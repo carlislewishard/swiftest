@@ -79,8 +79,6 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
 ! Executable code
 
-   WRITE(*,*) "ENTERING CASEHITANDRUN"
-
    ! Set the maximum number of fragments to be added in a Hit and Run collision (nfrag)
    nfrag = 4
    ! Pull in the information about the two particles involved in the collision 
@@ -315,7 +313,6 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    eoffset = eoffset + eold - enew
    ! Update fragmax to account for new fragments
    fragmax = fragmax + frags_added
-   WRITE(*,*) "LEAVING CASEHITANDRUN"
    RETURN 
 END SUBROUTINE symba_casehitandrun
 

@@ -77,8 +77,6 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    end interface
 
 ! Executable code
-
-   WRITE(*,*) "ENTERING CASEDISRUPTION"
    ! Set the maximum number of fragments to be added in a Disruption collision (nfrag)
    nfrag = 5 
    ! Pull in the information about the two particles involved in the collision 
@@ -186,7 +184,6 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
       ! util_regime while it's position and velocity should be calculated on the circle of 
       ! radius r_circle as described above.
       IF ((mres(2) > (1.0_DP / 3.0_DP)*mres(1))) THEN
-         WRITE(*,*) "CASEDISRUPTION 1st IF"
          ! frags_added is the actual number of fragments added to the simulation vs nfrag which is the total possible
          frags_added = frags_added + 1
          nmergeadd = nmergeadd + 1
@@ -197,7 +194,6 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
          mergeadd_list%radius(nmergeadd) = rres(2)
          mtot = mtot + mergeadd_list%mass(nmergeadd)
          DO i = 3, nfrag
-            WRITE(*,*) "CASEDISRUPTION 1st DO"
             frags_added = frags_added + 1
             nmergeadd = nmergeadd + 1
             mergeadd_list%status(nmergeadd) = DISRUPTION
@@ -211,10 +207,8 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
          END DO                            
       END IF
 
-      IF ((mres(2) < (1.0_DP / 3.0_DP)*mres(1))) THEN
-         WRITE(*,*) "CASEDISRUPTION 2nd IF"   
+      IF ((mres(2) < (1.0_DP / 3.0_DP)*mres(1))) THEN   
          DO i = 2, nfrag
-            WRITE(*,*) "CASEDISRUPTION 2nd DO"
             m_rem = (m1 + m2) - mres(1)
             frags_added = frags_added + 1
             nmergeadd = nmergeadd + 1
@@ -283,7 +277,6 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    theta = (2.0_DP * PI) / frags_added
 
    DO i=1, frags_added
-      WRITE(*,*) "CASEDISRUPTION 3rd DO"
 
          !WRITE(*,*) "CASEDISRUPTION mfrag/mtot", mergeadd_list%mass(nstart + i) / (m1 + m2)
 
@@ -297,10 +290,6 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
       vx_frag = ((A * cos(theta * i))*l(1)) + ((A * sin(theta * i))*p(1)) + vx_com
       vy_frag = ((A * cos(theta * i))*l(2)) + ((A * sin(theta * i))*p(2)) + vy_com
       vz_frag = ((A * cos(theta * i))*l(3)) + ((A * sin(theta * i))*p(3)) + vz_com
-
-      WRITE(*,*) "CASEDISRUPTION vx_frag", vx_frag
-      WRITE(*,*) "CASEDISRUPTION vy_frag", vy_frag
-      WRITE(*,*) "CASEDISRUPTION vz_frag", vz_frag
 
          !vx_frag = ((1.0_DP / frags_added) * (1.0_DP / mergeadd_list%mass(nstart + i)) * ((m1 * v1(1)) + (m2 * v2(1)))) + vx_com !- vbs(1)
          !vy_frag = ((1.0_DP / frags_added) * (1.0_DP / mergeadd_list%mass(nstart + i)) * ((m1 * v1(2)) + (m2 * v2(2)))) + vy_com !- vbs(2)
@@ -338,7 +327,6 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
 
    ! Update fragmax to account for new fragments
    fragmax = fragmax + frags_added
-   WRITE(*,*) "LEAVING CASEDISRUPTION"
    RETURN 
 END SUBROUTINE symba_casedisruption
 

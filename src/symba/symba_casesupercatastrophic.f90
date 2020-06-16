@@ -78,7 +78,6 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
 
 ! Executable code
      
-   WRITE(*,*) "ENTERING CASESUPERCATASTROPHIC"
    ! Set the maximum number of fragments to be added in a Supercatastrophic Disruption collision (nfrag)
    nfrag = 10
    ! Pull in the information about the two particles involved in the collision  
@@ -296,7 +295,6 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
 
    ! Update fragmax to account for new fragments
    fragmax = fragmax + frags_added
-   WRITE(*,*) "LEAVING CASESUPERCATASTROPHIC"
 
    RETURN 
 END SUBROUTINE symba_casesupercatastrophic
