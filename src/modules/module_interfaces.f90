@@ -1420,6 +1420,19 @@ MODULE module_interfaces
          END SUBROUTINE util_regime
      END INTERFACE
 
+     INTERFACE
+         SUBROUTINE util_mom(m1, x1, v1, m2, x2, v2, frags_added, nstart, m_frag, r_circle, theta, x_frag, v_frag)
+         USE swiftest_globals
+         USE swiftest_data_structures
+         IMPLICIT NONE
+         INTEGER(I4B), INTENT(IN)                               :: frags_added, nstart
+         REAL(DP), INTENT(IN)                                   :: m1, m2, r_circle, theta
+         REAL(DP), DIMENSION(NDIM), INTENT(IN)                  :: x1, v1, x2, v2
+         REAL(DP), DIMENSION(frags_added), INTENT(IN)           :: m_frag
+         REAL(DP), DIMENSION(NDIM, frags_added), INTENT(INOUT)  :: x_frag, v_frag
+         END SUBROUTINE util_mom
+     END INTERFACE
+
 END MODULE module_interfaces
 !**********************************************************************************************************************************
 !
