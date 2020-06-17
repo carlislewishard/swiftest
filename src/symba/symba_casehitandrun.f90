@@ -266,9 +266,9 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
          theta = (2.0_DP * PI) / (frags_added)
          DO i=1, frags_added
             ! Increment around the circle for positions of fragments
-            x_frag = (r_circle * cos(theta * i))*l(1) + (r_circle * sin(theta * i))*p(1) + x_rm(1) !x_com
-            y_frag = (r_circle * cos(theta * i))*l(2) + (r_circle * sin(theta * i))*p(2) + y_rm(1) !y_com
-            z_frag = (r_circle * cos(theta * i))*l(3) + (r_circle * sin(theta * i))*p(3) + z_rm(1) !z_com
+            x_frag = (r_circle * cos(theta * i))*l(1) + (r_circle * sin(theta * i))*p(1) + xh_rm(1) !x_com
+            y_frag = (r_circle * cos(theta * i))*l(2) + (r_circle * sin(theta * i))*p(2) + xh_rm(2) !y_com
+            z_frag = (r_circle * cos(theta * i))*l(3) + (r_circle * sin(theta * i))*p(3) + xh_rm(3) !z_com
 
             !vx_frag = ((1.0_DP / frags_added) * (1.0_DP / mergeadd_list%mass(nstart + i)) * ((m2 * v2(1)))) !- vbs(1)
             !vy_frag = ((1.0_DP / frags_added) * (1.0_DP / mergeadd_list%mass(nstart + i)) * ((m2 * v2(2)))) !- vbs(2)
