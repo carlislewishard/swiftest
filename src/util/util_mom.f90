@@ -76,8 +76,10 @@ SUBROUTINE util_mom(m1, x1, v1, m2, x2, v2, frags_added, nstart, m_frag, r_circl
 
      xr(:) = x2(:) - x1(:)
      l(:) = (v2(:) - v1(:)) / NORM2(v2(:)-v1(:))
-     p(:) = cross_product_mom(xr(:) / NORM2(xr(:)), l(:))
-     kk(:) = cross_product_mom(l(:),p(:))
+     call util_crossproduct(xr(:), l(:), p(:))
+     p(:) = p(:) / NORM2(p(:))
+     call util_crossproduct(l(:), p(:), kk(:))
+     kk(:) = kk(:) / NORM2(kk(:)) 
 
      DO i=1, frags_added
 
