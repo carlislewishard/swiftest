@@ -67,16 +67,6 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    REAL(DP)                                         :: r_smallestcircle
    REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xh_keep, xh_rm, vh_keep, vh_rm, l, kk, p
 
-   !TEMPORARY
-   interface 
-      function cross_product_hitandrun(ar1,ar2) result(ans)
-         use swiftest
-         implicit none
-         real(DP),dimension(3),intent(in) :: ar1,ar2
-         real(DP),dimension(3)             :: ans
-      end function cross_product_hitandrun
-   end interface
-
 ! Executable code
 
    ! Set the maximum number of fragments to be added in a Hit and Run collision (nfrag)
@@ -178,8 +168,10 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    symba_plA%helio%swiftest%status(index2) = HIT_AND_RUN
 
    l(:) = (v2(:) - v1(:)) / NORM2(v2(:)-v1(:))
-   p(:) = cross_product_hitandrun(xr(:) / NORM2(xr(:)), l(:))
-   kk(:) = cross_product_hitandrun(l(:),p(:))
+   call util_crossproduct(xr(:),l(:),p(:))
+   p(:) = p(:) / NORM2(p(:))
+   call util_crossproduct(l(:),p(:),kk(:))
+   kk(:) = kk(:)/NORM2(kk(:))
 
    mtot = 0.0_DP ! running total mass of new fragments
    mv = 0.0_DP   ! running sum of m*v of new fragments to be used in COM calculation
@@ -316,17 +308,3 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    RETURN 
 END SUBROUTINE symba_casehitandrun
 
-
-function cross_product_hitandrun(ar1,ar2) result(ans)
-   use swiftest
-   implicit none
-   
-   real(DP),dimension(3),intent(in) :: ar1,ar2
-   real(DP),dimension(3)             :: ans
-
-   ans(1) = ar1(2) * ar2(3) - ar1(3) * ar2(2)
-   ans(2) = ar1(3) * ar2(1) - ar1(1) * ar2(3)
-   ans(3) = ar1(1) * ar2(2) - ar1(2) * ar2(1)
-
-   return 
-end function cross_product_hitandrun
