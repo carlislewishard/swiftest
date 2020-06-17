@@ -15,6 +15,7 @@
 SUBROUTINE util_crossproduct(ar1, ar2, ans)
 
 ! Modules
+     USE swiftest_globals
      USE module_interfaces, EXCEPT_THIS_ONE => util_crossproduct
      IMPLICIT NONE
 
