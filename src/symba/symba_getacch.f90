@@ -70,15 +70,6 @@ SUBROUTINE symba_getacch(lextra_force, t, npl, nplm, symba_plA, j2rp2, j4rp4, np
                     dx(:) = symba_plA%helio%swiftest%xh(:,j) - symba_plA%helio%swiftest%xh(:,i)
                     rji2 = DOT_PRODUCT(dx(:), dx(:))
                     irij3 = 1.0_DP/(rji2*SQRT(rji2))
-                    IF (irij3  .NE. irij3 ) then 
-                         WRITE(*,*) "dx==0 for pl: ", i, "name:", symba_plA%helio%swiftest%name(i), &
-                    "and pl:", j, "name:", symba_plA%helio%swiftest%name(j)
-                    WRITE(*,*) "dx==0 for pl: ", i, "xh:", symba_plA%helio%swiftest%xh(1,i), &
-                    "and pl:", j, "xh:", symba_plA%helio%swiftest%xh(1,j)
-                         WRITE(*,*) "parent pl 1:", symba_plA%helio%swiftest%name(symba_plA%index_parent(i))
-                         WRITE(*,*) "parent pl 2:", symba_plA%helio%swiftest%name(symba_plA%index_parent(j))
-                         STOP
-                    END IF
                     faci = symba_plA%helio%swiftest%mass(i)*irij3
                     facj = symba_plA%helio%swiftest%mass(j)*irij3
                     symba_plA%helio%ah(:,i) = symba_plA%helio%ah(:,i) + facj*dx(:)
@@ -95,15 +86,6 @@ SUBROUTINE symba_getacch(lextra_force, t, npl, nplm, symba_plA, j2rp2, j4rp4, np
                dx(:) = symba_plA%helio%swiftest%xh(:,index_j) - symba_plA%helio%swiftest%xh(:,index_i)
                rji2 = DOT_PRODUCT(dx(:), dx(:))
                irij3 = 1.0_DP/(rji2*SQRT(rji2))
-               IF (irij3  .NE. irij3 ) then 
-                         WRITE(*,*) "dx==0 for pl: ", i, "name:", symba_plA%helio%swiftest%name(i), &
-                    "and pl:", j, "name:", symba_plA%helio%swiftest%name(j)
-                    WRITE(*,*) "dx==0 for pl: ", i, "xh:", symba_plA%helio%swiftest%xh(1,i), &
-                    "and pl:", j, "xh:", symba_plA%helio%swiftest%xh(1,j)
-                         WRITE(*,*) "parent pl 1:", symba_plA%helio%swiftest%name(symba_plA%index_parent(i))
-                         WRITE(*,*) "parent pl 2:", symba_plA%helio%swiftest%name(symba_plA%index_parent(j))
-                         STOP
-               END IF
                faci = symba_plA%helio%swiftest%mass(index_i)*irij3
                facj = symba_plA%helio%swiftest%mass(index_j)*irij3
                symba_plA%helio%ah(:,index_i) = symba_plA%helio%ah(:,index_i) - facj*dx(:)

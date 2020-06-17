@@ -43,9 +43,9 @@ program swiftest_symba
 
    ! Internals
    logical                       :: lfrag_add
-   integer(I4B)                  :: npl, ntp, ntp0, nsppl, nsptp, iout, idump, iloop
+   integer(I4B)                  :: npl, ntp, ntp0, nsppl, nsptp, iout, idump, iloop, idebug
    integer(I4B)                  :: nplplenc, npltpenc, nmergeadd, nmergesub, fragmax
-   real(DP)                      :: t, tfrac, tbase, mtiny, ke, pe, te, eoffset
+   real(DP)                      :: t, tfrac, tbase, mtiny, ke, pe, te, eoffset, Ltot_orig, Ltot_now, Lerror
    real(DP), dimension(ndim)     :: htot
    character(strmax)             :: inparfile
    type(symba_pl)                :: symba_plA
@@ -157,11 +157,11 @@ program swiftest_symba
    end if
    300 format(7(1x, e23.16))
    write(*, *) " *************** Main Loop *************** "
-   if (param%lenergy) then 
-      call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot)
-      write(egyiu,300) t, ke, pe, te, htot
-   end if
    call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot)
+   if (param%lenergy) then 
+      write(egyiu,300) t, ke, pe, te, htot
+      Ltot_orig = NORM2(htot)
+   end if
    do while ((t < tstop) .and. ((ntp0 == 0) .or. (ntp > 0)))
       call symba_step(t, dt, param,npl,ntp,symba_plA, symba_tpA,nplplenc, npltpenc,&
             plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
@@ -191,9 +191,12 @@ program swiftest_symba
             nsppl = 0
             nsptp = 0
          end if 
+         call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot)
          if (param%lenergy) then 
-            call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot)
             write(egyiu,300) t, ke, pe, te, htot
+            Ltot_now = NORM2(htot)
+            Lerror = (Ltot_now - Ltot_orig) / Ltot_orig
+            Write(*,*) "DL/L = ", Lerror
          end if
       end if
       if (istep_out > 0) then
@@ -201,11 +204,13 @@ program swiftest_symba
          if (iout == 0) then
             call io_write_frame(t, symba_plA%helio%swiftest, symba_tpA%helio%swiftest, outfile, out_type, out_form, out_stat)
             iout = istep_out
-            if (param%lenergy) then 
-               call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot)
-               write(egyiu,300) t, ke, pe, te, htot
-            end if
             call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot)
+            if (param%lenergy) then 
+               write(egyiu,300) t, ke, pe, te, htot
+               Ltot_now = NORM2(htot)
+               Lerror = (Ltot_now - Ltot_orig) / Ltot_orig
+               Write(*,*) "DL/L = ", Lerror
+            end if
          end if
       end if
       if (istep_dump > 0) then
