@@ -43,6 +43,7 @@ SUBROUTINE util_resize_pl(symba_plA, npl_new, npl_old)
      TYPE(symba_pl)                :: new_symba_plA
 
 ! Executable code
+
      IF (npl_new >= npl_old) THEN 
           CALL symba_pl_allocate(new_symba_plA, npl_new)
           new_symba_plA%helio%swiftest%name(1:npl_old) = symba_plA%helio%swiftest%name(1:npl_old)
@@ -70,7 +71,7 @@ SUBROUTINE util_resize_pl(symba_plA, npl_new, npl_old)
 
 
 
-     IF (npl_new < npl_old) THEN 
+     IF (npl_new < npl_old) THEN
           CALL symba_pl_allocate(new_symba_plA, npl_new)
           new_symba_plA%helio%swiftest%name(1:npl_new) = symba_plA%helio%swiftest%name(1:npl_new)
           new_symba_plA%helio%swiftest%status(1:npl_new) = symba_plA%helio%swiftest%status(1:npl_new)
