@@ -141,9 +141,10 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    symba_plA%helio%swiftest%status(index1) = DISRUPTION
    symba_plA%helio%swiftest%status(index2) = DISRUPTION
 
-   l(:) = (v2(:) - v1(:)) / NORM2(v2(:)-v1(:))
-   p(:) = cross_product_disruption(xr(:) / NORM2(xr(:)), l(:))
-   kk(:) = cross_product_disruption(l(:),p(:))
+   
+   !l(:) = (v2(:) - v1(:)) / NORM2(v2(:)-v1(:))
+   !p(:) = cross_product_disruption(xr(:) / NORM2(xr(:)), l(:))
+   !kk(:) = cross_product_disruption(l(:),p(:))
 
    rhill_p1 = symba_plA%helio%swiftest%rhill(index1_parent)
    rhill_p2 = symba_plA%helio%swiftest%rhill(index2_parent)
@@ -276,20 +277,24 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    r_circle = (2.0_DP * rhill_p1 + 2.0_DP * rhill_p2) / (2.0_DP * sin(PI / frags_added))
    theta = (2.0_DP * PI) / frags_added
 
+
+   CALL util_mom(m1, x1, v1, m2, x2, v2, frags_added, nstart, m_frag, r_circle, theta, x_frag, v_frag)
+
    DO i=1, frags_added
 
          !WRITE(*,*) "CASEDISRUPTION mfrag/mtot", mergeadd_list%mass(nstart + i) / (m1 + m2)
 
          ! Increment around the circle for positions of fragments
-      x_frag = (r_circle * cos(theta * i))*l(1) + (r_circle * sin(theta * i))*p(1) + x_com
-      y_frag = (r_circle * cos(theta * i))*l(2) + (r_circle * sin(theta * i))*p(2) + y_com
-      z_frag = (r_circle * cos(theta * i))*l(3) + (r_circle * sin(theta * i))*p(3) + z_com
+      !x_frag = (r_circle * cos(theta * i))*l(1) + (r_circle * sin(theta * i))*p(1) + x_com
+      !y_frag = (r_circle * cos(theta * i))*l(2) + (r_circle * sin(theta * i))*p(2) + y_com
+      !z_frag = (r_circle * cos(theta * i))*l(3) + (r_circle * sin(theta * i))*p(3) + z_com
 
-      A = v_col * (m1 + m2) * (1.0_DP / mergeadd_list%mass(nstart + i))
+      !A = v_col * (m1 + m2) * (1.0_DP / mergeadd_list%mass(nstart + i))
 
-      vx_frag = ((A * cos(theta * i))*l(1)) + ((A * sin(theta * i))*p(1)) + vx_com
-      vy_frag = ((A * cos(theta * i))*l(2)) + ((A * sin(theta * i))*p(2)) + vy_com
-      vz_frag = ((A * cos(theta * i))*l(3)) + ((A * sin(theta * i))*p(3)) + vz_com
+
+      !vx_frag = ((A * cos(theta * i))*l(1)) + ((A * sin(theta * i))*p(1)) + vx_com
+      !vy_frag = ((A * cos(theta * i))*l(2)) + ((A * sin(theta * i))*p(2)) + vy_com
+      !vz_frag = ((A * cos(theta * i))*l(3)) + ((A * sin(theta * i))*p(3)) + vz_com
 
          !vx_frag = ((1.0_DP / frags_added) * (1.0_DP / mergeadd_list%mass(nstart + i)) * ((m1 * v1(1)) + (m2 * v2(1)))) + vx_com !- vbs(1)
          !vy_frag = ((1.0_DP / frags_added) * (1.0_DP / mergeadd_list%mass(nstart + i)) * ((m1 * v1(2)) + (m2 * v2(2)))) + vy_com !- vbs(2)
@@ -308,12 +313,12 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
          !vy_frag = ((1.0_DP / frags_added) * (-A / z_frag)) - vbs(2)
          !vz_frag = vz_com - vbs(3)
 
-      mergeadd_list%xh(1,nstart + i) = x_frag
-      mergeadd_list%xh(2,nstart + i) = y_frag 
-      mergeadd_list%xh(3,nstart + i) = z_frag                                                    
-      mergeadd_list%vh(1,nstart + i) = vx_frag
-      mergeadd_list%vh(2,nstart + i) = vy_frag
-      mergeadd_list%vh(3,nstart + i) = vz_frag
+      mergeadd_list%xh(1,nstart + i) = x_frag(1, i) !x_frag
+      mergeadd_list%xh(2,nstart + i) = x_frag(2, i)!y_frag
+      mergeadd_list%xh(3,nstart + i) = x_frag(3, i)!z_frag                                                   
+      mergeadd_list%vh(1,nstart + i) = v_frag(1, i)!vx_frag
+      mergeadd_list%vh(2,nstart + i) = v_frag(2, i)!vy_frag
+      mergeadd_list%vh(3,nstart + i) = v_frag(3, i)!vz_frag
 
          ! Tracking linear momentum. 
       mv = mv + (mergeadd_list%mass(nstart + i) * mergeadd_list%vh(:,nstart + i))
