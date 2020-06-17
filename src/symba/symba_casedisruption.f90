@@ -66,15 +66,6 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    REAL(DP)                                         :: x_frag, y_frag, z_frag, vx_frag, vy_frag, vz_frag
    REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, l, kk, p
 
-   !TEMPORARY
-   interface 
-      function cross_product_disruption(ar1,ar2) result(ans)
-         use swiftest
-         implicit none
-         real(DP),dimension(3),intent(in) :: ar1,ar2
-         real(DP),dimension(3)             :: ans
-      end function cross_product_disruption
-   end interface
 
 ! Executable code
    ! Set the maximum number of fragments to be added in a Disruption collision (nfrag)
@@ -142,8 +133,10 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    symba_plA%helio%swiftest%status(index2) = DISRUPTION
 
    l(:) = (v2(:) - v1(:)) / NORM2(v2(:)-v1(:))
-   p(:) = cross_product_disruption(xr(:) / NORM2(xr(:)), l(:))
-   kk(:) = cross_product_disruption(l(:),p(:))
+   call util_crossproduct(xr(:),l(:),p(:))
+   p(:) = p(:) / NORM2(p(:))
+   call util_crossproduct(l(:),p(:),kk(:))
+   kk(:) = kk(:)/NORM2(kk(:))
 
    rhill_p1 = symba_plA%helio%swiftest%rhill(index1_parent)
    rhill_p2 = symba_plA%helio%swiftest%rhill(index2_parent)
@@ -331,16 +324,3 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
 END SUBROUTINE symba_casedisruption
 
 
-function cross_product_disruption(ar1,ar2) result(ans)
-   use swiftest
-   implicit none
-   
-   real(DP),dimension(3),intent(in) :: ar1,ar2
-   real(DP),dimension(3)             :: ans
-
-   ans(1) = ar1(2) * ar2(3) - ar1(3) * ar2(2)
-   ans(2) = ar1(3) * ar2(1) - ar1(1) * ar2(3)
-   ans(3) = ar1(1) * ar2(2) - ar1(2) * ar2(1)
-
-   return 
-end function cross_product_disruption

@@ -1273,6 +1273,14 @@ MODULE module_interfaces
           END SUBROUTINE symba_user_getacch_tp
      END INTERFACE
 
+     INTERFACE 
+          SUBROUTINE util_crossproduct(ar1, ar2, ans)
+               IMPLICIT NONE
+               real(DP),dimension(3),intent(in)  :: ar1,ar2
+               real(DP),dimension(3),intent(out) :: ans
+          END SUBROUTINE
+     END INTERFACE
+     
      INTERFACE
           SUBROUTINE util_exit(code)
                USE swiftest_globals
