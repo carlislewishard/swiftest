@@ -107,6 +107,12 @@ program swiftest_symba
    call symba_plA%helio%swiftest%read_from_file(param)
    call symba_tpA%helio%swiftest%read_from_file(param)
 
+   DO idebug=1,npl
+         WRITE(*,*) "pos main before allocation "
+         WRITE(*,*) "name particle = ", symba_plA%helio%swiftest%name(idebug)
+         WRITE(*,*) "xh particle = ", symba_plA%helio%swiftest%xh(:,idebug)
+   END DO 
+
    !Temporary until the argument lists get fixed
       npl = symba_plA%helio%swiftest%nbody
       ntp = symba_tpA%helio%swiftest%nbody
@@ -120,6 +126,12 @@ program swiftest_symba
       call symba_plA%helio%swiftest%read_from_file(param)
       call symba_tpA%helio%swiftest%read_from_file(param)
    !**************************************************
+
+   DO idebug=1,npl
+         WRITE(*,*) "pos main after allocation "
+         WRITE(*,*) "name particle = ", symba_plA%helio%swiftest%name(idebug)
+         WRITE(*,*) "xh particle = ", symba_plA%helio%swiftest%xh(:,idebug)
+   END DO 
 
    ! create arrays of data structures big enough to store the number of bodies we are adding
    call symba_merger_allocate(mergeadd_list,10*npl) !DM: Why 10*npl?
