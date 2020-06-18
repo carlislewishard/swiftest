@@ -41,18 +41,19 @@ SUBROUTINE symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
      IMPLICIT NONE
 
 ! Arguments
-     INTEGER(I4B), INTENT(INOUT)                      :: npl, ntp, nsppl, nsptp, nmergeadd !change to fragadd
+     INTEGER(I4B), INTENT(INOUT)                      :: npl, ntp, nsppl, nsptp, nmergeadd 
      TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
      TYPE(symba_tp), INTENT(INOUT)                    :: symba_tpA
      TYPE(swiftest_tp), INTENT(INOUT)                 :: discard_tpA
      TYPE(swiftest_pl), INTENT(INOUT)                 :: discard_plA
-     TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list !change to fragadd_list
-     TYPE(user_input_parameters),intent(in)                    :: param
+     TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list 
+     TYPE(user_input_parameters),intent(in)           :: param
 
 ! Internals
      INTEGER(I4B)                                   :: i, nkpl, nktp, nfrag
      REAL(DP)                                       :: mu, energy, ap, r, v2
-     LOGICAL, DIMENSION(npl)                        :: discard_l_pl, frag_l_add
+     LOGICAL, DIMENSION(npl)                        :: discard_l_pl 
+     LOGICAL, DIMENSION(nmergeadd)                  :: frag_l_add
      LOGICAL, DIMENSION(ntp)                        :: discard_l_tp
 
 ! Executable code
@@ -63,9 +64,9 @@ SUBROUTINE symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
         discard_l_pl(1:npl) = (symba_plA%helio%swiftest%status(1:npl) /= ACTIVE) 
         nsppl = COUNT(discard_l_pl)
         nkpl = npl - nsppl
-        frag_l_add = [(.FALSE.,i=1,npl)]
+        frag_l_add = [(.FALSE.,i=1,nmergeadd)]
         IF (param%lfragmentation) THEN
-            DO i = 1, npl
+            DO i = 1, nmergeadd
                 IF (mergeadd_list%status(i) == DISRUPTION) THEN
                     frag_l_add(i) = .TRUE.
                 ELSE IF (mergeadd_list%status(i) == HIT_AND_RUN) THEN
