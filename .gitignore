@@ -2,7 +2,7 @@
 *
 # Now, whitelist anything that's a directory
 !*/
-!*/python
+!python_routines/*
 # whitelist only the files that ever need to be tracked
 !*.f90
 !CHANGELOG 
