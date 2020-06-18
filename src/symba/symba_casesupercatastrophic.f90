@@ -240,7 +240,7 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
          !   END IF
          !END IF
 
-   r_circle = (RHSCALE * rhill_p1 + RHSCALE * rhill_p2) / (2.0_DP * sin(PI / frags_added))
+   r_circle = (RHSCALE * rhill_p1 + RHSCALE * rhill_p2) / (sin(PI / frags_added))
    theta = (2.0_DP * PI) / frags_added
 
    ALLOCATE(m_frag(frags_added))
@@ -262,7 +262,9 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
          ! Tracking linear momentum. 
       mv(:) = mv(:) + (mergeadd_list%mass(nstart + i) * mergeadd_list%vh(:,nstart + i))
    END DO
-
+   deallocate(m_frag)
+   deallocate(x_frag)
+   deallocate(v_frag)
    WRITE(*, *) "Number of fragments added: ", frags_added
    ! Calculate energy after frag                                                                           
    vnew(:) = mv(:) / mtot    ! COM of new fragments                               

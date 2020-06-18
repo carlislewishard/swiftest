@@ -79,12 +79,9 @@ SUBROUTINE symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
             END DO
         END IF
         nfrag = COUNT(frag_l_add)
-        WRITE(*,*) "number particles to add = ", nfrag 
-        WRITe(*,*) "number particles to remove = ", nsppl
         CALL discard_plA%alloc(nsppl)
 
         discard_plA%name(1:nsppl) = PACK(symba_plA%helio%swiftest%name(1:npl), discard_l_pl)
-        WRITE(*,*) "discard names: ", discard_plA%name(1:nsppl)
         discard_plA%status(1:nsppl) = PACK(symba_plA%helio%swiftest%status(1:npl), discard_l_pl)
         discard_plA%mass(1:nsppl) = PACK(symba_plA%helio%swiftest%mass(1:npl), discard_l_pl)
         discard_plA%radius(1:nsppl) = PACK(symba_plA%helio%swiftest%radius(1:npl), discard_l_pl)
@@ -102,7 +99,6 @@ SUBROUTINE symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
         discard_plA%vb(2,1:nsppl) = PACK(symba_plA%helio%swiftest%vb(2,1:npl), discard_l_pl)
         discard_plA%vb(3,1:nsppl) = PACK(symba_plA%helio%swiftest%vb(3,1:npl), discard_l_pl)
         IF (param%lfragmentation .AND. (nkpl + nfrag >= npl)) THEN 
-            WRITE(*,*) "condition met"
             symba_plA%helio%swiftest%name(1:nkpl) = PACK(symba_plA%helio%swiftest%name(1:npl), .NOT. discard_l_pl)
             symba_plA%helio%swiftest%status(1:nkpl) = PACK(symba_plA%helio%swiftest%status(1:npl), .NOT. discard_l_pl)
             symba_plA%helio%swiftest%mass(1:nkpl) = PACK(symba_plA%helio%swiftest%mass(1:npl), .NOT. discard_l_pl)
@@ -129,7 +125,6 @@ SUBROUTINE symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
             npl = nkpl  + nfrag
             !add fragments 
             symba_plA%helio%swiftest%name(nkpl+1:npl) = PACK(mergeadd_list%name(1:nmergeadd), frag_l_add)
-            WRITE(*,*) "frag names: ", symba_plA%helio%swiftest%name(nkpl+1:npl)
             symba_plA%helio%swiftest%status(nkpl+1:npl) = [(ACTIVE,i=1,nfrag)]!array of ACTIVE STATUS 
             symba_plA%helio%swiftest%mass(nkpl+1:npl) = PACK(mergeadd_list%mass(1:nmergeadd), frag_l_add)
             symba_plA%helio%swiftest%radius(nkpl+1:npl) = PACK(mergeadd_list%radius(1:nmergeadd), frag_l_add)
@@ -176,7 +171,6 @@ SUBROUTINE symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
             symba_plA%helio%swiftest%nbody = npl
 
             symba_plA%helio%swiftest%name(nkpl+1:npl) = PACK(mergeadd_list%name(1:nmergeadd), frag_l_add)
-            WRITE(*,*) "frag names: ", symba_plA%helio%swiftest%name(nkpl+1:npl)
             symba_plA%helio%swiftest%status(nkpl+1:npl) = [(ACTIVE,i=1,nfrag)]!array of ACTIVE STATUS 
             symba_plA%helio%swiftest%mass(nkpl+1:npl) = PACK(mergeadd_list%mass(1:nmergeadd), frag_l_add)
             symba_plA%helio%swiftest%radius(nkpl+1:npl) = PACK(mergeadd_list%radius(1:nmergeadd), frag_l_add)

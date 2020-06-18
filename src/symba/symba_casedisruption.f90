@@ -271,7 +271,7 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
 
       ! Calculate the positions of the new fragments in a circle with a radius large enough to space
       ! all fragments apart by a distance of rhill_p1 + rhill_p2
-   r_circle = (rhill_p1 + rhill_p2) / (2.0_DP * sin(PI / frags_added)) !((2.0_DP * rhill_p1 + 2.0_DP * rhill_p2) / (2.0_DP * sin(PI / frags_added))) 
+   r_circle = (rhill_p1 + rhill_p2) / (sin(PI / frags_added)) !((2.0_DP * rhill_p1 + 2.0_DP * rhill_p2) / (2.0_DP * sin(PI / frags_added))) 
    theta = (2.0_DP * PI) / frags_added
 
    ALLOCATE(m_frag(frags_added))
@@ -293,7 +293,9 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
          ! Tracking linear momentum. 
       mv(:) = mv(:) + (mergeadd_list%mass(nstart + i) * mergeadd_list%vh(:,nstart + i))
    END DO
-
+   deallocate(m_frag)
+   deallocate(x_frag)
+   deallocate(v_frag)
    WRITE(*, *) "Number of fragments added: ", frags_added
    ! Calculate energy after frag                                                                           
    vnew(:) = mv(:) / mtot    ! COM of new fragments                               
