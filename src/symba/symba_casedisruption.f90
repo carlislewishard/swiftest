@@ -69,7 +69,7 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    REAL(DP), DIMENSION(:, :), ALLOCATABLE, SAVE     :: x_frag, v_frag
    !REAL(DP), DIMENSION(symba_plA%helio%swiftest%nbody)                         :: m_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE        :: m_frag
-   REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv
+   REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xbs
 
 
 ! Executable code
@@ -87,6 +87,7 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    radius1 = symba_plA%helio%swiftest%radius(index1)
    radius2 = symba_plA%helio%swiftest%radius(index2)
    msun = symba_plA%helio%swiftest%mass(1)
+   xbs(:) = symba_plA%helio%swiftest%xb(:,1)
 
    ! Find COM
    x_com = ((x1(1) * m1) + (x2(1) * m2)) / (m1 + m2)
@@ -279,7 +280,11 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
 
    ALLOCATE(x_frag(NDIM, frags_added))
    ALLOCATE(v_frag(NDIM, frags_added))
-   CALL util_mom(m1, x1, v1, m2, x2, v2, frags_added, nstart, m_frag, r_circle, theta, x_frag, v_frag)
+   print("xbs = ", xbs)
+   print("vbs = ", vbs)
+   print("norm(xbs) = ", NORM2(xbs))
+   print("norm(vbs) = ", NORM2(vbs))
+   CALL util_mom(m1, x1+xbs, v1, m2, x2+xbs, v2, frags_added, nstart, m_frag, r_circle, theta, x_frag, v_frag)
 
    DO i=1, frags_added
 

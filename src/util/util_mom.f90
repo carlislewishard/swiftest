@@ -167,17 +167,17 @@ SUBROUTINE util_mom(m1, x1, v1, m2, x2, v2, frags_added, nstart, m_frag, r_circl
      WRITE(*,*) "util_mom DL/L = ", DL 
      !WRITE(*,*) "util_mom l(1) :", l(1)
      !WRITE(*,*) "util_mom p(1) :", p(1)
-     !WRITE(*,*) "util_mom p_frag_check :", p_frag_check
-     !WRITE(*,*) "util_mom v_frag_check :", v_frag_check
+     WRITE(*,*) "util_mom p_frag_check :", p_frag_check
+     WRITE(*,*) "util_mom v_frag_check :", v_frag_check
 
      !WRITE(*,*) "util_mom linmom_after: ", NORM2(veclinmom_after)
-     !WRITE(*,*) "util_mom linmom_diff: ", (NORM2(veclinmom_after) - linmom_before) / linmom_before
-     !WRITE(*,*) "util_mom x position com diff", (x_com - x_com_frag)
-     !WRITE(*,*) "util_mom y position com diff", (y_com - y_com_frag)
-     !WRITE(*,*) "util_mom z position com diff", (z_com - z_com_frag)
-     !WRITE(*,*) "util_mom x velocity com diff", (vx_com - vx_com_frag)
-     !WRITE(*,*) "util_mom y velocity com diff", (vy_com - vy_com_frag)
-     !WRITE(*,*) "util_mom z velocity com diff", (vz_com - vz_com_frag)
+     WRITE(*,*) "util_mom linmom_diff: ", (NORM2(veclinmom_after) - linmom_before) / linmom_before
+     WRITE(*,*) "util_mom x position com diff", (x_com - x_com_frag)
+     WRITE(*,*) "util_mom y position com diff", (y_com - y_com_frag)
+     WRITE(*,*) "util_mom z position com diff", (z_com - z_com_frag)
+     WRITE(*,*) "util_mom x velocity com diff", (vx_com - vx_com_frag)
+     WRITE(*,*) "util_mom y velocity com diff", (vy_com - vy_com_frag)
+     WRITE(*,*) "util_mom z velocity com diff", (vz_com - vz_com_frag)
 
    RETURN
 
