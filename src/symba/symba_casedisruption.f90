@@ -272,7 +272,7 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
 
       ! Calculate the positions of the new fragments in a circle with a radius large enough to space
       ! all fragments apart by a distance of rhill_p1 + rhill_p2
-   r_circle = (rhill_p1 + rhill_p2) / (sin(PI / frags_added)) !((2.0_DP * rhill_p1 + 2.0_DP * rhill_p2) / (2.0_DP * sin(PI / frags_added))) 
+   r_circle = (rhill_p1 + rhill_p2) / (2.0_DP * sin(PI / frags_added)) !((2.0_DP * rhill_p1 + 2.0_DP * rhill_p2) / (2.0_DP * sin(PI / frags_added))) 
    theta = (2.0_DP * PI) / frags_added
 
    ALLOCATE(m_frag(frags_added))
@@ -280,10 +280,10 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
 
    ALLOCATE(x_frag(NDIM, frags_added))
    ALLOCATE(v_frag(NDIM, frags_added))
-   print("xbs = ", xbs)
-   print("vbs = ", vbs)
-   print("norm(xbs) = ", NORM2(xbs))
-   print("norm(vbs) = ", NORM2(vbs))
+   WRITE(*,*) "xbs = ", xbs
+   WRITE(*,*) "vbs = ", vbs
+   WRITE(*,*) "norm(xbs) = ", NORM2(xbs)
+   WRITE(*,*) "norm(vbs) = ", NORM2(vbs)
    CALL util_mom(m1, x1+xbs, v1, m2, x2+xbs, v2, frags_added, nstart, m_frag, r_circle, theta, x_frag, v_frag)
 
    DO i=1, frags_added
