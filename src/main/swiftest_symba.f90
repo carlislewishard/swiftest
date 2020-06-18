@@ -149,7 +149,6 @@ program swiftest_symba
    fragmax = 0 
    nplmax = npl
    ntpmax = ntp
-   WRITE(*,*) "nplmax = ", nplmax, "ntpmax = ", ntpmax
    if (istep_out > 0) then
       call io_write_frame(t, symba_plA%helio%swiftest, symba_tpA%helio%swiftest, outfile, out_type, out_form, out_stat)
    end if
@@ -186,6 +185,10 @@ program swiftest_symba
       if ((ldiscard .eqv. .true.) .or. (ldiscard_tp .eqv. .true.) .or. (lfrag_add .eqv. .true.)) then
          call symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
             discard_tpA,param)
+            call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot)
+               Ltot_now = NORM2(htot)
+               Lerror = (Ltot_now - Ltot_orig) / Ltot_orig
+               Write(*,*) "DL/L after rearray = ", Lerror
          if ((ldiscard .eqv. .true.) .or. (ldiscard_tp .eqv. .true.)) then
             call io_discard_write_symba(t, mtiny, npl, ntp, nsppl, nsptp, nmergeadd, symba_plA, &
                discard_plA, discard_tpA, mergeadd_list, mergesub_list, discard_file, param%lbig_discard) 

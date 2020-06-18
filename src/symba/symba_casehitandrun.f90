@@ -63,9 +63,11 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    REAL(DP)                                         :: rhill_keep, r_circle, theta, radius1, radius2, e, q, semimajor_encounter
    REAL(DP)                                         :: m_rem, m_test, mass1, mass2, enew, eold, semimajor_inward, A, B, v_col
    REAL(DP)                                         :: x_com, y_com, z_com, vx_com, vy_com, vz_com, mass_keep, mass_rm, rhill_rm
-   REAL(DP)                                         :: x_frag, y_frag, z_frag, vx_frag, vy_frag, vz_frag, rad_keep, rad_rm
+   REAL(DP)                                         :: rad_keep, rad_rm
    REAL(DP)                                         :: r_smallestcircle
-   REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xh_keep, xh_rm, vh_keep, vh_rm, l, kk, p
+   REAL(DP), DIMENSION(:, :), ALLOCATABLE, SAVE     :: x_frag, v_frag
+   REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE        :: m_frag
+   REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xh_keep, xh_rm, vh_keep, vh_rm 
 
 ! Executable code
 
@@ -167,14 +169,11 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    symba_plA%helio%swiftest%status(index1) = HIT_AND_RUN
    symba_plA%helio%swiftest%status(index2) = HIT_AND_RUN
 
-   l(:) = (v2(:) - v1(:)) / NORM2(v2(:)-v1(:))
-   call util_crossproduct(xr(:),l(:),p(:))
-   p(:) = p(:) / NORM2(p(:))
-   call util_crossproduct(l(:),p(:),kk(:))
-   kk(:) = kk(:)/NORM2(kk(:))
 
    mtot = 0.0_DP ! running total mass of new fragments
-   mv = 0.0_DP   ! running sum of m*v of new fragments to be used in COM calculation
+   mv(1) = 0.0_DP   ! running sum of m*v of new fragments to be used in COM calculation
+   mv(2) = 0.0_DP   ! running sum of m*v of new fragments to be used in COM calculation
+   mv(3) = 0.0_DP   ! running sum of m*v of new fragments to be used in COM calculation
    frags_added = 0 ! running total number of new fragments
    nstart = nmergeadd + 1 ! start of new fragments in mergeadd_list
    ! Increment around the circle for positions of fragments
@@ -264,43 +263,31 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    IF (frags_added > 1) THEN
          r_circle = (RHSCALE * rhill_keep + RHSCALE * rhill_rm) / (2.0_DP * sin(PI / frags_added))
          theta = (2.0_DP * PI) / (frags_added)
+         ALLOCATE(m_frag(frags_added))
+         m_frag(1:frags_added) = mergeadd_list%mass(nstart + 1 :nstart + 1 + frags_added)
+
+         ALLOCATE(x_frag(NDIM, frags_added))
+         ALLOCATE(v_frag(NDIM, frags_added))
+         CALL util_mom(0.0_DP, [(0.0_DP,i=1,3)], [(0.0_DP,i=1,3)], m2, x2, v2, & 
+            frags_added, nstart, m_frag, r_circle, theta, x_frag, v_frag)
+
          DO i=1, frags_added
-            ! Increment around the circle for positions of fragments
-            x_frag = (r_circle * cos(theta * i))*l(1) + (r_circle * sin(theta * i))*p(1) + xh_rm(1) !x_com
-            y_frag = (r_circle * cos(theta * i))*l(2) + (r_circle * sin(theta * i))*p(2) + xh_rm(2) !y_com
-            z_frag = (r_circle * cos(theta * i))*l(3) + (r_circle * sin(theta * i))*p(3) + xh_rm(3) !z_com
 
-            !vx_frag = ((1.0_DP / frags_added) * (1.0_DP / mergeadd_list%mass(nstart + i)) * ((m2 * v2(1)))) !- vbs(1)
-            !vy_frag = ((1.0_DP / frags_added) * (1.0_DP / mergeadd_list%mass(nstart + i)) * ((m2 * v2(2)))) !- vbs(2)
-            !vz_frag = ((1.0_DP / frags_added) * (1.0_DP / mergeadd_list%mass(nstart + i)) * ((m2 * v2(3)))) !- vbs(3)
+            mergeadd_list%xh(1,nstart + i) = x_frag(1, i) !x_frag
+            mergeadd_list%xh(2,nstart + i) = x_frag(2, i)!y_frag
+            mergeadd_list%xh(3,nstart + i) = x_frag(3, i)!z_frag                                                   
+            mergeadd_list%vh(1,nstart + i) = v_frag(1, i)!vx_frag
+            mergeadd_list%vh(2,nstart + i) = v_frag(2, i)!vy_frag
+            mergeadd_list%vh(3,nstart + i) = v_frag(3, i)!vz_frag
 
-            A = v_col * m2 * (1.0_DP / mergeadd_list%mass(nstart + i))
+         ! Tracking linear momentum. 
+            mv(:) = mv(:) + (mergeadd_list%mass(nstart + i) * mergeadd_list%vh(:,nstart + i))
+         END DO
 
-            vx_frag = ((A * cos(theta * i))*l(1)) + ((A * sin(theta * i))*p(1)) + vh_rm(1) !+ vx_com
-            vy_frag = ((A * cos(theta * i))*l(2)) + ((A * sin(theta * i))*p(2)) + vh_rm(2) !+ vy_com
-            vz_frag = ((A * cos(theta * i))*l(3)) + ((A * sin(theta * i))*p(3)) + vh_rm(3) !+ vz_com
-
-            ! Conservation of Angular Momentum for velocities of fragments
-            !A = ((y_rm * vz_rm * m_rm) - (z_rm * vy_rm * m_rm)) / mergeadd_list%mass(nmergeadd)
-            !B = ((z_rm * vx_rm * m_rm) - (x_rm * vz_rm * m_rm)) / mergeadd_list%mass(nmergeadd)
-            !vx_frag = ((1.0_DP / frags_added) * (B / z_frag)) - vbs(1)
-            !vy_frag = ((1.0_DP / frags_added) * (-A / z_frag)) - vbs(2)
-            !vz_frag = vz_com - vbs(3)
-
-            mergeadd_list%xh(1,nstart + i) = x_frag
-            mergeadd_list%xh(2,nstart + i) = y_frag 
-            mergeadd_list%xh(3,nstart + i) = z_frag                                                    
-            mergeadd_list%vh(1,nstart + i) = vx_frag
-            mergeadd_list%vh(2,nstart + i) = vy_frag
-            mergeadd_list%vh(3,nstart + i) = vz_frag 
-
-            ! Tracking linear momentum.                                            
-            mv = mv + (mergeadd_list%mass(nmergeadd) * mergeadd_list%vh(:,nmergeadd))
-         END DO 
    END IF
    WRITE(*, *) "Number of fragments added: ", (frags_added)
    ! Calculate energy after frag                                                                           
-   vnew(:) = mv / mtot    ! COM of new fragments                               
+   vnew(:) = mv(:) / mtot    ! COM of new fragments                               
    enew = 0.5_DP*mtot*DOT_PRODUCT(vnew(:), vnew(:))
    eoffset = eoffset + eold - enew
    ! Update fragmax to account for new fragments

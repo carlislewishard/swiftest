@@ -69,7 +69,7 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    REAL(DP), DIMENSION(:, :), ALLOCATABLE, SAVE     :: x_frag, v_frag
    !REAL(DP), DIMENSION(symba_plA%helio%swiftest%nbody)                         :: m_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE        :: m_frag
-   REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, l, kk, p
+   REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv
 
 
 ! Executable code
