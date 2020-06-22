@@ -37,7 +37,7 @@
 !  Notes       : Adapted from Hal Levison's Swift routine io_discard_mass.f and io_discard_merge.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE io_discard_write_symba(t, mtiny, npl, ntp, nsppl, nsptp, nmergeadd, symba_plA, & 
+SUBROUTINE io_discard_write_symba(t, mtiny, npl, ntp, nsppl, nsptp, nmergesub, symba_plA, & 
      discard_plA, discard_tpA, mergeadd_list, mergesub_list, fname, lbig_discard)
 
 ! Modules
@@ -48,7 +48,7 @@ SUBROUTINE io_discard_write_symba(t, mtiny, npl, ntp, nsppl, nsptp, nmergeadd, s
 
 ! Arguments
      LOGICAL(LGT), INTENT(IN)                       :: lbig_discard
-     INTEGER(I4B), INTENT(IN)                       :: npl, ntp, nsppl, nsptp, nmergeadd
+     INTEGER(I4B), INTENT(IN)                       :: npl, ntp, nsppl, nsptp, nmergesub
      REAL(DP), INTENT(IN)                           :: t, mtiny
      CHARACTER(*), INTENT(IN)                       :: fname
      TYPE(symba_pl), INTENT(INOUT)                  :: symba_plA
@@ -58,7 +58,7 @@ SUBROUTINE io_discard_write_symba(t, mtiny, npl, ntp, nsppl, nsptp, nmergeadd, s
 
 ! Internals
      INTEGER(I4B), PARAMETER   :: LUN = 40
-     INTEGER(I4B)              :: i, index, ncomp, ierr, nplm
+     INTEGER(I4B)              :: i, index, ierr, nplm, nadded
 
 ! Executable code
      CALL io_open(LUN, fname, "APPEND", "FORMATTED", ierr)
@@ -70,26 +70,32 @@ SUBROUTINE io_discard_write_symba(t, mtiny, npl, ntp, nsppl, nsptp, nmergeadd, s
                CALL util_exit(FAILURE)
           END IF
      END IF
-     WRITE(LUN, 100) t, nsppl + nsptp + 2*nmergeadd, lbig_discard 
+     WRITE(LUN, 100) t, nsppl + nsptp, lbig_discard 
  100 FORMAT(E23.16, 1X, I8, 1X, L1)
      index = 0
-     DO i = 1, nmergeadd
-          WRITE(LUN, 200) ADD, mergeadd_list%name(i), mergeadd_list%status(i)
+     DO i = 1, (nmergesub / 2)
+          WRITE(LUN, 200) SUB, mergesub_list%name(i), mergesub_list%status(i)
  200      FORMAT(A, 2(1X, I8))
-          WRITE(LUN, 300) mergeadd_list%xh(:,i)
+          WRITE(LUN, 300) mergesub_list%xh(:,i)
  300      FORMAT(3(E23.16, 1X))
-          WRITE(LUN, 300) mergeadd_list%vh(:,i)
-          ncomp = mergeadd_list%ncomp(i)
-          DO index = 1, ncomp !j=0 -> index=1
-               !index = index + 1
-               WRITE(LUN, 200) SUB, mergesub_list%name(index), mergesub_list%status(index)
-               WRITE(LUN, 300) mergesub_list%xh(:,index)
-               WRITE(LUN, 300) mergesub_list%vh(:,index)
-               WRITE(LUN, 500) mergesub_list%name(index), mergesub_list%mass(index), mergesub_list%radius(index)
+          WRITE(LUN, 300) mergesub_list%vh(:,i)
+          nadded = mergesub_list%nadded(i)
+
+          WRITE(LUN, 200) SUB, mergesub_list%name(i + 1), mergesub_list%status(i + 1)
+          WRITE(LUN, 300) mergesub_list%xh(:,i + 1)
+          WRITE(LUN, 300) mergesub_list%vh(:,i + 1)
+
+          DO index = 1, nadded
+               WRITE(LUN, 200) ADD, mergeadd_list%name(index), mergeadd_list%status(index)
+               WRITE(LUN, 300) mergeadd_list%xh(:,index)
+               WRITE(LUN, 300) mergeadd_list%vh(:,index)
+               WRITE(LUN, 500) mergeadd_list%mass(index), mergeadd_list%radius(index)
           END DO
      END DO
-     DO i = 1, nsppl
-          IF (discard_plA%status(i) /= MERGED) THEN
+
+     DO i = 1, (nsppl / 2)
+          IF ((discard_plA%status(i) /= MERGED) .AND. (discard_plA%status(i) /= HIT_AND_RUN) .AND. &
+             (discard_plA%status(i) /= DISRUPTION) .AND. (discard_plA%status(i) /= SUPERCATASTROPHIC)) THEN
                WRITE(LUN, 200) SUB, discard_plA%name(i), discard_plA%status(i)
                WRITE(LUN, 300) discard_plA%xh(1,i),discard_plA%xh(2,i), discard_plA%xh(3,i)
                WRITE(LUN, 300) discard_plA%vh(1,i),discard_plA%vh(2,i), discard_plA%vh(3,i)
@@ -113,7 +119,7 @@ SUBROUTINE io_discard_write_symba(t, mtiny, npl, ntp, nsppl, nsptp, nmergeadd, s
                DO i = 2, nplm
                     WRITE(LUN, 500) symba_plA%helio%swiftest%name(i), symba_plA%helio%swiftest%mass(i),& 
                      symba_plA%helio%swiftest%radius(i)
- 500                FORMAT(I8, 2(1X, E23.16))
+ 500                FORMAT(2(1X, E23.16))
                     WRITE(LUN, 300) symba_plA%helio%swiftest%xh(:,i)
                     WRITE(LUN, 300) symba_plA%helio%swiftest%vh(:,i)
                END DO
