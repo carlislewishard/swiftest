@@ -75,12 +75,14 @@ MODULE module_symba
      end type symba_pltpenc
 
      type symba_merger
-          integer(I4B), dimension(:),     allocatable :: name   ! external identifier
-          integer(I4B), dimension(:),     allocatable :: index_ps   ! position of the particle
-          integer(I4B), dimension(:),     allocatable :: status ! status
-          integer(I4B), dimension(:),     allocatable :: ncomp  ! number of component bodies in this one during this merger
-          real(DP),     dimension(:,:),   allocatable :: xh     ! heliocentric position
-          real(DP),     dimension(:,:),   allocatable :: vh     ! heliocentric velocity
+          integer(I4B), dimension(:),     allocatable :: name     ! external identifier
+          integer(I4B), dimension(:),     allocatable :: index_ps ! position of the particle
+          integer(I4B), dimension(:),     allocatable :: status   ! status
+          integer(I4B), dimension(:),     allocatable :: ncomp    ! number of component bodies in this body aka number of parents
+          integer(I4B), dimension(:),     allocatable :: nadded   ! number of resultant bodies from this collisional event aka 
+                                                                  !        number of fragments
+          real(DP),     dimension(:,:),   allocatable :: xh       ! heliocentric position
+          real(DP),     dimension(:,:),   allocatable :: vh       ! heliocentric velocity
           real(DP),     dimension(:),     allocatable :: mass 
           real(DP),     dimension(:),     allocatable :: radius 
      end type symba_merger 
