@@ -72,17 +72,24 @@ contains
       end do
    case (XV)
       do i = 2, swiftest_plA%nbody
-         xtmp(:) = swiftest_plA%xh(:,i)
-         vtmp(:) = swiftest_plA%vh(:,i)
-         j = swiftest_plA%name(i)
-         call io_write_line(iu, j, xtmp(1), xtmp(2), xtmp(3), vtmp(1), vtmp(2), vtmp(3), out_type,                     &
-         mass = swiftest_plA%mass(i), radius = swiftest_plA%radius(i))
+         write(LUN) swiftest_pla%name(:)
+         write(LUN) swiftest_pla%xh(1,:)
+         write(LUN) swiftest_pla%xh(2,:)
+         write(LUN) swiftest_pla%xh(3,:)
+         write(LUN) swiftest_pla%vh(1,:)
+         write(LUN) swiftest_pla%vh(2,:)
+         write(LUN) swiftest_pla%vh(3,:)
+         write(LUN) swiftest_pla%mass(:)
+         write(LUN) swiftest_pla%radius(:) 
       end do
       do i = 1, swiftest_tpA%nbody
-         xtmp(:) = swiftest_tpA%xh(:,i)
-         vtmp(:) = swiftest_tpA%vh(:,i)
-         j = swiftest_tpA%name(i)
-         call io_write_line(iu, j, xtmp(1), xtmp(2), xtmp(3), vtmp(1), vtmp(2), vtmp(3), out_type)
+         write(LUN) swiftest_tpa%name(:)  
+         write(LUN) swiftest_tpa%xh(1,:)
+         write(LUN) swiftest_tpa%xh(2,:)
+         write(LUN) swiftest_tpa%xh(3,:)
+         write(LUN) swiftest_tpa%vh(1,:)
+         write(LUN) swiftest_tpa%vh(2,:)
+         write(LUN) swiftest_tpa%vh(3,:)
       end do
    end select
 
