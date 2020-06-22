@@ -168,12 +168,6 @@ program swiftest_symba
       call symba_step(t, dt, param,npl,ntp,symba_plA, symba_tpA,nplplenc, npltpenc,&
             plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
             eoffset, fragmax)
-      iloop = iloop + 1
-      if (iloop == loopmax) then
-          tbase = tbase + iloop*dt
-          iloop = 0
-      end if
-      t = tbase + iloop*dt
       ldiscard = .false. 
       ldiscard_tp = .false.
       lfrag_add = .false.
@@ -186,7 +180,7 @@ program swiftest_symba
          call symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
             discard_tpA,param)
          if ((ldiscard .eqv. .true.) .or. (ldiscard_tp .eqv. .true.)) then
-            call io_discard_write_symba(t, mtiny, npl, ntp, nsppl, nsptp, nmergeadd, symba_plA, &
+            call io_discard_write_symba(t, mtiny, npl, ntp, nsppl, nsptp, nmergesub, symba_plA, &
                discard_plA, discard_tpA, mergeadd_list, mergesub_list, discard_file, param%lbig_discard) 
             nmergeadd = 0
             nmergesub = 0
@@ -198,9 +192,17 @@ program swiftest_symba
             write(egyiu,300) t, ke, pe, te, htot
             Ltot_now = NORM2(htot)
             Lerror = (Ltot_now - Ltot_orig) / Ltot_orig
-            Write(*,*) "DL/L = ", Lerror
+            !Write(*,*) "DL/L = ", Lerror
          end if
       end if
+
+      iloop = iloop + 1
+      if (iloop == loopmax) then
+          tbase = tbase + iloop*dt
+          iloop = 0
+      end if
+      t = tbase + iloop*dt
+
       if (istep_out > 0) then
          iout = iout - 1
          if (iout == 0) then
@@ -211,7 +213,7 @@ program swiftest_symba
                write(egyiu,300) t, ke, pe, te, htot
                Ltot_now = NORM2(htot)
                Lerror = (Ltot_now - Ltot_orig) / Ltot_orig
-               Write(*,*) "DL/L = ", Lerror
+               !Write(*,*) "DL/L = ", Lerror
             end if
          end if
       end if
