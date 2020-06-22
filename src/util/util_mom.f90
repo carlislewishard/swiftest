@@ -110,13 +110,9 @@ SUBROUTINE util_mom(m1, xb1, vb1, m2, xb2, vb2, frags_added, nstart, m_frag, r_c
           WRITE(*,*) "p_fragz = ", p_frag(3,i)
 
           p_frag_check = - (B * cos(theta * i)) + p_frag_check
-          WRITE(*,*) "pfragcheck(i)", - (r_circle * cos(theta * i)) 
           vel_frag(1,i) = (((A * cos(theta * i))*l(1)) + ((A * sin(theta * i))*p(1)))  + vx_com
           vel_frag(2,i) = (((A * cos(theta * i))*l(2)) + ((A * sin(theta * i))*p(2)))  + vy_com
           vel_frag(3,i) = (((A * cos(theta * i))*l(3)) + ((A * sin(theta * i))*p(3)))  + vz_com
-          WRITE(*,*) "vel_fragx = ", vel_frag(1,i)
-          WRITE(*,*) "vel_fragy = ", vel_frag(2,i)
-          WRITE(*,*) "vel_fragz = ", vel_frag(3,i)
           v_frag_check = (A * cos(theta * i)) + v_frag_check
           WRITE(*,*) "vfragcheck(i)", A* cos(theta * i)
           mx_frag = (p_frag(1,i) * m_frag(i)) + mx_frag

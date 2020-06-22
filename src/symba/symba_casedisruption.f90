@@ -69,7 +69,7 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    REAL(DP), DIMENSION(:, :), ALLOCATABLE, SAVE     :: x_frag, v_frag
    !REAL(DP), DIMENSION(symba_plA%helio%swiftest%nbody)                         :: m_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE        :: m_frag
-   REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xbs
+   REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xbs, xbscrossvbs
 
 
 ! Executable code
@@ -272,28 +272,31 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
 
       ! Calculate the positions of the new fragments in a circle with a radius large enough to space
       ! all fragments apart by a distance of rhill_p1 + rhill_p2
-   r_circle = (rhill_p1 + rhill_p2) / (2.0_DP * sin(PI / frags_added)) !((2.0_DP * rhill_p1 + 2.0_DP * rhill_p2) / (2.0_DP * sin(PI / frags_added))) 
+   r_circle = (rhill_p1 + rhill_p2) / (sin(PI / frags_added)) !((2.0_DP * rhill_p1 + 2.0_DP * rhill_p2) / (2.0_DP * sin(PI / frags_added))) 
    theta = (2.0_DP * PI) / frags_added
+   WRITE(*,*) "theta = ", theta
+
+   CALL util_crossproduct(xbs, vbs, xbscrossvbs)
 
    ALLOCATE(m_frag(frags_added))
    m_frag(1:frags_added) = mergeadd_list%mass(nstart + 1 :nstart + 1 + frags_added)
 
    ALLOCATE(x_frag(NDIM, frags_added))
    ALLOCATE(v_frag(NDIM, frags_added))
-   WRITE(*,*) "xbs = ", xbs
-   WRITE(*,*) "vbs = ", vbs
-   WRITE(*,*) "norm(xbs) = ", NORM2(xbs)
-   WRITE(*,*) "norm(vbs) = ", NORM2(vbs)
+   print("xbs = ", xbs)
+   print("vbs = ", vbs)
+   print("norm(xbs) = ", NORM2(xbs))
+   print("norm(vbs) = ", NORM2(vbs))
    CALL util_mom(m1, x1+xbs, v1, m2, x2+xbs, v2, frags_added, nstart, m_frag, r_circle, theta, x_frag, v_frag)
 
    DO i=1, frags_added
 
-      mergeadd_list%xh(1,nstart + i) = x_frag(1, i) !x_frag
-      mergeadd_list%xh(2,nstart + i) = x_frag(2, i)!y_frag
-      mergeadd_list%xh(3,nstart + i) = x_frag(3, i)!z_frag                                                   
-      mergeadd_list%vh(1,nstart + i) = v_frag(1, i)!vx_frag
-      mergeadd_list%vh(2,nstart + i) = v_frag(2, i)!vy_frag
-      mergeadd_list%vh(3,nstart + i) = v_frag(3, i)!vz_frag
+      mergeadd_list%xh(1,nstart + i) = x_frag(1, i) - xbs(1)!x_frag
+      mergeadd_list%xh(2,nstart + i) = x_frag(2, i) - xbs(2)!y_frag
+      mergeadd_list%xh(3,nstart + i) = x_frag(3, i) - xbs(3)!z_frag                                                   
+      mergeadd_list%vh(1,nstart + i) = v_frag(1, i) - vbs(1)!vx_frag
+      mergeadd_list%vh(2,nstart + i) = v_frag(2, i) - vbs(2)!vy_frag
+      mergeadd_list%vh(3,nstart + i) = v_frag(3, i) - vbs(3)!vz_frag
 
          ! Tracking linear momentum. 
       mv(:) = mv(:) + (mergeadd_list%mass(nstart + i) * mergeadd_list%vh(:,nstart + i))
