@@ -139,22 +139,6 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    WRITE(*, *) "Hit and run between particles ", name1, " and ", name2, " at time t = ",t
    WRITE(*, *) "Particle ", name_keep, " survives; Particle ", name_rm, " is fragmented."
 
-   ! Add both particles involved in the collision to mergesub_list
-   nmergesub = nmergesub + 1
-   mergesub_list%name(nmergesub) = name1
-   mergesub_list%status(nmergesub) = HIT_AND_RUN 
-   mergesub_list%xh(:,nmergesub) = x1(:)
-   mergesub_list%vh(:,nmergesub) = v1(:) - vbs(:)
-   mergesub_list%mass(nmergesub) = mass1
-   mergesub_list%radius(nmergesub) = rad1
-   nmergesub = nmergesub + 1
-   mergesub_list%name(nmergesub) = name2
-   mergesub_list%status(nmergesub) = HIT_AND_RUN
-   mergesub_list%xh(:,nmergesub) = x2(:)
-   mergesub_list%vh(:,nmergesub) = v2(:) - vbs(:)
-   mergesub_list%mass(nmergesub) = mass2
-   mergesub_list%radius(nmergesub) = rad2
-
    ! Go through the encounter list and look for particles actively encoutering in this timestep
    ! Prevent them from having further encounters in this timestep by setting status in plplenc_list to MERGED
    DO k = 1, nplplenc 
@@ -287,6 +271,24 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
          deallocate(x_frag)
          deallocate(v_frag)
    END IF
+
+   ! Add both particles involved in the collision to mergesub_list
+   nmergesub = nmergesub + 1
+   mergesub_list%name(nmergesub) = name1
+   mergesub_list%status(nmergesub) = HIT_AND_RUN 
+   mergesub_list%xh(:,nmergesub) = x1(:)
+   mergesub_list%vh(:,nmergesub) = v1(:) - vbs(:)
+   mergesub_list%mass(nmergesub) = mass1
+   mergesub_list%radius(nmergesub) = rad1
+   mergesub_list%nadded(nmergesub) = frags_added
+   nmergesub = nmergesub + 1
+   mergesub_list%name(nmergesub) = name2
+   mergesub_list%status(nmergesub) = HIT_AND_RUN
+   mergesub_list%xh(:,nmergesub) = x2(:)
+   mergesub_list%vh(:,nmergesub) = v2(:) - vbs(:)
+   mergesub_list%mass(nmergesub) = mass2
+   mergesub_list%radius(nmergesub) = rad2
+   mergesub_list%nadded(nmergesub) = frags_added
 
    WRITE(*, *) "Number of fragments added: ", (frags_added)
    ! Calculate energy after frag                                                                           
