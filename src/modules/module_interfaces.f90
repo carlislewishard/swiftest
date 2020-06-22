@@ -448,14 +448,14 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE io_discard_write_symba(t, mtiny, npl, ntp, nsppl, nsptp, nmergeadd, symba_plA, & 
+          SUBROUTINE io_discard_write_symba(t, mtiny, npl, ntp, nsppl, nsptp, nmergesub, symba_plA, & 
                discard_plA, discard_tpA, mergeadd_list, mergesub_list, fname, lbig_discard)
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_symba
                IMPLICIT NONE
                LOGICAL(LGT), INTENT(IN)                       :: lbig_discard
-               INTEGER(I4B), INTENT(IN)                       :: npl, ntp, nsppl, nsptp, nmergeadd
+               INTEGER(I4B), INTENT(IN)                       :: npl, ntp, nsppl, nsptp, nmergesub
                REAL(DP), INTENT(IN)                           :: t, mtiny
                CHARACTER(*), INTENT(IN)                       :: fname
                TYPE(symba_pl), INTENT(INOUT)                  :: symba_plA
