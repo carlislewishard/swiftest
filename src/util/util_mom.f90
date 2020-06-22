@@ -59,7 +59,7 @@ SUBROUTINE util_mom(m1, xb1, vb1, m2, xb2, vb2, frags_added, nstart, m_frag, r_c
      call util_crossproduct(xb1,vb1,xbvb1)
      call util_crossproduct(xb2,vb2,xbvb2)
      angmom_before = (m1*xbvb1+m2*xbvb2)
-     WRITE(*,*) "angmom_before =", NORM2(angmom_before)
+     !WRITE(*,*) "angmom_before =", NORM2(angmom_before)
         ! Find COM
    x_com = ((xb1(1) * m1) + (xb2(1) * m2)) / (m1 + m2)
    y_com = ((xb1(2) * m1) + (xb2(2) * m2)) / (m1 + m2)
@@ -104,17 +104,17 @@ SUBROUTINE util_mom(m1, xb1, vb1, m2, xb2, vb2, frags_added, nstart, m_frag, r_c
           p_frag(1,i) = (- B  * cos(theta * i))*l(1) + (- B  * sin(theta * i))*p(1) + x_com
           p_frag(2,i) = (- B  * cos(theta * i))*l(2) + (- B  * sin(theta * i))*p(2) + y_com
           p_frag(3,i) = (- B  * cos(theta * i))*l(3) + (- B  * sin(theta * i))*p(3) + z_com
-          WRITE(*,*) "**** fragment number = ", i, " ****"
-          WRITE(*,*) "p_fragx = ", p_frag(1,i)
-          WRITE(*,*) "p_fragy = ", p_frag(2,i)
-          WRITE(*,*) "p_fragz = ", p_frag(3,i)
+          !WRITE(*,*) "**** fragment number = ", i, " ****"
+          !WRITE(*,*) "p_fragx = ", p_frag(1,i)
+          !WRITE(*,*) "p_fragy = ", p_frag(2,i)
+          !WRITE(*,*) "p_fragz = ", p_frag(3,i)
 
           p_frag_check = - (B * cos(theta * i)) + p_frag_check
           vel_frag(1,i) = (((A * cos(theta * i))*l(1)) + ((A * sin(theta * i))*p(1)))  + vx_com
           vel_frag(2,i) = (((A * cos(theta * i))*l(2)) + ((A * sin(theta * i))*p(2)))  + vy_com
           vel_frag(3,i) = (((A * cos(theta * i))*l(3)) + ((A * sin(theta * i))*p(3)))  + vz_com
           v_frag_check = (A * cos(theta * i)) + v_frag_check
-          WRITE(*,*) "vfragcheck(i)", A* cos(theta * i)
+          !WRITE(*,*) "vfragcheck(i)", A* cos(theta * i)
           mx_frag = (p_frag(1,i) * m_frag(i)) + mx_frag
           my_frag = (p_frag(2,i) * m_frag(i)) + my_frag
           mz_frag = (p_frag(3,i) * m_frag(i)) + mz_frag
@@ -184,20 +184,20 @@ SUBROUTINE util_mom(m1, xb1, vb1, m2, xb2, vb2, frags_added, nstart, m_frag, r_c
      vz_com_frag = mvz_frag / SUM(m_frag(:))
      angmom_after = NORM2(angmom_com_frag)
      DL = (angmom_after - NORM2(angmom_before))/ NORM2(angmom_before)
-     WRITE(*,*) "util_mom DL/L = ", DL 
+     !WRITE(*,*) "util_mom DL/L = ", DL 
      !WRITE(*,*) "util_mom l(1) :", l(1)
      !WRITE(*,*) "util_mom p(1) :", p(1)
-     WRITE(*,*) "util_mom p_frag_check :", p_frag_check
-     WRITE(*,*) "util_mom v_frag_check :", v_frag_check
+     !WRITE(*,*) "util_mom p_frag_check :", p_frag_check
+     !WRITE(*,*) "util_mom v_frag_check :", v_frag_check
 
      !WRITE(*,*) "util_mom linmom_after: ", NORM2(veclinmom_after)
-     WRITE(*,*) "util_mom linmom_diff: ", (NORM2(veclinmom_after) - linmom_before) / linmom_before
-     WRITE(*,*) "util_mom x position com diff", (x_com - x_com_frag)
-     WRITE(*,*) "util_mom y position com diff", (y_com - y_com_frag)
-     WRITE(*,*) "util_mom z position com diff", (z_com - z_com_frag)
-     WRITE(*,*) "util_mom x velocity com diff", (vx_com - vx_com_frag)
-     WRITE(*,*) "util_mom y velocity com diff", (vy_com - vy_com_frag)
-     WRITE(*,*) "util_mom z velocity com diff", (vz_com - vz_com_frag)
+     !WRITE(*,*) "util_mom linmom_diff: ", (NORM2(veclinmom_after) - linmom_before) / linmom_before
+     !WRITE(*,*) "util_mom x position com diff", (x_com - x_com_frag)
+     !WRITE(*,*) "util_mom y position com diff", (y_com - y_com_frag)
+     !WRITE(*,*) "util_mom z position com diff", (z_com - z_com_frag)
+     !WRITE(*,*) "util_mom x velocity com diff", (vx_com - vx_com_frag)
+     !WRITE(*,*) "util_mom y velocity com diff", (vy_com - vy_com_frag)
+     !WRITE(*,*) "util_mom z velocity com diff", (vz_com - vz_com_frag)
 
    RETURN
 
