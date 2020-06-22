@@ -101,6 +101,7 @@ module module_swiftestalloc
       allocate(mergeadd_list%index_ps(nmergeadd))
       allocate(mergeadd_list%status(nmergeadd))
       allocate(mergeadd_list%ncomp(nmergeadd))
+      allocate(mergeadd_list%nadded(nmergeadd))
       allocate(mergeadd_list%xh(NDIM,nmergeadd))
       allocate(mergeadd_list%vh(NDIM,nmergeadd))
       allocate(mergeadd_list%mass(nmergeadd))
@@ -110,6 +111,7 @@ module module_swiftestalloc
       mergeadd_list%index_ps = 1
       mergeadd_list%status = 0
       mergeadd_list%ncomp = 0
+      mergeadd_list%nadded = 0
       mergeadd_list%xh = 0.0_DP
       mergeadd_list%vh = 0.0_DP
       mergeadd_list%mass = 0.0_DP
@@ -183,9 +185,6 @@ module module_swiftestalloc
 !___________________________
 
 
-
-
-
    subroutine helio_pl_deallocate(helio_plA)
       use module_helio
       implicit none
@@ -246,6 +245,7 @@ module module_swiftestalloc
       deallocate(mergeadd_list%index_ps)
       deallocate(mergeadd_list%status)
       deallocate(mergeadd_list%ncomp)
+      deallocate(mergeadd_list%nadded)
       deallocate(mergeadd_list%xh)
       deallocate(mergeadd_list%vh)
       deallocate(mergeadd_list%mass)
