@@ -107,22 +107,6 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    eold = eold - (m1*m2/(SQRT(DOT_PRODUCT(xr(:), xr(:)))))
    
    WRITE(*, *) "Disruption between particles ", name1, " and ", name2, " at time t = ",t
-     
-   ! Add both particles involved in the collision to mergesub_list
-   nmergesub = nmergesub + 1
-   mergesub_list%name(nmergesub) = name1
-   mergesub_list%status(nmergesub) = DISRUPTION
-   mergesub_list%xh(:,nmergesub) = x1(:)
-   mergesub_list%vh(:,nmergesub) = v1(:) - vbs(:)
-   mergesub_list%mass(nmergesub) = mass1
-   mergesub_list%radius(nmergesub) = radius1
-   nmergesub = nmergesub + 1
-   mergesub_list%name(nmergesub) = name2
-   mergesub_list%status(nmergesub) = DISRUPTION
-   mergesub_list%xh(:,nmergesub) = x2(:)
-   mergesub_list%vh(:,nmergesub) = v2(:) - vbs(:)
-   mergesub_list%mass(nmergesub) = mass2
-   mergesub_list%radius(nmergesub) = radius2
 
    ! Go through the encounter list and look for particles actively encoutering in this timestep
    ! Prevent them from having further encounters in this timestep by setting status in plplenc_list to MERGED
@@ -274,7 +258,6 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
       ! all fragments apart by a distance of rhill_p1 + rhill_p2
    r_circle = (rhill_p1 + rhill_p2) / (sin(PI / frags_added)) !((2.0_DP * rhill_p1 + 2.0_DP * rhill_p2) / (2.0_DP * sin(PI / frags_added))) 
    theta = (2.0_DP * PI) / frags_added
-   WRITE(*,*) "theta = ", theta
 
    CALL util_crossproduct(xbs, vbs, xbscrossvbs)
 
@@ -283,10 +266,7 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
 
    ALLOCATE(x_frag(NDIM, frags_added))
    ALLOCATE(v_frag(NDIM, frags_added))
-   print("xbs = ", xbs)
-   print("vbs = ", vbs)
-   print("norm(xbs) = ", NORM2(xbs))
-   print("norm(vbs) = ", NORM2(vbs))
+
    CALL util_mom(m1, x1+xbs, v1, m2, x2+xbs, v2, frags_added, nstart, m_frag, r_circle, theta, x_frag, v_frag)
 
    DO i=1, frags_added
@@ -304,6 +284,26 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    deallocate(m_frag)
    deallocate(x_frag)
    deallocate(v_frag)
+
+
+   ! Add both particles involved in the collision to mergesub_list
+   nmergesub = nmergesub + 1
+   mergesub_list%name(nmergesub) = name1
+   mergesub_list%status(nmergesub) = DISRUPTION
+   mergesub_list%xh(:,nmergesub) = x1(:)
+   mergesub_list%vh(:,nmergesub) = v1(:) - vbs(:)
+   mergesub_list%mass(nmergesub) = mass1
+   mergesub_list%radius(nmergesub) = radius1
+   mergesub_list%nadded(nmergesub) = frags_added
+   nmergesub = nmergesub + 1
+   mergesub_list%name(nmergesub) = name2
+   mergesub_list%status(nmergesub) = DISRUPTION
+   mergesub_list%xh(:,nmergesub) = x2(:)
+   mergesub_list%vh(:,nmergesub) = v2(:) - vbs(:)
+   mergesub_list%mass(nmergesub) = mass2
+   mergesub_list%radius(nmergesub) = radius2
+   mergesub_list%nadded(nmergesub) = frags_added
+
    WRITE(*, *) "Number of fragments added: ", frags_added
    ! Calculate energy after frag                                                                           
    vnew(:) = mv(:) / mtot    ! COM of new fragments                               
