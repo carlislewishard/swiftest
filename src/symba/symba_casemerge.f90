@@ -47,8 +47,8 @@ SUBROUTINE symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
      INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub
      REAL(DP), INTENT(IN)                             :: t
      REAL(DP), INTENT(INOUT)                          :: eoffset, m1, m2, rad1, rad2
-     REAL(DP), DIMENSION(:), INTENT(IN)            :: vbs
-     REAL(DP), DIMENSION(:), INTENT(INOUT)         :: x1, x2, v1, v2
+     REAL(DP), DIMENSION(:), INTENT(IN)               :: vbs
+     REAL(DP), DIMENSION(:), INTENT(INOUT)            :: x1, x2, v1, v2
      TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
      TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
      TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
@@ -70,30 +70,19 @@ SUBROUTINE symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
    index2 = plplenc_list%index2(index_enc)
    index1_parent = symba_plA%index_parent(index1)
    index2_parent = symba_plA%index_parent(index2)
-   mtot = m1 + m2
-   xnew(:) = (m1*x1(:) + m2*x2(:))/mtot
-   vnew(:) = (m1*v1(:) + m2*v2(:))/mtot
    name1 = symba_plA%helio%swiftest%name(index1)
    name2 = symba_plA%helio%swiftest%name(index2)
    mass1 = symba_plA%helio%swiftest%mass(index1)
    mass2 = symba_plA%helio%swiftest%mass(index2)
    stat1 = symba_plA%helio%swiftest%status(index1)
    stat2 = symba_plA%helio%swiftest%status(index2)
+
+   mtot = m1 + m2
+   xnew(:) = (m1*x1(:) + m2*x2(:))/mtot
+   vnew(:) = (m1*v1(:) + m2*v2(:))/mtot
    
    WRITE(*, *) "Merging particles ", name1, " and ", name2, " at time t = ",t
 
-   IF (m2 > m1) THEN
-      mergeadd_list%name(nmergeadd) = name2
-      mergeadd_list%status(nmergeadd) = stat2
-
-   ELSE
-      mergeadd_list%name(nmergeadd) = name1
-      mergeadd_list%status(nmergeadd) = stat1
-   END IF
-
-   mergeadd_list%ncomp(nmergeadd) = 2
-   mergeadd_list%xh(:,nmergeadd) = xnew(:)
-   mergeadd_list%vh(:,nmergeadd) = vnew(:) - vbs(:)
    eold = 0.5_DP*(m1*DOT_PRODUCT(v1(:), v1(:)) + m2*DOT_PRODUCT(v2(:), v2(:)))
    xr(:) = x2(:) - x1(:)
    eold = eold - m1*m2/SQRT(DOT_PRODUCT(xr(:), xr(:)))
@@ -159,7 +148,6 @@ SUBROUTINE symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
    ! updates the number of children of the kept parent
    symba_plA%nchild(index1_parent) = symba_plA%nchild(index1_parent) + symba_plA%nchild(index2_parent) + 1
 
-
    nmergesub = nmergesub + 1
    mergesub_list%name(nmergesub) = name1
    mergesub_list%status(nmergesub) = MERGED
@@ -176,7 +164,20 @@ SUBROUTINE symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
    mergesub_list%mass(nmergesub) = mass2
    mergesub_list%radius(nmergesub) = rad2
    mergesub_list%nadded(nmergesub) = 1
+
    nmergeadd = nmergeadd + 1
+   IF (m2 > m1) THEN
+      mergeadd_list%name(nmergeadd) = name2
+      mergeadd_list%status(nmergeadd) = stat2
+   ELSE
+      mergeadd_list%name(nmergeadd) = name1
+      mergeadd_list%status(nmergeadd) = stat1
+   END IF
+   mergeadd_list%ncomp = 2
+   mergeadd_list%xh(:,nmergeadd) = xnew(:)
+   mergeadd_list%vh(:,nmergeadd) = vnew(:) - vbs(:)
+   mergeadd_list%mass(nmergeadd) = mtot
+   mergeadd_list%radius(nmergeadd) = (rad1**3.0_DP + rad2**3.0_DP)**(1.0_DP/3.0_DP)
 
    RETURN 
 END SUBROUTINE symba_casemerge
