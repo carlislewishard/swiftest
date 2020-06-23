@@ -120,7 +120,7 @@ SUBROUTINE io_discard_write_symba(t, mtiny, npl, ntp, nsppl, nsptp, nmergesub, s
                     WRITE(LUN, 600) symba_plA%helio%swiftest%name(i), symba_plA%helio%swiftest%mass(i),& 
                      symba_plA%helio%swiftest%radius(i)
  500                FORMAT(2(1X, E23.16))
- 500                FORMAT(I8, 2(1X, E23.16))
+ 600                FORMAT(I8, 2(1X, E23.16))
                     WRITE(LUN, 300) symba_plA%helio%swiftest%xh(:,i)
                     WRITE(LUN, 300) symba_plA%helio%swiftest%vh(:,i)
                END DO
