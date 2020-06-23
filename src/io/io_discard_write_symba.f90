@@ -99,7 +99,7 @@ SUBROUTINE io_discard_write_symba(t, mtiny, npl, ntp, nsppl, nsptp, nmergesub, s
                WRITE(LUN, 200) SUB, discard_plA%name(i), discard_plA%status(i)
                WRITE(LUN, 300) discard_plA%xh(1,i),discard_plA%xh(2,i), discard_plA%xh(3,i)
                WRITE(LUN, 300) discard_plA%vh(1,i),discard_plA%vh(2,i), discard_plA%vh(3,i)
-               WRITE(LUN, 500) discard_plA%name(i),discard_plA%mass(i), discard_plA%radius(i)
+               WRITE(LUN, 500) discard_plA%mass(i), discard_plA%radius(i)
           END IF
      END DO
      DO i = 1, nsptp
