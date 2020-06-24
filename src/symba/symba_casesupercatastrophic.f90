@@ -176,7 +176,7 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
             mergeadd_list%name(nmergeadd) = nplmax + ntpmax + fragmax + i
             mergeadd_list%status(nmergeadd) = SUPERCATASTROPHIC
             mergeadd_list%ncomp(nmergeadd) = 2
-            mergeadd_list%mass(nmergeadd) = (m1 + m2 - mres(1)) / (nfrag - 1.0_DP)
+            mergeadd_list%mass(nmergeadd) = (m1 + m2 - mres(1)) / (nfrag - 1)
             mergeadd_list%radius(nmergeadd) = ((3.0_DP * mergeadd_list%mass(nmergeadd)) / (4.0_DP * PI * avg_d))  & 
                   ** (1.0_DP / 3.0_DP)  
             mtot = mtot + mergeadd_list%mass(nmergeadd)
