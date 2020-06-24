@@ -24,7 +24,7 @@
 !                Vetterling, and Flannery, 2nd ed., pp. 1173-4
 !
 !**********************************************************************************************************************************
-SUBROUTINE util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vh1, vh2, den1, den2, regime, Mlr, Mslr)
+SUBROUTINE util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vh1, vh2, den1, den2, regime, Mlr, Mslr, mtiny)
 
 ! Modules
      USE swiftest
@@ -37,8 +37,8 @@ SUBROUTINE util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vh1, vh2, den1, de
 
 ! Arguments
      INTEGER(I4B), INTENT(OUT)                 :: regime
-     REAL(DP), INTENT(OUT)                     :: Mlr, Mslr 
-     REAL(DP), INTENT(IN)                      :: Mcenter, m1, m2, rad1, rad2, den1, den2  
+     REAL(DP), INTENT(OUT)                     :: Mlr, Mslr
+     REAL(DP), INTENT(IN)                      :: Mcenter, m1, m2, rad1, rad2, den1, den2, mtiny 
      REAL(DP), DIMENSION(NDIM), INTENT(IN)     :: xh1, xh2, vh1, vh2
 
 ! Internals
@@ -113,39 +113,48 @@ SUBROUTINE util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vh1, vh2, den1, de
       vcr = vescp * (c1 * fgamma * theta ** c5 + c2 * fgamma + c3 * theta ** c5 + c4)
       bcrit = rad1/(rad1+rad2)
 
-      IF( vimp < vescp) THEN
+      IF (m1+m2 < MTINY) THEN 
         regime = COLLRESOLVE_REGIME_MERGE !perfect merging regime
-         Mlr = mtot
-         Mslr = 0.0_DP
-      ELSE IF (vimp < verosion) THEN 
-        IF (b<bcrit) THEN
-          regime = COLLRESOLVE_REGIME_MERGE !partial accretion regime"
-           Mlr = mtot
-           Mslr = 0.0_DP
-        ELSE IF ((b>bcrit) .AND. (vimp < vcr)) THEN
-          regime = COLLRESOLVE_REGIME_MERGE ! graze and merge
-           Mlr = mtot
-           Mslr = 0.0_DP
-        ELSE
-           Mlr = m1
-           Mslr = calc_QRD_rev(m2,m1,mint,den1,den2,vimp)
-           regime = COLLRESOLVE_REGIME_HIT_AND_RUN !hit and run
-        END IF 
-      ELSE IF (vimp > verosion .AND. vimp < vsupercat) THEN
-        IF ((m2 < 0.001_DP * m1)) THEN 
-          regime = COLLRESOLVE_REGIME_MERGE !cratering regime"
-           Mlr = mtot
-           Mslr = 0.0_DP
-        ELSE 
-           Mslr = (mtot * ((3.0_DP - beta) * (1.0_DP - (N1 * Mlr / mtot)))) / (N2 * beta)  ! (Eq 37)
-           regime = COLLRESOLVE_REGIME_DISRUPTION !disruption
-        END IF 
-      ELSE IF (vimp > vsupercat) THEN 
-         Mlr = mtot * (0.1_DP * ((QR / (QRD_pstar * 1.8_DP)) ** (-1.5_DP)))     !Eq (44)
-         Mslr = (mtot * ((3.0_DP - beta) * (1.0_DP - (N1 * Mlr / mtot)))) / (N2 * beta)  ! (Eq 37)
-        regime = COLLRESOLVE_REGIME_SUPERCATASTROPHIC ! supercatastrophic
+        Mlr = mtot
+        Mslr = 0.0_DP
+      
+
       ELSE 
-        WRITE(*,*) "Error no regime found in util_regime"
+
+        IF( vimp < vescp) THEN
+          regime = COLLRESOLVE_REGIME_MERGE !perfect merging regime
+          Mlr = mtot
+          Mslr = 0.0_DP
+        ELSE IF (vimp < verosion) THEN 
+          IF (b<bcrit) THEN
+            regime = COLLRESOLVE_REGIME_MERGE !partial accretion regime"
+             Mlr = mtot
+            Mslr = 0.0_DP
+          ELSE IF ((b>bcrit) .AND. (vimp < vcr)) THEN
+            regime = COLLRESOLVE_REGIME_MERGE ! graze and merge
+            Mlr = mtot
+            Mslr = 0.0_DP
+          ELSE
+            Mlr = m1
+            Mslr = calc_QRD_rev(m2,m1,mint,den1,den2,vimp)
+            regime = COLLRESOLVE_REGIME_HIT_AND_RUN !hit and run
+          END IF 
+        ELSE IF (vimp > verosion .AND. vimp < vsupercat) THEN
+          IF ((m2 < 0.001_DP * m1)) THEN 
+            regime = COLLRESOLVE_REGIME_MERGE !cratering regime"
+            Mlr = mtot
+            Mslr = 0.0_DP
+          ELSE 
+            Mslr = (mtot * ((3.0_DP - beta) * (1.0_DP - (N1 * Mlr / mtot)))) / (N2 * beta)  ! (Eq 37)
+            regime = COLLRESOLVE_REGIME_DISRUPTION !disruption
+          END IF 
+        ELSE IF (vimp > vsupercat) THEN 
+          Mlr = mtot * (0.1_DP * ((QR / (QRD_pstar * 1.8_DP)) ** (-1.5_DP)))     !Eq (44)
+          Mslr = (mtot * ((3.0_DP - beta) * (1.0_DP - (N1 * Mlr / mtot)))) / (N2 * beta)  ! (Eq 37)
+          regime = COLLRESOLVE_REGIME_SUPERCATASTROPHIC ! supercatastrophic
+        ELSE 
+          WRITE(*,*) "Error no regime found in util_regime"
+        END IF 
       END IF 
     RETURN 
 

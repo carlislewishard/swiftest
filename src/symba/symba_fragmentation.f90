@@ -33,7 +33,7 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-     encounter_file, out_type, npl, symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax)
+     encounter_file, out_type, npl, symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mtiny)
 
 ! Modules
      USE swiftest
@@ -47,7 +47,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
      INTEGER(I4B), INTENT(IN)                         :: npl, nplplenc
      INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub, fragmax
      REAL(DP), INTENT(IN)                             :: t, dt
-     REAL(DP), INTENT(INOUT)                          :: eoffset
+     REAL(DP), INTENT(INOUT)                          :: eoffset, mtiny
      REAL(DP), DIMENSION(NDIM), INTENT(IN)            :: vbs
      CHARACTER(*), INTENT(IN)                         :: encounter_file, out_type
      TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
@@ -77,7 +77,6 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
 
 ! Executable code
-
      lmerge = .FALSE.
      lfrag_add = .FALSE.
      ! Model 2 is the model for collresolve_resolve (LS12)
@@ -246,7 +245,8 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
           !regime = collresolve_resolve(model,mtarg,mproj,rtarg,rproj,xtarg,xproj, vtarg,vproj, nres, mres, rres, pres, vres)
 
-          CALL util_regime(Mcenter, mtarg, mproj, rtarg, rproj, xtarg, xproj, vtarg, vproj, dentarg, denproj, regime, Mlr, Mslr)
+          CALL util_regime(Mcenter, mtarg, mproj, rtarg, rproj, xtarg, xproj, vtarg, vproj, dentarg, denproj, &
+               regime, Mlr, Mslr, mtiny)
 
           mres(1) = Mlr
           mres(2) = Mslr 

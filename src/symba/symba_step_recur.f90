@@ -83,10 +83,11 @@ RECURSIVE SUBROUTINE symba_step_recur(lclose, t, ireci, npl, nplm, ntp, symba_pl
 ! Internals
      LOGICAL(LGT)              :: lencounter
      INTEGER(I4B)              :: i, j, irecp, icflg, index_i, index_j, index_pl, index_tp
-     REAL(DP)                  :: dtl, dth, sgn
+     REAL(DP)                  :: dtl, dth, sgn, mtiny
      REAL(DP), DIMENSION(NDIM) :: xr, vr, vbs
 
 ! Executable code
+     mtiny = param%mtiny
      dtl = dt0/(NTENC**ireci)
      dth = 0.5_DP*dtl
      IF (dtl/dt0 < TINY) THEN
@@ -162,7 +163,7 @@ RECURSIVE SUBROUTINE symba_step_recur(lclose, t, ireci, npl, nplm, ntp, symba_pl
                          IF (param%lfragmentation) THEN
                             CALL symba_fragmentation (t, dtl, i, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
                                         eoffset, vbs, encounter_file, out_type, npl, symba_plA, nplplenc, plplenc_list, nplmax, &
-                                        ntpmax, fragmax)
+                                        ntpmax, fragmax, mtiny)
                          ELSE
                             CALL symba_merge_pl(t, dtl, i, nplplenc, plplenc_list, nmergeadd, nmergesub, mergeadd_list, &
                               mergesub_list, eoffset, vbs, encounter_file, out_type, npl, symba_plA)
@@ -258,7 +259,7 @@ RECURSIVE SUBROUTINE symba_step_recur(lclose, t, ireci, npl, nplm, ntp, symba_pl
                               IF (param%lfragmentation) THEN
                                    CALL symba_fragmentation (t, dtl, i, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
                                         eoffset, vbs, encounter_file, out_type, npl, symba_plA, nplplenc, plplenc_list, nplmax, &
-                                        ntpmax, fragmax)
+                                        ntpmax, fragmax, mtiny)
                               ELSE
                                    CALL symba_merge_pl(t, dtl, i, nplplenc, plplenc_list, nmergeadd, nmergesub, mergeadd_list, &
                                         mergesub_list, eoffset, vbs, encounter_file, out_type, npl, symba_plA)

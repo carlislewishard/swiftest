@@ -913,7 +913,7 @@ MODULE module_interfaces
      INTERFACE
           SUBROUTINE symba_fragmentation(t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, &
                mergesub_list, eoffset, vbs, encounter_file, out_type, npl, symba_plA, nplplenc, &
-               plplenc_list, nplmax, ntpmax, fragmax)
+               plplenc_list, nplmax, ntpmax, fragmax, mtiny)
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_helio
@@ -923,7 +923,7 @@ MODULE module_interfaces
                INTEGER(I4B), INTENT(IN)                         :: npl,  nplplenc
                INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub, fragmax
                REAL(DP), INTENT(IN)                             :: t, dt
-               REAL(DP), INTENT(INOUT)                          :: eoffset
+               REAL(DP), INTENT(INOUT)                          :: eoffset, mtiny
                REAL(DP), DIMENSION(NDIM), INTENT(IN)            :: vbs
                CHARACTER(*), INTENT(IN)                         :: encounter_file, out_type
                TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
@@ -1415,7 +1415,7 @@ MODULE module_interfaces
       END INTERFACE
 
      INTERFACE
-         SUBROUTINE util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vh1, vh2, den1, den2, regime, Mlr, Mslr)
+         SUBROUTINE util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vh1, vh2, den1, den2, regime, Mlr, Mslr, mtiny)
           USE swiftest_globals
           USE module_symba
           USE swiftest_data_structures
@@ -1424,7 +1424,7 @@ MODULE module_interfaces
           USE module_swiftestalloc
          IMPLICIT NONE
           INTEGER(I4B), INTENT(OUT)                 :: regime
-          REAL(DP), INTENT(INOUT)                   :: Mcenter, Mlr, Mslr, m1, m2, rad1, rad2, den1, den2
+          REAL(DP), INTENT(INOUT)                   :: Mcenter, Mlr, Mslr, m1, m2, rad1, rad2, den1, den2, mtiny
           REAL(DP), DIMENSION(NDIM), INTENT(IN)     :: xh1, xh2, vh1, vh2
          END SUBROUTINE util_regime
      END INTERFACE
