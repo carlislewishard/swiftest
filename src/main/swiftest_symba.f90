@@ -275,7 +275,7 @@ program swiftest_symba
    end do
    call param%dump_to_file(t)
    call io_dump_pl(npl, symba_plA%helio%swiftest, param%lclose, param%lrhill_present)
-   if (ntp > 0) call io_dump_tp(ntp, symba_tpA%helio%swiftest)
+   call io_dump_tp(ntp, symba_tpA%helio%swiftest)
    if (param%lenergy) then 
       call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot)
       write(egyiu,300) t, ke, pe, te, htot
