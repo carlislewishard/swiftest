@@ -81,7 +81,6 @@ contains
          inc_tp(i) = inc 
          !call io_write_line(iu, j, a, e, inc, capom, omega, capm, out_type)
       end do
-         write(LUN) t
          write(LUN) swiftest_pla%name(2:swiftest_plA%nbody)
          write(LUN) swiftest_pla%xh(1,2:swiftest_plA%nbody)
          write(LUN) swiftest_pla%xh(2,2:swiftest_plA%nbody)
@@ -99,7 +98,6 @@ contains
           !  deallocate(a_tp, e_tp, inc_tp)
         ! end if
    case (XV)
-         write(LUN) t
          write(LUN) swiftest_pla%name(2:swiftest_plA%nbody)
          write(LUN) swiftest_pla%xh(1,2:swiftest_plA%nbody)
          write(LUN) swiftest_pla%xh(2,2:swiftest_plA%nbody)
