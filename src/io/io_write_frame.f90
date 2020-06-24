@@ -19,7 +19,7 @@ contains
    integer(I4B), save        :: iu = lun, iout_form = xv
    real(DP)                  :: a, e, inc, capom, omega, capm, mu
    real(DP), dimension(NDIM) :: xtmp, vtmp
-   real(DP), allocatable(:)  :: a_pl, e_pl, inc_pl, a_tp, e_tp, inc_tp
+   real(DP), dimension(swiftest_plA%nbody -1)  :: a_pl, e_pl, inc_pl, a_tp, e_tp, inc_tp
 
    if (lfirst) then
       select case(out_stat)
@@ -58,7 +58,7 @@ contains
    call io_write_hdr(iu, t, swiftest_plA%nbody, swiftest_tpA%nbody, iout_form, out_type)
    select case (iout_form)
    case (EL)
-      Allocate(a_pl(swiftest_plA%nbody -1), e_pl(swiftest_plA%nbody -1), inc_pl(swiftest_plA%nbody -1))
+      !Allocate(a_pl(swiftest_plA%nbody -1), e_pl(swiftest_plA%nbody -1), inc_pl(swiftest_plA%nbody -1))
       do i = 2, swiftest_plA%nbody
          mu = swiftest_plA%mass(1) + swiftest_plA%mass(i)
          j = swiftest_plA%name(i)
@@ -66,11 +66,12 @@ contains
          a_pl(i) = a 
          e_pl(i) = e
          inc_pl(i) = inc !call io_write_line(iu, j, a, e, inc, capom, omega, capm, out_type, &
-         mass = swiftest_plA%mass(i),radius = swiftest_plA%radius(i))
+         !mass = swiftest_plA%mass(i)
+         !radius = swiftest_plA%radius(i)
       end do
       mu = swiftest_plA%mass(1)
       if (swiftest_tpA%nbody >0) then 
-      Allocate(a_tp(swiftest_plA%nbody -1), e_tp(swiftest_plA%nbody -1), inc_tp(swiftest_plA%nbody -1))
+      !Allocate(a_tp(swiftest_plA%nbody -1), e_tp(swiftest_plA%nbody -1), inc_tp(swiftest_plA%nbody -1))
       end if 
       do i = 1, swiftest_tpA%nbody
          j = swiftest_tpA%name(i)
@@ -91,10 +92,10 @@ contains
          write(LUN) a_pl(:)
          write(LUN) e_pl(:)
          write(LUN) inc_pl(:)
-         deallocate(a_pl, e_pl, inc_pl)
-         if (swiftest_tpA%nbody >0) then 
-            deallocate(a_tp, e_tp, inc_tp)
-         end if
+         !deallocate(a_pl, e_pl, inc_pl)
+         !if (swiftest_tpA%nbody >0) then 
+          !  deallocate(a_tp, e_tp, inc_tp)
+        ! end if
    case (XV)
          write(LUN) swiftest_pla%name(2:swiftest_plA%nbody)
          write(LUN) swiftest_pla%xh(1,2:swiftest_plA%nbody)
