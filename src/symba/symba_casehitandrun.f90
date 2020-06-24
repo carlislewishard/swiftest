@@ -192,7 +192,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       nmergeadd = nmergeadd + 1
       mergeadd_list%status(nmergeadd) = HIT_AND_RUN
       mergeadd_list%ncomp(nmergeadd) = 2
-      mergeadd_list%name(nmergeadd) = nplmax + ntpmax + fragmax + i - 1
+      mergeadd_list%name(nmergeadd) = symba_plA%helio%swiftest%name(index_rm)
       mergeadd_list%mass(nmergeadd) = mass_rm
       mergeadd_list%radius(nmergeadd) = rad_rm
       mergeadd_list%xh(:,nmergeadd) = xh_rm(:)
@@ -215,7 +215,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
          nmergeadd = nmergeadd + 1
          mergeadd_list%status(nmergeadd) = HIT_AND_RUN
          mergeadd_list%ncomp(nmergeadd) = 2
-         mergeadd_list%name(nmergeadd) = nplmax + ntpmax + fragmax + i - 1
+         mergeadd_list%name(nmergeadd) = nplmax + ntpmax + fragmax + i
          mergeadd_list%mass(nmergeadd) = m_rem / (nfrag - 1) 
          mergeadd_list%radius(nmergeadd) = ((3.0_DP * mergeadd_list%mass(nmergeadd)) / (4.0_DP * PI * d_rm))  & 
             ** (1.0_DP / 3.0_DP) 
