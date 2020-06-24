@@ -57,12 +57,12 @@ SUBROUTINE io_dump_pl(npl, swiftest_plA, lclose, lrhill_present)
       call util_exit(failure)
    end if
    write(LUN) npl
-   write(LUN) swiftest_pla%name(1:npl)
-   write(LUN) swiftest_pla%mass(1:npl)
-   if (lrhill_present) write(LUN) swiftest_pla%rhill(1:npl) 
-   if (lclose) write(LUN) swiftest_pla%radius(1:npl) 
-   write(LUN) swiftest_pla%xh(:,1:npl)
-   write(LUN) swiftest_pla%vh(:,1:npl)
+   write(LUN) swiftest_plA%name(1:npl)
+   write(LUN) swiftest_plA%mass(1:npl)
+   if (lrhill_present) write(LUN) swiftest_plA%rhill(1:npl) 
+   if (lclose) write(LUN) swiftest_plA%radius(1:npl) 
+   write(LUN) swiftest_plA%xh(:,1:npl)
+   write(LUN) swiftest_plA%vh(:,1:npl)
    close(LUN)
    idx = idx + 1
    if (idx > 2) idx = 1

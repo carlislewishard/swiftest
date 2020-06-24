@@ -19,7 +19,7 @@ contains
    integer(I4B), save        :: iu = lun, iout_form = xv
    real(DP)                  :: a, e, inc, capom, omega, capm, mu
    real(DP), dimension(NDIM) :: xtmp, vtmp
-   real(DP), dimension(swiftest_plA%nbody -1)  :: a_pl, e_pl, inc_pl, a_tp, e_tp, inc_tp
+   real(DP), dimension(2:swiftest_plA%nbody)  :: a_pl, e_pl, inc_pl, a_tp, e_tp, inc_tp
 
    if (lfirst) then
       select case(out_stat)
