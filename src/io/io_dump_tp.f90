@@ -48,9 +48,11 @@ subroutine io_dump_tp(ntp, swiftest_tpa)
         call util_exit(failure)
    end if
    write(LUN) ntp
-   write(LUN) swiftest_tpA%name(:)
-   write(LUN) swiftest_tpA%xh(:,:)
-   write(LUN) swiftest_tpA%vh(:,:)
+   if (ntp > 0) then
+      write(LUN) swiftest_tpA%name(1:ntp)
+      write(LUN) swiftest_tpA%xh(:,1:ntp)
+      write(LUN) swiftest_tpA%vh(:,1:ntp)
+   end if
    close(LUN)
    idx = idx + 1
    if (idx > 2) idx = 1

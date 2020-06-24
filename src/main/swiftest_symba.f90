@@ -225,7 +225,7 @@ program swiftest_symba
 200         format(" Time = ", es12.5, "; fraction done = ", f5.3, "; number of active pl, tp = ", i5, ", ", i5)
             call param%dump_to_file(t)
             call io_dump_pl(npl, symba_plA%helio%swiftest, param%lclose, param%lrhill_present)
-            if (ntp > 0) call io_dump_tp(ntp, symba_tpA%helio%swiftest)
+            call io_dump_tp(ntp, symba_tpA%helio%swiftest)
             idump = istep_dump
          end if
       end if
