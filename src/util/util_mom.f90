@@ -74,7 +74,8 @@ SUBROUTINE util_mom(m1, xb1, vb1, m2, xb2, vb2, frags_added, nstart, m_frag, r_c
 
      xr(:) = xb2(:) - xb1(:)
      l(:) = (vb2(:) - vb1(:)) 
-     call util_crossproduct(l(:), xr(:), kk(:))
+     kk(:) = angmom_before
+     !call util_crossproduct(l(:), xr(:), kk(:))
      call util_crossproduct(kk(:), l(:), p(:))
      kk(:) = kk(:) / NORM2(kk(:))
      l(:) = l(:) / NORM2(l(:))
@@ -98,7 +99,7 @@ SUBROUTINE util_mom(m1, xb1, vb1, m2, xb2, vb2, frags_added, nstart, m_frag, r_c
      angmom_frag(1) = 0.0_DP
      angmom_frag(2) = 0.0_DP
      angmom_frag(3) = 0.0_DP
-     A = - v_col
+     A = - v_col/2
      B = r_circle
      DO i=1, frags_added
           p_frag(1,i) = (- B  * cos(theta * i))*l(1) + (- B  * sin(theta * i))*p(1) + x_com
