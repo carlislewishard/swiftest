@@ -67,7 +67,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    REAL(DP)                                         :: r_smallestcircle
    REAL(DP), DIMENSION(:, :), ALLOCATABLE, SAVE     :: x_frag, v_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE        :: m_frag
-   REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xh_keep, xh_rm, vh_keep, vh_rm 
+   REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xh_keep, xh_rm, vh_keep, vh_rm, xbs
 
 ! Executable code
 
@@ -85,6 +85,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    radius1 = symba_plA%helio%swiftest%radius(index1)
    radius2 = symba_plA%helio%swiftest%radius(index2)
    msun = symba_plA%helio%swiftest%mass(1)
+   xbs(:) = symba_plA%helio%swiftest%xb(:,1)
 
    ! Determine which of the two particles in the collision is larger where mass INCLUDES the mass of all their children
    IF (m2 > m1) THEN
