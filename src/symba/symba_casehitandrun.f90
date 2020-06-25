@@ -227,7 +227,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
          ALLOCATE(x_frag(NDIM, frags_added))
          ALLOCATE(v_frag(NDIM, frags_added))
-         CALL util_mom(0.0_DP, [(0.0_DP,i=1,3)], [(0.0_DP,i=1,3)], m2, x2+xbs, v2, & 
+         CALL util_mom(0.0_DP, x1+xbs, v1 m2, x2+xbs, v2, & 
             frags_added, nstart, m_frag, r_circle, theta, x_frag, v_frag)
 
          DO i=1, frags_added
