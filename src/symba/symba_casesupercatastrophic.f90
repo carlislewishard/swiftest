@@ -64,7 +64,7 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
    REAL(DP)                                         :: m_rem, m_test, mass1, mass2, enew, eold, A, B, v_col
    REAL(DP)                                         :: x_com, y_com, z_com, vx_com, vy_com, vz_com
    REAL(DP)                                         :: m1m2_10
-   REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv
+   REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xbs
    REAL(DP), DIMENSION(:, :), ALLOCATABLE, SAVE     :: x_frag, v_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE        :: m_frag
 
@@ -85,6 +85,7 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
    radius1 = symba_plA%helio%swiftest%radius(index1)
    radius2 = symba_plA%helio%swiftest%radius(index2)
    msun = symba_plA%helio%swiftest%mass(1)
+   xbs(:) = symba_plA%helio%swiftest%xb(:,1)
 
    ! Find COM
    x_com = ((x1(1) * m1) + (x2(1) * m2)) / (m1 + m2)
