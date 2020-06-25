@@ -161,7 +161,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    ! Calculate the positions of the new fragments in a circle of radius rhill_keep
    rhill_keep = symba_plA%helio%swiftest%rhill(index_keep_parent)
    rhill_rm = symba_plA%helio%swiftest%rhill(index_rm_parent)
-   r_smallestcircle = (RHSCALE * rhill_rm + RHSCALE * rhill_keep) / (2.0_DP * sin(PI / 2.0_DP))
+   r_smallestcircle = (rhill_keep + rhill_rm) / (2.0_DP*sin(PI /2.0_DP))
 
    ! Check that no fragments will be added interior of the smallest orbit that the timestep can reliably resolve
    semimajor_inward = ((dt * 32.0_DP) ** 2.0_DP) ** (1.0_DP / 3.0_DP)
@@ -218,24 +218,25 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    END IF
 
    IF (frags_added > 0) THEN
-         r_circle = (RHSCALE * rhill_keep + RHSCALE * rhill_rm) / (sin(PI / frags_added))
+         r_circle = (rhill_keep + rhill_rm) / (2.0_DP*sin(PI / frags_added))
+         WRITE(*,*) "r_circle factor hitandrun = ", 1.0 / (sin(PI / frags_added))
          theta = (2.0_DP * PI) / (frags_added)
          ALLOCATE(m_frag(frags_added))
          m_frag(1:frags_added) = mergeadd_list%mass(nstart + 1 :nstart + 1 + frags_added)
 
          ALLOCATE(x_frag(NDIM, frags_added))
          ALLOCATE(v_frag(NDIM, frags_added))
-         CALL util_mom(0.0_DP, [(0.0_DP,i=1,3)], [(0.0_DP,i=1,3)], m2, x2, v2, & 
+         CALL util_mom(0.0_DP, [(0.0_DP,i=1,3)], [(0.0_DP,i=1,3)], m2, x2+xbs, v2, & 
             frags_added, nstart, m_frag, r_circle, theta, x_frag, v_frag)
 
          DO i=1, frags_added
 
-            mergeadd_list%xh(1,nstart + i) = x_frag(1, i)
-            mergeadd_list%xh(2,nstart + i) = x_frag(2, i)
-            mergeadd_list%xh(3,nstart + i) = x_frag(3, i)                                                 
-            mergeadd_list%vh(1,nstart + i) = v_frag(1, i)
-            mergeadd_list%vh(2,nstart + i) = v_frag(2, i)
-            mergeadd_list%vh(3,nstart + i) = v_frag(3, i)
+            mergeadd_list%xh(1,nstart + i) = x_frag(1, i) -xbs(1) !x_frag
+            mergeadd_list%xh(2,nstart + i) = x_frag(2, i) -xbs(2) !y_frag
+            mergeadd_list%xh(3,nstart + i) = x_frag(3, i) -xbs(3) !z_frag                                                   
+            mergeadd_list%vh(1,nstart + i) = v_frag(1, i) -vbs(1) !vx_frag
+            mergeadd_list%vh(2,nstart + i) = v_frag(2, i) -vbs(2) !vy_frag
+            mergeadd_list%vh(3,nstart + i) = v_frag(3, i) -vbs(1)  !vz_frag
 
          ! Tracking linear momentum. 
             mv(:) = mv(:) + (mergeadd_list%mass(nstart + i) * mergeadd_list%vh(:,nstart + i))

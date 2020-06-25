@@ -44,7 +44,7 @@ SUBROUTINE util_mom(m1, xb1, vb1, m2, xb2, vb2, frags_added, nstart, m_frag, r_c
 ! Internals
 
    INTEGER(I4B)                                           :: i 
-   REAL(DP)                                               :: x_com, y_com, z_com, vx_com, vy_com, vz_com, v_col, A
+   REAL(DP)                                               :: x_com, y_com, z_com, vx_com, vy_com, vz_com, v_col, A, v2el
    REAL(DP)                                               :: linmom_before, angmom_after, linmom_after, DL
    REAL(DP), DIMENSION(NDIM)                              :: veclinmom_after, xbvb1, xbvb2, xv_frag, vecangmom_after
    REAL(DP)                                               :: mx_frag, my_frag, mz_frag, mvx_frag, mvy_frag, mvz_frag
@@ -71,7 +71,6 @@ SUBROUTINE util_mom(m1, xb1, vb1, m2, xb2, vb2, frags_added, nstart, m_frag, r_c
 
    ! Find Collision velocity
       v_col = NORM2(vb2(:) - vb1(:))
-
      xr(:) = xb2(:) - xb1(:)
      l(:) = (vb2(:) - vb1(:)) 
      kk(:) = angmom_before
@@ -99,7 +98,8 @@ SUBROUTINE util_mom(m1, xb1, vb1, m2, xb2, vb2, frags_added, nstart, m_frag, r_c
      angmom_frag(1) = 0.0_DP
      angmom_frag(2) = 0.0_DP
      angmom_frag(3) = 0.0_DP
-     A = - v_col/2
+     v2el = v_col**2/4 - 2.0_DP*(m1+m2)*GC*(1.0_DP/(NORM2(xr)) - 1.0_DP/r_circle)
+     A = - (SQRT(v2el))
      B = r_circle
      DO i=1, frags_added
           p_frag(1,i) = (- B  * cos(theta * i))*l(1) + (- B  * sin(theta * i))*p(1) + x_com
@@ -185,7 +185,7 @@ SUBROUTINE util_mom(m1, xb1, vb1, m2, xb2, vb2, frags_added, nstart, m_frag, r_c
      vz_com_frag = mvz_frag / SUM(m_frag(:))
      angmom_after = NORM2(angmom_com_frag)
      DL = (angmom_after - NORM2(angmom_before))/ NORM2(angmom_before)
-     !WRITE(*,*) "util_mom DL/L = ", DL 
+     WRITE(*,*) "util_mom DL/L = ", DL 
      !WRITE(*,*) "util_mom l(1) :", l(1)
      !WRITE(*,*) "util_mom p(1) :", p(1)
      !WRITE(*,*) "util_mom p_frag_check :", p_frag_check

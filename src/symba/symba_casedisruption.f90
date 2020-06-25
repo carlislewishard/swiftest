@@ -129,7 +129,7 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
 
    rhill_p1 = symba_plA%helio%swiftest%rhill(index1_parent)
    rhill_p2 = symba_plA%helio%swiftest%rhill(index2_parent)
-   r_smallestcircle = (RHSCALE * rhill_p1 + RHSCALE * rhill_p2) / (2.0_DP * sin(PI / 2.0_DP))
+   r_smallestcircle = (rhill_p1 + rhill_p2) / (2.0_DP*sin(PI /2.0_DP))
 
    ! Check that no fragments will be added interior of the smallest orbit that the timestep can reliably resolve
    semimajor_inward = ((dt * 32.0_DP) ** 2.0_DP) ** (1.0_DP / 3.0_DP)
@@ -205,58 +205,10 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
          END DO
       END IF
 
-      ! If we are doing more fragments
-      !IF ((i > 2) .AND. (mres(2) > (1.0_DP / 3.0_DP)*mres(1))) THEN
-         ! m_rem is the mass needed to be "made up for" in fragments, mres(1) and mres(2) are the mass of the largest 
-         ! and second largest fragments that have already been added, and m1 and m2 are the masses of the original 
-         ! particles involved in the collision.
-         !frags_added = frags_added + 1
-         !nmergeadd = nmergeadd + 1
-         !mergeadd_list%status(nmergeadd) = DISRUPTION
-         !mergeadd_list%ncomp(nmergeadd) = 2
-         !mergeadd_list%name(nmergeadd) = nplmax + ntpmax + fragmax + i
-         !m_rem = (m1 + m2) - (mres(1) + mres(2))
-         !mergeadd_list%mass(nmergeadd) = m_rem / (nfrag - 1) 
-         !mergeadd_list%radius(nmergeadd) = ((3.0_DP * mergeadd_list%mass(nmergeadd)) / (4.0_DP * PI * avg_d))  & 
-         !   ** (1.0_DP / 3.0_DP) 
-         !mtot = mtot + mergeadd_list%mass(nmergeadd) 
-
-            !WRITE(*,*) "CASEDISRUPTION mres(1) and mres(2)", mres(1), mres(2)
-
-            ! Check if these fragments will be large enough to be resolved    
-            !IF (m_rem > (m2) / 100.0_DP) THEN
-               ! If yes, add a fragment using Durda et al 2007 Figure 2 Supercatastrophic: N = (1.5e5)e(-1.3*D) for the mass
-            
-            ! Create a "test mass" using Durda et al 2007 Figure 2 Supercatastrophic: N = (1.5e5)e(-1.3*D)
-            !m_test = (((- 1.0_DP / 2.6_DP) * log(i / (1.5_DP * 10.0_DP ** 5.0_DP))) ** 3.0_DP) * ((4.0_DP / 3.0_DP) &
-            !   * PI * avg_d)
-            ! If the test mass is smaller than the mass that needs to be "made up for", add it. 
-            !IF (m_test < m_rem) THEN
-            !      mergeadd_list%mass(nmergeadd) = m_test
-               ! If not, aka if the test mass is too large, then add a fragment with a mass equal to the difference between
-               ! the sum of the mass of the parents and the total mass already added.   
-            !ELSE
-            !   mergeadd_list%mass(nmergeadd) = m_rem !(m1 + m2) - mtot 
-            !END IF 
-
-            ! Calculate the radius of the fragments using the weighted average density of the parents. 
-            !mergeadd_list%radius(nmergeadd) = ((3.0_DP * mergeadd_list%mass(nmergeadd)) / (4.0_DP * PI * avg_d))  & 
-            !   ** (1.0_DP / 3.0_DP) 
-            !mtot = mtot + mergeadd_list%mass(nmergeadd) 
-
-            ! If these fragments will NOT be large enough to be resolved, add the remaining mass that we need to 
-            ! "make up for" to the mass of the most recent fragment and recalculate the radius. 
-            !ELSE 
-            !   mergeadd_list%mass(nmergeadd) = mergeadd_list%mass(nmergeadd) + m_rem
-            !   mergeadd_list%radius(nmergeadd) = (((3.0_DP/4.0_DP) * PI) * (mergeadd_list%mass(nmergeadd) / avg_d)) &
-            !      ** (1.0_DP / 3.0_DP)                                                            
-            !END IF
-      !END IF
-   !END DO
-
       ! Calculate the positions of the new fragments in a circle with a radius large enough to space
       ! all fragments apart by a distance of rhill_p1 + rhill_p2
-   r_circle = (rhill_p1 + rhill_p2) / (sin(PI / frags_added)) !((2.0_DP * rhill_p1 + 2.0_DP * rhill_p2) / (2.0_DP * sin(PI / frags_added))) 
+   r_circle = (rhill_p1 + rhill_p2) / (2.0_DP*sin(PI / frags_added)) !((2.0_DP * rhill_p1 + 2.0_DP * rhill_p2) / (2.0_DP * sin(PI / frags_added))) 
+   WRITE(*,*) "r_circle factor disruption = ", 1.0 / (sin(PI / frags_added))
    theta = (2.0_DP * PI) / frags_added
 
    CALL util_crossproduct(xbs, vbs, xbscrossvbs)

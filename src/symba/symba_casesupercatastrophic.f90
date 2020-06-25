@@ -124,7 +124,7 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
    ! all fragments apart by a distance of rhill_p1 + rhill_p2
    rhill_p1 = symba_plA%helio%swiftest%rhill(index1_parent)
    rhill_p2 = symba_plA%helio%swiftest%rhill(index2_parent)
-   r_smallestcircle = (RHSCALE * rhill_p1 + RHSCALE * rhill_p2) / (2.0_DP * sin(PI /2.0_DP))
+   r_smallestcircle = (rhill_p1 + rhill_p2) / (2.0_DP*sin(PI /2.0_DP))
 
    ! Check that no fragments will be added interior of the smallest orbit that the timestep can reliably resolve
    semimajor_inward = ((dt * 32.0_DP) ** 2.0_DP) ** (1.0_DP / 3.0_DP)
@@ -183,48 +183,8 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
          END DO
       END IF 
 
-
-         !END IF
-         ! If we are adding more than one fragment
-         !IF ((i > 1) .AND. (mres(1) > m1m2_10)) THEN
-            ! m_rem is the mass needed to be "made up for" in fragments, mres(1) is the mass of the largest fragments 
-            ! that has already been added, and m1 and m2 are the masses of the original particles involved in the collision.
-         !   m_rem = (m1 + m2) - (mergeadd_list%mass(nmergeadd))
-            ! Check if these fragments will be large enough to be resolved
-         !   IF (m_rem > (1.0_DP / 10.0_DP)*mres(1))) THEN
-
-               ! If yes, add a fragment using Durda et al 2007 Figure 2 Supercatastrophic: N = (1.5e5)e(-1.3*D) for the mass
-         !      frags_added = frags_added + 1
-         !      nmergeadd = nmergeadd + 1
-         !      mergeadd_list%name(nmergeadd) = nplmax + ntpmax + fragmax + i
-         !      mergeadd_list%status(nmergeadd) = SUPERCATASTROPHIC
-         !      mergeadd_list%ncomp(nmergeadd) = 2
-         !      mergeadd_list%mass(nmergeadd) = m_rem / (nfrag - 1) 
-
-               ! Create a "test mass" using Durda et al 2007 Figure 2 Supercatastrophic: N = (1.5e5)e(-1.3*D)
-               !m_test = (((- 1.0_DP / 2.6_DP) * log(i / (1.5_DP * 10.0_DP ** 5))) ** 3.0_DP) * ((4.0_DP / 3.0_DP) &
-               !   * PI * avg_d)
-               ! If the test mass is smaller than the mass that needs to be "made up for", add it.
-               !IF (m_test < m_rem) THEN
-               !   mergeadd_list%mass(nmergeadd) = m_test
-               ! If not, aka if the test mass is too large, then add a fragment with a mass equal to the difference between
-               ! the sum of the mass of the parents and the total mass already added. 
-               !ELSE
-               !   mergeadd_list%mass(nmergeadd) = (m1 + m2) - mtot 
-               !END IF
-
-               ! Calculate the radius of the fragments using the weighted average density of the parents. 
-         !      mergeadd_list%radius(nmergeadd) = ((3.0_DP * mergeadd_list%mass(nmergeadd)) / (4.0_DP * PI * avg_d))  & 
-         !         ** (1.0_DP / 3.0_DP) 
-         !      mtot = mtot + mergeadd_list%mass(nmergeadd)
-         !   ELSE 
-         !      mergeadd_list%mass(nmergeadd) = mergeadd_list%mass(nmergeadd) + m_rem
-         !      mergeadd_list%radius(nmergeadd) = (((3.0_DP/4.0_DP) * PI) * (mergeadd_list%mass(nmergeadd) / avg_d)) &
-         !         ** (1.0_DP / 3.0_DP)
-         !   END IF
-         !END IF
-
-   r_circle = (RHSCALE * rhill_p1 + RHSCALE * rhill_p2) / (sin(PI / frags_added))
+   r_circle = (rhill_p1 + rhill_p2) / (2.0_DP*sin(PI / frags_added))
+   WRITE(*,*) "r_circle factor supercat = ", 1.0 / (sin(PI / frags_added))
    theta = (2.0_DP * PI) / frags_added
 
    ALLOCATE(m_frag(frags_added))
@@ -232,16 +192,16 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
 
    ALLOCATE(x_frag(NDIM, frags_added))
    ALLOCATE(v_frag(NDIM, frags_added))
-   CALL util_mom(m1, x1, v1, m2, x2, v2, frags_added, nstart, m_frag, r_circle, theta, x_frag, v_frag)
+   CALL util_mom(m1, x1+xbs, v1, m2, x2+xbs, v2, frags_added, nstart, m_frag, r_circle, theta, x_frag, v_frag)
 
    DO i=1, frags_added
 
-      mergeadd_list%xh(1,nstart + i) = x_frag(1, i) !x_frag
-      mergeadd_list%xh(2,nstart + i) = x_frag(2, i)!y_frag
-      mergeadd_list%xh(3,nstart + i) = x_frag(3, i)!z_frag                                                   
-      mergeadd_list%vh(1,nstart + i) = v_frag(1, i)!vx_frag
-      mergeadd_list%vh(2,nstart + i) = v_frag(2, i)!vy_frag
-      mergeadd_list%vh(3,nstart + i) = v_frag(3, i)!vz_frag
+      mergeadd_list%xh(1,nstart + i) = x_frag(1, i) - xbs(1)!x_frag
+      mergeadd_list%xh(2,nstart + i) = x_frag(2, i)- xbs(2)!y_frag
+      mergeadd_list%xh(3,nstart + i) = x_frag(3, i)- xbs(3)!z_frag                                                   
+      mergeadd_list%vh(1,nstart + i) = v_frag(1, i)- vbs(1)!vx_frag
+      mergeadd_list%vh(2,nstart + i) = v_frag(2, i)- vbs(2)!vy_frag
+      mergeadd_list%vh(3,nstart + i) = v_frag(3, i)- vbs(3)!vz_frag
 
          ! Tracking linear momentum. 
       mv(:) = mv(:) + (mergeadd_list%mass(nstart + i) * mergeadd_list%vh(:,nstart + i))
