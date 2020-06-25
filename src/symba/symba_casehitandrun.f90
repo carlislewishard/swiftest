@@ -136,9 +136,6 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    xr(:) = x2(:) - x1(:)
    eold = eold - (m1*m2/(SQRT(DOT_PRODUCT(xr(:), xr(:)))))
 
-   WRITE(*, *) "Hit and run between particles ", name1, " and ", name2, " at time t = ",t
-   WRITE(*, *) "Particle ", name_keep, " survives; Particle ", name_rm, " is fragmented."
-
    ! Go through the encounter list and look for particles actively encoutering in this timestep
    ! Prevent them from having further encounters in this timestep by setting status in plplenc_list to MERGED
    DO k = 1, nplplenc 
@@ -188,7 +185,10 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
    ! Pure Hit & Run
    IF (mres(2) > m2 * 0.9_DP) THEN
-      frags_added = frags_added + 1
+      !frags_added does NOT get incremented on in a perfect merger because then fragmax would be fragmax + 1
+      !this screws up the naming of new fragments in subsequent disruptions or supercatastrophic disruptions or
+      !imperfect hit & runs. In other words, in a hit & run, frags_added is only incremented on in imperfect 
+      !hit & runs. 
       nmergeadd = nmergeadd + 1
       mergeadd_list%status(nmergeadd) = HIT_AND_RUN
       mergeadd_list%ncomp(nmergeadd) = 2
@@ -198,16 +198,11 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       mergeadd_list%xh(:,nmergeadd) = xh_rm(:)
       mergeadd_list%vh(:,nmergeadd) = vh_rm(:)
       mtot = mtot + mergeadd_list%mass(nmergeadd)
-   ELSE       
+   ELSE
+   ! Imperfect Hit & Run       
       DO i = 1, nfrag
          m_rm = mass_rm
          r_rm = rad_rm
-         !x_rm = xh_rm(1)
-         !y_rm = xh_rm(2)
-         !z_rm = xh_rm(3)
-         !vx_rm = vh_rm(1)
-         !vy_rm = vh_rm(2)
-         !vz_rm = vh_rm(3)
          d_rm = (3.0_DP * m_rm) / (4.0_DP * PI * (r_rm ** 3.0_DP))
 
          m_rem = m_rm - mres(2)
@@ -219,32 +214,10 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
          mergeadd_list%mass(nmergeadd) = m_rem / (nfrag) 
          mergeadd_list%radius(nmergeadd) = ((3.0_DP * mergeadd_list%mass(nmergeadd)) / (4.0_DP * PI * d_rm))  & 
             ** (1.0_DP / 3.0_DP) 
-
-            ! Check if these fragments will NOT be large enough to be resolved AND we have only added one fragment 
-            ! previously (aka the slr). This is the perfect hit and run case.   
-         !ELSE IF ((i > 2) .AND. (mres(2) > m2 * 0.9_DP) .AND. frags_added == 1) THEN
-            ! If yes, update the mass of the slr to be the mass of the removed particle and give it all the
-            ! characteristics of the removed particle
-         
-         !   mergeadd_list%name(nmergeadd) = symba_plA%helio%swiftest%name(index_rm)
-         !   mergeadd_list%mass(nmergeadd) = mass_rm
-         !   mergeadd_list%radius(nmergeadd) = rad_rm
-         !   mergeadd_list%xh(:,nmergeadd) = xh_rm
-         !   mergeadd_list%vh(:,nmergeadd) = vh_rm
-         !   mtot = mtot - mres(2) + mass_rm
-
-            ! If these fragments will NOT be large enough to be resolved but we have added more than one fragment
-            ! previously, add the remaining mass that we need to "make up for" to the mass of the most recent
-            ! fragment and recalculate the radius. 
-            !ELSE 
-            !   mergeadd_list%mass(nmergeadd) = mergeadd_list%mass(nmergeadd) + m_rem
-            !   mergeadd_list%radius(nmergeadd) = (((3.0_DP/4.0_DP) * PI) * (mergeadd_list%mass(nmergeadd) / d_rm)) &
-            !      ** (1.0_DP / 3.0_DP)                                                            
-            !END IF  
       END DO
    END IF
 
-   IF (frags_added > 1) THEN
+   IF (frags_added > 0) THEN
          r_circle = (RHSCALE * rhill_keep + RHSCALE * rhill_rm) / (sin(PI / frags_added))
          theta = (2.0_DP * PI) / (frags_added)
          ALLOCATE(m_frag(frags_added))
@@ -257,12 +230,12 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
          DO i=1, frags_added
 
-            mergeadd_list%xh(1,nstart + i) = x_frag(1, i) !x_frag
-            mergeadd_list%xh(2,nstart + i) = x_frag(2, i)!y_frag
-            mergeadd_list%xh(3,nstart + i) = x_frag(3, i)!z_frag                                                   
-            mergeadd_list%vh(1,nstart + i) = v_frag(1, i)!vx_frag
-            mergeadd_list%vh(2,nstart + i) = v_frag(2, i)!vy_frag
-            mergeadd_list%vh(3,nstart + i) = v_frag(3, i)!vz_frag
+            mergeadd_list%xh(1,nstart + i) = x_frag(1, i)
+            mergeadd_list%xh(2,nstart + i) = x_frag(2, i)
+            mergeadd_list%xh(3,nstart + i) = x_frag(3, i)                                                 
+            mergeadd_list%vh(1,nstart + i) = v_frag(1, i)
+            mergeadd_list%vh(2,nstart + i) = v_frag(2, i)
+            mergeadd_list%vh(3,nstart + i) = v_frag(3, i)
 
          ! Tracking linear momentum. 
             mv(:) = mv(:) + (mergeadd_list%mass(nstart + i) * mergeadd_list%vh(:,nstart + i))
@@ -280,7 +253,12 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    mergesub_list%vh(:,nmergesub) = v1(:) - vbs(:)
    mergesub_list%mass(nmergesub) = mass1
    mergesub_list%radius(nmergesub) = rad1
-   mergesub_list%nadded(nmergesub) = frags_added
+   IF (frags_added == 0) THEN !AKA if it was a perfect merger
+      !You must have nadded for a pure hit & run be equal to 1 so it does the discard correctly
+      mergesub_list%nadded(nmergesub) = 1
+   ELSE 
+      mergesub_list%nadded(nmergesub) = frags_added
+   END IF
    nmergesub = nmergesub + 1
    mergesub_list%name(nmergesub) = name2
    mergesub_list%status(nmergesub) = HIT_AND_RUN
@@ -288,14 +266,26 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    mergesub_list%vh(:,nmergesub) = v2(:) - vbs(:)
    mergesub_list%mass(nmergesub) = mass2
    mergesub_list%radius(nmergesub) = rad2
-   mergesub_list%nadded(nmergesub) = frags_added
+   IF (frags_added == 0) THEN !AKA if it was a perfect merger
+      !You must have nadded for a pure hit & run be equal to 1 so it does the discard correctly
+      mergesub_list%nadded(nmergesub) = 1
+   ELSE 
+      mergesub_list%nadded(nmergesub) = frags_added
+   END IF
 
-   WRITE(*, *) "Number of fragments added: ", (frags_added)
+   WRITE(*, *) "Hit and run between particles ", name1, " and ", name2, " at time t = ",t
+   IF (frags_added == 0) THEN
+      WRITE(*,*) "0 fragments produced; pure hit and run."
+   ELSE
+      WRITE(*, *) "Particle ", name_keep, " survives; Particle ", name_rm, " is fragmented."
+      WRITE(*, *) "Number of fragments added: ", (frags_added)
+   END IF
+   
    ! Calculate energy after frag                                                                           
    vnew(:) = mv(:) / mtot    ! COM of new fragments                               
    enew = 0.5_DP*mtot*DOT_PRODUCT(vnew(:), vnew(:))
    eoffset = eoffset + eold - enew
-   ! Update fragmax to account for new fragments
+   ! Update fragmax to account for new fragments made in imperfect hit & runs
    fragmax = fragmax + frags_added
    RETURN 
 END SUBROUTINE symba_casehitandrun
