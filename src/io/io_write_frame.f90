@@ -47,6 +47,7 @@ contains
       end select
       lfirst = .false.
    else
+      WRITE(*,*) "IO_WRITE_FRAME 3"
       open(unit = iu, file = outfile, status = 'OLD', position =  'APPEND', form = 'UNFORMATTED', iostat = ierr)
       if (ierr /= 0) then
          write(*, *) "Swiftest error:"
@@ -62,6 +63,7 @@ contains
       do i = 2, swiftest_plA%nbody
          mu = swiftest_plA%mass(1) + swiftest_plA%mass(i)
          j = swiftest_plA%name(i)
+         WRITE(*,*) "IO_WRITE_FRAME NAME: ", swiftest_plA%name(i)
          call orbel_xv2el(swiftest_plA%xh(:,i), swiftest_plA%vh(:,i), mu, a, e, inc, capom, omega, capm)
          a_pl(i) = a 
          e_pl(i) = e

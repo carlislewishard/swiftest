@@ -57,6 +57,7 @@ SUBROUTINE orbel_xv2el(x, v, mu, a, e, inc, capom, omega, capm)
      REAL(DP)     :: r, v2, hx, hy, hz, h2, h, rdotv, energy, fac, u, w, cw, sw, face, cape, tmpf, capf
 
 ! Executable code
+     WRITE(*,*) "ENTERING ORBEL_XV2EL"
      a = 0.0_DP
      e = 0.0_DP
      inc = 0.0_DP
@@ -68,24 +69,30 @@ SUBROUTINE orbel_xv2el(x, v, mu, a, e, inc, capom, omega, capm)
      hx = x(2)*v(3) - x(3)*v(2)
      hy = x(3)*v(1) - x(1)*v(3)
      hz = x(1)*v(2) - x(2)*v(1)
+     WRITE(*,*) "ORBEL_XV2EL hx, hy, hz", hx, hy, hz
      h2 = hx*hx + hy*hy + hz*hz
      h = SQRT(h2)
      IF (h2 == 0.0_DP) RETURN
      rdotv = DOT_PRODUCT(x(:), v(:))
      energy = 0.5_DP*v2 - mu/r
      fac = hz/h
+     WRITE(*,*) "ORBEL_XV2EL fac, hz, h: ", fac, hz, h
      IF (fac < -1.0_DP) THEN
           inc = PI
      ELSE IF (fac < 1.0_DP) THEN
           inc = ACOS(fac)
      END IF
      fac = SQRT(hx*hx + hy*hy)/h
+     WRITE(*,*) "ORBEL_XV2EL fac: ", fac
      IF (fac < TINY) THEN
           u = ATAN2(x(2), x(1))
           IF (hz < 0.0_DP) u = -u
      ELSE
           capom = ATAN2(hx, -hy)
+          WRITE(*,*) "ORBEL_XV2EL 1"
+          WRITE(*,*) "ORBEL_XV2EL inc: ", inc
           u = ATAN2(x(3)/SIN(inc), x(1)*COS(capom) + x(2)*SIN(capom))
+          WRITE(*,*) "ORBEL_XV2EL 2"
      END IF
      IF (capom < 0.0_DP) capom = capom + TWOPI
      IF (u < 0.0_DP) u = u + TWOPI
@@ -155,6 +162,7 @@ SUBROUTINE orbel_xv2el(x, v, mu, a, e, inc, capom, omega, capm)
      END SELECT
      omega = u - w
      IF (omega < 0.0_DP) omega = omega + TWOPI
+     WRITE(*,*) "LEAVING ORBEL_XV2EL"
 
      RETURN
 
