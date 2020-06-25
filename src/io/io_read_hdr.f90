@@ -54,12 +54,18 @@ FUNCTION io_read_hdr(iu, t, npl, ntp, iout_form, out_type)
 ! Executable code
      SELECT CASE (out_type)
           CASE (REAL4_TYPE, SWIFTER_REAL4_TYPE)
-               READ(iu, IOSTAT = ierr) ttmp, npl, ntp, iout_form
+               READ(iu, IOSTAT = ierr) ttmp
+               READ(iu, IOSTAT = ierr) npl
+               READ(iu, IOSTAT = ierr) ntp
+               READ(iu, IOSTAT = ierr) iout_form
                io_read_hdr = ierr
                IF (ierr /= 0) RETURN
                t = ttmp
           CASE (REAL8_TYPE, SWIFTER_REAL8_TYPE)
-               READ(iu, IOSTAT = ierr) t, npl, ntp, iout_form
+               READ(iu, IOSTAT = ierr) t
+               READ(iu, IOSTAT = ierr) npl
+               READ(iu, IOSTAT = ierr) ntp
+               READ(iu, IOSTAT = ierr) iout_form
                io_read_hdr = ierr
      END SELECT
 

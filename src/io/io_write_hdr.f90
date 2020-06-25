@@ -12,20 +12,29 @@ contains
    integer(I4B)               :: ierr !! Error code
 
    select case (out_type)
-      case (REAL4_TYPE,SWIFTER_REAL4_TYPE)
-         write(iu, iostat = ierr) real(t, kind=SP), npl, ntp, iout_form
-         if (ierr < 0) then
-            write(*, *) "Swiftest error:"
-            write(*, *) "   Unable to write binary file header"
-            call util_exit(FAILURE)
-         end if
-      case (REAL8_TYPE,SWIFTER_REAL8_TYPE)
-         write(iu, iostat = ierr) t, npl, ntp, iout_form
-         if (ierr < 0) then
-            write(*, *) "Swiftest error:"
-            write(*, *) "   Unable to write binary file header"
-            call util_exit(FAILURE)
-         end if
+   case (REAL4_TYPE,SWIFTER_REAL4_TYPE)
+      write(iu, iostat = ierr) real(t, kind=SP)
+      write(iu, iostat = ierr) npl
+      write(iu, iostat = ierr) ntp
+      write(iu, iostat = ierr) iout_form
+      if (ierr < 0) then
+         write(*, *) "Swiftest error:"
+         write(*, *) "   Unable to write binary file header"
+         call util_exit(FAILURE)
+      end if
+   case (REAL8_TYPE,SWIFTER_REAL8_TYPE)
+      write(iu, iostat = ierr) t
+      write(iu, iostat = ierr) npl
+      write(iu, iostat = ierr) ntp
+      write(iu, iostat = ierr) iout_form
+      if (ierr < 0) then
+         write(*, *) "Swiftest error:"
+         write(*, *) "   Unable to write binary file header"
+         call util_exit(FAILURE)
+      end if
+   case default
+      write(*,*) 'Invalid output type: ',out_type
+      call util_exit(FAILURE)
    end select
 
    return
