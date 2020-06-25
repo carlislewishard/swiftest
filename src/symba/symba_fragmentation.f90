@@ -77,11 +77,12 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
 
 ! Executable code
+     Write(*,*) "enter symba_fragmentation "
      lmerge = .FALSE.
      lfrag_add = .FALSE.
      ! Model 2 is the model for collresolve_resolve (LS12)
      model = 2
-
+     WRITE(*,*) "barycenter check: xh(sun)+xbs =", symba_plA%helio%swiftest%xh(:,1) + symba_plA%helio%swiftest%xb(:,1)
      index1 = plplenc_list%index1(index_enc)
      index2 = plplenc_list%index2(index_enc)
 
@@ -262,7 +263,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           CALL symba_caseresolve(t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
           npl, symba_plA, nplplenc, plplenc_list, regime, nplmax, ntpmax, fragmax, mres, rres, array_index1_child, &
           array_index2_child, m1, m2, rad1, rad2, x1, x2, v1, v2)
-
+          Write(*,*) "exit symba_fragmentation "
      END IF 
      RETURN
 

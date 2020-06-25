@@ -57,7 +57,7 @@ SUBROUTINE symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
      LOGICAL, DIMENSION(ntp)                        :: discard_l_tp
 
 ! Executable code
-
+    Write(*,*) "enter rearray"
     IF (ldiscard) THEN 
         nsppl = 0
         nkpl = 0
@@ -256,6 +256,7 @@ SUBROUTINE symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
         ntp = nktp
         symba_tpA%helio%swiftest%nbody = ntp
     END IF 
+    Write(*,*) "leaves rearray"
 
 END SUBROUTINE symba_rearray
 

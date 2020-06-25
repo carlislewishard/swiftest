@@ -91,7 +91,7 @@ SUBROUTINE symba_step_interp(lextra_force, lclose, t, npl, nplm, nplmax, ntp, nt
      REAL(DP), DIMENSION(:, :), ALLOCATABLE, SAVE :: xbeg, xend
 
 ! Executable code
-
+     
      IF (lmalloc) THEN
           ALLOCATE(xbeg(NDIM, nplmax), xend(NDIM, nplmax))
           lmalloc = .FALSE.
@@ -99,7 +99,7 @@ SUBROUTINE symba_step_interp(lextra_force, lclose, t, npl, nplm, nplmax, ntp, nt
      dth = 0.5_DP*dt
 
      CALL coord_vh2vb(npl, symba_plA%helio%swiftest, msys)
-
+     write(*,*) "before helio_lindrift"
      CALL helio_lindrift(npl, symba_plA%helio%swiftest, dth, ptb)
      IF (ntp > 0) THEN
           CALL coord_vh2vb_tp(ntp, symba_tpA%helio%swiftest, -ptb)
@@ -108,15 +108,16 @@ SUBROUTINE symba_step_interp(lextra_force, lclose, t, npl, nplm, nplmax, ntp, nt
                xbeg(:, i) = symba_plA%helio%swiftest%xh(:,i)
           END DO
      END IF
-
+     write(*,*) "before symba_getacch"
      CALL symba_getacch(lextra_force, t, npl, nplm, symba_plA, j2rp2, j4rp4, nplplenc, plplenc_list)
      IF (ntp > 0) CALL symba_getacch_tp(lextra_force, t, npl, nplm, nplmax, ntp, ntpmax, symba_plA, symba_tpA, xbeg, j2rp2,     &
           j4rp4, npltpenc, pltpenc_list)
 
+     write(*,*) "before helio_kickvb"
      CALL helio_kickvb(npl, symba_plA%helio, dth)
      IF (ntp > 0) CALL helio_kickvb_tp(ntp, symba_tpA%helio, dth)
      irec = -1
-
+     write(*,*) "before symba_helio_drift"
      CALL symba_helio_drift(irec, npl, symba_plA, dt)
      IF (ntp > 0) CALL symba_helio_drift_tp(irec, ntp, symba_tpA, symba_plA%helio%swiftest%mass(1), dt)
      irec = 0
@@ -129,11 +130,13 @@ SUBROUTINE symba_step_interp(lextra_force, lclose, t, npl, nplm, nplmax, ntp, nt
                xend(:, i) = symba_plA%helio%swiftest%xh(:,i)
           END DO
      END IF
+     write(*,*) "before symba_getacch2"
      CALL symba_getacch(lextra_force, t+dt, npl, nplm, symba_plA, j2rp2, j4rp4, nplplenc, plplenc_list)
      IF (ntp > 0) CALL symba_getacch_tp(lextra_force, t+dt, npl, nplm, nplmax, ntp, ntpmax, symba_plA, symba_tpA, xend, j2rp2,  &
           j4rp4, npltpenc, pltpenc_list)
      CALL helio_kickvb(npl, symba_plA%helio, dth)
      IF (ntp > 0) CALL helio_kickvb_tp(ntp, symba_tpA%helio, dth)
+
      CALL coord_vb2vh(npl, symba_plA%helio%swiftest)
      CALL helio_lindrift(npl, symba_plA%helio%swiftest, dth, pte)
      IF (ntp > 0) THEN

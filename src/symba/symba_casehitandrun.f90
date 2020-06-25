@@ -185,7 +185,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
 
    ! Pure Hit & Run
-   IF (mres(2) > m2 * 0.9_DP) THEN
+   IF (mres(2) > mass_rm * 0.9_DP) THEN
       !frags_added does NOT get incremented on in a perfect merger because then fragmax would be fragmax + 1
       !this screws up the naming of new fragments in subsequent disruptions or supercatastrophic disruptions or
       !imperfect hit & runs. In other words, in a hit & run, frags_added is only incremented on in imperfect 
@@ -207,13 +207,13 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       nmergeadd = nmergeadd + 1
       mergeadd_list%status(nmergeadd) = HIT_AND_RUN
       mergeadd_list%ncomp(nmergeadd) = 2
-      mergeadd_list%name(nmergeadd) = symba_plA%helio%swiftest%name(index_rm)
+      mergeadd_list%name(nmergeadd) = nplmax + ntpmax + fragmax + 1
       mergeadd_list%mass(nmergeadd) = mres(2)
       mergeadd_list%radius(nmergeadd) = ((3.0_DP * mergeadd_list%mass(nmergeadd)) / (4.0_DP * PI * d_rm))  & 
             ** (1.0_DP / 3.0_DP) 
       mtot = mtot + mergeadd_list%mass(nmergeadd)
    ! Imperfect Hit & Run       
-      DO i = 1, nfrag -1 
+      DO i = 2, nfrag 
          m_rem = m_rm - mres(2)
          frags_added = frags_added + 1
          nmergeadd = nmergeadd + 1
@@ -226,6 +226,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
          mtot = mtot + mergeadd_list%mass(nmergeadd)
       END DO
    END IF
+   Write(*,*) "mtot -m1 -m2 = ", mtot - m1 -m2 
 
    IF (frags_added > 0) THEN
          r_circle = (rhill_keep + rhill_rm) / (2.0_DP*sin(PI / frags_added))
@@ -237,7 +238,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
          ALLOCATE(x_frag(NDIM, frags_added))
          ALLOCATE(v_frag(NDIM, frags_added))
          WRITE(*,*) "enter util_mom"
-         CALL util_mom(0.0_DP, x1+xbs, v1, m2, x2+xbs, v2, & 
+         CALL util_mom(0.0_DP, xh_keep+xbs, vh_keep, mass_rm, xh_rm+xbs, vh_rm, & 
             frags_added, nstart, m_frag, r_circle, theta, x_frag, v_frag)
          WRITE(*,*) "exit util_mom"
          DO i=1, frags_added
