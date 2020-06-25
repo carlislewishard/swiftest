@@ -84,7 +84,7 @@ SUBROUTINE orbel_xv2el(x, v, mu, a, e, inc, capom, omega, capm)
      END IF
      fac = SQRT(hx*hx + hy*hy)/h
      WRITE(*,*) "ORBEL_XV2EL fac: ", fac
-     IF (fac < TINY) THEN
+     IF (fac**2 < TINY) THEN
           u = ATAN2(x(2), x(1))
           IF (hz < 0.0_DP) u = -u
      ELSE
