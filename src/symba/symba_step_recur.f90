@@ -87,7 +87,6 @@ RECURSIVE SUBROUTINE symba_step_recur(lclose, t, ireci, npl, nplm, ntp, symba_pl
      REAL(DP), DIMENSION(NDIM) :: xr, vr, vbs
 
 ! Executable code
-     Write(*,*) "enter step recur "
      mtiny = param%mtiny
      dtl = dt0/(NTENC**ireci)
      dth = 0.5_DP*dtl
@@ -150,7 +149,6 @@ RECURSIVE SUBROUTINE symba_step_recur(lclose, t, ireci, npl, nplm, ntp, symba_pl
           sgn = 1.0_DP
           CALL symba_kick(irecp, nplplenc, npltpenc, plplenc_list, pltpenc_list, dth, sgn,symba_plA, symba_tpA) 
           IF (lclose) THEN
-               Write(*,*) "if lclose in step_recur"
                vbs(:) = symba_plA%helio%swiftest%vb(:,1)
                DO i = 1, nplplenc
                     index_i  = plplenc_list%index1(i) 
@@ -182,7 +180,6 @@ RECURSIVE SUBROUTINE symba_step_recur(lclose, t, ireci, npl, nplm, ntp, symba_pl
                     END IF
                END DO
           END IF
-          Write(*,*) "endif lclose in step_recur"
           DO i = 1, nplplenc
                index_i  = plplenc_list%index1(i) 
                index_j  = plplenc_list%index2(i) 
@@ -294,7 +291,6 @@ RECURSIVE SUBROUTINE symba_step_recur(lclose, t, ireci, npl, nplm, ntp, symba_pl
                END DO
           END DO
      END IF
-     Write(*,*) "exit step recur "
 
      RETURN
 

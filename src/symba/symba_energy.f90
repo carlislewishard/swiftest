@@ -52,8 +52,6 @@ SUBROUTINE symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, htot)
 
 
 ! Executable code
-     Write(*,*) "enter symba_energy"
-
      CALL coord_h2b(npl, swiftest_plA, msys)
      htot = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
      ke = 0.0_DP
@@ -94,7 +92,6 @@ SUBROUTINE symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, htot)
           pe = pe + oblpot
      END IF
      te = ke + pe
-     Write(*,*) "leaves symba_energy"
 
      RETURN
 

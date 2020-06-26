@@ -90,7 +90,6 @@ SUBROUTINE symba_step(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      LOGICAL, SAVE             :: lfirst = .true.
      
 ! Executable code
-     Write(*,*) "enter symba_step"
     DO i = 1,npl
           symba_plA%nplenc(i) = 0
           symba_plA%ntpenc(i) = 0
@@ -116,8 +115,6 @@ SUBROUTINE symba_step(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
           nplm = 1
      END IF
      irec = 0
-
-! ALL THIS NEEDS TO BE CHANGED TO THE TREE SEARCH FUNCTION FOR ENCOUNTERS
 
      DO i = 2, npl
           IF (symba_plA%helio%swiftest%mass(i) < param%mtiny) EXIT
@@ -179,26 +176,19 @@ SUBROUTINE symba_step(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
           END DO
      END DO
 
-! END OF THINGS THAT NEED TO BE CHANGED IN THE TREE
-
      lencounter = ((nplplenc > 0) .OR. (npltpenc > 0))
      IF (lencounter) THEN
-          Write(*,*) "enter step_interp"
           CALL symba_step_interp(param%lextra_force, param%lclose, t, npl, nplm, param%nplmax, &
                ntp, param%ntpmax, symba_plA, symba_tpA, param%j2rp2, param%j4rp4,   &
                dt, eoffset, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, &
                nmergesub, mergeadd_list, mergesub_list, param%encounter_file, param%out_type, &
                fragmax, param)
-          Write(*,*) "exit step_interp"
           lfirst = .TRUE.
      ELSE 
-          Write(*,*) "enter step_recur"
           CALL symba_step_helio(lfirst, param%lextra_force, t, npl, nplm, param%nplmax, ntp,&
                param%ntpmax, symba_plA%helio, symba_tpA%helio, &
                param%j2rp2, param%j4rp4, dt)
-          Write(*,*) "exit step_interp"
      END IF
-     Write(*,*) "leaves symba_step"
      RETURN
 
 END SUBROUTINE symba_step

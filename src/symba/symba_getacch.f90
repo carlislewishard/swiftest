@@ -69,19 +69,7 @@ SUBROUTINE symba_getacch(lextra_force, t, npl, nplm, symba_plA, j2rp2, j4rp4, np
                    (symba_plA%index_parent(i) /= symba_plA%index_parent(j))) THEN
                     dx(:) = symba_plA%helio%swiftest%xh(:,j) - symba_plA%helio%swiftest%xh(:,i)
                     rji2 = DOT_PRODUCT(dx(:), dx(:))
-                    if (rji2 < 1.0e-8) THEN 
-                         write(*,*) "dx = ", dx
-                         write(*,*) "xh pl1", symba_plA%helio%swiftest%xh(:,i)
-                         write(*,*) "index parent pl1", symba_plA%index_parent(i)
-                         write(*,*) "index parent pl1", symba_plA%index_parent(j)
-                         write(*,*) "name parent pl1", symba_plA%helio%swiftest%name(symba_plA%index_parent(i))
-                         write(*,*) "name parent pl1", symba_plA%helio%swiftest%name(symba_plA%index_parent(j))
-                         write(*,*) "mass parent pl1", symba_plA%helio%swiftest%mass(symba_plA%index_parent(i))
-                         write(*,*) "mass parent pl1", symba_plA%helio%swiftest%mass(symba_plA%index_parent(j))
-                         write(*,*) "name pl1, pl2 =", symba_plA%helio%swiftest%name(i),symba_plA%helio%swiftest%name(j) 
-                    end if 
                     irij3 = 1.0_DP/(rji2*SQRT(rji2))
-                    if (irij3 .NE. irij3) write(*,*) "error getacch r=0"
                     faci = symba_plA%helio%swiftest%mass(i)*irij3
                     facj = symba_plA%helio%swiftest%mass(j)*irij3
                     symba_plA%helio%ah(:,i) = symba_plA%helio%ah(:,i) + facj*dx(:)
@@ -89,7 +77,6 @@ SUBROUTINE symba_getacch(lextra_force, t, npl, nplm, symba_plA, j2rp2, j4rp4, np
                END IF
           END DO
      END DO
-     Write(*,*) "after nplm loop symba_getacch"
 
      DO i = 1, nplplenc
           index_i = plplenc_list%index1(i)
@@ -105,12 +92,7 @@ SUBROUTINE symba_getacch(lextra_force, t, npl, nplm, symba_plA, j2rp2, j4rp4, np
                symba_plA%helio%ah(:,index_j) = symba_plA%helio%ah(:,index_j) + faci*dx(:)
           END IF
      END DO
-     Write(*,*) "after nplplenc loop symba_getacch"
      IF (j2rp2 /= 0.0_DP) THEN
-          !IF (lmalloc) THEN
-              !ALLOCATE(xh(NDIM, npl),aobl(NDIM, npl), irh(npl))
-               !lmalloc = .FALSE.
-          !END IF
           DO i = 2, npl
                r2 = DOT_PRODUCT(symba_plA%helio%swiftest%xh(:,i), symba_plA%helio%swiftest%xh(:,i))
                irh(i) = 1.0_DP/SQRT(r2)
@@ -121,7 +103,6 @@ SUBROUTINE symba_getacch(lextra_force, t, npl, nplm, symba_plA, j2rp2, j4rp4, np
           END DO
      END IF
      IF (lextra_force) CALL symba_user_getacch(t, npl, symba_plA)
-     Write(*,*) "after j2rp2 loop symba_getacch"
      RETURN
 
 END SUBROUTINE symba_getacch
