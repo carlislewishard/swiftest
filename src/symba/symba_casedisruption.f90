@@ -208,10 +208,7 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
       ! Calculate the positions of the new fragments in a circle with a radius large enough to space
       ! all fragments apart by a distance of rhill_p1 + rhill_p2
    r_circle = (rhill_p1 + rhill_p2) / (2.0_DP*sin(PI / frags_added)) !((2.0_DP * rhill_p1 + 2.0_DP * rhill_p2) / (2.0_DP * sin(PI / frags_added))) 
-   WRITE(*,*) "r_circle factor disruption = ", 1.0 / (sin(PI / frags_added))
    theta = (2.0_DP * PI) / frags_added
-
-   CALL util_crossproduct(xbs, vbs, xbscrossvbs)
 
    ALLOCATE(m_frag(frags_added))
    m_frag(1:frags_added) = mergeadd_list%mass(nstart + 1 :nstart + 1 + frags_added)

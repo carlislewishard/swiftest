@@ -226,21 +226,17 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
          mtot = mtot + mergeadd_list%mass(nmergeadd)
       END DO
    END IF
-   Write(*,*) "mtot -m1 -m2 = ", mtot - m1 -m2 
 
    IF (frags_added > 0) THEN
          r_circle = (rhill_keep + rhill_rm) / (2.0_DP*sin(PI / frags_added))
-         WRITE(*,*) "r_circle factor hitandrun = ", 1.0 / (sin(PI / frags_added))
          theta = (2.0_DP * PI) / (frags_added)
          ALLOCATE(m_frag(frags_added))
          m_frag(1:frags_added) = mergeadd_list%mass(nstart + 1 :nstart + 1 + frags_added)
 
          ALLOCATE(x_frag(NDIM, frags_added))
          ALLOCATE(v_frag(NDIM, frags_added))
-         WRITE(*,*) "enter util_mom"
          CALL util_mom(0.0_DP, xh_keep+xbs, vh_keep, mass_rm, xh_rm+xbs, vh_rm, & 
             frags_added, nstart, m_frag, r_circle, theta, x_frag, v_frag)
-         WRITE(*,*) "exit util_mom"
          DO i=1, frags_added
 
             mergeadd_list%xh(1,nstart + i) = x_frag(1, i) -xbs(1) !x_frag

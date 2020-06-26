@@ -185,7 +185,6 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
       END IF 
 
    r_circle = (rhill_p1 + rhill_p2) / (2.0_DP*sin(PI / frags_added))
-   WRITE(*,*) "r_circle factor supercat = ", 1.0 / (sin(PI / frags_added))
    theta = (2.0_DP * PI) / frags_added
 
    ALLOCATE(m_frag(frags_added))
