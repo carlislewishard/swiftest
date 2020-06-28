@@ -44,7 +44,7 @@ SUBROUTINE util_mom(m1, xb1, vb1, m2, xb2, vb2, frags_added, nstart, m_frag, r_c
 ! Internals
 
    INTEGER(I4B)                                           :: i 
-   REAL(DP)                                               :: x_com, y_com, z_com, vx_com, vy_com, vz_com, v_col, A, v2el
+   REAL(DP)                                               :: x_com, y_com, z_com, vx_com, vy_com, vz_com, v_col, A, v2el, v2esc
    REAL(DP)                                               :: linmom_before, angmom_after, linmom_after, DL
    REAL(DP), DIMENSION(NDIM)                              :: veclinmom_after, xbvb1, xbvb2, xv_frag, vecangmom_after
    REAL(DP)                                               :: mx_frag, my_frag, mz_frag, mvx_frag, mvy_frag, mvz_frag
@@ -97,8 +97,9 @@ SUBROUTINE util_mom(m1, xb1, vb1, m2, xb2, vb2, frags_added, nstart, m_frag, r_c
      v_frag_check = 0.0_DP
      angmom_frag(1) = 0.0_DP
      angmom_frag(2) = 0.0_DP
+     v2esc = 2.0_DP * GC * (m1+m2) / (NORM2(xr))
      angmom_frag(3) = 0.0_DP
-     v2el = v_col**2/4 - 2.0_DP*(m1+m2)*GC*(1.0_DP/(NORM2(xr)) - 1.0_DP/r_circle)
+     v2el = v2esc - 2.0_DP*(m1+m2)*GC*(1.0_DP/(NORM2(xr)) - 1.0_DP/r_circle)
      WRITE(*,*) "v2el"
      A = - (SQRT(v2el))
      B = r_circle
