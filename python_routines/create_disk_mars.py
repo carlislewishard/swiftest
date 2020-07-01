@@ -76,7 +76,7 @@ sim.G=6.67428e-11
 sim.add(m=M_Planet,r=R_Planet)
 ########################################################################################################################
 #Make folder to put all files created
-NewDirName = output_path + "/"+disk_type+"/"+ ecc_type+"/"+str(n_particles)+"/"+seed  #store in output_path/disk_type/eccentricity_type/#particles/#seed
+NewDirName = output_path + "/"+disk_type+"_"+ ecc_type+"_"+str(n_particles)+"_"+seed  #store in output_path/disk_type/eccentricity_type/#particles/#seed
 print("Making directory :", NewDirName)
 if not os.path.exists(NewDirName):
     os.makedirs(NewDirName)
@@ -161,18 +161,18 @@ if disk_type == 'low':
 ### Medium Mass disk
 elif disk_type == 'medium':
 
-    dmax=((3*1.0e-8*M_Planet/4/np.pi/particle_density)**(1/3))*2
+    dmax=((6*1.0e-8*M_Planet/4/np.pi/particle_density)**(1/3))*2
     if n_particles ==1500:
-        dmin = ((3*5.0e-10*M_Planet/4/np.pi/particle_density)**(1/3))*2
+        dmin = ((5*5.0e-10*M_Planet/4/np.pi/particle_density)**(1/3))*2
         #print(dmin, dmax, "dmin, dmax")
         while abs((total - M_disk) / M_disk) > 0.3:
-            iexp = random.randrange(10, 30, 5)/10
+            iexp = random.randrange(11, 31, 5)/10.0
             d = rndm(dmin, dmax, 1 - iexp, n_particles)  # normally -3 + 1 due to power law d ~ -3 , but had to change to 1 + 1
             darray= [pickdensity(impactor_density,mars_density,tracking,particle_density) for i in range(0,n_particles)]
             m = np.multiply((4 / 3) * np.pi * np.power(np.divide(d, 2), 3),darray)
             total_particles = len(d)
             total = sum(m)
-            #print((total-M_disk)/M_disk)
+            print((total-M_disk)/M_disk)
         print('disk created')
 
 
@@ -246,6 +246,7 @@ textfile = open(NewDirName+"/disk_characteristics.txt",'w')
 textfile.write("Debris disk Mass in kg = %f \n" % total)
 textfile.write("Debris disk Mass / Mass Phobos = %f \n" % float(float(total)/float(M_P)) )
 print(total, "Debris disk Mass in kg", total/M_P, "debris disk mass / Mass of Phobos")
+print(min(m), "min mass in Debris disk Mass in kg")
 ## Create random eccentricities, inclinations, and semi-major axis
 if ecc_type == "high":
     sigma_e = 1e-2
@@ -267,8 +268,8 @@ textfile.write("maximum inclination in degrees = %f \n" % max(inc*180/np.pi))
 ## Create workbook object of particles diameter in debris disk
 if create==1:
     wb = openpyxl.Workbook()
-    sheet = wb.get_active_sheet()
-    sheet.title = 'Sheet #1'
+    sheet = wb.active
+    sheet.title = 'Planet_diameters_list'
     for i in range(0, len(d)):
         sheet.cell(row=i + 2, column=1).value = d[i]
 ## Finally, save the file and give it a name
@@ -332,9 +333,9 @@ Rhill = [sim.particles[j].a * (sim.particles[j].m / (3 * M_Planet))**(1/3) for j
 density = np.multiply(3/4/np.pi/G,np.divide(m,np.power(r,3)))
 
 if create_canup ==1:
-    print("create canup input file")
+    print("create input file")
     print("minimum period in hours", min(mint))
-    with open(NewDirName+ '/canup_input.in', 'w') as output:
+    with open(NewDirName+ '/mars.in', 'w') as output:
         output.write("%s        ! Mars System in SI units\n" % (sim.N))
         output.write("1 %s \n" % ("{:10.8e}".format(G * M_Planet)))
         output.write(".0 .0 .0        ! x y z\n")
@@ -471,6 +472,59 @@ plt.grid(b=True, which='minor', color='#999999', linestyle='--', alpha = 0.2)
 #sns_plot.ax_joint.set_yscale('log')
 #sns_plot.ax_joint.set_yticks([1e-5, 1.0e1, 1, 1.1])
 plt.savefig(NewDirName+"/"+"disk_mass_distance.png")
+
+MU2KG=1
+DU2M =1
+TU2S = 1
+lfrag = 'no'
+rmin = 10
+rmax = 33890000.
+J2 = 0.0
+J4 = 0.0
+t_0=0.0
+end_sim = 365*3600*24*100
+deltaT = 800
+iout = 100
+lenergy ="yes"
+mtiny = 10
+sys.stdout = open(NewDirName+"/"+"param.in", "w")
+print(f'!Parameter file for the SyMBA-RINGMOONS test')
+print(f'!NPLMAX         {n_particles}')
+print(f'!NTPMAX         {0}')
+print(f'T0             {t_0} ')
+print(f'TSTOP          {end_sim}')
+print(f'DT             {deltaT}')
+print(f'PL_IN          mars.in')
+print(f'TP_IN          tp.in')
+print(f'IN_TYPE        ASCII')
+print(f'ISTEP_OUT      {iout:d}')
+print(f'BIN_OUT        bin.dat')
+print(f'OUT_TYPE       REAL8')
+print(f'OUT_FORM       EL')
+print(f'OUT_STAT       NEW')
+print(f'ISTEP_DUMP     {iout:d}')
+print(f'J2             {J2}')
+print(f'J4             {J4}')
+print(f'CHK_CLOSE      yes')
+print(f'CHK_RMIN       {rmin}')
+print(f'CHK_RMAX       {rmax}')
+print(f'CHK_EJECT      {rmax}')
+print(f'CHK_QMIN       {rmin}')
+print(f'CHK_QMIN_COORD HELIO')
+print(f'CHK_QMIN_RANGE {rmin} {rmax}')
+print(f'ENC_OUT        enc.dat')
+print(f'EXTRA_FORCE    no')
+print(f'BIG_DISCARD    no')
+print(f'RHILL_PRESENT  yes')
+print(f'MTINY          {mtiny}')
+print(f'ENERGY        {lenergy}')
+print(f'FRAGMENTATION  {lfrag}')
+print(f'MU2KG          {MU2KG}')
+print(f'DU2M          {DU2M}')
+print(f'TU2S           {TU2S}')
+
+
+
 
 
 
