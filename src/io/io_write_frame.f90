@@ -19,7 +19,8 @@ contains
    integer(I4B), save        :: iu = lun, iout_form = xv
    real(DP)                  :: a, e, inc, capom, omega, capm, mu
    real(DP), dimension(NDIM) :: xtmp, vtmp
-   real(DP), dimension(2:swiftest_plA%nbody)  :: a_pl, e_pl, inc_pl, a_tp, e_tp, inc_tp
+   real(DP), dimension(2:swiftest_plA%nbody)  :: a_pl, e_pl, inc_pl, capom_pl, omega_pl, capm_pl
+   real(DP), dimension(1:swiftest_tpA%nbody)  :: a_tp, e_tp, inc_tp, capom_tp, omega_tp, capm_tp
 
    if (lfirst) then
       select case(out_stat)
@@ -58,45 +59,46 @@ contains
    call io_write_hdr(iu, t, swiftest_plA%nbody, swiftest_tpA%nbody, iout_form, out_type)
    select case (iout_form)
    case (EL)
-      !Allocate(a_pl(swiftest_plA%nbody -1), e_pl(swiftest_plA%nbody -1), inc_pl(swiftest_plA%nbody -1))
       do i = 2, swiftest_plA%nbody
          mu = swiftest_plA%mass(1) + swiftest_plA%mass(i)
          j = swiftest_plA%name(i)
          call orbel_xv2el(swiftest_plA%xh(:,i), swiftest_plA%vh(:,i), mu, a, e, inc, capom, omega, capm)
          a_pl(i) = a 
          e_pl(i) = e
-         inc_pl(i) = inc !call io_write_line(iu, j, a, e, inc, capom, omega, capm, out_type, &
-         !mass = swiftest_plA%mass(i)
-         !radius = swiftest_plA%radius(i)
+         inc_pl(i) = inc
+         capom_pl(i) = capom
+         omega_pl(i) = omega
+         capm_pl(i) = capm 
       end do
       mu = swiftest_plA%mass(1)
-      if (swiftest_tpA%nbody >0) then 
-      !Allocate(a_tp(swiftest_plA%nbody -1), e_tp(swiftest_plA%nbody -1), inc_tp(swiftest_plA%nbody -1))
-      end if 
       do i = 1, swiftest_tpA%nbody
          j = swiftest_tpA%name(i)
          call orbel_xv2el(swiftest_tpA%xh(:,i), swiftest_tpA%vh(:,i), mu, a, e, inc, capom, omega, capm)
          a_tp(i) = a 
          e_tp(i) = e
          inc_tp(i) = inc 
-         !call io_write_line(iu, j, a, e, inc, capom, omega, capm, out_type)
+         capom_tp(i) = capom
+         omega_tp(i) = omega
+         capm_tp(i) = capm
       end do
-         write(LUN) swiftest_pla%name(2:swiftest_plA%nbody)
-         write(LUN) swiftest_pla%xh(1,2:swiftest_plA%nbody)
-         write(LUN) swiftest_pla%xh(2,2:swiftest_plA%nbody)
-         write(LUN) swiftest_pla%xh(3,2:swiftest_plA%nbody)
-         write(LUN) swiftest_pla%vh(1,2:swiftest_plA%nbody)
-         write(LUN) swiftest_pla%vh(2,2:swiftest_plA%nbody)
-         write(LUN) swiftest_pla%vh(3,2:swiftest_plA%nbody)
-         write(LUN) swiftest_pla%mass(2:swiftest_plA%nbody)
-         write(LUN) swiftest_pla%radius(2:swiftest_plA%nbody)
-         write(LUN) a_pl(:)
-         write(LUN) e_pl(:)
-         write(LUN) inc_pl(:)
-         !deallocate(a_pl, e_pl, inc_pl)
-         !if (swiftest_tpA%nbody >0) then 
-          !  deallocate(a_tp, e_tp, inc_tp)
-        ! end if
+      write(LUN) swiftest_plA%name(2:swiftest_plA%nbody)
+      write(LUN) a_pl(:)
+      write(LUN) e_pl(:)
+      write(LUN) inc_pl(:)
+      write(LUN) capom_pl(:)
+      write(LUN) omega_pl(:)
+      write(LUN) capm_pl(:)
+      write(LUN) swiftest_plA%mass(2:swiftest_plA%nbody)
+      write(LUN) swiftest_plA%radius(2:swiftest_plA%nbody)
+
+      write(LUN) swiftest_tpA%name(2:swiftest_tpA%nbody)
+      write(LUN) a_tp(:)
+      write(LUN) e_tp(:)
+      write(LUN) inc_tp(:)
+      write(LUN) capom_tp(:)
+      write(LUN) omega_tp(:)
+      write(LUN) capm_tp(:)
+
    case (XV)
          write(LUN) swiftest_pla%name(2:swiftest_plA%nbody)
          write(LUN) swiftest_pla%xh(1,2:swiftest_plA%nbody)
