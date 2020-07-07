@@ -110,13 +110,16 @@ contains
          write(LUN) swiftest_pla%mass(2:swiftest_plA%nbody)
          write(LUN) swiftest_pla%radius(2:swiftest_plA%nbody) 
 
-         write(LUN) swiftest_tpa%name(:)  
-         write(LUN) swiftest_tpa%xh(1,:)
-         write(LUN) swiftest_tpa%xh(2,:)
-         write(LUN) swiftest_tpa%xh(3,:)
-         write(LUN) swiftest_tpa%vh(1,:)
-         write(LUN) swiftest_tpa%vh(2,:)
-         write(LUN) swiftest_tpa%vh(3,:)
+         if (swiftest_tpA%nbody > 0) then
+            write(LUN) swiftest_tpa%name(:)  
+            write(LUN) swiftest_tpa%xh(1,:)
+            write(LUN) swiftest_tpa%xh(2,:)
+            write(LUN) swiftest_tpa%xh(3,:)
+            write(LUN) swiftest_tpa%vh(1,:)
+            write(LUN) swiftest_tpa%vh(2,:)
+            write(LUN) swiftest_tpa%vh(3,:)
+         end if 
+
    end select
 
 
