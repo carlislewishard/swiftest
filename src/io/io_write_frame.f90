@@ -82,22 +82,23 @@ contains
          capm_tp(i) = capm
       end do
       write(LUN) swiftest_plA%name(2:swiftest_plA%nbody)
-      write(LUN) a_pl(:)
-      write(LUN) e_pl(:)
-      write(LUN) inc_pl(:)
-      write(LUN) capom_pl(:)
-      write(LUN) omega_pl(:)
-      write(LUN) capm_pl(:)
+      write(LUN) a_pl(2:swiftest_plA%nbody)
+      write(LUN) e_pl(2:swiftest_plA%nbody)
+      write(LUN) inc_pl(2:swiftest_plA%nbody)
+      write(LUN) capom_pl(2:swiftest_plA%nbody)
+      write(LUN) omega_pl(2:swiftest_plA%nbody)
+      write(LUN) capm_pl(2:swiftest_plA%nbody)
       write(LUN) swiftest_plA%mass(2:swiftest_plA%nbody)
       write(LUN) swiftest_plA%radius(2:swiftest_plA%nbody)
-
-      write(LUN) swiftest_tpA%name(2:swiftest_tpA%nbody)
-      write(LUN) a_tp(:)
-      write(LUN) e_tp(:)
-      write(LUN) inc_tp(:)
-      write(LUN) capom_tp(:)
-      write(LUN) omega_tp(:)
-      write(LUN) capm_tp(:)
+      if (swiftest_tpA%nbody > 0) then
+         write(LUN) swiftest_tpA%name(1:swiftest_tpA%nbody)
+         write(LUN) a_tp(1:swiftest_tpA%nbody)
+         write(LUN) e_tp(1:swiftest_tpA%nbody)
+         write(LUN) inc_tp(1:swiftest_tpA%nbody)
+         write(LUN) capom_tp(1:swiftest_tpA%nbody)
+         write(LUN) omega_tp(1:swiftest_tpA%nbody)
+         write(LUN) capm_tp(1:swiftest_tpA%nbody)
+      end if
 
    case (XV)
          write(LUN) swiftest_pla%name(2:swiftest_plA%nbody)
