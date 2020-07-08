@@ -46,7 +46,7 @@ SUBROUTINE util_mom(m1, xb1, vb1, m2, xb2, vb2, frags_added, nstart, m_frag, r_c
    INTEGER(I4B)                                           :: i 
    REAL(DP)                                               :: x_com, y_com, z_com, vx_com, vy_com, vz_com, v_col, A, v2el, v2esc
    REAL(DP)                                               :: linmom_before, angmom_after, linmom_after, DL
-   REAL(DP), DIMENSION(NDIM)                              :: veclinmom_after, xbvb1, xbvb2, xv_frag, vecangmom_after
+   REAL(DP), DIMENSION(NDIM)                              :: veclinmom_after, xbvb1, xbvb2, xv_frag, vecangmom_after, xvrel
    REAL(DP)                                               :: mx_frag, my_frag, mz_frag, mvx_frag, mvy_frag, mvz_frag
    REAL(DP)                                               :: x_com_frag, y_com_frag, z_com_frag, vx_com_frag, vy_com_frag
    REAL(DP)                                               :: vz_com_frag, p_frag_check, v_frag_check, B, m_frag_tot
@@ -100,7 +100,7 @@ SUBROUTINE util_mom(m1, xb1, vb1, m2, xb2, vb2, frags_added, nstart, m_frag, r_c
      v2esc = 2.0_DP * GC * (m1+m2) / (NORM2(xr))
      angmom_frag(3) = 0.0_DP
      v2el = v2esc - 2.0_DP*(m1+m2)*GC*(1.0_DP/(NORM2(xr)) - 1.0_DP/r_circle)
-     WRITE(*,*) "v2el"
+     !WRITE(*,*) "v2el"
      A = - (SQRT(v2el))
      B = r_circle
      DO i=1, frags_added
@@ -129,24 +129,24 @@ SUBROUTINE util_mom(m1, xb1, vb1, m2, xb2, vb2, frags_added, nstart, m_frag, r_c
           call util_crossproduct(p_frag(:,i), vel_frag(:,i), angmom_fragi(:)) 
           angmom_frag(:) = angmom_frag(:) + angmom_fragi(:)
      END DO
-     WRITE(*,*) " after frags added loop"
+     !WRITE(*,*) " after frags added loop"
 
      m_frag_tot = SUM(m_frag(:))
-     Write(*,*) "m1 = ", m1
-     Write(*,*) "m2 = ", m2
-     Write(*,*) "mfrag = ", m_frag
-     Write(*,*) "mfragtot = ", m_frag_tot
-     Write(*,*) "mxfrag = ", mx_frag
-     Write(*,*) "my_frag = ", mx_frag
-     Write(*,*) "mz_frag = ", my_frag
+     !Write(*,*) "m1 = ", m1
+     !Write(*,*) "m2 = ", m2
+     !Write(*,*) "mfrag = ", m_frag
+     !Write(*,*) "mfragtot = ", m_frag_tot
+     !Write(*,*) "mxfrag = ", mx_frag
+     !Write(*,*) "my_frag = ", mx_frag
+     !Write(*,*) "mz_frag = ", my_frag
      x_com_frag = mx_frag / m_frag_tot
      y_com_frag = my_frag / m_frag_tot
      z_com_frag = mz_frag / m_frag_tot
-     WRITE(*,*) "after x frag com"
+     !WRITE(*,*) "after x frag com"
      vx_com_frag = mvx_frag / m_frag_tot
      vy_com_frag = mvy_frag / m_frag_tot
      vz_com_frag = mvz_frag / m_frag_tot
-     WRITE(*,*) "after v  _com_frag"
+     !WRITE(*,*) "after v  _com_frag"
      x_f(1) =  x_com - x_com_frag
      x_f(2) =  y_com - y_com_frag
      x_f(3) =  z_com - z_com_frag
@@ -154,11 +154,11 @@ SUBROUTINE util_mom(m1, xb1, vb1, m2, xb2, vb2, frags_added, nstart, m_frag, r_c
      v_f(1) = vx_com - vx_com_frag
      v_f(2) = vy_com - vy_com_frag
      v_f(3) = vz_com - vz_com_frag
-     WRITE(*,*) " calculate offset"
+     !WRITE(*,*) " calculate offset"
      angmom_f(1) = angmom_before(1) - angmom_frag(1)
      angmom_f(2) = angmom_before(2) - angmom_frag(2)
      angmom_f(3) = angmom_before(3) - angmom_frag(3)
-     WRITE(*,*) " new angular momentum"
+     !WRITE(*,*) " new angular momentum"
      mx_frag = 0.0_DP
      my_frag = 0.0_DP
      mz_frag = 0.0_DP
@@ -168,7 +168,7 @@ SUBROUTINE util_mom(m1, xb1, vb1, m2, xb2, vb2, frags_added, nstart, m_frag, r_c
      angmom_frag(1) = 0.0_DP
      angmom_frag(2) = 0.0_DP
      angmom_frag(3) = 0.0_DP
-      WRITE(*,*) " before offset"
+     !WRITE(*,*) " before offset"
      DO i=1, frags_added
           p_frag(:,i) = p_frag(:,i) + x_f(:)
           vel_frag(:,i) = vel_frag(:,i) + v_f(:)
@@ -183,7 +183,7 @@ SUBROUTINE util_mom(m1, xb1, vb1, m2, xb2, vb2, frags_added, nstart, m_frag, r_c
           call util_crossproduct(p_frag(:,i), vel_frag(:,i), angmom_fragi(:)) 
           angmom_frag(:) = angmom_frag(:) + angmom_fragi(:)
      END DO 
-      WRITE(*,*) " after offset"
+      !WRITE(*,*) " after offset"
      angmom_com_frag(1) = angmom_before(1) - angmom_frag(1)
      angmom_com_frag(2) = angmom_before(2) - angmom_frag(2)
      angmom_com_frag(3) = angmom_before(3) - angmom_frag(3)
@@ -197,7 +197,7 @@ SUBROUTINE util_mom(m1, xb1, vb1, m2, xb2, vb2, frags_added, nstart, m_frag, r_c
      vz_com_frag = mvz_frag / SUM(m_frag(:))
      angmom_after = NORM2(angmom_com_frag)
      DL = (angmom_after - NORM2(angmom_before))/ NORM2(angmom_before)
-     WRITE(*,*) "util_mom DL/L = ", DL 
+     !WRITE(*,*) "util_mom DL/L = ", DL 
      !WRITE(*,*) "util_mom l(1) :", l(1)
      !WRITE(*,*) "util_mom p(1) :", p(1)
      !WRITE(*,*) "util_mom p_frag_check :", p_frag_check
