@@ -291,13 +291,13 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       WRITE(*, *) "Number of fragments added: ", (frags_added)
    END IF
 
-   first_add_x = mergeadd_list%xh(1,1)
-   first_add_y = mergeadd_list%xh(2,1)
-   first_add_z = mergeadd_list%xh(3,1)
+   first_add_x = mergeadd_list%vh(1,1)
+   first_add_y = mergeadd_list%vh(2,1)
+   first_add_z = mergeadd_list%vh(3,1)
 
-   second_add_x = mergeadd_list%xh(1,2)
-   second_add_y = mergeadd_list%xh(2,2)
-   second_add_z = mergeadd_list%xh(3,2)
+   second_add_x = mergeadd_list%vh(1,2)
+   second_add_y = mergeadd_list%vh(2,2)
+   second_add_z = mergeadd_list%vh(3,2)
    
    ! Calculate energy after frag                                                                           
    vnew(:) = mv(:) / mtot    ! COM of new fragments                               

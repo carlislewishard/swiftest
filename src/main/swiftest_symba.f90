@@ -169,14 +169,14 @@ program swiftest_symba
       call symba_step(t, dt, param,npl,ntp,symba_plA, symba_tpA,nplplenc, npltpenc,&
             plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
             eoffset, fragmax)
-      
-      first_add_x = mergeadd_list%xh(1,1)
-      first_add_y = mergeadd_list%xh(2,1)
-      first_add_z = mergeadd_list%xh(3,1)
 
-      second_add_x = mergeadd_list%xh(1,2)
-      second_add_y = mergeadd_list%xh(2,2)
-      second_add_z = mergeadd_list%xh(3,2)
+      first_add_x = mergeadd_list%vh(1,1)
+      first_add_y = mergeadd_list%vh(2,1)
+      first_add_z = mergeadd_list%vh(3,1)
+
+      second_add_x = mergeadd_list%vh(1,2)
+      second_add_y = mergeadd_list%vh(2,2)
+      second_add_z = mergeadd_list%vh(3,2)
 
       ldiscard = .false. 
       ldiscard_tp = .false.
