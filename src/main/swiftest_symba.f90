@@ -169,15 +169,6 @@ program swiftest_symba
       call symba_step(t, dt, param,npl,ntp,symba_plA, symba_tpA,nplplenc, npltpenc,&
             plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
             eoffset, fragmax)
-
-      first_add_x = mergeadd_list%vh(1,1)
-      first_add_y = mergeadd_list%vh(2,1)
-      first_add_z = mergeadd_list%vh(3,1)
-
-      second_add_x = mergeadd_list%vh(1,2)
-      second_add_y = mergeadd_list%vh(2,2)
-      second_add_z = mergeadd_list%vh(3,2)
-
       ldiscard = .false. 
       ldiscard_tp = .false.
       lfrag_add = .false.
@@ -187,11 +178,39 @@ program swiftest_symba
       call symba_discard_tp(t, npl, ntp, nsptp, symba_plA, symba_tpA, dt, rmin, rmax, rmaxu, qmin, qmin_coord, &    ! check this 
             qmin_alo, qmin_ahi, param%lclose, param%lrhill_present)
       if ((ldiscard .eqv. .true.) .or. (ldiscard_tp .eqv. .true.) .or. (lfrag_add .eqv. .true.)) then
+         
+         first_add_x = mergeadd_list%vh(1,1)
+         first_add_y = mergeadd_list%vh(2,1)
+         first_add_z = mergeadd_list%vh(3,1)
+
+         second_add_x = mergeadd_list%vh(1,2)
+         second_add_y = mergeadd_list%vh(2,2)
+         second_add_z = mergeadd_list%vh(3,2)
+
          call symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
             discard_tpA,param)
+
+         first_add_x = mergeadd_list%vh(1,1)
+         first_add_y = mergeadd_list%vh(2,1)
+         first_add_z = mergeadd_list%vh(3,1)
+
+         second_add_x = mergeadd_list%vh(1,2)
+         second_add_y = mergeadd_list%vh(2,2)
+         second_add_z = mergeadd_list%vh(3,2)
+
          if ((ldiscard .eqv. .true.) .or. (ldiscard_tp .eqv. .true.)) then
             call io_discard_write_symba(t, mtiny, npl, ntp, nsppl, nsptp, nmergesub, symba_plA, &
                discard_plA, discard_tpA, mergeadd_list, mergesub_list, discard_file, param%lbig_discard) 
+            
+            first_add_x = mergeadd_list%vh(1,1)
+            first_add_y = mergeadd_list%vh(2,1)
+            first_add_z = mergeadd_list%vh(3,1)
+
+            second_add_x = mergeadd_list%vh(1,2)
+            second_add_y = mergeadd_list%vh(2,2)
+            second_add_z = mergeadd_list%vh(3,2)
+
+
             nmergeadd = 0
             nmergesub = 0
             nsppl = 0
