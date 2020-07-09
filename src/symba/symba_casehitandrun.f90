@@ -59,6 +59,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    INTEGER(I4B)                                     :: nfrag, i, k, index1, index2, frags_added
    INTEGER(I4B)                                     :: index1_parent, index2_parent, index_keep_parent, index_rm_parent
    INTEGER(I4B)                                     :: name1, name2, index_keep, index_rm, name_keep, name_rm, nstart
+   real(DP)                           :: first_add_x, first_add_y, first_add_z, second_add_x, second_add_y, second_add_z
    REAL(DP)                                         :: mtot, msun, d_rm, m_rm, r_rm, x_rm, y_rm, z_rm, vx_rm, vy_rm, vz_rm 
    REAL(DP)                                         :: rhill_keep, r_circle, theta, radius1, radius2, e, q, semimajor_encounter
    REAL(DP)                                         :: m_rem, m_test, mass1, mass2, enew, eold, semimajor_inward, A, B, v_col
@@ -289,6 +290,14 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       WRITE(*, *) "Particle ", name_keep, " survives; Particle ", name_rm, " is fragmented."
       WRITE(*, *) "Number of fragments added: ", (frags_added)
    END IF
+
+   first_add_x = mergeadd_list%xh(1,1)
+   first_add_y = mergeadd_list%xh(2,1)
+   first_add_z = mergeadd_list%xh(3,1)
+
+   second_add_x = mergeadd_list%xh(1,2)
+   second_add_y = mergeadd_list%xh(2,2)
+   second_add_z = mergeadd_list%xh(3,2)
    
    ! Calculate energy after frag                                                                           
    vnew(:) = mv(:) / mtot    ! COM of new fragments                               

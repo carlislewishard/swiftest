@@ -46,6 +46,7 @@ program swiftest_symba
    integer(I4B)                  :: npl, ntp, ntp0, nsppl, nsptp, iout, idump, iloop, idebug
    integer(I4B)                  :: nplplenc, npltpenc, nmergeadd, nmergesub, fragmax
    real(DP)                      :: t, tfrac, tbase, mtiny, ke, pe, te, eoffset, Ltot_orig, Ltot_now, Lerror
+   real(DP)                      :: first_add_x, first_add_y, first_add_z, second_add_x, second_add_y, second_add_z
    real(DP), dimension(ndim)     :: htot
    character(strmax)             :: inparfile
    type(symba_pl)                :: symba_plA
@@ -168,6 +169,15 @@ program swiftest_symba
       call symba_step(t, dt, param,npl,ntp,symba_plA, symba_tpA,nplplenc, npltpenc,&
             plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
             eoffset, fragmax)
+      
+      first_add_x = mergeadd_list%xh(1,1)
+      first_add_y = mergeadd_list%xh(2,1)
+      first_add_z = mergeadd_list%xh(3,1)
+
+      second_add_x = mergeadd_list%xh(1,2)
+      second_add_y = mergeadd_list%xh(2,2)
+      second_add_z = mergeadd_list%xh(3,2)
+
       ldiscard = .false. 
       ldiscard_tp = .false.
       lfrag_add = .false.
