@@ -277,8 +277,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    mergesub_list%mass(nmergesub) = mass2
    mergesub_list%radius(nmergesub) = rad2
    IF (frags_added == 0) THEN !AKA if it was a perfect merger
-      !You must have nadded for a pure hit & run be equal to 1 so it does the discard correctly
-      mergesub_list%nadded(nmergesub) = 1
+      mergesub_list%nadded(nmergesub) = 2
    ELSE 
       mergesub_list%nadded(nmergesub) = frags_added
    END IF
