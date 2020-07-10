@@ -70,6 +70,9 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
      LOGICAL(LGT)                   :: lfrag_add, lmerge
      INTEGER(I4B), DIMENSION(npl)   :: array_index1_child, array_index2_child
      REAL(DP)                       :: Mlr, Mslr, mtarg, mproj
+     real(DP)                                     :: first_add_vhz, second_add_vhz, first_add_vbz, second_add_vbz
+     integer(I4B)                                 :: first_add_name, second_add_name, first_add_index, second_add_index
+     
 
 ! Executable code
 
