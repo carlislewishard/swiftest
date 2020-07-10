@@ -124,6 +124,27 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
      nres = 2
      IF (lfrag_add) THEN 
 
+         do i = 2, npl
+            if (symba_plA%helio%swiftest%name(i) == 183) then
+               first_add_index = i 
+            end if
+            if (symba_plA%helio%swiftest%name(i) == 624) then
+               second_add_index = i 
+            end if
+         end do
+
+         first_add_name = symba_plA%helio%swiftest%name(first_add_index)
+         second_add_name = symba_plA%helio%swiftest%name(second_add_index)
+
+         first_add_vbz = symba_plA%helio%swiftest%vb(3,first_add_index)
+         second_add_vbz = symba_plA%helio%swiftest%vb(3,second_add_index)
+
+         first_add_vhz = symba_plA%helio%swiftest%vh(3,first_add_index)
+         second_add_vhz = symba_plA%helio%swiftest%vh(3,second_add_index)
+
+         WRITE(*,*) "FRAG", first_add_name, first_add_vbz, first_add_vhz
+         WRITE(*,*) "FRAG", second_add_name, second_add_vbz, second_add_vhz
+
           symba_plA%lmerged(index1) = .TRUE.
           symba_plA%lmerged(index2) = .TRUE.
           index1_parent = symba_plA%index_parent(index1)
@@ -159,6 +180,9 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           x1(:) = x1(:)/m1
           v1(:) = v1(:)/m1
 
+
+          WRITE(*,*) "FRAG v1", v1(3)
+
           index2_parent = symba_plA%index_parent(index2)
           m2 = symba_plA%helio%swiftest%mass(index2_parent)
           mass2 = m2
@@ -192,6 +216,8 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           rad2 = ((3.0_DP * m2) / (den2 * 4.0_DP * PI)) ** (1.0_DP / 3.0_DP)
           x2(:) = x2(:)/m2
           v2(:) = v2(:)/m2
+
+          WRITE(*,*) "FRAG v2", v2(3)
 
           m1_si = (m1 / GU) * MU2KG 
           m2_si = (m2 / GU) * MU2KG
