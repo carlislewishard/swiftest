@@ -87,6 +87,7 @@ RECURSIVE SUBROUTINE symba_step_recur(lclose, t, ireci, npl, nplm, ntp, symba_pl
      REAL(DP), DIMENSION(NDIM) :: xr, vr, vbs
 
 ! Executable code
+
      mtiny = param%mtiny
      dtl = dt0/(NTENC**ireci)
      dth = 0.5_DP*dtl

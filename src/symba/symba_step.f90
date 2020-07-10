@@ -88,8 +88,32 @@ SUBROUTINE symba_step(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      INTEGER(I4B)              :: i, j, irec, nplm
      REAL(DP), DIMENSION(NDIM) :: xr, vr
      LOGICAL, SAVE             :: lfirst = .true.
+     real(DP)                                     :: first_add_vz, second_add_vz, first_add_pz, second_add_pz
+     integer(I4B)                                 :: first_add_name, second_add_name, first_add_index, second_add_index
      
 ! Executable code
+
+     do i = 2, npl
+        if (symba_plA%helio%swiftest%name(i) == 468) then
+           first_add_index = i 
+        end if
+        if (symba_plA%helio%swiftest%name(i) == 894) then
+           second_add_index = i 
+        end if
+     end do
+
+     first_add_name = symba_plA%helio%swiftest%name(first_add_index)
+     second_add_name = symba_plA%helio%swiftest%name(second_add_index)
+
+     first_add_pz = symba_plA%helio%swiftest%xh(3,first_add_index)
+     second_add_pz = symba_plA%helio%swiftest%xh(3,second_add_index)
+
+     first_add_vz = symba_plA%helio%swiftest%vh(3,first_add_index)
+     second_add_vz = symba_plA%helio%swiftest%vh(3,second_add_index)
+
+     WRITE(*,*) "STEP", first_add_name, first_add_pz, first_add_vz
+     WRITE(*,*) "STEP", second_add_name, second_add_pz, second_add_vz
+
     DO i = 1,npl
           symba_plA%nplenc(i) = 0
           symba_plA%ntpenc(i) = 0

@@ -131,6 +131,8 @@ contains
          first_add_vz = swiftest_pla%vh(3,first_add_index)
          second_add_vz = swiftest_pla%vh(3,second_add_index)
 
+         WRITE(*,*) "IOWRITEFRAME", first_add_name, first_add_pz, first_add_vz
+         WRITE(*,*) "IOWRITEFRAME", second_add_name, second_add_pz, second_add_vz
 
          if (swiftest_tpA%nbody > 0) then
             write(LUN) swiftest_tpa%name(:)  

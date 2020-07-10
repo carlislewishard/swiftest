@@ -219,6 +219,7 @@ program swiftest_symba
             end if
          end if
       end if
+
       if (istep_dump > 0) then
          idump = idump - 1
          if (idump == 0) then

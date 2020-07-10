@@ -73,7 +73,8 @@ SUBROUTINE util_mom(m1, xb1, vb1, m2, xb2, vb2, frags_added, nstart, m_frag, r_c
      v_col = NORM2(vb2(:) - vb1(:))
      xr(:) = xb2(:) - xb1(:)
      l(:) = (vb2(:) - vb1(:)) 
-     kk(:) = angmom_before
+     call util_crossproduct(l,xr,xvrel)
+     kk(:) = xvrel !angmom_before
      !call util_crossproduct(l(:), xr(:), kk(:))
      call util_crossproduct(kk(:), l(:), p(:))
      kk(:) = kk(:) / NORM2(kk(:))

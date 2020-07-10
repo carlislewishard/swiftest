@@ -69,7 +69,10 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
      REAL(DP)                       :: den1_si, den2_si, rad1_si, rad2_si, rproj, rtarg
      LOGICAL(LGT)                   :: lfrag_add, lmerge
      INTEGER(I4B), DIMENSION(npl)   :: array_index1_child, array_index2_child
-     REAL(DP)                       :: Mlr, Mslr, mtarg, mproj, mtiny_si
+     REAL(DP)                       :: Mlr, Mslr, mtarg, mproj
+
+     real(DP)                                     :: first_add_vz, second_add_vz, first_add_pz, second_add_pz
+     integer(I4B)                                 :: first_add_name, second_add_name, first_add_index, second_add_index
      !REAL(DP)                       :: K2 = 2.959122082855911e-4 ! in SI units
      !REAL(DP)                       :: MSUN = 1.98847e30 ! in SI units
      !REAL(DP)                       :: AU = 1.495978707e11 ! in SI units
@@ -77,6 +80,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
 
 ! Executable code
+
      lmerge = .FALSE.
      lfrag_add = .FALSE.
      ! Model 2 is the model for collresolve_resolve (LS12)
@@ -127,6 +131,17 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
      nres = 2
      IF (lfrag_add) THEN 
+
+
+         do i = 2, npl
+            if (symba_plA%helio%swiftest%name(i) == 468) then
+               first_add_index = i 
+            end if
+            if (symba_plA%helio%swiftest%name(i) == 894) then
+               second_add_index = i 
+            end if
+         end do
+
           symba_plA%lmerged(index1) = .TRUE.
           symba_plA%lmerged(index2) = .TRUE.
           index1_parent = symba_plA%index_parent(index1)
@@ -134,6 +149,16 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           mass1 = m1 
           x1(:) = m1*symba_plA%helio%swiftest%xh(:,index1_parent)
           v1(:) = m1*symba_plA%helio%swiftest%vb(:,index1_parent)
+
+          WRITE(*,*) "FRAGMENTATION name index1_parent", symba_plA%helio%swiftest%name(index1_parent)
+          WRITE(*,*) "FRAGMENTATION vb index1_parent", symba_plA%helio%swiftest%vb(3,index1_parent)
+
+         first_add_name = symba_plA%helio%swiftest%name(first_add_index)
+         first_add_vz = symba_plA%helio%swiftest%vh(3,first_add_index)
+
+         WRITE(*,*) "FRAGMENTATION first_add_name", first_add_name
+         WRITE(*,*) "FRAGMENTATION first_add_vz", first_add_vz
+
           mmax = m1
           name1 = symba_plA%helio%swiftest%name(index1_parent)
           index_big1 = index1_parent

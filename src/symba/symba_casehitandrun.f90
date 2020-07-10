@@ -303,6 +303,9 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
    first_add_vz = mergeadd_list%vh(3,1)
    second_add_vz = mergeadd_list%vh(3,2)
+
+   WRITE(*,*) "HITANDRUN", first_add_name, first_add_pz, first_add_vz
+   WRITE(*,*) "HITANDRUN", second_add_name, second_add_pz, second_add_vz
    
    ! Calculate energy after frag                                                                           
    vnew(:) = mv(:) / mtot    ! COM of new fragments                               
