@@ -113,27 +113,6 @@ contains
          write(LUN) swiftest_pla%mass(2:swiftest_plA%nbody)
          write(LUN) swiftest_pla%radius(2:swiftest_plA%nbody) 
 
-         do i = 2, swiftest_plA%nbody
-            if (swiftest_plA%name(i) == 468) then
-               first_add_index = i 
-            end if
-            if (swiftest_plA%name(i) == 894) then
-               second_add_index = i 
-            end if
-         end do
-
-         first_add_name = swiftest_pla%name(first_add_index)
-         second_add_name = swiftest_pla%name(second_add_index)
-
-         first_add_pz = swiftest_pla%xh(3,first_add_index)
-         second_add_pz = swiftest_pla%xh(3,second_add_index)
-
-         first_add_vz = swiftest_pla%vh(3,first_add_index)
-         second_add_vz = swiftest_pla%vh(3,second_add_index)
-
-         WRITE(*,*) "IOWRITEFRAME", first_add_name, first_add_pz, first_add_vz
-         WRITE(*,*) "IOWRITEFRAME", second_add_name, second_add_pz, second_add_vz
-
          if (swiftest_tpA%nbody > 0) then
             write(LUN) swiftest_tpa%name(:)  
             write(LUN) swiftest_tpa%xh(1,:)

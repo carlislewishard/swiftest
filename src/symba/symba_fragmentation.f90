@@ -124,16 +124,6 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
      nres = 2
      IF (lfrag_add) THEN 
 
-
-         do i = 2, npl
-            if (symba_plA%helio%swiftest%name(i) == 468) then
-               first_add_index = i 
-            end if
-            if (symba_plA%helio%swiftest%name(i) == 894) then
-               second_add_index = i 
-            end if
-         end do
-
           symba_plA%lmerged(index1) = .TRUE.
           symba_plA%lmerged(index2) = .TRUE.
           index1_parent = symba_plA%index_parent(index1)

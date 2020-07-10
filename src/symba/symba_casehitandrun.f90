@@ -220,16 +220,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    IF (frags_added > 0) THEN
          r_circle = (rhill_keep + rhill_rm) / (2.0_DP*sin(PI / frags_added))
          theta = (2.0_DP * PI) / (frags_added)
-         ALLOCATE(m_frag(frags_added))
 
-         m_frag(1:frags_added) = mergeadd_list%mass(nstart + 1 :nstart + 1 + frags_added)
-         WRITE(*,*) "m1/mtiny = ", m1/mtiny, "m2/mtiny = ", m2/mtiny
-         DO i=1,frags_added
-            WRITE(*,*) "mfrag/MTINY = ", m_frag(i)/MTINY
-         END DO 
-
-         ALLOCATE(x_frag(NDIM, frags_added))
-         ALLOCATE(v_frag(NDIM, frags_added))
          CALL util_mom(0.0_DP, xh_keep+xbs, vh_keep, mass_rm, xh_rm+xbs, vh_rm, & 
             frags_added, nstart, m_frag, r_circle, theta, x_frag, v_frag)
          DO i=1, frags_added
@@ -244,9 +235,6 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
          ! Tracking linear momentum. 
             mv(:) = mv(:) + (mergeadd_list%mass(nstart + i) * mergeadd_list%vh(:,nstart + i))
          END DO
-         deallocate(m_frag)
-         deallocate(x_frag)
-         deallocate(v_frag)
    END IF
 
    ! Add both particles involved in the collision to mergesub_list
@@ -283,18 +271,6 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       WRITE(*, *) "Number of fragments added: ", (frags_added)
    END IF
 
-   first_add_name = mergeadd_list%name(1)
-   second_add_name = mergeadd_list%name(2)
-
-   first_add_pz = mergeadd_list%xh(3,1)
-   second_add_pz = mergeadd_list%xh(3,2)
-
-   first_add_vz = mergeadd_list%vh(3,1)
-   second_add_vz = mergeadd_list%vh(3,2)
-
-   WRITE(*,*) "HITANDRUN", first_add_name, first_add_pz, first_add_vz
-   WRITE(*,*) "HITANDRUN", second_add_name, second_add_pz, second_add_vz
-   
    ! Calculate energy after frag                                                                           
    vnew(:) = mv(:) / mtot    ! COM of new fragments                               
    enew = 0.5_DP*mtot*DOT_PRODUCT(vnew(:), vnew(:))
