@@ -187,7 +187,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
 
    ! Pure Hit & Run
-   IF (mres(2) > mass_rm * 0.9_DP) THEN
+   IF ((mres(2) > mass_rm * 0.9_DP).OR.(mres(2)<nfrag*mtiny)) THEN
       !frags_added does NOT get incremented on in a perfect merger because then fragmax would be fragmax + 1
       !this screws up the naming of new fragments in subsequent disruptions or supercatastrophic disruptions or
       !imperfect hit & runs. In other words, in a hit & run, frags_added is only incremented on in imperfect 
@@ -215,9 +215,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
             ** (1.0_DP / 3.0_DP) 
       mtot = mtot + mergeadd_list%mass(nmergeadd)
    ! Imperfect Hit & Run       
-      m_rem = m_rm - mres(2)
-      if (m_rem > nfrag*mtiny) then
-         DO i = 2, nfrag 
+      DO i = 2, nfrag 
             m_rem = m_rm - mres(2)
             frags_added = frags_added + 1
             nmergeadd = nmergeadd + 1
@@ -229,20 +227,6 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
                ** (1.0_DP / 3.0_DP) 
             mtot = mtot + mergeadd_list%mass(nmergeadd)
          END DO
-      else
-         nfrag = 1
-         frags_added = frags_added + 1
-         nmergeadd = nmergeadd + 1
-         mergeadd_list%status(nmergeadd) = HIT_AND_RUN
-         mergeadd_list%ncomp(nmergeadd) = 2
-         mergeadd_list%name(nmergeadd) = nplmax + ntpmax + fragmax + i
-         mergeadd_list%mass(nmergeadd) = m_rem / (nfrag) 
-         mergeadd_list%radius(nmergeadd) = ((3.0_DP * mergeadd_list%mass(nmergeadd)) / (4.0_DP * PI * d_rm))  & 
-               ** (1.0_DP / 3.0_DP) 
-         mtot = mtot + mergeadd_list%mass(nmergeadd)
-
-      end if 
-
    END IF
 
    IF (frags_added > 0) THEN
