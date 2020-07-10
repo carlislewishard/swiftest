@@ -59,6 +59,15 @@ SUBROUTINE symba_kick(irec, nplplenc, npltpenc, plplenc_list, pltpenc_list, dt, 
 
       WRITE(*,*) "KICK irec, sgn", irec, sgn
 
+      do i = 2, npl
+        if (symba_plA%helio%swiftest%name(i) == 183) then
+           first_add_index = i 
+        end if
+        if (symba_plA%helio%swiftest%name(i) == 624) then
+           second_add_index = i 
+        end if
+     end do
+
       first_add_name = symba_plA%helio%swiftest%name(first_add_index)
       second_add_name = symba_plA%helio%swiftest%name(second_add_index)
 
