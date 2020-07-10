@@ -65,19 +65,11 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
      REAL(DP)                       :: r2, rlim, rlim2, vdotr, tcr2, dt2, a, e, q
      REAL(DP)                       :: rad1, rad2, m1, m2, den1, den2, vol1, vol2, vchild, dentarg, denproj, dentot, Mcenter
      REAL(DP)                       :: mass1, mass2, mmax, mtmp, mtot, m1_si, m2_si
-     REAL(DP), DIMENSION(NDIM)      :: xr, vr, x1, v1, x2, v2, x1_si, x2_si, v1_si, v2_si, xproj, xtarg, vproj, vtarg
+     REAL(DP), DIMENSION(NDIM)      :: xr, vr, x1, v1, x2, v2, x1_si, x2_si, v1_si, v2_si, xproj, xtarg, vproj, vtarg, vbs_si
      REAL(DP)                       :: den1_si, den2_si, rad1_si, rad2_si, rproj, rtarg
      LOGICAL(LGT)                   :: lfrag_add, lmerge
      INTEGER(I4B), DIMENSION(npl)   :: array_index1_child, array_index2_child
      REAL(DP)                       :: Mlr, Mslr, mtarg, mproj
-
-     real(DP)                                     :: first_add_vz, second_add_vz, first_add_pz, second_add_pz
-     integer(I4B)                                 :: first_add_name, second_add_name, first_add_index, second_add_index
-     !REAL(DP)                       :: K2 = 2.959122082855911e-4 ! in SI units
-     !REAL(DP)                       :: MSUN = 1.98847e30 ! in SI units
-     !REAL(DP)                       :: AU = 1.495978707e11 ! in SI units
-     !REAL(DP)                       :: year = 3.154e7 ! in SI units
-
 
 ! Executable code
 
@@ -150,15 +142,6 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           x1(:) = m1*symba_plA%helio%swiftest%xh(:,index1_parent)
           v1(:) = m1*symba_plA%helio%swiftest%vb(:,index1_parent)
 
-          WRITE(*,*) "FRAGMENTATION name index1_parent", symba_plA%helio%swiftest%name(index1_parent)
-          WRITE(*,*) "FRAGMENTATION vb index1_parent", symba_plA%helio%swiftest%vb(3,index1_parent)
-
-         first_add_name = symba_plA%helio%swiftest%name(first_add_index)
-         first_add_vz = symba_plA%helio%swiftest%vh(3,first_add_index)
-
-         WRITE(*,*) "FRAGMENTATION first_add_name", first_add_name
-         WRITE(*,*) "FRAGMENTATION first_add_vz", first_add_vz
-
           mmax = m1
           name1 = symba_plA%helio%swiftest%name(index1_parent)
           index_big1 = index1_parent
@@ -230,6 +213,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           v2_si(:) = v2(:) * DU2M / TU2S
           den1_si = (den1 / GU) * MU2KG / (DU2M ** 3.0_DP)
           den2_si = (den2 / GU) * MU2KG / (DU2M ** 3.0_DP)
+          vbs_si = vbs(:) * DU2M / TU2S 
 
           mres(:) = 0.0_DP
           rres(:) = 0.0_DP
@@ -268,7 +252,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           Mcenter = symba_plA%helio%swiftest%mass(1) * MU2KG / GU
           mtiny_si = (mtiny/GU)*MU2KG
           !regime = collresolve_resolve(model,mtarg,mproj,rtarg,rproj,xtarg,xproj, vtarg,vproj, nres, mres, rres, pres, vres)
-          CALL util_regime(Mcenter, mtarg, mproj, rtarg, rproj, xtarg, xproj, vtarg, vproj, dentarg, denproj, &
+          CALL util_regime(Mcenter, mtarg, mproj, rtarg, rproj, xtarg, xproj, vtarg-vbs_si, vproj-vbs_si, dentarg, denproj, &
                regime, Mlr, Mslr, mtiny_si)
 
           mres(1) = Mlr
