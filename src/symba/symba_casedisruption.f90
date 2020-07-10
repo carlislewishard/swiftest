@@ -90,20 +90,8 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    msun = symba_plA%helio%swiftest%mass(1)
    xbs(:) = symba_plA%helio%swiftest%xb(:,1)
 
-   ! Find COM
-   x_com = ((x1(1) * m1) + (x2(1) * m2)) / (m1 + m2)
-   y_com = ((x1(2) * m1) + (x2(2) * m2)) / (m1 + m2)
-   z_com = ((x1(3) * m1) + (x2(3) * m2)) / (m1 + m2)
-
-   vx_com = ((v1(1) * m1) + (v2(1) * m2)) / (m1 + m2)
-   vy_com = ((v1(2) * m1) + (v2(2) * m2)) / (m1 + m2)
-   vz_com = ((v1(3) * m1) + (v2(3) * m2)) / (m1 + m2)
-
-   ! Find Collision velocity
-   v_col = NORM2(v2(:) - v1(:))
-
    ! Find energy pre-frag
-   eold = 0.5_DP*(m1*DOT_PRODUCT(v1(:), v1(:)) + m2*DOT_PRODUCT(v2(:), v2(:)))
+   eold = 0.5_DP*(m1*DOT_PRODUCT(v1(:)-vbs(:), v1(:)-vbs(:)) + m2*DOT_PRODUCT(v2(:)-vbs(:), v2(:)-vbs(:)))
    xr(:) = x2(:) - x1(:)
    eold = eold - (m1*m2/(SQRT(DOT_PRODUCT(xr(:), xr(:)))))
    
