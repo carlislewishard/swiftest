@@ -123,7 +123,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    END IF
 
    ! Find energy pre-frag
-   eold = 0.5_DP*(mass_keep*DOT_PRODUCT(vh_keep, vh_keep + mass_rm*DOT_PRODUCT(vh_rm, vh_rm)
+   eold = 0.5_DP*(mass_keep*DOT_PRODUCT(vh_keep, vh_keep) + mass_rm*DOT_PRODUCT(vh_rm, vh_rm))
    xr(:) = x2(:) - x1(:)
    eold = eold - (m1*m2/(SQRT(DOT_PRODUCT(xr(:), xr(:)))))
 
