@@ -88,7 +88,7 @@ SUBROUTINE symba_step(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      INTEGER(I4B)              :: i, j, irec, nplm
      REAL(DP), DIMENSION(NDIM) :: xr, vr
      LOGICAL, SAVE             :: lfirst = .true.
-     real(DP)                                     :: first_add_vz, second_add_vz, first_add_pz, second_add_pz
+     real(DP)                                     :: first_add_vhz, second_add_vhz, first_add_vbz, second_add_vbz
      integer(I4B)                                 :: first_add_name, second_add_name, first_add_index, second_add_index
      
 ! Executable code
@@ -105,14 +105,14 @@ SUBROUTINE symba_step(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      first_add_name = symba_plA%helio%swiftest%name(first_add_index)
      second_add_name = symba_plA%helio%swiftest%name(second_add_index)
 
-     first_add_pz = symba_plA%helio%swiftest%xh(3,first_add_index)
-     second_add_pz = symba_plA%helio%swiftest%xh(3,second_add_index)
+     first_add_vbz = symba_plA%helio%swiftest%vb(3,first_add_index)
+     second_add_vbz = symba_plA%helio%swiftest%vb(3,second_add_index)
 
-     first_add_vz = symba_plA%helio%swiftest%vh(3,first_add_index)
-     second_add_vz = symba_plA%helio%swiftest%vh(3,second_add_index)
+     first_add_vhz = symba_plA%helio%swiftest%vh(3,first_add_index)
+     second_add_vhz = symba_plA%helio%swiftest%vh(3,second_add_index)
 
-     WRITE(*,*) "STEP", first_add_name, first_add_pz, first_add_vz
-     WRITE(*,*) "STEP", second_add_name, second_add_pz, second_add_vz
+     WRITE(*,*) "STEP", first_add_name, first_add_vbz, first_add_vhz
+     WRITE(*,*) "STEP", second_add_name, second_add_vbz, second_add_vhz
 
     DO i = 1,npl
           symba_plA%nplenc(i) = 0
