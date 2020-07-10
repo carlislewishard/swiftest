@@ -51,8 +51,26 @@ SUBROUTINE symba_kick(irec, nplplenc, npltpenc, plplenc_list, pltpenc_list, dt, 
      INTEGER(I4B)              :: i, irm1, irecl, index_i,index_j,index_tp,index_pl
      REAL(DP)                  :: r, rr, ri, ris, rim1, r2, ir3, fac, faci, facj
      REAL(DP), DIMENSION(NDIM) :: dx
+     real(DP)                                     :: first_add_vhz, second_add_vhz, first_add_vbz, second_add_vbz
+     integer(I4B)                                 :: first_add_name, second_add_name, first_add_index, second_add_index
+     
 
 ! Executable code
+
+      WRITE(*,*) "KICK irec, sgn", irec, sgn
+
+      first_add_name = symba_plA%helio%swiftest%name(first_add_index)
+      second_add_name = symba_plA%helio%swiftest%name(second_add_index)
+
+      first_add_vbz = symba_plA%helio%swiftest%vb(3,first_add_index)
+      second_add_vbz = symba_plA%helio%swiftest%vb(3,second_add_index)
+
+      first_add_vhz = symba_plA%helio%swiftest%vh(3,first_add_index)
+      second_add_vhz = symba_plA%helio%swiftest%vh(3,second_add_index)
+
+      WRITE(*,*) "KICK", first_add_name, first_add_vbz, first_add_vhz
+      WRITE(*,*) "KICK", second_add_name, second_add_vbz, second_add_vhz
+
      irm1 = irec - 1
      IF (sgn < 0.0_DP) THEN
           irecl = irec - 1

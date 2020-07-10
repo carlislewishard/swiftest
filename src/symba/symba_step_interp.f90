@@ -148,6 +148,7 @@ SUBROUTINE symba_step_interp(lextra_force, lclose, t, npl, nplm, nplmax, ntp, nt
      CALL symba_step_recur(lclose, t, irec, npl, nplm, ntp, symba_plA, symba_tpA, dt, eoffset, nplplenc, npltpenc,              &
           plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, encounter_file, out_type, &
           nplmax, ntpmax, fragmax, param)
+
      IF (ntp > 0) THEN
           DO i = 2, npl
                xend(:, i) = symba_plA%helio%swiftest%xh(:,i)
@@ -159,7 +160,20 @@ SUBROUTINE symba_step_interp(lextra_force, lclose, t, npl, nplm, nplmax, ntp, nt
      CALL helio_kickvb(npl, symba_plA%helio, dth)
      IF (ntp > 0) CALL helio_kickvb_tp(ntp, symba_tpA%helio, dth)
 
+     WRITE(*,*) "INTERP 1 first vb", symba_plA%helio%swiftest%vb(3,first_add_index)
+     WRITE(*,*) "INTERP 1 first vh", symba_plA%helio%swiftest%vh(3,first_add_index)
+
+     WRITE(*,*) "INTERP 1 second vb", symba_plA%helio%swiftest%vb(3,second_add_index)
+     WRITE(*,*) "INTERP 1 second vh", symba_plA%helio%swiftest%vh(3,second_add_index)
+
      CALL coord_vb2vh(npl, symba_plA%helio%swiftest)
+
+     WRITE(*,*) "INTERP 2 first vb", symba_plA%helio%swiftest%vb(3,first_add_index)
+     WRITE(*,*) "INTERP 2 first vh", symba_plA%helio%swiftest%vh(3,first_add_index)
+
+     WRITE(*,*) "INTERP 2 second vb", symba_plA%helio%swiftest%vb(3,second_add_index)
+     WRITE(*,*) "INTERP 2 second vh", symba_plA%helio%swiftest%vh(3,second_add_index)
+
      CALL helio_lindrift(npl, symba_plA%helio%swiftest, dth, pte)
      IF (ntp > 0) THEN
           CALL coord_vb2vh_tp(ntp, symba_tpA%helio%swiftest, -pte)
