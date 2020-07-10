@@ -99,8 +99,8 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       rad_rm = rad1
       xh_keep = x2
       xh_rm = x1
-      vh_keep = v2
-      vh_rm = v1
+      vh_keep = v2 - vbs
+      vh_rm = v1 - vbs
       index_keep_parent = index2_parent
       index_rm_parent = index1_parent
       name_keep = name2
@@ -114,28 +114,16 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       rad_rm = rad2
       xh_keep = x1
       xh_rm = x2
-      vh_keep = v1
-      vh_rm = v2
+      vh_keep = v1 - vbs
+      vh_rm = v2 - vbs
       index_keep_parent = index1_parent
       index_rm_parent = index2_parent
       name_keep = name1
       name_rm = name2
    END IF
 
-   ! Find COM
-   x_com = ((x1(1) * m1) + (x2(1) * m2)) / (m1 + m2)
-   y_com = ((x1(2) * m1) + (x2(2) * m2)) / (m1 + m2)
-   z_com = ((x1(3) * m1) + (x2(3) * m2)) / (m1 + m2)
-
-   vx_com = ((v1(1) * m1) + (v2(1) * m2)) / (m1 + m2)
-   vy_com = ((v1(2) * m1) + (v2(2) * m2)) / (m1 + m2)
-   vz_com = ((v1(3) * m1) + (v2(3) * m2)) / (m1 + m2)
-
-   ! Find Collision velocity
-   v_col = NORM2(v2(:) - v1(:))
-
    ! Find energy pre-frag
-   eold = 0.5_DP*(m1*DOT_PRODUCT(v1(:), v1(:)) + m2*DOT_PRODUCT(v2(:), v2(:)))
+   eold = 0.5_DP*(mass_keep*DOT_PRODUCT(vh_keep, vh_keep + mass_rm*DOT_PRODUCT(vh_rm, vh_rm)
    xr(:) = x2(:) - x1(:)
    eold = eold - (m1*m2/(SQRT(DOT_PRODUCT(xr(:), xr(:)))))
 
@@ -251,7 +239,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
             mergeadd_list%xh(3,nstart + i) = x_frag(3, i) -xbs(3) !z_frag                                                   
             mergeadd_list%vh(1,nstart + i) = v_frag(1, i) -vbs(1) !vx_frag
             mergeadd_list%vh(2,nstart + i) = v_frag(2, i) -vbs(2) !vy_frag
-            mergeadd_list%vh(3,nstart + i) = v_frag(3, i) -vbs(1)  !vz_frag
+            mergeadd_list%vh(3,nstart + i) = v_frag(3, i) -vbs(3) !vz_frag
 
          ! Tracking linear momentum. 
             mv(:) = mv(:) + (mergeadd_list%mass(nstart + i) * mergeadd_list%vh(:,nstart + i))
