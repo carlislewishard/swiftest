@@ -73,6 +73,10 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
 ! Executable code
 
+   WRITE(*,*) "HITANDRUN v1", v1
+   WRITE(*,*) "HITANDRUN v2", v2
+   WRITE(*,*) "HITANDRUN vbs", vbs
+
    ! Set the maximum number of fragments to be added in a Hit and Run collision (nfrag)
    nfrag = 4
    ! Pull in the information about the two particles involved in the collision 
@@ -121,6 +125,9 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       name_keep = name1
       name_rm = name2
    END IF
+
+   WRITE(*,*) "HITANDRUN vh_keep", vh_keep
+   WRITE(*,*) "HITANDRUN vh_rm", vh_rm
 
    ! Find energy pre-frag
    eold = 0.5_DP*(mass_keep*DOT_PRODUCT(vh_keep, vh_keep) + mass_rm*DOT_PRODUCT(vh_rm, vh_rm))
@@ -173,6 +180,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    mergeadd_list%vh(:,nmergeadd) = vh_keep(:)
    mtot = mtot + mergeadd_list%mass(nmergeadd) 
 
+   WRITE(*,*) "HITANDRUN mergeadd_list%vh(:,1)", mergeadd_list%vh(:,nmergeadd)
 
    ! Pure Hit & Run
    IF ((mres(2) > mass_rm * 0.9_DP).OR.(mres(2)<nfrag*mtiny)) THEN
@@ -189,6 +197,8 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       mergeadd_list%xh(:,nmergeadd) = xh_rm(:)
       mergeadd_list%vh(:,nmergeadd) = vh_rm(:)
       mtot = mtot + mergeadd_list%mass(nmergeadd)
+
+      WRITE(*,*) "HITANDRUN mergeadd_list%vh(:,2)", mergeadd_list%vh(:,nmergeadd)
    ELSE
       m_rm = mass_rm
       r_rm = rad_rm
@@ -250,6 +260,8 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    ELSE 
       mergesub_list%nadded(nmergesub) = frags_added
    END IF
+   WRITE(*,*) "HITANDRUN mergesub_list%vh(:,1)", mergesub_list%vh(:,nmergesub)
+
    nmergesub = nmergesub + 1
    mergesub_list%name(nmergesub) = name2
    mergesub_list%status(nmergesub) = HIT_AND_RUN
@@ -262,6 +274,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    ELSE 
       mergesub_list%nadded(nmergesub) = frags_added
    END IF
+   WRITE(*,*) "HITANDRUN mergesub_list%vh(:,2)", mergesub_list%vh(:,nmergesub)
 
    WRITE(*, *) "Hit and run between particles ", name1, " and ", name2, " at time t = ",t
    IF (frags_added == 0) THEN
