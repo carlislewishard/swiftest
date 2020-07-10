@@ -33,7 +33,7 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-   symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, x1, x2, v1, v2)
+   symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, x1, x2, v1, v2,mtiny)
 
 ! Modules
    USE swiftest
@@ -46,7 +46,7 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
    INTEGER(I4B), INTENT(IN)                         :: index_enc, nplmax, ntpmax
    INTEGER(I4B), INTENT(IN)                         :: nplplenc
    INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub, fragmax
-   REAL(DP), INTENT(IN)                             :: t, dt
+   REAL(DP), INTENT(IN)                             :: t, dt, mtiny
    REAL(DP), INTENT(INOUT)                          :: eoffset, m1, m2, rad1, rad2
    REAL(DP), DIMENSION(:), INTENT(INOUT)            :: mres, rres
    REAL(DP), DIMENSION(:), INTENT(IN)            :: vbs
@@ -70,7 +70,7 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
 
 
 ! Executable code
-     
+   
    ! Set the maximum number of fragments to be added in a Supercatastrophic Disruption collision (nfrag)
    nfrag = 10
    ! Pull in the information about the two particles involved in the collision  
@@ -171,6 +171,7 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
          mergeadd_list%mass(nmergeadd) = mres(1)
          mergeadd_list%radius(nmergeadd) = rres(1)
          mtot = mtot + mergeadd_list%mass(nmergeadd) 
+         ! Fragments creation 
          DO i = 2, nfrag
             frags_added = frags_added + 1
             nmergeadd = nmergeadd + 1

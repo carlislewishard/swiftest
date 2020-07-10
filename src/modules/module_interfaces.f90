@@ -690,7 +690,7 @@ MODULE module_interfaces
 
      INTERFACE
           SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-          symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, x1, x2, v1, v2)
+          symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny)
           USE swiftest_globals
           USE swiftest_data_structures
           USE module_helio
@@ -699,7 +699,7 @@ MODULE module_interfaces
           INTEGER(I4B), INTENT(IN)                         :: index_enc, nplmax, ntpmax
           INTEGER(I4B), INTENT(IN)                         :: nplplenc
           INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub, fragmax
-          REAL(DP), INTENT(IN)                             :: t, dt
+          REAL(DP), INTENT(IN)                             :: t, dt,mtiny
           REAL(DP), INTENT(INOUT)                          :: eoffset, m1, m2, rad1, rad2
           REAL(DP), DIMENSION(:), INTENT(INOUT)            :: mres, rres
           REAL(DP), DIMENSION(:), INTENT(IN)            :: vbs
@@ -713,7 +713,7 @@ MODULE module_interfaces
 
      INTERFACE
           SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-          symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, x1, x2, v1, v2)
+          symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny)
           USE swiftest_globals
           USE swiftest_data_structures
           USE module_helio
@@ -722,7 +722,7 @@ MODULE module_interfaces
           INTEGER(I4B), INTENT(IN)                         :: index_enc, nplmax, ntpmax
           INTEGER(I4B), INTENT(IN)                         :: nplplenc
           INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub, fragmax
-          REAL(DP), INTENT(IN)                             :: t, dt
+          REAL(DP), INTENT(IN)                             :: t, dt, mtiny
           REAL(DP), INTENT(INOUT)                          :: eoffset, m1, m2, rad1, rad2
           REAL(DP), DIMENSION(:), INTENT(INOUT)            :: mres, rres
           REAL(DP), DIMENSION(:), INTENT(IN)            :: vbs
@@ -759,7 +759,7 @@ MODULE module_interfaces
      INTERFACE
           SUBROUTINE symba_caseresolve (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
           npl, symba_plA, nplplenc, plplenc_list, regime, nplmax, ntpmax, fragmax, mres, rres, array_index1_child, &
-          array_index2_child, m1, m2, rad1, rad2, x1, x2, v1, v2)
+          array_index2_child, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny)
           USE swiftest_globals
           USE swiftest_data_structures
           USE module_helio
@@ -768,7 +768,7 @@ MODULE module_interfaces
           INTEGER(I4B), INTENT(IN)                         :: index_enc, nplmax, ntpmax
           INTEGER(I4B), INTENT(IN)                         :: npl, nplplenc
           INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub, fragmax
-          REAL(DP), INTENT(IN)                             :: t, dt
+          REAL(DP), INTENT(IN)                             :: t, dt, mtiny
           REAL(DP), INTENT(INOUT)                          :: eoffset, m1, m2, rad1, rad2
           REAL(DP), DIMENSION(:), INTENT(INOUT)            :: mres, rres
           REAL(DP), DIMENSION(:), INTENT(IN)            :: vbs
@@ -785,7 +785,7 @@ MODULE module_interfaces
      INTERFACE
           SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
                eoffset, vbs, symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, &
-               rad2, x1, x2, v1, v2)
+               rad2, x1, x2, v1, v2, mtiny)
           USE swiftest_globals
           USE swiftest_data_structures
           USE module_helio
@@ -794,7 +794,7 @@ MODULE module_interfaces
           INTEGER(I4B), INTENT(IN)                         :: index_enc, nplmax, ntpmax
           INTEGER(I4B), INTENT(IN)                         :: nplplenc
           INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub, fragmax
-          REAL(DP), INTENT(IN)                             :: t, dt
+          REAL(DP), INTENT(IN)                             :: t, dt, mtiny
           REAL(DP), INTENT(INOUT)                          :: eoffset, m1, m2, rad1, rad2
           REAL(DP), DIMENSION(:), INTENT(INOUT)            :: mres, rres
           REAL(DP), DIMENSION(:), INTENT(IN)            :: vbs

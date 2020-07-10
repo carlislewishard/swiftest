@@ -69,7 +69,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
      REAL(DP)                       :: den1_si, den2_si, rad1_si, rad2_si, rproj, rtarg
      LOGICAL(LGT)                   :: lfrag_add, lmerge
      INTEGER(I4B), DIMENSION(npl)   :: array_index1_child, array_index2_child
-     REAL(DP)                       :: Mlr, Mslr, mtarg, mproj
+     REAL(DP)                       :: Mlr, Mslr, mtarg, mproj, mtiny_si
      !REAL(DP)                       :: K2 = 2.959122082855911e-4 ! in SI units
      !REAL(DP)                       :: MSUN = 1.98847e30 ! in SI units
      !REAL(DP)                       :: AU = 1.495978707e11 ! in SI units
@@ -241,11 +241,10 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           mtot = m1_si + m2_si
           dentot = (m1_si *den1_si +m2_si*den2_si )/ mtot
           Mcenter = symba_plA%helio%swiftest%mass(1) * MU2KG / GU
-
+          mtiny_si = (mtiny/GU)*MU2KG
           !regime = collresolve_resolve(model,mtarg,mproj,rtarg,rproj,xtarg,xproj, vtarg,vproj, nres, mres, rres, pres, vres)
-
           CALL util_regime(Mcenter, mtarg, mproj, rtarg, rproj, xtarg, xproj, vtarg, vproj, dentarg, denproj, &
-               regime, Mlr, Mslr, mtiny)
+               regime, Mlr, Mslr, mtiny_si)
 
           mres(1) = Mlr
           mres(2) = Mslr 
@@ -260,7 +259,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
           CALL symba_caseresolve(t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
           npl, symba_plA, nplplenc, plplenc_list, regime, nplmax, ntpmax, fragmax, mres, rres, array_index1_child, &
-          array_index2_child, m1, m2, rad1, rad2, x1, x2, v1, v2)
+          array_index2_child, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny)
      END IF 
      RETURN
 

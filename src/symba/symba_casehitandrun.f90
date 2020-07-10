@@ -33,7 +33,7 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-   symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, x1, x2, v1, v2)
+   symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny)
 
 ! Modules
    USE swiftest
@@ -46,7 +46,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    INTEGER(I4B), INTENT(IN)                         :: index_enc, nplmax, ntpmax
    INTEGER(I4B), INTENT(IN)                         :: nplplenc
    INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub, fragmax
-   REAL(DP), INTENT(IN)                             :: t, dt
+   REAL(DP), INTENT(IN)                             :: t, dt, mtiny
    REAL(DP), INTENT(INOUT)                          :: eoffset, m1, m2, rad1, rad2
    REAL(DP), DIMENSION(:), INTENT(INOUT)            :: mres, rres
    REAL(DP), DIMENSION(:), INTENT(IN)               :: vbs
@@ -215,8 +215,22 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
             ** (1.0_DP / 3.0_DP) 
       mtot = mtot + mergeadd_list%mass(nmergeadd)
    ! Imperfect Hit & Run       
-      DO i = 2, nfrag 
-         m_rem = m_rm - mres(2)
+      m_rem = m_rm - mres(2)
+      if (m_rem > nfrag*mtiny) then
+         DO i = 2, nfrag 
+            m_rem = m_rm - mres(2)
+            frags_added = frags_added + 1
+            nmergeadd = nmergeadd + 1
+            mergeadd_list%status(nmergeadd) = HIT_AND_RUN
+            mergeadd_list%ncomp(nmergeadd) = 2
+            mergeadd_list%name(nmergeadd) = nplmax + ntpmax + fragmax + i
+            mergeadd_list%mass(nmergeadd) = m_rem / (nfrag) 
+            mergeadd_list%radius(nmergeadd) = ((3.0_DP * mergeadd_list%mass(nmergeadd)) / (4.0_DP * PI * d_rm))  & 
+               ** (1.0_DP / 3.0_DP) 
+            mtot = mtot + mergeadd_list%mass(nmergeadd)
+         END DO
+      else
+         nfrag = 1
          frags_added = frags_added + 1
          nmergeadd = nmergeadd + 1
          mergeadd_list%status(nmergeadd) = HIT_AND_RUN
@@ -224,16 +238,23 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
          mergeadd_list%name(nmergeadd) = nplmax + ntpmax + fragmax + i
          mergeadd_list%mass(nmergeadd) = m_rem / (nfrag) 
          mergeadd_list%radius(nmergeadd) = ((3.0_DP * mergeadd_list%mass(nmergeadd)) / (4.0_DP * PI * d_rm))  & 
-            ** (1.0_DP / 3.0_DP) 
+               ** (1.0_DP / 3.0_DP) 
          mtot = mtot + mergeadd_list%mass(nmergeadd)
-      END DO
+
+      end if 
+
    END IF
 
    IF (frags_added > 0) THEN
          r_circle = (rhill_keep + rhill_rm) / (2.0_DP*sin(PI / frags_added))
          theta = (2.0_DP * PI) / (frags_added)
          ALLOCATE(m_frag(frags_added))
+
          m_frag(1:frags_added) = mergeadd_list%mass(nstart + 1 :nstart + 1 + frags_added)
+         WRITE(*,*) "m1/mtiny = ", m1/mtiny, "m2/mtiny = ", m2/mtiny
+         DO i=1,frags_added
+            WRITE(*,*) "mfrag/MTINY = ", m_frag(i)/MTINY
+         END DO 
 
          ALLOCATE(x_frag(NDIM, frags_added))
          ALLOCATE(v_frag(NDIM, frags_added))
