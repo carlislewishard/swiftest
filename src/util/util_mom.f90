@@ -197,7 +197,8 @@ SUBROUTINE util_mom(m1, xh1, vh1, m2, xh2, vh2, frags_added, nstart, m_frag, r_c
      vz_com_frag = mvz_frag / SUM(m_frag(:))
      angmom_after = NORM2(angmom_com_frag)
      DL = (angmom_after - NORM2(angmom_before))/ NORM2(angmom_before)
-     !WRITE(*,*) "util_mom DL/L = ", DL 
+     
+     WRITE(*,*) "util_mom DL/L = ", DL 
      !WRITE(*,*) "util_mom l(1) :", l(1)
      !WRITE(*,*) "util_mom p(1) :", p(1)
      !WRITE(*,*) "util_mom p_frag_check :", p_frag_check
