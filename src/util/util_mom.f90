@@ -55,11 +55,18 @@ SUBROUTINE util_mom(m1, xh1, vh1, m2, xh2, vh2, frags_added, nstart, m_frag, r_c
 
 ! Executable code
 
+   WRITE(*,*) "UTIL_MOM xh1", xh1 
+   WRITE(*,*) "UTIL_MOM xh2", xh2 
+   WRITE(*,*) "UTIL_MOM vh1", vh1 
+   WRITE(*,*) "UTIL_MOM vh2", vh2 
+
      linmom_before = NORM2(m1*vh1(:) + m2*vh2(:))
      call util_crossproduct(xh1,vh1,xhvh1)
      call util_crossproduct(xh2,vh2,xhvh2)
      angmom_before = (m1*xhvh1+m2*xhvh2)
-     !WRITE(*,*) "angmom_before =", NORM2(angmom_before)
+
+   WRITE(*,*) "UTIL_MOM angmom_before", NORM2(angmom_before)
+
         ! Find COM
    x_com = ((xh1(1) * m1) + (xh2(1) * m2)) / (m1 + m2)
    y_com = ((xh1(2) * m1) + (xh2(2) * m2)) / (m1 + m2)
@@ -196,8 +203,9 @@ SUBROUTINE util_mom(m1, xh1, vh1, m2, xh2, vh2, frags_added, nstart, m_frag, r_c
      vy_com_frag = mvy_frag / SUM(m_frag(:))
      vz_com_frag = mvz_frag / SUM(m_frag(:))
      angmom_after = NORM2(angmom_com_frag)
+     WRITE(*,*) "UTIL_MOM angmom_after", angmom_after
      DL = (angmom_after - NORM2(angmom_before))/ NORM2(angmom_before)
-     
+
      WRITE(*,*) "util_mom DL/L = ", DL 
      !WRITE(*,*) "util_mom l(1) :", l(1)
      !WRITE(*,*) "util_mom p(1) :", p(1)
