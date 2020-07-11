@@ -94,10 +94,10 @@ SUBROUTINE symba_step(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
 ! Executable code
 
      do i = 2, npl
-        if (symba_plA%helio%swiftest%name(i) == 2) then
+        if (symba_plA%helio%swiftest%name(i) == 183) then
            first_add_index = i 
         end if
-        if (symba_plA%helio%swiftest%name(i) == 3) then
+        if (symba_plA%helio%swiftest%name(i) == 624) then
            second_add_index = i 
         end if
      end do

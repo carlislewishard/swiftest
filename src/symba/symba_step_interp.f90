@@ -95,11 +95,12 @@ SUBROUTINE symba_step_interp(lextra_force, lclose, t, npl, nplm, nplmax, ntp, nt
 
 ! Executable code
 
+   IF (t >= 9.00000E-01) THEN
       do i = 2, npl
-        if (symba_plA%helio%swiftest%name(i) == 2) then
+        if (symba_plA%helio%swiftest%name(i) == 183) then
            first_add_index = i 
         end if
-        if (symba_plA%helio%swiftest%name(i) == 3) then
+        if (symba_plA%helio%swiftest%name(i) == 624) then
            second_add_index = i 
         end if
      end do
@@ -115,6 +116,7 @@ SUBROUTINE symba_step_interp(lextra_force, lclose, t, npl, nplm, nplmax, ntp, nt
 
      WRITE(*,*) "INTERP", first_add_name, first_add_vbz, first_add_vhz
      WRITE(*,*) "INTERP", second_add_name, second_add_vbz, second_add_vhz
+   end if
 
      
      IF (lmalloc) THEN
