@@ -200,7 +200,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       mergeadd_list%name(nmergeadd) = symba_plA%helio%swiftest%name(index_rm)
       mergeadd_list%mass(nmergeadd) = mass_rm
       mergeadd_list%radius(nmergeadd) = rad_rm
-      mergeadd_list%xh(:,nmergeadd) = xh_rm(:)
+      mergeadd_list%xh(:,nmergeadd) = xh_rm(:) + (NORM2(vh_rm(:)) * (rhill_keep + rhill_rm))
       mergeadd_list%vh(:,nmergeadd) = vh_rm(:)
       mtot = mtot + mergeadd_list%mass(nmergeadd)
 
