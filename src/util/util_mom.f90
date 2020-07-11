@@ -24,7 +24,7 @@
 !  Notes       : Adapted from Hal Levison's Swift routine util_hills.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE util_mom(m1, xb1, vb1, m2, xb2, vb2, frags_added, nstart, m_frag, r_circle, theta, p_frag, vel_frag)
+SUBROUTINE util_mom(m1, xh1, vh1, m2, xh2, vh2, frags_added, nstart, m_frag, r_circle, theta, p_frag, vel_frag)
 
 !x_frag, y_frag, z_frag, vx_frag, vy_frag, vz_frag)
 
@@ -37,7 +37,7 @@ SUBROUTINE util_mom(m1, xb1, vb1, m2, xb2, vb2, frags_added, nstart, m_frag, r_c
 ! Arguments
    INTEGER(I4B), INTENT(IN)                               :: frags_added, nstart
    REAL(DP), INTENT(IN)                                   :: m1, m2, r_circle, theta
-   REAL(DP), DIMENSION(:), INTENT(IN)                     :: xb1, vb1, xb2, vb2
+   REAL(DP), DIMENSION(:), INTENT(IN)                     :: xh1, vh1, xh2, vh2
    REAL(DP), DIMENSION(:), INTENT(IN)                     :: m_frag
    REAL(DP), DIMENSION(:, :), INTENT(INOUT)               :: p_frag, vel_frag
 
@@ -46,7 +46,7 @@ SUBROUTINE util_mom(m1, xb1, vb1, m2, xb2, vb2, frags_added, nstart, m_frag, r_c
    INTEGER(I4B)                                           :: i 
    REAL(DP)                                               :: x_com, y_com, z_com, vx_com, vy_com, vz_com, v_col, A, v2el, v2esc
    REAL(DP)                                               :: linmom_before, angmom_after, linmom_after, DL
-   REAL(DP), DIMENSION(NDIM)                              :: veclinmom_after, xbvb1, xbvb2, xv_frag, vecangmom_after, xvrel
+   REAL(DP), DIMENSION(NDIM)                              :: veclinmom_after, xhvh1, xhvh2, xv_frag, vecangmom_after, xvrel
    REAL(DP)                                               :: mx_frag, my_frag, mz_frag, mvx_frag, mvy_frag, mvz_frag
    REAL(DP)                                               :: x_com_frag, y_com_frag, z_com_frag, vx_com_frag, vy_com_frag
    REAL(DP)                                               :: vz_com_frag, p_frag_check, v_frag_check, B, m_frag_tot
@@ -55,24 +55,24 @@ SUBROUTINE util_mom(m1, xb1, vb1, m2, xb2, vb2, frags_added, nstart, m_frag, r_c
 
 ! Executable code
 
-     linmom_before = NORM2(m1*vb1(:) + m2*vb2(:))
-     call util_crossproduct(xb1,vb1,xbvb1)
-     call util_crossproduct(xb2,vb2,xbvb2)
-     angmom_before = (m1*xbvb1+m2*xbvb2)
+     linmom_before = NORM2(m1*vh1(:) + m2*vh2(:))
+     call util_crossproduct(xh1,vh1,xhvh1)
+     call util_crossproduct(xh2,vh2,xhvh2)
+     angmom_before = (m1*xhvh1+m2*xhvh2)
      !WRITE(*,*) "angmom_before =", NORM2(angmom_before)
         ! Find COM
-   x_com = ((xb1(1) * m1) + (xb2(1) * m2)) / (m1 + m2)
-   y_com = ((xb1(2) * m1) + (xb2(2) * m2)) / (m1 + m2)
-   z_com = ((xb1(3) * m1) + (xb2(3) * m2)) / (m1 + m2)
+   x_com = ((xh1(1) * m1) + (xh2(1) * m2)) / (m1 + m2)
+   y_com = ((xh1(2) * m1) + (xh2(2) * m2)) / (m1 + m2)
+   z_com = ((xh1(3) * m1) + (xh2(3) * m2)) / (m1 + m2)
 
-   vx_com = ((vb1(1) * m1) + (vb2(1) * m2)) / (m1 + m2)
-   vy_com = ((vb1(2) * m1) + (vb2(2) * m2)) / (m1 + m2)
-   vz_com = ((vb1(3) * m1) + (vb2(3) * m2)) / (m1 + m2)
+   vx_com = ((vh1(1) * m1) + (vh2(1) * m2)) / (m1 + m2)
+   vy_com = ((vh1(2) * m1) + (vh2(2) * m2)) / (m1 + m2)
+   vz_com = ((vh1(3) * m1) + (vh2(3) * m2)) / (m1 + m2)
 
    ! Find Collision velocity
-     v_col = NORM2(vb2(:) - vb1(:))
-     xr(:) = xb2(:) - xb1(:)
-     l(:) = (vb2(:) - vb1(:)) 
+     v_col = NORM2(vh2(:) - vh1(:))
+     xr(:) = xh2(:) - xh1(:)
+     l(:) = (vh2(:) - vh1(:)) 
      call util_crossproduct(l,xr,xvrel)
      kk(:) = xvrel !angmom_before
      !call util_crossproduct(l(:), xr(:), kk(:))
