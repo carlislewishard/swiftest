@@ -51,8 +51,6 @@ SUBROUTINE coord_vb2vh(npl, swiftest_plA)
           swiftest_plA%vh(:,i) = swiftest_plA%vb(:,i) - vtmp(:)
      END DO
 
-     WRITE(*,*) "COORD_VB2VB ", vtmp
-
      RETURN
 
 END SUBROUTINE coord_vb2vh
