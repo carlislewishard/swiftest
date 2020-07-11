@@ -190,11 +190,10 @@ SUBROUTINE util_mom(m1, xh1, vh1, m2, xh2, vh2, frags_added, nstart, m_frag, r_c
           mx_frag = (p_frag(1,i) * m_frag(i)) + mx_frag
           my_frag = (p_frag(2,i) * m_frag(i)) + my_frag
           mz_frag = (p_frag(3,i) * m_frag(i)) + mz_frag
-
           mvx_frag = (vel_frag(1,i) * m_frag(i)) + mvx_frag
           mvy_frag = (vel_frag(2,i) * m_frag(i)) + mvy_frag
           mvz_frag = (vel_frag(3,i) * m_frag(i)) + mvz_frag
-          call util_crossproduct(p_frag(:,i), vel_frag(:,i), angmom_fragi(:)) 
+          call util_crossproduct(p_frag(:,i)*m_frag(i), vel_frag(:,i), angmom_fragi(:)) 
           angmom_frag(:) = angmom_frag(:) + angmom_fragi(:)
      END DO 
      ! WRITE(*,*) " after offset"
