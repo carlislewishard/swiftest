@@ -85,36 +85,8 @@ RECURSIVE SUBROUTINE symba_step_recur(lclose, t, ireci, npl, nplm, ntp, symba_pl
      INTEGER(I4B)              :: i, j, irecp, icflg, index_i, index_j, index_pl, index_tp
      REAL(DP)                  :: dtl, dth, sgn, mtiny
      REAL(DP), DIMENSION(NDIM) :: xr, vr, vbs
-     real(DP)                                     :: first_add_vhz, second_add_vhz, first_add_vbz, second_add_vbz
-     integer(I4B)                                 :: first_add_name, second_add_name, first_add_index, second_add_index
-     
-
 
 ! Executable code
-
-
-   IF (t >= 9.00000E-01) THEN
-      do i = 2, npl
-        if (symba_plA%helio%swiftest%name(i) == 183) then
-           first_add_index = i 
-        end if
-        if (symba_plA%helio%swiftest%name(i) == 624) then
-           second_add_index = i 
-        end if
-     end do
-
-     first_add_name = symba_plA%helio%swiftest%name(first_add_index)
-     second_add_name = symba_plA%helio%swiftest%name(second_add_index)
-
-     first_add_vbz = symba_plA%helio%swiftest%vb(3,first_add_index)
-     second_add_vbz = symba_plA%helio%swiftest%vb(3,second_add_index)
-
-     first_add_vhz = symba_plA%helio%swiftest%vh(3,first_add_index)
-     second_add_vhz = symba_plA%helio%swiftest%vh(3,second_add_index)
-
-     WRITE(*,*) "RECUR", first_add_name, first_add_vbz, first_add_vhz
-     WRITE(*,*) "RECUR", second_add_name, second_add_vbz, second_add_vhz
-   end if
 
      mtiny = param%mtiny
      dtl = dt0/(NTENC**ireci)

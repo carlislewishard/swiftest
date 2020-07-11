@@ -131,11 +131,6 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       name_rm = name2
    END IF
 
-   WRITE(*,*) "HITANDRUN vh_keep", vh_keep(3)
-   WRITE(*,*) "HITANDRUN vh_rm", vh_rm(3)
-   WRITE(*,*) "HITANDRUN vb_keep", vb_keep(3)
-   WRITE(*,*) "HITANDRUN vb_rm", vb_rm(3)
-
    ! Find energy pre-frag
    eold = 0.5_DP*(mass_keep*DOT_PRODUCT(vh_keep, vh_keep) + mass_rm*DOT_PRODUCT(vh_rm, vh_rm))
    xr(:) = x2(:) - x1(:) !heliocentric
@@ -186,8 +181,6 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    mergeadd_list%vh(:,nmergeadd) = vh_keep(:)
    mtot = mtot + mergeadd_list%mass(nmergeadd) 
 
-   WRITE(*,*) "HITANDRUN mergeadd_list%vh(:,1)", mergeadd_list%vh(3,nmergeadd)
-
    ! Pure Hit & Run
    IF ((mres(2) > mass_rm * 0.9_DP).OR.(mres(2)<nfrag*mtiny)) THEN
       !frags_added does NOT get incremented on in a perfect merger because then fragmax would be fragmax + 1
@@ -204,7 +197,6 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       mergeadd_list%vh(:,nmergeadd) = vh_rm(:)
       mtot = mtot + mergeadd_list%mass(nmergeadd)
 
-      WRITE(*,*) "HITANDRUN mergeadd_list%vh(:,2)", mergeadd_list%vh(3,nmergeadd)
    ELSE
       m_rm = mass_rm
       r_rm = rad_rm
@@ -266,7 +258,6 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    ELSE 
       mergesub_list%nadded(nmergesub) = frags_added
    END IF
-   WRITE(*,*) "HITANDRUN mergesub_list%vh(:,1)", mergesub_list%vh(3,nmergesub)
 
    nmergesub = nmergesub + 1
    mergesub_list%name(nmergesub) = name2
@@ -280,7 +271,6 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    ELSE 
       mergesub_list%nadded(nmergesub) = frags_added
    END IF
-   WRITE(*,*) "HITANDRUN mergesub_list%vh(:,2)", mergesub_list%vh(3,nmergesub)
 
    WRITE(*, *) "Hit and run between particles ", name1, " and ", name2, " at time t = ",t
    IF (frags_added == 0) THEN
