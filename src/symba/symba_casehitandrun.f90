@@ -73,9 +73,9 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
 ! Executable code
 
-   WRITE(*,*) "HITANDRUN v1", v1
-   WRITE(*,*) "HITANDRUN v2", v2
-   WRITE(*,*) "HITANDRUN vbs", vbs
+   WRITE(*,*) "HITANDRUN v1", v1(3)
+   WRITE(*,*) "HITANDRUN v2", v2(3)
+   WRITE(*,*) "HITANDRUN vbs", vbs(3)
 
    ! Set the maximum number of fragments to be added in a Hit and Run collision (nfrag)
    nfrag = 4
@@ -125,6 +125,8 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       name_keep = name1
       name_rm = name2
    END IF
+
+   mres(2) = mass_rm
 
    WRITE(*,*) "HITANDRUN vh_keep", vh_keep
    WRITE(*,*) "HITANDRUN vh_rm", vh_rm
