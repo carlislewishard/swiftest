@@ -146,10 +146,10 @@ SUBROUTINE util_mom(m1, xh1, vh1, m2, xh2, vh2, frags_added, nstart, m_frag, r_c
      !WRITE(*,*) " after frags added loop"
 
      m_frag_tot = SUM(m_frag(:))
-     !Write(*,*) "m1 = ", m1
-     !Write(*,*) "m2 = ", m2
-     !Write(*,*) "mfrag = ", m_frag
-     !Write(*,*) "mfragtot = ", m_frag_tot
+     Write(*,*) "m1 = ", m1
+     Write(*,*) "m2 = ", m2
+     Write(*,*) "mfrag = ", m_frag
+     Write(*,*) "mfragtot = ", m_frag_tot
      !Write(*,*) "mxfrag = ", mx_frag
      !Write(*,*) "my_frag = ", mx_frag
      !Write(*,*) "mz_frag = ", my_frag
@@ -198,9 +198,9 @@ SUBROUTINE util_mom(m1, xh1, vh1, m2, xh2, vh2, frags_added, nstart, m_frag, r_c
           angmom_frag(:) = angmom_frag(:) + angmom_fragi(:)
      END DO 
      ! WRITE(*,*) " after offset"
-     angmom_com_frag(1) = angmom_before(1) - angmom_frag(1)
-     angmom_com_frag(2) = angmom_before(2) - angmom_frag(2)
-     angmom_com_frag(3) = angmom_before(3) - angmom_frag(3)
+     !angmom_com_frag(1) = angmom_before(1) - angmom_frag(1)
+     !angmom_com_frag(2) = angmom_before(2) - angmom_frag(2)
+     !angmom_com_frag(3) = angmom_before(3) - angmom_frag(3)
 
      x_com_frag = mx_frag / SUM(m_frag(:))
      y_com_frag = my_frag / SUM(m_frag(:))
@@ -209,7 +209,7 @@ SUBROUTINE util_mom(m1, xh1, vh1, m2, xh2, vh2, frags_added, nstart, m_frag, r_c
      vx_com_frag = mvx_frag / SUM(m_frag(:))
      vy_com_frag = mvy_frag / SUM(m_frag(:))
      vz_com_frag = mvz_frag / SUM(m_frag(:))
-     angmom_after = NORM2(angmom_com_frag)
+     angmom_after = NORM2(angmom_frag)
      WRITE(*,*) "UTIL_MOM angmom_after", angmom_after
      DL = (angmom_after - NORM2(angmom_before))/ NORM2(angmom_before)
 
