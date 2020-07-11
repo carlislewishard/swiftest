@@ -69,13 +69,10 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    REAL(DP)                                         :: r_smallestcircle
    REAL(DP), DIMENSION(:, :), ALLOCATABLE, SAVE     :: x_frag, v_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE        :: m_frag
-   REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xh_keep, xh_rm, vh_keep, vh_rm, xbs
+   REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xh_keep, xh_rm, vh_keep, vh_rm, xbs, xb_keep 
+   REAL(DP), DIMENSION(NDIM)                        :: xb_rm, vb_keep, vb_rm
 
 ! Executable code
-
-   WRITE(*,*) "HITANDRUN v1", v1(3)
-   WRITE(*,*) "HITANDRUN v2", v2(3)
-   WRITE(*,*) "HITANDRUN vbs", vbs(3)
 
    ! Set the maximum number of fragments to be added in a Hit and Run collision (nfrag)
    nfrag = 4
@@ -101,10 +98,14 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       mass_rm = m1
       rad_keep = rad2
       rad_rm = rad1
-      xh_keep = x2
-      xh_rm = x1
-      vh_keep = v2 - vbs
-      vh_rm = v1 - vbs
+      xh_keep = symba_plA%helio%swiftest%xh(:,index2)
+      xh_rm = symba_plA%helio%swiftest%xh(:,index1)
+      xb_keep = symba_plA%helio%swiftest%xb(:,index2)
+      xb_rm = symba_plA%helio%swiftest%xb(:,index1)
+      vh_keep = symba_plA%helio%swiftest%vh(:,index2)!v2 - vbs
+      vh_rm = symba_plA%helio%swiftest%vh(:,index1)!v1 - vbs
+      vb_keep = symba_plA%helio%swiftest%vb(:,index2)
+      vb_rm = symba_plA%helio%swiftest%vb(:,index1)
       index_keep_parent = index2_parent
       index_rm_parent = index1_parent
       name_keep = name2
@@ -116,10 +117,14 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       mass_rm = m2
       rad_keep = rad1
       rad_rm = rad2
-      xh_keep = x1
-      xh_rm = x2
-      vh_keep = v1 - vbs
-      vh_rm = v2 - vbs
+      xh_keep = symba_plA%helio%swiftest%xh(:,index1)
+      xh_rm = symba_plA%helio%swiftest%xh(:,index2)
+      xb_keep = symba_plA%helio%swiftest%xb(:,index1)
+      xb_rm = symba_plA%helio%swiftest%xb(:,index2)
+      vh_keep = symba_plA%helio%swiftest%vh(:,index1) !v1 - vbs
+      vh_rm = symba_plA%helio%swiftest%vh(:,index2) !v2 - vbs
+      vb_keep = symba_plA%helio%swiftest%vb(:,index1)
+      vb_rm = symba_plA%helio%swiftest%vb(:,index2)
       index_keep_parent = index1_parent
       index_rm_parent = index2_parent
       name_keep = name1
@@ -128,11 +133,13 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
    WRITE(*,*) "HITANDRUN vh_keep", vh_keep(3)
    WRITE(*,*) "HITANDRUN vh_rm", vh_rm(3)
+   WRITE(*,*) "HITANDRUN vb_keep", vb_keep(3)
+   WRITE(*,*) "HITANDRUN vb_rm", vb_rm(3)
 
    ! Find energy pre-frag
    eold = 0.5_DP*(mass_keep*DOT_PRODUCT(vh_keep, vh_keep) + mass_rm*DOT_PRODUCT(vh_rm, vh_rm))
-   xr(:) = x2(:) - x1(:)
-   eold = eold - (m1*m2/(SQRT(DOT_PRODUCT(xr(:), xr(:)))))
+   xr(:) = x2(:) - x1(:) !heliocentric
+   eold = eold - (m1*m2/(SQRT(DOT_PRODUCT(xr(:), xr(:))))) 
 
    ! Go through the encounter list and look for particles actively encoutering in this timestep
    ! Prevent them from having further encounters in this timestep by setting status in plplenc_list to MERGED
@@ -148,7 +155,6 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    symba_plA%helio%swiftest%status(index1) = HIT_AND_RUN
    symba_plA%helio%swiftest%status(index2) = HIT_AND_RUN
 
-
    mtot = 0.0_DP ! running total mass of new fragments
    mv(1) = 0.0_DP   ! running sum of m*v of new fragments to be used in COM calculation
    mv(2) = 0.0_DP   ! running sum of m*v of new fragments to be used in COM calculation
@@ -163,7 +169,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
    ! Check that no fragments will be added interior of the smallest orbit that the timestep can reliably resolve
    semimajor_inward = ((dt * 32.0_DP) ** 2.0_DP) ** (1.0_DP / 3.0_DP)
-   CALL orbel_xv2aeq(x1, v1, msun, semimajor_encounter, e, q)
+   CALL orbel_xv2aeq(xb_keep, vb_keep, msun, semimajor_encounter, e, q)
    ! If they are going to be added interior to this orbit, give a warning
    IF (semimajor_inward > (semimajor_encounter - r_smallestcircle)) THEN
       WRITE(*,*) "WARNING in symba_casehitandrun: Timestep is too large to resolve fragments."
@@ -231,16 +237,16 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
          r_circle = (rhill_keep + rhill_rm) / (2.0_DP*sin(PI / frags_added))
          theta = (2.0_DP * PI) / (frags_added)
 
-         CALL util_mom(0.0_DP, xh_keep+xbs, vh_keep, mass_rm, xh_rm+xbs, vh_rm, & 
+         CALL util_mom(0.0_DP, xh_keep, vh_keep, mass_rm, xh_rm, vh_rm, & 
             frags_added, nstart, m_frag, r_circle, theta, x_frag, v_frag)
          DO i=1, frags_added
 
-            mergeadd_list%xh(1,nstart + i) = x_frag(1, i) -xbs(1) !x_frag
-            mergeadd_list%xh(2,nstart + i) = x_frag(2, i) -xbs(2) !y_frag
-            mergeadd_list%xh(3,nstart + i) = x_frag(3, i) -xbs(3) !z_frag                                                   
-            mergeadd_list%vh(1,nstart + i) = v_frag(1, i) -vbs(1) !vx_frag
-            mergeadd_list%vh(2,nstart + i) = v_frag(2, i) -vbs(2) !vy_frag
-            mergeadd_list%vh(3,nstart + i) = v_frag(3, i) -vbs(3) !vz_frag
+            mergeadd_list%xh(1,nstart + i) = x_frag(1, i) !-xbs(1) !x_frag
+            mergeadd_list%xh(2,nstart + i) = x_frag(2, i) !-xbs(2) !y_frag
+            mergeadd_list%xh(3,nstart + i) = x_frag(3, i) !-xbs(3) !z_frag                                                   
+            mergeadd_list%vh(1,nstart + i) = v_frag(1, i) !-vbs(1) !vx_frag
+            mergeadd_list%vh(2,nstart + i) = v_frag(2, i) !-vbs(2) !vy_frag
+            mergeadd_list%vh(3,nstart + i) = v_frag(3, i) !-vbs(3) !vz_frag
 
          ! Tracking linear momentum. 
             mv(:) = mv(:) + (mergeadd_list%mass(nstart + i) * mergeadd_list%vh(:,nstart + i))
@@ -251,8 +257,8 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    nmergesub = nmergesub + 1
    mergesub_list%name(nmergesub) = name1
    mergesub_list%status(nmergesub) = HIT_AND_RUN 
-   mergesub_list%xh(:,nmergesub) = x1(:)
-   mergesub_list%vh(:,nmergesub) = v1(:) - vbs(:)
+   mergesub_list%xh(:,nmergesub) = xh_keep
+   mergesub_list%vh(:,nmergesub) = vh_keep !v1(:) - vbs(:)
    mergesub_list%mass(nmergesub) = mass1
    mergesub_list%radius(nmergesub) = rad1
    IF (frags_added == 0) THEN !AKA if it was a perfect merger
@@ -265,8 +271,8 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    nmergesub = nmergesub + 1
    mergesub_list%name(nmergesub) = name2
    mergesub_list%status(nmergesub) = HIT_AND_RUN
-   mergesub_list%xh(:,nmergesub) = x2(:)
-   mergesub_list%vh(:,nmergesub) = v2(:) - vbs(:)
+   mergesub_list%xh(:,nmergesub) = xh_rm
+   mergesub_list%vh(:,nmergesub) = vh_rm !v2(:) - vbs(:)
    mergesub_list%mass(nmergesub) = mass2
    mergesub_list%radius(nmergesub) = rad2
    IF (frags_added == 0) THEN !AKA if it was a perfect merger

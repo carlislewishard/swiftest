@@ -40,6 +40,7 @@ SUBROUTINE coord_vb2vh(npl, swiftest_plA)
      REAL(DP), DIMENSION(NDIM) :: vtmp
 
 ! Executable code
+
      vtmp(:) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
      DO i = 2, npl
           vtmp(:) = vtmp(:) - swiftest_plA%mass(i)*swiftest_plA%vb(:,i)
@@ -49,6 +50,8 @@ SUBROUTINE coord_vb2vh(npl, swiftest_plA)
      DO i = 2, npl
           swiftest_plA%vh(:,i) = swiftest_plA%vb(:,i) - vtmp(:)
      END DO
+
+     WRITE(*,*) "COORD_VB2VB ", vtmp
 
      RETURN
 
