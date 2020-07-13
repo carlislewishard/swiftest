@@ -70,11 +70,17 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
      LOGICAL(LGT)                   :: lfrag_add, lmerge
      INTEGER(I4B), DIMENSION(npl)   :: array_index1_child, array_index2_child
      REAL(DP)                       :: Mlr, Mslr, mtarg, mproj
-     real(DP)                                     :: first_add_vhz, second_add_vhz, first_add_vbz, second_add_vbz
-     integer(I4B)                                 :: first_add_name, second_add_name, first_add_index, second_add_index
+     real(DP)                       :: first_add_vhz, second_add_vhz, first_add_vbz, second_add_vbz
+     integer(I4B)                   :: first_add_name, second_add_name, first_add_index, second_add_index
+     REAL(DP), DIMENSION(NDIM)      :: vbs_instep
      
 
 ! Executable code
+
+     ! Recalculates vbs 
+     CALL coord_vb2vh(npl, symba_plA%helio%swiftest)
+
+     vbs_instep(:) = symba_plA%helio%swiftest%vb(:,1)
 
      lmerge = .FALSE.
      lfrag_add = .FALSE.
@@ -110,12 +116,12 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
                          m1 = symba_plA%helio%swiftest%mass(index1)
                          rad1 = symba_plA%helio%swiftest%radius(index1)
                          x1(:) = symba_plA%helio%swiftest%xh(:,index1)
-                         v1(:) = symba_plA%helio%swiftest%vb(:,index1) - vbs(:)
+                         v1(:) = symba_plA%helio%swiftest%vb(:,index1) - vbs_instep(:)
                          name2 = symba_plA%helio%swiftest%name(index2)
                          m2 = symba_plA%helio%swiftest%mass(index2)
                          rad2 = symba_plA%helio%swiftest%radius(index2)
                          x2(:) = symba_plA%helio%swiftest%xh(:,index2)
-                         v2(:) = symba_plA%helio%swiftest%vb(:,index2) - vbs(:)
+                         v2(:) = symba_plA%helio%swiftest%vb(:,index2) - vbs_instep(:)
 
                          CALL io_write_encounter(t, name1, name2, m1, m2, rad1, rad2, x1(:), x2(:), &
                               v1(:), v2(:), encounter_file, out_type)
@@ -206,7 +212,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           v2_si(:) = v2(:) * DU2M / TU2S
           den1_si = (den1 / GU) * MU2KG / (DU2M ** 3.0_DP)
           den2_si = (den2 / GU) * MU2KG / (DU2M ** 3.0_DP)
-          vbs_si = vbs(:) * DU2M / TU2S 
+          vbs_si = vbs_instep(:) * DU2M / TU2S 
 
           mres(:) = 0.0_DP
           rres(:) = 0.0_DP
@@ -245,7 +251,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           Mcenter = symba_plA%helio%swiftest%mass(1) * MU2KG / GU
           mtiny_si = (mtiny/GU)*MU2KG
           !regime = collresolve_resolve(model,mtarg,mproj,rtarg,rproj,xtarg,xproj, vtarg,vproj, nres, mres, rres, pres, vres)
-          CALL util_regime(Mcenter, mtarg, mproj, rtarg, rproj, xtarg, xproj, vtarg-vbs_si, vproj-vbs_si, dentarg, denproj, &
+          CALL util_regime(Mcenter, mtarg, mproj, rtarg, rproj, xtarg, xproj, vtarg, vproj, dentarg, denproj, &
                regime, Mlr, Mslr, mtiny_si)
 
           mres(1) = Mlr
@@ -259,7 +265,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           mres(:) = (mres(:) / MU2KG) * GU
           rres(:) = rres(:) / DU2M
 
-          CALL symba_caseresolve(t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
+          CALL symba_caseresolve(t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs_instep, & 
           npl, symba_plA, nplplenc, plplenc_list, regime, nplmax, ntpmax, fragmax, mres, rres, array_index1_child, &
           array_index2_child, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny)
      END IF 
