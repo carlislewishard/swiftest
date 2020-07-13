@@ -157,11 +157,11 @@ program swiftest_symba
    else 
       open(unit = egyiu, file = energy_file, form = "formatted", status = "replace", action = "write")
    end if
-   300 format(7(1x, e23.16))
+   300 format(8(1x, e23.16))
    write(*, *) " *************** Main Loop *************** "
    call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot)
    if (param%lenergy) then 
-      write(egyiu,300) t, ke, pe, te, htot
+      write(egyiu,300) t, ke, pe, te, htot, eoffset
       Ltot_orig = NORM2(htot)
    end if
    do while ((t < tstop) .and. ((ntp0 == 0) .or. (ntp > 0)))
@@ -191,7 +191,7 @@ program swiftest_symba
          end if 
          call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot)
          if (param%lenergy) then 
-            write(egyiu,300) t, ke, pe, te, htot
+            write(egyiu,300) t, ke, pe, te, htot, eoffset
             Ltot_now = NORM2(htot)
             Lerror = (Ltot_now - Ltot_orig) / Ltot_orig
             !Write(*,*) "DL/L = ", Lerror
@@ -212,7 +212,7 @@ program swiftest_symba
             iout = istep_out
             call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot)
             if (param%lenergy) then 
-               write(egyiu,300) t, ke, pe, te, htot
+               write(egyiu,300) t, ke, pe, te, htot, eoffset
                Ltot_now = NORM2(htot)
                Lerror = (Ltot_now - Ltot_orig) / Ltot_orig
                !Write(*,*) "DL/L = ", Lerror
@@ -281,7 +281,7 @@ program swiftest_symba
    call io_dump_tp(ntp, symba_tpA%helio%swiftest)
    if (param%lenergy) then 
       call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot)
-      write(egyiu,300) t, ke, pe, te, htot
+      write(egyiu,300) t, ke, pe, te, htot, eoffset
       close(egyiu)
    end if
 
