@@ -33,7 +33,7 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-   symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny)
+   symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, xh_1, xh_2, vb_1, vb_2, mtiny)
 
 ! Modules
    USE swiftest
@@ -50,7 +50,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    REAL(DP), INTENT(INOUT)                          :: eoffset, m1, m2, rad1, rad2
    REAL(DP), DIMENSION(:), INTENT(INOUT)            :: mres, rres
    REAL(DP), DIMENSION(:), INTENT(IN)               :: vbs
-   REAL(DP), DIMENSION(:), INTENT(INOUT)            :: x1, x2, v1, v2
+   REAL(DP), DIMENSION(:), INTENT(INOUT)            :: xh_1, xh_2, vb_1, vb_2
    TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
    TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
    TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
@@ -70,7 +70,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    REAL(DP), DIMENSION(:, :), ALLOCATABLE, SAVE     :: x_frag, v_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE        :: m_frag
    REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xh_keep, xh_rm, vh_keep, vh_rm, xbs, xb_keep 
-   REAL(DP), DIMENSION(NDIM)                        :: xb_rm, vb_keep, vb_rm
+   REAL(DP), DIMENSION(NDIM)                        :: xb_rm, vb_keep, vb_rm, vtmp
 
 ! Executable code
 
@@ -98,14 +98,14 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       mass_rm = m1
       rad_keep = rad2
       rad_rm = rad1
-      xh_keep = symba_plA%helio%swiftest%xh(:,index2)
-      xh_rm = symba_plA%helio%swiftest%xh(:,index1)
-      xb_keep = symba_plA%helio%swiftest%xb(:,index2)
-      xb_rm = symba_plA%helio%swiftest%xb(:,index1)
-      vh_keep = symba_plA%helio%swiftest%vh(:,index2)!v2 - vbs
-      vh_rm = symba_plA%helio%swiftest%vh(:,index1)!v1 - vbs
-      vb_keep = symba_plA%helio%swiftest%vb(:,index2)
-      vb_rm = symba_plA%helio%swiftest%vb(:,index1)
+      xh_keep = xh_2 !symba_plA%helio%swiftest%xh(:,index2)
+      xh_rm = xh_1 !symba_plA%helio%swiftest%xh(:,index1)
+      !xb_keep = symba_plA%helio%swiftest%xb(:,index2)
+      !xb_rm = symba_plA%helio%swiftest%xb(:,index1)
+      vb_keep = vb_2 !symba_plA%helio%swiftest%vb(:,index2)
+      vb_rm = vb_1 !symba_plA%helio%swiftest%vb(:,index1)
+      vh_keep = vb_rm - vbs
+      vh_rm = vb_keep - vbs
       index_keep_parent = index2_parent
       index_rm_parent = index1_parent
       name_keep = name2
@@ -117,14 +117,14 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       mass_rm = m2
       rad_keep = rad1
       rad_rm = rad2
-      xh_keep = symba_plA%helio%swiftest%xh(:,index1)
-      xh_rm = symba_plA%helio%swiftest%xh(:,index2)
-      xb_keep = symba_plA%helio%swiftest%xb(:,index1)
-      xb_rm = symba_plA%helio%swiftest%xb(:,index2)
-      vh_keep = symba_plA%helio%swiftest%vh(:,index1) !v1 - vbs
-      vh_rm = symba_plA%helio%swiftest%vh(:,index2) !v2 - vbs
-      vb_keep = symba_plA%helio%swiftest%vb(:,index1)
-      vb_rm = symba_plA%helio%swiftest%vb(:,index2)
+      xh_keep = xh_1 !symba_plA%helio%swiftest%xh(:,index1)
+      xh_rm = xh_2 !symba_plA%helio%swiftest%xh(:,index2)
+      !xb_keep = symba_plA%helio%swiftest%xb(:,index1)
+      !xb_rm = symba_plA%helio%swiftest%xb(:,index2)
+      vb_keep = vb_1 !symba_plA%helio%swiftest%vb(:,index1)
+      vb_rm = vb_2 !symba_plA%helio%swiftest%vb(:,index2)
+      vh_keep = vb_keep - vbs
+      vh_rm = vb_rm - vbs
       index_keep_parent = index1_parent
       index_rm_parent = index2_parent
       name_keep = name1
@@ -132,8 +132,8 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    END IF
 
    ! Find energy pre-frag
-   eold = 0.5_DP*(mass_keep*DOT_PRODUCT(vh_keep, vh_keep) + mass_rm*DOT_PRODUCT(vh_rm, vh_rm))
-   xr(:) = x2(:) - x1(:) !heliocentric
+   eold = 0.5_DP*(mass_keep*DOT_PRODUCT(vb_keep, vb_keep) + mass_rm*DOT_PRODUCT(vb_rm, vb_rm))
+   xr(:) = xh_1(:) - xh_2(:) !heliocentric
    eold = eold - (m1*m2/(SQRT(DOT_PRODUCT(xr(:), xr(:))))) 
 
    ! Go through the encounter list and look for particles actively encoutering in this timestep
@@ -164,7 +164,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
    ! Check that no fragments will be added interior of the smallest orbit that the timestep can reliably resolve
    semimajor_inward = ((dt * 32.0_DP) ** 2.0_DP) ** (1.0_DP / 3.0_DP)
-   CALL orbel_xv2aeq(xb_keep, vb_keep, msun, semimajor_encounter, e, q)
+   CALL orbel_xv2aeq(xh_keep, vb_keep, msun, semimajor_encounter, e, q)
    ! If they are going to be added interior to this orbit, give a warning
    IF (semimajor_inward > (semimajor_encounter - r_smallestcircle)) THEN
       WRITE(*,*) "WARNING in symba_casehitandrun: Timestep is too large to resolve fragments."
@@ -193,7 +193,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       mergeadd_list%name(nmergeadd) = symba_plA%helio%swiftest%name(index_rm)
       mergeadd_list%mass(nmergeadd) = mass_rm
       mergeadd_list%radius(nmergeadd) = rad_rm
-      mergeadd_list%xh(:,nmergeadd) = xh_rm(:) + ((vh_rm(:) / NORM2(vh_rm(:))) * (rhill_keep + rhill_rm))
+      mergeadd_list%xh(:,nmergeadd) = xh_rm(:) + ((vb_rm(:) / NORM2(vb_rm(:))) * (rhill_keep + rhill_rm))
       mergeadd_list%vh(:,nmergeadd) = vh_rm(:)
       mtot = mtot + mergeadd_list%mass(nmergeadd)
 
@@ -229,16 +229,17 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
          r_circle = (rhill_keep + rhill_rm) / (2.0_DP*sin(PI / frags_added))
          theta = (2.0_DP * PI) / (frags_added)
 
-         CALL util_mom(0.0_DP, xh_keep, vh_keep, mass_rm, xh_rm, vh_rm, & 
+         CALL util_mom(0.0_DP, xh_keep, vb_keep, mass_rm, xh_rm, vb_rm, & 
             frags_added, nstart, m_frag, r_circle, theta, x_frag, v_frag)
+
          DO i=1, frags_added
 
             mergeadd_list%xh(1,nstart + i) = x_frag(1, i) !-xbs(1) !x_frag
             mergeadd_list%xh(2,nstart + i) = x_frag(2, i) !-xbs(2) !y_frag
             mergeadd_list%xh(3,nstart + i) = x_frag(3, i) !-xbs(3) !z_frag                                                   
-            mergeadd_list%vh(1,nstart + i) = v_frag(1, i) !-vbs(1) !vx_frag
-            mergeadd_list%vh(2,nstart + i) = v_frag(2, i) !-vbs(2) !vy_frag
-            mergeadd_list%vh(3,nstart + i) = v_frag(3, i) !-vbs(3) !vz_frag
+            mergeadd_list%vh(1,nstart + i) = v_frag(1, i) - vbs(1) !vx_frag
+            mergeadd_list%vh(2,nstart + i) = v_frag(2, i) - vbs(2) !vy_frag
+            mergeadd_list%vh(3,nstart + i) = v_frag(3, i) - vbs(3) !vz_frag
 
          ! Tracking linear momentum. 
             mv(:) = mv(:) + (mergeadd_list%mass(nstart + i) * mergeadd_list%vh(:,nstart + i))

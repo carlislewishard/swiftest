@@ -33,7 +33,7 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-   symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny)
+   symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, xh_1, xh_2, vb_1, vb_2, mtiny)
 
 ! Modules
    USE swiftest
@@ -52,7 +52,7 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    REAL(DP), INTENT(INOUT)                          :: eoffset, m1, m2, rad1, rad2
    REAL(DP), DIMENSION(:), INTENT(INOUT)            :: mres, rres
    REAL(DP), DIMENSION(:), INTENT(IN)               :: vbs
-   REAL(DP), DIMENSION(:), INTENT(INOUT)            :: x1, x2, v1, v2
+   REAL(DP), DIMENSION(:), INTENT(INOUT)            :: xh_1, xh_2, vb_1, vb_2
    TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
    TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
    TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
@@ -69,7 +69,7 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    REAL(DP), DIMENSION(:, :), ALLOCATABLE, SAVE     :: x_frag, v_frag
    !REAL(DP), DIMENSION(symba_plA%helio%swiftest%nbody)                         :: m_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE        :: m_frag
-   REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xbs, xbscrossvbs, vh_1, vh_2, xh_1, xh_2
+   REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xbs, xbscrossvbs, vh_1, vh_2
 
 
 ! Executable code
@@ -89,14 +89,12 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    radius2 = symba_plA%helio%swiftest%radius(index2)
    msun = symba_plA%helio%swiftest%mass(1)
    xbs(:) = symba_plA%helio%swiftest%xb(:,1)
-   vh_1(:) = symba_plA%helio%swiftest%vh(:,index1)
-   vh_2(:) = symba_plA%helio%swiftest%vh(:,index2)
-   xh_1(:) = symba_plA%helio%swiftest%xh(:,index1)
-   xh_2(:) = symba_plA%helio%swiftest%xh(:,index2)
+   vh_1(:) = vb_1(:) - vbs(:)!symba_plA%helio%swiftest%vh(:,index1)
+   vh_2(:) = vb_2(:) - vbs(:)!symba_plA%helio%swiftest%vh(:,index2)
 
    ! Find energy pre-frag
-   eold = 0.5_DP*(m1*DOT_PRODUCT(vh_1(:), vh_1(:)) + m2*DOT_PRODUCT(vh_2(:), vh_2(:)))
-   xr(:) = x2(:) - x1(:)
+   eold = 0.5_DP*(m1*DOT_PRODUCT(vb_1(:), vb_1(:)) + m2*DOT_PRODUCT(vb_2(:), vb_2(:)))
+   xr(:) = xh_2(:) - xh_1(:)
    eold = eold - (m1*m2/(SQRT(DOT_PRODUCT(xr(:), xr(:)))))
    
    WRITE(*, *) "Disruption between particles ", name1, " and ", name2, " at time t = ",t
@@ -126,7 +124,7 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
 
    ! Check that no fragments will be added interior of the smallest orbit that the timestep can reliably resolve
    semimajor_inward = ((dt * 32.0_DP) ** 2.0_DP) ** (1.0_DP / 3.0_DP)
-   CALL orbel_xv2aeq(xh_1, vh_1, msun, semimajor_encounter, e, q)
+   CALL orbel_xv2aeq(xh_1, vb_1, msun, semimajor_encounter, e, q)
    ! If they are going to be added interior to this orbit, give a warning
    IF (semimajor_inward > (semimajor_encounter - r_smallestcircle)) THEN
       WRITE(*,*) "WARNING in symba_casedisruption: Timestep is too large to resolve fragments."
@@ -209,16 +207,16 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    ALLOCATE(x_frag(NDIM, frags_added))
    ALLOCATE(v_frag(NDIM, frags_added))
 
-   CALL util_mom(m1, xh_1, vh_1, m2, xh_2, vh_2, frags_added, nstart, m_frag, r_circle, theta, x_frag, v_frag)
+   CALL util_mom(m1, xh_1, vb_1, m2, xh_2, vb_2, frags_added, nstart, m_frag, r_circle, theta, x_frag, v_frag)
 
    DO i=1, frags_added
 
       mergeadd_list%xh(1,nstart + i) = x_frag(1, i)! - xbs(1)!x_frag
       mergeadd_list%xh(2,nstart + i) = x_frag(2, i)! - xbs(2)!y_frag
       mergeadd_list%xh(3,nstart + i) = x_frag(3, i)! - xbs(3)!z_frag                                                   
-      mergeadd_list%vh(1,nstart + i) = v_frag(1, i)! - vbs(1)!vx_frag
-      mergeadd_list%vh(2,nstart + i) = v_frag(2, i)! - vbs(2)!vy_frag
-      mergeadd_list%vh(3,nstart + i) = v_frag(3, i)! - vbs(3)!vz_frag
+      mergeadd_list%vh(1,nstart + i) = v_frag(1, i) - vbs(1)!vx_frag
+      mergeadd_list%vh(2,nstart + i) = v_frag(2, i) - vbs(2)!vy_frag
+      mergeadd_list%vh(3,nstart + i) = v_frag(3, i) - vbs(3)!vz_frag
 
          ! Tracking linear momentum. 
       mv(:) = mv(:) + (mergeadd_list%mass(nstart + i) * mergeadd_list%vh(:,nstart + i))
