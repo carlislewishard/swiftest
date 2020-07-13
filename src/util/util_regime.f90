@@ -24,7 +24,7 @@
 !                Vetterling, and Flannery, 2nd ed., pp. 1173-4
 !
 !**********************************************************************************************************************************
-SUBROUTINE util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vh1, vh2, den1, den2, regime, Mlr, Mslr, mtiny)
+SUBROUTINE util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2, regime, Mlr, Mslr, mtiny)
 
 ! Modules
      USE swiftest
@@ -39,7 +39,7 @@ SUBROUTINE util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vh1, vh2, den1, de
      INTEGER(I4B), INTENT(OUT)                 :: regime
      REAL(DP), INTENT(OUT)                     :: Mlr, Mslr
      REAL(DP), INTENT(IN)                      :: Mcenter, m1, m2, rad1, rad2, den1, den2, mtiny 
-     REAL(DP), DIMENSION(NDIM), INTENT(IN)     :: xh1, xh2, vh1, vh2
+     REAL(DP), DIMENSION(NDIM), INTENT(IN)     :: xh1, xh2, vb1, vb2
 
 ! Internals
      REAL(DP)                      :: a1, alpha, Aint, b, bcrit, E, fgamma, l, Lint, mu, phi, theta
@@ -65,10 +65,10 @@ SUBROUTINE util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vh1, vh2, den1, de
      REAL(DP)                      :: crufu = (2.0_DP-3.0_DP*0.36_DP) ! central potential variable from Rufu et al. 2019
 
 ! Executable code
-      vimp = NORM2(vh2(:) - vh1(:))
-      b = calc_b(xh2, vh2, rad2, xh1, vh1, rad1)
+      vimp = NORM2(vb2(:) - vb1(:))
+      b = calc_b(xh2, vb2, rad2, xh1, vb1, rad1)
       l = (rad1 + rad2)*(1-b)
-      E = (NORM2(vh1)**2.0_DP)/2.0_DP - G*Mcenter/NORM2(xh1)
+      E = (NORM2(vb1)**2.0_DP)/2.0_DP - G*Mcenter/NORM2(xh1)
       a1 = - G*Mcenter/2.0_DP/E
       mtot = m1 + m2 
       mu = (m1*m2)/mtot
