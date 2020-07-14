@@ -202,7 +202,7 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    theta = (2.0_DP * PI) / frags_added
 
    ALLOCATE(m_frag(frags_added))
-   m_frag(1:frags_added) = mergeadd_list%mass(nstart + 1 :nstart + 1 + frags_added)
+   m_frag(1:frags_added) = mergeadd_list%mass(nstart + 1 :nstart + frags_added)
 
    ALLOCATE(x_frag(NDIM, frags_added))
    ALLOCATE(v_frag(NDIM, frags_added))
