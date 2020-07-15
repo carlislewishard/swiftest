@@ -1438,7 +1438,7 @@ MODULE module_interfaces
          REAL(DP), INTENT(IN)                                   :: m1, m2, r_circle, theta
          REAL(DP), DIMENSION(:), INTENT(IN)                     :: xb1, vb1, xb2, vb2
          REAL(DP), DIMENSION(:), INTENT(IN)                     :: m_frag
-         REAL(DP), DIMENSION(:,:), INTENT(INOUT)                :: x_frag, v_frag
+         REAL(DP), DIMENSION(:,:), INTENT(OUT)                  :: x_frag, v_frag
          END SUBROUTINE util_mom
      END INTERFACE
 
