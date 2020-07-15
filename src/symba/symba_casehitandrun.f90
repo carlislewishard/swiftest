@@ -67,8 +67,8 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    REAL(DP)                                         :: x_com, y_com, z_com, vx_com, vy_com, vz_com, mass_keep, mass_rm, rhill_rm
    REAL(DP)                                         :: rad_keep, rad_rm
    REAL(DP)                                         :: r_smallestcircle
-   REAL(DP), DIMENSION(:, :), ALLOCATABLE, SAVE     :: x_frag, v_frag
-   REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE        :: m_frag
+   REAL(DP), DIMENSION(:, :), ALLOCATABLE           :: x_frag, v_frag
+   REAL(DP), DIMENSION(:), ALLOCATABLE              :: m_frag
    REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xh_keep, xh_rm, vh_keep, vh_rm, xbs, xb_keep 
    REAL(DP), DIMENSION(NDIM)                        :: xb_rm, vb_keep, vb_rm, vtmp
 
@@ -228,7 +228,11 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    IF (frags_added > 0) THEN
          r_circle = (rhill_keep + rhill_rm) / (2.0_DP*sin(PI / frags_added))
          theta = (2.0_DP * PI) / (frags_added)
+         ALLOCATE(m_frag(frags_added))
+         m_frag(1:frags_added) = mergeadd_list%mass(nstart + 1 :nstart + frags_added)
 
+         ALLOCATE(x_frag(NDIM, frags_added))
+         ALLOCATE(v_frag(NDIM, frags_added))
          CALL util_mom(0.0_DP, xh_keep, vb_keep, mass_rm, xh_rm, vb_rm, & 
             frags_added, nstart, m_frag, r_circle, theta, x_frag, v_frag)
 
@@ -244,6 +248,9 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
          ! Tracking linear momentum. 
             mv(:) = mv(:) + (mergeadd_list%mass(nstart + i) * mergeadd_list%vh(:,nstart + i))
          END DO
+         deallocate(m_frag)
+         deallocate(x_frag)
+         deallocate(v_frag)
    END IF
 
    ! Add both particles involved in the collision to mergesub_list
@@ -272,7 +279,6 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    ELSE 
       mergesub_list%nadded(nmergesub) = frags_added
    END IF
-
    WRITE(*, *) "Hit and run between particles ", name1, " and ", name2, " at time t = ",t
    IF (frags_added == 0) THEN
       WRITE(*,*) "0 fragments produced; pure hit and run."
