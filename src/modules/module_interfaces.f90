@@ -1430,15 +1430,15 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-         SUBROUTINE util_mom(m1, xb1, vb1, m2, xb2, vb2, frags_added, nstart, m_frag, r_circle, theta, x_frag, v_frag)
+         SUBROUTINE util_mom(m1, xh1, vb1, m2, xh2, vb2, frags_added, nstart, m_frag, r_circle, theta, p_frag, vel_frag)
          USE swiftest_globals
          USE swiftest_data_structures
          IMPLICIT NONE
          INTEGER(I4B), INTENT(IN)                               :: frags_added, nstart
          REAL(DP), INTENT(IN)                                   :: m1, m2, r_circle, theta
-         REAL(DP), DIMENSION(:), INTENT(IN)                     :: xb1, vb1, xb2, vb2
+         REAL(DP), DIMENSION(:), INTENT(IN)                     :: xh1, vb1, xh2, vb2
          REAL(DP), DIMENSION(:), INTENT(IN)                     :: m_frag
-         REAL(DP), DIMENSION(:,:), INTENT(OUT)                  :: x_frag, v_frag
+         REAL(DP), DIMENSION(:,:), INTENT(OUT)                  :: p_frag, vel_frag
          END SUBROUTINE util_mom
      END INTERFACE
 
