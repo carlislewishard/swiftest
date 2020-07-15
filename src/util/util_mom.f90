@@ -39,7 +39,7 @@ SUBROUTINE util_mom(m1, xh1, vb1, m2, xh2, vb2, frags_added, nstart, m_frag, r_c
    REAL(DP), INTENT(IN)                                   :: m1, m2, r_circle, theta
    REAL(DP), DIMENSION(:), INTENT(IN)                     :: xh1, vb1, xh2, vb2
    REAL(DP), DIMENSION(:), INTENT(IN)                     :: m_frag
-   REAL(DP), DIMENSION(:, :), INTENT(INOUT)               :: p_frag, vel_frag
+   REAL(DP), DIMENSION(:, :), INTENT(OUT)                 :: p_frag, vel_frag
 
 ! Internals
 

@@ -65,8 +65,8 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
    REAL(DP)                                         :: x_com, y_com, z_com, vx_com, vy_com, vz_com
    REAL(DP)                                         :: m1m2_10
    REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xbs, vh_1, vh_2
-   REAL(DP), DIMENSION(:, :), ALLOCATABLE, SAVE     :: x_frag, v_frag
-   REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE        :: m_frag
+   REAL(DP), DIMENSION(:, :), ALLOCATABLE           :: x_frag, v_frag
+   REAL(DP), DIMENSION(:), ALLOCATABLE              :: m_frag
 
 
 ! Executable code
