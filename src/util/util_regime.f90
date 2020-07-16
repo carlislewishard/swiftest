@@ -217,32 +217,47 @@ function calc_QRD_rev(Mp,Mtarg,mint,den1,den2, vimp) result(ans)
    return
 end function calc_QRD_rev
 
-function calc_b(Mp_pos, Mp_vel, Mp_r, Mtarg_pos, Mtarg_vel, Mtarg_r) result(b)
-   implicit none
-   real(DP), intent(in), DIMENSION(3) :: Mp_pos, Mp_vel, Mtarg_pos, Mtarg_vel
-   real(DP), intent(in) :: Mp_r, Mtarg_r
-   real(DP) :: h_sq, b, dvel_sq
-   real(DP), DIMENSION(3) :: dpos, dvel, h
+function calc_b(proj_pos, proj_vel, proj_r, targ_pos, targ_vel, targ_r) result(b)
+  implicit none
+  real(DP), intent(in), DIMENSION(3) :: proj_pos, proj_vel, targ_pos, targ_vel
+  real(DP), intent(in)               :: proj_r, targ_r
+  real(DP)                           :: angle, b  
+  real(DP), DIMENSION(3)             :: Vimp, distance         
 
-   dpos(1) = mtarg_pos(1) - mp_pos(1)
-   dpos(2) = mtarg_pos(2) - mp_pos(2)
-   dpos(3) = mtarg_pos(3) - mp_pos(3)
-
-   dvel(1) = mtarg_vel(1) - mp_vel(1)
-   dvel(2) = mtarg_vel(2) - mp_vel(2)
-   dvel(3) = mtarg_vel(3) - mp_vel(3)
-
-   h(1) = (dpos(2) * dvel(3)) - (dpos(3) * dvel(2))
-   h(2) = (dpos(3) * dvel(1)) - (dpos(1) * dvel(3))
-   h(3) = (dpos(1) * dvel(2)) - (dpos(2) * dvel(1))
-
-   h_sq = (h(1) * h(1)) + (h(2) * h(2)) + (h(3) * h(3))
-   dvel_sq = (dvel(1) * dvel(1)) + (dvel(2) * dvel(2)) + (dvel(3) * dvel(3))
-
-   b = (h_sq / (((Mp_r + Mtarg_r) ** 2.0_DP) * dvel_sq)) ** (1.0_DP / 2.0_DP)
-
-   return
+    Vimp = proj_vel - targ_vel
+    distance = proj_pos - targ_pos
+    angle = ACOS(DOT_PRODUCT(Vimp,distance)/NORM2(Vimp)/NORM2(distance))      
+    b = SIN(angle)
+    write(*,*) b, "b"
+  return 
 end function calc_b
+
+! function calc_b(Mp_pos, Mp_vel, Mp_r, Mtarg_pos, Mtarg_vel, Mtarg_r) result(b)
+!    implicit none
+!    real(DP), intent(in), DIMENSION(3) :: Mp_pos, Mp_vel, Mtarg_pos, Mtarg_vel
+!    real(DP), intent(in) :: Mp_r, Mtarg_r
+!    real(DP) :: h_sq, b, dvel_sq
+!    real(DP), DIMENSION(3) :: dpos, dvel, h
+
+!    dpos(1) = mtarg_pos(1) - mp_pos(1)
+!    dpos(2) = mtarg_pos(2) - mp_pos(2)
+!    dpos(3) = mtarg_pos(3) - mp_pos(3)
+
+!    dvel(1) = mtarg_vel(1) - mp_vel(1)
+!    dvel(2) = mtarg_vel(2) - mp_vel(2)
+!    dvel(3) = mtarg_vel(3) - mp_vel(3)
+
+!    h(1) = (dpos(2) * dvel(3)) - (dpos(3) * dvel(2))
+!    h(2) = (dpos(3) * dvel(1)) - (dpos(1) * dvel(3))
+!    h(3) = (dpos(1) * dvel(2)) - (dpos(2) * dvel(1))
+
+!    h_sq = (h(1) * h(1)) + (h(2) * h(2)) + (h(3) * h(3))
+!    dvel_sq = (dvel(1) * dvel(1)) + (dvel(2) * dvel(2)) + (dvel(3) * dvel(3))
+
+!    b = (h_sq / (((Mp_r + Mtarg_r) ** 2.0_DP) * dvel_sq)) ** (1.0_DP / 2.0_DP)
+!    print(b,"b")
+!    return
+! end function calc_b
 
 END SUBROUTINE util_regime
 !**********************************************************************************************************************************
