@@ -228,7 +228,6 @@ function calc_b(proj_pos, proj_vel, proj_r, targ_pos, targ_vel, targ_r) result(b
     distance = proj_pos - targ_pos
     angle = ACOS(DOT_PRODUCT(Vimp,distance)/NORM2(Vimp)/NORM2(distance))      
     b = SIN(angle)
-    write(*,*) b, "b"
   return 
 end function calc_b
 
