@@ -132,7 +132,6 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
      nres = 2
      IF (lfrag_add) THEN 
-
           symba_plA%lmerged(index1) = .TRUE.
           symba_plA%lmerged(index2) = .TRUE.
           index1_parent = symba_plA%index_parent(index1)

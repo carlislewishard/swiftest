@@ -66,13 +66,14 @@ SUBROUTINE symba_caseresolve (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_l
 
           CASE (COLLRESOLVE_REGIME_DISRUPTION)
                CALL symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-               symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny)
+               symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, x1, x2, v1, v2,&
+                mtiny, npl)
 
           CASE (COLLRESOLVE_REGIME_SUPERCATASTROPHIC)
                CALL symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
                eoffset, vbs, symba_plA, nplplenc, &
                plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, &
-               rad2, x1, x2, v1, v2, mtiny)
+               rad2, x1, x2, v1, v2, mtiny, npl)
 
           CASE (COLLRESOLVE_REGIME_GRAZE_AND_MERGE)
                CALL symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
@@ -82,7 +83,7 @@ SUBROUTINE symba_caseresolve (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_l
           CASE (COLLRESOLVE_REGIME_HIT_AND_RUN)
                CALL symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
                symba_plA, nplplenc, plplenc_list, &
-               nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny)
+               nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny, npl)
 
           CASE (COLLRESOLVE_REGIME_MERGE)
                CALL symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 

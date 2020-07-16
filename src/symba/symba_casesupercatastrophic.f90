@@ -33,7 +33,7 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-   symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, xh_1, xh_2, vb_1, vb_2,mtiny)
+   symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, xh_1, xh_2, vb_1, vb_2,mtiny, npl)
 
 ! Modules
    USE swiftest
@@ -43,7 +43,7 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
    IMPLICIT NONE
 
 ! Arguments
-   INTEGER(I4B), INTENT(IN)                         :: index_enc, nplmax, ntpmax
+   INTEGER(I4B), INTENT(IN)                         :: index_enc, nplmax, ntpmax, npl
    INTEGER(I4B), INTENT(IN)                         :: nplplenc
    INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub, fragmax
    REAL(DP), INTENT(IN)                             :: t, dt, mtiny
@@ -56,8 +56,8 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
    TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
 
 ! Internals
-   INTEGER(I4B)                                     :: nfrag, i, k, index1, index2, frags_added
-   INTEGER(I4B)                                     :: index1_parent, index2_parent
+   INTEGER(I4B)                                     :: nfrag, i, k, index1, index2, frags_added, j
+   INTEGER(I4B)                                     :: index1_parent, index2_parent, index1_child, index2_child 
    INTEGER(I4B)                                     :: name1, name2, nstart
    REAL(DP)                                         :: mtot, msun, avg_d, d_p1, d_p2, semimajor_encounter, e, q, semimajor_inward
    REAL(DP)                                         :: rhill_p1, rhill_p2, r_circle, theta, radius1, radius2, r_smallestcircle
@@ -67,6 +67,8 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
    REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xbs, vh_1, vh_2
    REAL(DP), DIMENSION(:, :), ALLOCATABLE           :: x_frag, v_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE              :: m_frag
+   INTEGER(I4B), DIMENSION(npl)                     :: array_index1_child, array_index2_child
+
 
 
 ! Executable code
@@ -98,18 +100,44 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
 
    ! Go through the encounter list and look for particles actively encoutering in this timestep
    ! Prevent them from having further encounters in this timestep by setting status in plplenc_list to MERGED
-   DO k = 1, nplplenc 
-      IF ((plplenc_list%status(k) == ACTIVE) .AND. &
-         ((index1 == plplenc_list%index1(k) .OR. index2 == plplenc_list%index2(k)) .OR. &
-         (index2 == plplenc_list%index1(k) .OR. index1 == plplenc_list%index2(k)))) THEN
-            plplenc_list%status(k) = MERGED
-      END IF
-   END DO
+   ! DO k = 1, nplplenc 
+   !    IF ((plplenc_list%status(k) == ACTIVE) .AND. &
+   !       ((index1 == plplenc_list%index1(k) .OR. index2 == plplenc_list%index2(k)) .OR. &
+   !       (index2 == plplenc_list%index1(k) .OR. index1 == plplenc_list%index2(k)))) THEN
+   !          plplenc_list%status(k) = MERGED
+   !    END IF
+   ! END DO
 
    ! Set the status of the particles in symba_plA to DISRUPTION
    symba_plA%helio%swiftest%status(index1) = SUPERCATASTROPHIC
    symba_plA%helio%swiftest%status(index2) = SUPERCATASTROPHIC
-
+   symba_plA%helio%swiftest%status(index1_parent) = SUPERCATASTROPHIC
+   symba_plA%helio%swiftest%status(index2_parent) = SUPERCATASTROPHIC
+   array_index1_child(1:npl) = symba_plA%index_child(1:npl,index1_parent)
+   array_index2_child(1:npl) = symba_plA%index_child(1:npl,index2_parent)
+   DO k = 1, nplplenc                                          !go through the encounter list and for particles actively encoutering, get their children
+      IF (plplenc_list%status(k) == ACTIVE) THEN
+         DO i = 0, symba_plA%nchild(index1_parent)
+            IF (i == 0) THEN 
+               index1_child = index1_parent
+            ELSE
+               index1_child = array_index1_child(i)
+            END IF 
+            DO j = 0, symba_plA%nchild(index2_parent)
+               IF (j == 0) THEN
+                  index2_child = index2_parent
+               ELSE
+                  index2_child = array_index2_child(j)
+               END IF
+               IF ((index1_child == plplenc_list%index1(k)) .OR. (index2_child == plplenc_list%index2(k))) THEN
+                  plplenc_list%status(k) = MERGED
+               ELSE IF ((index1_child == plplenc_list%index2(k)) .OR. (index2_child == plplenc_list%index1(k))) THEN
+                  plplenc_list%status(k) = MERGED
+               END IF
+            END DO
+         END DO
+      END IF
+   END DO
 
    ! Calculate the positions of the new fragments in a circle with a radius large enough to space
    ! all fragments apart by a distance of rhill_p1 + rhill_p2

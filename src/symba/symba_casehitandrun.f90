@@ -33,7 +33,7 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-   symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, xh_1, xh_2, vb_1, vb_2, mtiny)
+   symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, xh_1, xh_2, vb_1, vb_2, mtiny, npl)
 
 ! Modules
    USE swiftest
@@ -43,7 +43,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    IMPLICIT NONE
 
 ! Arguments
-   INTEGER(I4B), INTENT(IN)                         :: index_enc, nplmax, ntpmax
+   INTEGER(I4B), INTENT(IN)                         :: index_enc, nplmax, ntpmax, npl
    INTEGER(I4B), INTENT(IN)                         :: nplplenc
    INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub, fragmax
    REAL(DP), INTENT(IN)                             :: t, dt, mtiny
@@ -56,7 +56,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
 
 ! Internals
-   INTEGER(I4B)                                     :: nfrag, i, k, index1, index2, frags_added
+   INTEGER(I4B)                                     :: nfrag, i, k, index1, index2, frags_added, j, index1_child, index2_child 
    INTEGER(I4B)                                     :: index1_parent, index2_parent, index_keep_parent, index_rm_parent
    INTEGER(I4B)                                     :: name1, name2, index_keep, index_rm, name_keep, name_rm, nstart
    real(DP)                                         :: first_add_vz, second_add_vz, first_add_pz, second_add_pz
@@ -71,6 +71,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    REAL(DP), DIMENSION(:), ALLOCATABLE              :: m_frag
    REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xh_keep, xh_rm, vh_keep, vh_rm, xbs, xb_keep 
    REAL(DP), DIMENSION(NDIM)                        :: xb_rm, vb_keep, vb_rm, vtmp
+   INTEGER(I4B), DIMENSION(npl)                     :: array_index1_child, array_index2_child
 
 ! Executable code
 
@@ -138,17 +139,45 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
    ! Go through the encounter list and look for particles actively encoutering in this timestep
    ! Prevent them from having further encounters in this timestep by setting status in plplenc_list to MERGED
-   DO k = 1, nplplenc 
-      IF ((plplenc_list%status(k) == ACTIVE) .AND. &
-         ((index1 == plplenc_list%index1(k) .OR. index2 == plplenc_list%index2(k)) .OR. &
-         (index2 == plplenc_list%index1(k) .OR. index1 == plplenc_list%index2(k)))) THEN
-            plplenc_list%status(k) = MERGED
-      END IF
-   END DO
+   ! DO k = 1, nplplenc 
+   !    IF ((plplenc_list%status(k) == ACTIVE) .AND. &
+   !       ((index1 == plplenc_list%index1(k) .OR. index2 == plplenc_list%index2(k)) .OR. &
+   !       (index2 == plplenc_list%index1(k) .OR. index1 == plplenc_list%index2(k)))) THEN
+   !          plplenc_list%status(k) = MERGED
+   !    END IF
+   ! END DO
 
    ! Set the status of the particles in symba_plA to HIT_AND_RUN
    symba_plA%helio%swiftest%status(index1) = HIT_AND_RUN
    symba_plA%helio%swiftest%status(index2) = HIT_AND_RUN
+
+   symba_plA%helio%swiftest%status(index1_parent) = HIT_AND_RUN
+   symba_plA%helio%swiftest%status(index2_parent) = HIT_AND_RUN
+   array_index1_child(1:npl) = symba_plA%index_child(1:npl,index1_parent)
+   array_index2_child(1:npl) = symba_plA%index_child(1:npl,index2_parent)
+   DO k = 1, nplplenc                                          !go through the encounter list and for particles actively encoutering, get their children
+      IF (plplenc_list%status(k) == ACTIVE) THEN
+         DO i = 0, symba_plA%nchild(index1_parent)
+            IF (i == 0) THEN 
+               index1_child = index1_parent
+            ELSE
+               index1_child = array_index1_child(i)
+            END IF 
+            DO j = 0, symba_plA%nchild(index2_parent)
+               IF (j == 0) THEN
+                  index2_child = index2_parent
+               ELSE
+                  index2_child = array_index2_child(j)
+               END IF
+               IF ((index1_child == plplenc_list%index1(k)) .OR. (index2_child == plplenc_list%index2(k))) THEN
+                  plplenc_list%status(k) = MERGED
+               ELSE IF ((index1_child == plplenc_list%index2(k)) .OR. (index2_child == plplenc_list%index1(k))) THEN
+                  plplenc_list%status(k) = MERGED
+               END IF
+            END DO
+         END DO
+      END IF
+   END DO
 
    mtot = 0.0_DP ! running total mass of new fragments
    mv(1) = 0.0_DP   ! running sum of m*v of new fragments to be used in COM calculation

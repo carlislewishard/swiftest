@@ -690,13 +690,13 @@ MODULE module_interfaces
 
      INTERFACE
           SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-          symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny)
+          symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny, npl)
           USE swiftest_globals
           USE swiftest_data_structures
           USE module_helio
           USE module_symba
           IMPLICIT NONE
-          INTEGER(I4B), INTENT(IN)                         :: index_enc, nplmax, ntpmax
+          INTEGER(I4B), INTENT(IN)                         :: index_enc, nplmax, ntpmax, npl
           INTEGER(I4B), INTENT(IN)                         :: nplplenc
           INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub, fragmax
           REAL(DP), INTENT(IN)                             :: t, dt,mtiny
@@ -713,13 +713,13 @@ MODULE module_interfaces
 
      INTERFACE
           SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-          symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny)
+          symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny, npl)
           USE swiftest_globals
           USE swiftest_data_structures
           USE module_helio
           USE module_symba
           IMPLICIT NONE
-          INTEGER(I4B), INTENT(IN)                         :: index_enc, nplmax, ntpmax
+          INTEGER(I4B), INTENT(IN)                         :: index_enc, nplmax, ntpmax, npl
           INTEGER(I4B), INTENT(IN)                         :: nplplenc
           INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub, fragmax
           REAL(DP), INTENT(IN)                             :: t, dt, mtiny
@@ -785,13 +785,13 @@ MODULE module_interfaces
      INTERFACE
           SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
                eoffset, vbs, symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, &
-               rad2, x1, x2, v1, v2, mtiny)
+               rad2, x1, x2, v1, v2, mtiny, npl)
           USE swiftest_globals
           USE swiftest_data_structures
           USE module_helio
           USE module_symba
           IMPLICIT NONE
-          INTEGER(I4B), INTENT(IN)                         :: index_enc, nplmax, ntpmax
+          INTEGER(I4B), INTENT(IN)                         :: index_enc, nplmax, ntpmax, npl
           INTEGER(I4B), INTENT(IN)                         :: nplplenc
           INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub, fragmax
           REAL(DP), INTENT(IN)                             :: t, dt, mtiny
