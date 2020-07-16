@@ -57,13 +57,19 @@ program swiftest_symba
    type(symba_merger)            :: mergeadd_list, mergesub_list
    integer(I4B), parameter       :: egyiu = 72
    real(DP)                      :: start, finish
+   CHARACTER(len=STRMAX)         :: arg
+   INTEGER(I4B)                  :: ierr
 
-   ! Executable code
+! Executable code
    call cpu_time(start)
-   call util_version
-   nthreads = 1                        
-   write(*, 100, advance = "no") "Enter name of parameter data file: "
-   read(*, 100) inparfile
+   CALL util_version
+
+   CALL get_command_argument(1, inparfile, status = ierr) 
+   IF (ierr /= 0) THEN
+       WRITE(*, 100, ADVANCE = "NO") "Enter name of parameter data file: "
+       READ(*, 100) inparfile
+   END IF
+
    100 format(a)
    inparfile = trim(adjustl(inparfile))
    ! read in the param.in file and get simulation parameters
