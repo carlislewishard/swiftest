@@ -57,18 +57,21 @@ program swiftest_symba
    type(symba_merger)            :: mergeadd_list, mergesub_list
    integer(I4B), parameter       :: egyiu = 72
    real(DP)                      :: start, finish
+   INTEGER(I8B)                  :: clock_count, count_rate, count_max
    CHARACTER(len=STRMAX)         :: arg
    INTEGER(I4B)                  :: ierr
 
 ! Executable code
-   call cpu_time(start)
-   CALL util_version
+   call system_clock(clock_count, count_rate, count_max)
+   start = clock_count / (count_rate * 1.0_DP)
 
-   CALL get_command_argument(1, inparfile, status = ierr) 
-   IF (ierr /= 0) THEN
-       WRITE(*, 100, ADVANCE = "NO") "Enter name of parameter data file: "
-       READ(*, 100) inparfile
-   END IF
+   call util_version
+
+   call get_command_argument(1, inparfile, status = ierr) 
+   if (ierr /= 0) then
+       write(*, 100, advance = "NO") "Enter name of parameter data file: "
+       read(*, 100) inparfile
+   end if
 
    100 format(a)
    inparfile = trim(adjustl(inparfile))
@@ -299,8 +302,10 @@ program swiftest_symba
       call symba_tp_deallocate(symba_tpA)
       call symba_pltpenc_deallocate(pltpenc_list)
    end if
-   call cpu_time(finish)
-   write(*,*) 'Time: ', finish - start
+   call system_clock(clock_count)
+   finish = clock_count / (count_rate * 1.0_DP)
+   write(*,*) 'Wall time to complete run (s): ', finish - start
+
    call util_exit(SUCCESS)
 
    stop
