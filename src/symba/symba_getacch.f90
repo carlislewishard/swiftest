@@ -56,13 +56,17 @@ SUBROUTINE symba_getacch(lextra_force, t, npl, nplm, symba_plA, j2rp2, j4rp4, np
      REAL(DP), DIMENSION(NDIM)                    :: dx
      REAL(DP), DIMENSION(npl)                     :: irh
      REAL(DP), DIMENSION(NDIM, npl)               :: aobl
+     REAL(DP), DIMENSION(NDIM, npl)               :: ahp, ahm
 
 ! Executable code
      
-     DO i = 2, npl
-          symba_plA%helio%ah(:,i) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
-     END DO
+     ahp(:,:) = 0.0_DP
+     ahm(:,:) = 0.0_DP
 
+     !$omp parallel do schedule(static) default(private) &
+     !$omp shared(nplm, npl, symba_plA) &
+     !$omp reduction(+:ahp) &
+     !$omp reduction(-:ahm)
      DO i = 2, nplm
           DO j = i + 1, npl
                IF ((.NOT. symba_plA%lmerged(i)) .OR. (.NOT. symba_plA%lmerged(j)) .OR. &
@@ -72,11 +76,13 @@ SUBROUTINE symba_getacch(lextra_force, t, npl, nplm, symba_plA, j2rp2, j4rp4, np
                     irij3 = 1.0_DP/(rji2*SQRT(rji2))
                     faci = symba_plA%helio%swiftest%mass(i)*irij3
                     facj = symba_plA%helio%swiftest%mass(j)*irij3
-                    symba_plA%helio%ah(:,i) = symba_plA%helio%ah(:,i) + facj*dx(:)
-                    symba_plA%helio%ah(:,j) = symba_plA%helio%ah(:,j) - faci*dx(:)
+                    ahp(:, i) = ahp(:, i) + facj * dx(:)
+                    ahm(:, j) = ahm(:, j) - faci * dx(:)
                END IF
           END DO
      END DO
+     !$omp end parallel do
+     symba_plA%helio%ah(:,:) = ahp(:, :) + ahm(:,:)
 
      DO i = 1, nplplenc
           index_i = plplenc_list%index1(i)

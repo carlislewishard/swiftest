@@ -85,54 +85,45 @@ SUBROUTINE symba_step(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
 ! Internals
      LOGICAL(LGT)              :: lencounter, lvdotr
-     INTEGER(I4B)              :: i, j, irec, nplm
+     INTEGER(I4B)              :: i, j, k, irec, nplm
      REAL(DP), DIMENSION(NDIM) :: xr, vr
      LOGICAL, SAVE             :: lfirst = .true.
+  
 
 ! Executable code
 
-    DO i = 1,npl
-          symba_plA%nplenc(i) = 0
-          symba_plA%ntpenc(i) = 0
-          symba_plA%levelg(i) = -1
-          symba_plA%levelm(i) = -1
-          symba_plA%index_parent(i) = i
-          symba_plA%index_child(:,i) = 0
-     END DO
-     DO i =1,ntp
-          symba_tpA%nplenc(i) = 0 
-          symba_tpA%levelg(i) = -1
-          symba_tpA%levelm(i) = -1
-     END DO 
+    do i = 1, npl
+      symba_plA%index_parent(i) = i
+    end do
+    symba_plA%nplenc(:) = 0
+    symba_plA%ntpenc(:) = 0
+    symba_plA%levelg(:) = -1
+    symba_plA%levelm(:) = -1
+    symba_plA%index_child(:,:) = 0
+    symba_tpA%nplenc(:) = 0 
+    symba_tpA%levelg(:) = -1
+    symba_tpA%levelm(:) = -1
 
 
      !THERE SHOULD BE SOME PARALLEL BITS IN HERE
 
      nplplenc = 0
      npltpenc = 0
-     IF (symba_plA%helio%swiftest%mass(1) < param%mtiny) THEN
-          nplm = 0
-     ELSE
-          nplm = 1
-     END IF
      irec = 0
 
-     DO i = 2, npl
-          IF (symba_plA%helio%swiftest%mass(i) < param%mtiny) EXIT
-          nplm = nplm + 1
-          DO j = i + 1, npl
+     nplm = count(symba_plA%helio%swiftest%mass(1:npl) >= param%mtiny)
+
+     DO i = 2, nplm
+         !$omp parallel do schedule(static) default(private) &
+         !$omp shared(i, npl, nplm, symba_plA, param, dt, irec, plplenc_list, nplplenc)
+         DO j = i + 1, npl
                xr(:) = symba_plA%helio%swiftest%xh(:,j) - symba_plA%helio%swiftest%xh(:,i)
                vr(:) = symba_plA%helio%swiftest%vh(:,j) - symba_plA%helio%swiftest%vh(:,i)
                CALL symba_chk(xr(:), vr(:), symba_plA%helio%swiftest%rhill(i), &
                     symba_plA%helio%swiftest%rhill(j), dt, irec, lencounter, lvdotr)
                IF (lencounter) THEN
+                    !$omp critical
                     nplplenc = nplplenc + 1
-                    IF (nplplenc > NENMAX) THEN
-                         WRITE(*, *) "SWIFTER Error:"
-                         WRITE(*, *) "   PL-PL encounter list is full."
-                         WRITE(*, *) "   STOPPING..."
-                         CALL util_exit(FAILURE)
-                    END IF
                     plplenc_list%status(nplplenc) = ACTIVE
                     plplenc_list%lvdotr(nplplenc) = lvdotr
                     plplenc_list%level(nplplenc) = irec
@@ -148,8 +139,10 @@ SUBROUTINE symba_step(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
                     symba_plA%levelg(j) = irec
                     symba_plA%levelm(j) = irec
                     symba_plA%nchild(j) = 0
+                    !$omp end critical
                END IF
           END DO
+         !$omp end parallel do
           DO j = 1, ntp
                xr(:) = symba_tpA%helio%swiftest%xh(:,j) - symba_plA%helio%swiftest%xh(:,i)
                vr(:) = symba_tpA%helio%swiftest%vh(:,j) - symba_plA%helio%swiftest%vh(:,i)
@@ -190,6 +183,9 @@ SUBROUTINE symba_step(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
                param%ntpmax, symba_plA%helio, symba_tpA%helio, &
                param%j2rp2, param%j4rp4, dt)
      END IF
+
+
+     !deallocate(plvdotr, pstatus, plevel, pindex1, pindex2)
      RETURN
 
 END SUBROUTINE symba_step
