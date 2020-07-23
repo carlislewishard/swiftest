@@ -72,7 +72,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
      REAL(DP)                       :: Mlr, Mslr, mtarg, mproj
      real(DP)                       :: first_add_vhz, second_add_vhz, first_add_vbz, second_add_vbz
      integer(I4B)                   :: first_add_name, second_add_name, first_add_index, second_add_index
-     REAL(DP), DIMENSION(NDIM)      :: vbs_instep
+     REAL(DP), DIMENSION(NDIM)      :: vbs_instep, denvec
      
 
 ! Executable code
@@ -246,9 +246,9 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
                vproj(:) = v1_si(:)
           END IF
           mtot = m1_si + m2_si
-          dentot = (m1_si *den1_si +m2_si*den2_si )/ mtot
+          dentot = (m1_si * den1_si + m2_si * den2_si)/ mtot
           Mcenter = symba_plA%helio%swiftest%mass(1) * MU2KG / GU
-          mtiny_si = (mtiny/GU)*MU2KG
+          mtiny_si = (mtiny / GU) * MU2KG
           !regime = collresolve_resolve(model,mtarg,mproj,rtarg,rproj,xtarg,xproj, vtarg,vproj, nres, mres, rres, pres, vres)
           CALL util_regime(Mcenter, mtarg, mproj, rtarg, rproj, xtarg, xproj, vtarg, vproj, dentarg, denproj, &
                regime, Mlr, Mslr, mtiny_si)
@@ -256,10 +256,11 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           mres(1) = Mlr
           mres(2) = Mslr 
           mres(3) = mtot - Mlr - Mslr
-          rres(1) = (3.0_DP * mres(1)  / (4.0_DP * PI * dentarg)) *(1.0_DP/3.0_DP)
-          rres(1) = (3.0_DP * mres(1)  / (4.0_DP * PI * dentarg)) ** (1.0_DP/3.0_DP)
-          rres(2) = (3.0_DP * mres(2)  / (4.0_DP * PI * denproj)) ** (1.0_DP/3.0_DP)
-          rres(3) = (3.0_DP * mres(2)  / (4.0_DP * PI * dentot)) ** (1.0_DP/3.0_DP)
+          denvec(1) = dentarg
+          denvec(2) = denproj
+          denvec(3) = dentot
+
+          rres(:) = (3.0_DP * mres(:)  / (4.0_DP * PI * denvec(:))) ** (1.0_DP/3.0_DP)
 
           mres(:) = (mres(:) / MU2KG) * GU
           rres(:) = rres(:) / DU2M

@@ -215,12 +215,8 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
 
    DO i=1, frags_added
 
-      mergeadd_list%xh(1,nstart + i) = x_frag(1, i)! - xbs(1)!x_frag
-      mergeadd_list%xh(2,nstart + i) = x_frag(2, i)!- xbs(2)!y_frag
-      mergeadd_list%xh(3,nstart + i) = x_frag(3, i)!- xbs(3)!z_frag                                                   
-      mergeadd_list%vh(1,nstart + i) = v_frag(1, i) - vbs(1)!vx_frag
-      mergeadd_list%vh(2,nstart + i) = v_frag(2, i) - vbs(2)!vy_frag
-      mergeadd_list%vh(3,nstart + i) = v_frag(3, i) - vbs(3)!vz_frag
+      mergeadd_list%xh(:,nstart + i) = x_frag(:, i)! - xbs(1)!x_frag
+      mergeadd_list%vh(:,nstart + i) = v_frag(:, i) - vbs(:)!vx_frag
 
          ! Tracking linear momentum. 
       mv(:) = mv(:) + (mergeadd_list%mass(nstart + i) * mergeadd_list%vh(:,nstart + i))
