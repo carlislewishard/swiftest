@@ -92,7 +92,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
      rlim = symba_plA%helio%swiftest%radius(index1) + symba_plA%helio%swiftest%radius(index2)
      xr(:) = symba_plA%helio%swiftest%xh(:,index2) - symba_plA%helio%swiftest%xh(:,index1)
      r2 = DOT_PRODUCT(xr(:), xr(:))
-     rlim2 = rlim*rlim
+     rlim2 = rlim**2
      ! checks if bodies are actively colliding in this time step
      IF (rlim2 >= r2) THEN 
           lfrag_add = .TRUE.
@@ -102,8 +102,8 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           vr(:) = symba_plA%helio%swiftest%vb(:,index2) - symba_plA%helio%swiftest%vb(:,index1)
           vdotr = DOT_PRODUCT(xr(:), vr(:))
           IF (plplenc_list%lvdotr(index_enc) .AND. (vdotr > 0.0_DP)) THEN 
-               tcr2 = r2/DOT_PRODUCT(vr(:), vr(:))
-               dt2 = dt*dt
+               tcr2 = r2 / DOT_PRODUCT(vr(:), vr(:))
+               dt2 = dt**2
                IF (tcr2 <= dt2) THEN
                     mtot = symba_plA%helio%swiftest%mass(index1) + symba_plA%helio%swiftest%mass(index2)
                     CALL orbel_xv2aeq(xr(:), vr(:), mtot, a, e, q)
