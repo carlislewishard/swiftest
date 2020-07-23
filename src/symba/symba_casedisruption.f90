@@ -93,9 +93,9 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    vh_2(:) = vb_2(:) - vbs(:)!symba_plA%helio%swiftest%vh(:,index2)
 
    ! Find energy pre-frag
-   eold = 0.5_DP*(m1*DOT_PRODUCT(vb_1(:), vb_1(:)) + m2*DOT_PRODUCT(vb_2(:), vb_2(:)))
+   eold = 0.5_DP * (m1 * DOT_PRODUCT(vb_1(:), vb_1(:)) + m2 * DOT_PRODUCT(vb_2(:), vb_2(:)))
    xr(:) = xh_2(:) - xh_1(:)
-   eold = eold - (m1*m2/(SQRT(DOT_PRODUCT(xr(:), xr(:)))))
+   eold = eold - m1 * m2 / NORM2(xr(:))
    
    WRITE(*, *) "Disruption between particles ", name1, " and ", name2, " at time t = ",t
 
