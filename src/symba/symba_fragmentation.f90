@@ -145,14 +145,14 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           name1 = symba_plA%helio%swiftest%name(index1_parent)
           index_big1 = index1_parent
           stat1 = symba_plA%helio%swiftest%status(index1_parent)
-          vol1 =  ((4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(index1_parent)**3.0_DP)
+          vol1 =  ((4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(index1_parent)**3)
           if (nchild1 > 0) then
             allocate(array_index1_child(nchild1))
             array_index1_child(:) = symba_plA%index_child(1:nchild1, index1_parent)
             DO i = 1, nchild1 ! initialize an array of children
                index1_child = array_index1_child(i)
                mtmp = symba_plA%helio%swiftest%mass(index1_child)
-               vchild = ((4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(index1_child)**3.0_DP)
+               vchild = ((4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(index1_child)**3)
                vol1 = vol1 + vchild
                IF (mtmp > mmax) THEN
                     mmax = mtmp
@@ -264,9 +264,9 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           CALL util_regime(Mcenter, mtarg, mproj, rtarg, rproj, xtarg, xproj, vtarg, vproj, dentarg, denproj, &
                regime, Mlr, Mslr, mtiny_si)
 
-          mres(1) = Mlr
-          mres(2) = Mslr 
-          mres(3) = max(mtot - Mlr - Mslr, 0.0_DP)
+          mres(1) = min(max(Mlr, 0.0_DP), mtot)
+          mres(2) = min(max(Mslr, 0.0_DP), mtot)
+          mres(3) = min(max(mtot - Mlr - Mslr, 0.0_DP), mtot)
           denvec(1) = dentarg
           denvec(2) = denproj
           denvec(3) = dentot
