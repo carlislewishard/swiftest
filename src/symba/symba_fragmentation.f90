@@ -266,7 +266,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
           mres(1) = Mlr
           mres(2) = Mslr 
-          mres(3) = mtot - Mlr - Mslr
+          mres(3) = max(mtot - Mlr - Mslr, 0.0_DP)
           denvec(1) = dentarg
           denvec(2) = denproj
           denvec(3) = dentot

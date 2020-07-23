@@ -65,6 +65,7 @@ SUBROUTINE util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, de
      REAL(DP)                      :: c4 = 1.08_DP !Ls12 constants
      REAL(DP)                      :: c5 = 2.5_DP !Ls12 constants
      REAL(DP)                      :: crufu = (2.0_DP-3.0_DP*0.36_DP) ! central potential variable from Rufu et al. 2019
+     real(DP)                      :: mresidual
 
 ! Executable code
       vimp = NORM2(vb2(:) - vb1(:))
@@ -153,12 +154,18 @@ SUBROUTINE util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, de
           END IF 
         ELSE IF (vimp > vsupercat) THEN 
           Mlr = mtot * (0.1_DP * ((QR / (QRD_pstar * 1.8_DP))**(-1.5_DP)))     !Eq (44)
-          Mslr = (mtot * ((3.0_DP - beta) * (1.0_DP - (N1 * Mlr / mtot)))) / (N2 * beta)  ! (Eq 37)
+          Mslr = mtot * (3.0_DP - beta) * (1.0_DP - N1 * Mlr / mtot) / (N2 * beta)  ! (Eq 37)
           regime = COLLRESOLVE_REGIME_SUPERCATASTROPHIC ! supercatastrophic
         ELSE 
           WRITE(*,*) "Error no regime found in util_regime"
         END IF 
       END IF 
+
+      mresidual = mtot - Mlr - Mslr
+      if (mresidual < 0.0_DP) then ! Prevents final masses from going negative
+         Mlr = Mlr + mresidual
+      end if
+         
     RETURN 
 
 
