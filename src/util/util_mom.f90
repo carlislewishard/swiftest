@@ -53,7 +53,7 @@ SUBROUTINE util_mom(m1, xh1, vb1, m2, xh2, vb2, frags_added, nstart, m_frag, r_c
    REAL(DP), DIMENSION(NDIM)                              :: xr, l, kk, p, v_f, x_f, angmom_frag, angmom_fragi, angmom_com_frag
    REAL(DP), DIMENSION(NDIM)                              :: angmom_f, angmom_before
    integer(I4B), save                                     :: thetashift = 0
-   integer(I4B), parameter                                :: SHIFTMAX = 9
+   integer(I4B), parameter                                :: SHIFTMAX = 10
    real(DP)                                               :: phase_ang
 
 ! Executable code
@@ -62,7 +62,7 @@ SUBROUTINE util_mom(m1, xh1, vb1, m2, xh2, vb2, frags_added, nstart, m_frag, r_c
    ! don't pile up on top of each other
    phase_ang = theta * thetashift / SHIFTMAX
    thetashift = thetashift + 1
-   if (thetashift > shiftmax) thetashift = 0
+   if (thetashift >= shiftmax) thetashift = 0
 
    !WRITE(*,*) "UTIL_MOM xh1", xh1 
    !WRITE(*,*) "UTIL_MOM xh2", xh2 
