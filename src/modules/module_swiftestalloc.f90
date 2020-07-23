@@ -17,12 +17,18 @@ module module_swiftestalloc
 
       integer(I4B), intent(in)            :: npl
       type(helio_pl), intent(inout)        :: helio_plA
+      integer(I4B)                            :: n
 
-      if (npl <= 0) return
-      allocate(helio_plA%ah(NDIM,npl))
-      allocate(helio_plA%ahi(NDIM,npl))
-      helio_plA%ah = 0.0_DP
-      helio_plA%ahi = 0.0_DP
+      if (npl <= 0) then
+         n = 1
+      else
+         n = npl
+      end if
+
+      allocate(helio_plA%ah(NDIM, n))
+      allocate(helio_plA%ahi(NDIM, n))
+      helio_plA%ah(:, :)= 0.0_DP
+      helio_plA%ahi(:, :) = 0.0_DP
       call helio_plA%swiftest%alloc(npl)
       return
    end subroutine helio_pl_allocate
@@ -34,31 +40,37 @@ module module_swiftestalloc
 
       integer(I4B), intent(in)            :: npl
       type(symba_pl), intent(inout)        :: symba_plA
+      integer(I4B)                            :: n
 
-      if (npl <= 0) return
-      allocate(symba_plA%lmerged(npl))
-      allocate(symba_plA%nplenc(npl))
-      allocate(symba_plA%ntpenc(npl))
-      allocate(symba_plA%levelg(npl))
-      allocate(symba_plA%levelm(npl))
-      allocate(symba_plA%nchild(npl))
-      allocate(symba_plA%isperi(npl))
-      allocate(symba_plA%peri(npl))
-      allocate(symba_plA%atp(npl))
-      allocate(symba_plA%index_parent(npl))
-      allocate(symba_plA%index_child(npl,npl))
+      if (npl <= 0) then
+         n = 1
+      else
+         n = npl
+      end if
 
-      symba_plA%lmerged = .false.
-      symba_plA%nplenc = 0
-      symba_plA%ntpenc = 0
-      symba_plA%levelg = 0
-      symba_plA%levelm = 0
-      symba_plA%nchild = 0
-      symba_plA%isperi = 0
-      symba_plA%peri = 0.0_DP
-      symba_plA%atp = 0.0_DP
-      symba_plA%index_parent = 1
-      symba_plA%index_child = 1
+      allocate(symba_plA%lmerged(n))
+      allocate(symba_plA%nplenc(n))
+      allocate(symba_plA%ntpenc(n))
+      allocate(symba_plA%levelg(n))
+      allocate(symba_plA%levelm(n))
+      allocate(symba_plA%nchild(n))
+      allocate(symba_plA%isperi(n))
+      allocate(symba_plA%peri(n))
+      allocate(symba_plA%atp(n))
+      allocate(symba_plA%index_parent(n))
+      allocate(symba_plA%index_child(n, n))
+
+      symba_plA%lmerged(:) = .false.
+      symba_plA%nplenc(:) = 0
+      symba_plA%ntpenc(:) = 0
+      symba_plA%levelg(:) = 0
+      symba_plA%levelm(:) = 0
+      symba_plA%nchild(:) = 0
+      symba_plA%isperi(:) = 0
+      symba_plA%peri(:) = 0.0_DP
+      symba_plA%atp(:) = 0.0_DP
+      symba_plA%index_parent(:) = 1
+      symba_plA%index_child(:, :) = 1
       call helio_pl_allocate(symba_plA%helio,npl)
       return
    end subroutine symba_pl_allocate
@@ -69,23 +81,29 @@ module module_swiftestalloc
 
       integer(I4B), intent(in)                :: nplplenc
       type(symba_plplenc), intent(inout)        :: plplenc_list
+      integer(I4B)                            :: n
 
-      if (nplplenc <= 0) return
-      allocate(plplenc_list%lvdotr(nplplenc))
-      allocate(plplenc_list%status(nplplenc))
-      allocate(plplenc_list%level(nplplenc))
-      allocate(plplenc_list%index1(nplplenc))
-      allocate(plplenc_list%index2(nplplenc))
-      allocate(plplenc_list%enc_child(nplplenc))
-      allocate(plplenc_list%enc_parent(nplplenc))
+      if (nplplenc <= 0) then
+         n = 1
+      else
+         n = nplplenc
+      end if
 
-      plplenc_list%lvdotr = .false.
-      plplenc_list%status = 0
-      plplenc_list%level = 1
-      plplenc_list%index1 = 1
-      plplenc_list%index2 = 1
-      plplenc_list%enc_child = 1
-      plplenc_list%enc_parent = 1
+      allocate(plplenc_list%lvdotr(n))
+      allocate(plplenc_list%status(n))
+      allocate(plplenc_list%level(n))
+      allocate(plplenc_list%index1(n))
+      allocate(plplenc_list%index2(n))
+      allocate(plplenc_list%enc_child(n))
+      allocate(plplenc_list%enc_parent(n))
+
+      plplenc_list%lvdotr(:) = .false.
+      plplenc_list%status(:) = 0
+      plplenc_list%level(:) = 1
+      plplenc_list%index1(:) = 1
+      plplenc_list%index2(:) = 1
+      plplenc_list%enc_child(:) = 1
+      plplenc_list%enc_parent(:) = 1
       return
    end subroutine symba_plplenc_allocate
 
@@ -94,28 +112,34 @@ module module_swiftestalloc
       implicit none
 
       integer(I4B), intent(in)                :: nmergeadd
-      type(symba_merger), intent(inout)        :: mergeadd_list
+      type(symba_merger), intent(inout)       :: mergeadd_list
+      integer(I4B)                            :: n
 
-      if (nmergeadd <= 0) return
-      allocate(mergeadd_list%name(nmergeadd))
-      allocate(mergeadd_list%index_ps(nmergeadd))
-      allocate(mergeadd_list%status(nmergeadd))
-      allocate(mergeadd_list%ncomp(nmergeadd))
-      allocate(mergeadd_list%nadded(nmergeadd))
-      allocate(mergeadd_list%xh(NDIM,nmergeadd))
-      allocate(mergeadd_list%vh(NDIM,nmergeadd))
-      allocate(mergeadd_list%mass(nmergeadd))
-      allocate(mergeadd_list%radius(nmergeadd))
+      if (nmergeadd <= 0) then
+         n = 0
+      else
+         n = nmergeadd
+      end if
 
-      mergeadd_list%name = 0
-      mergeadd_list%index_ps = 1
-      mergeadd_list%status = 0
-      mergeadd_list%ncomp = 0
-      mergeadd_list%nadded = 0
-      mergeadd_list%xh = 0.0_DP
-      mergeadd_list%vh = 0.0_DP
-      mergeadd_list%mass = 0.0_DP
-      mergeadd_list%radius = 0.0_DP
+      allocate(mergeadd_list%name(n))
+      allocate(mergeadd_list%index_ps(n))
+      allocate(mergeadd_list%status(n))
+      allocate(mergeadd_list%ncomp(n))
+      allocate(mergeadd_list%nadded(n))
+      allocate(mergeadd_list%xh(NDIM, n))
+      allocate(mergeadd_list%vh(NDIM, n))
+      allocate(mergeadd_list%mass(n))
+      allocate(mergeadd_list%radius(n))
+
+      mergeadd_list%name(:) = 0
+      mergeadd_list%index_ps(:) = 1
+      mergeadd_list%status(:) = 0
+      mergeadd_list%ncomp(:) = 0
+      mergeadd_list%nadded(:) = 0
+      mergeadd_list%xh(:, :) = 0.0_DP
+      mergeadd_list%vh(:, :) = 0.0_DP
+      mergeadd_list%mass(:) = 0.0_DP
+      mergeadd_list%radius(:) = 0.0_DP
 
       return
    end subroutine symba_merger_allocate
@@ -126,13 +150,19 @@ module module_swiftestalloc
 
       integer(I4B), intent(in)            :: ntp
       type(helio_tp), intent(inout)       :: helio_tpA
+      integer(I4B)                        :: n
 
-      if (ntp <= 0) return
-      allocate(helio_tpA%ah(NDIM,ntp))
-      allocate(helio_tpA%ahi(NDIM,ntp))
+      if (ntp <= 0) then
+         n = 1
+      else
+         n = ntp
+      end if
 
-      helio_tpA%ah = 0.0_DP
-      helio_tpA%ahi = 0.0_DP
+      allocate(helio_tpA%ah(NDIM, n))
+      allocate(helio_tpA%ahi(NDIM, n))
+
+      helio_tpA%ah(:, :) = 0.0_DP
+      helio_tpA%ahi(:, :) = 0.0_DP
       call helio_tpA%swiftest%alloc(ntp)
 
       return
@@ -145,16 +175,20 @@ module module_swiftestalloc
 
       integer(I4B), intent(in)            :: ntp
       type(symba_tp), intent(inout)       :: symba_tpA
+      integer(I4B)                        :: n
 
-      if (ntp <= 0) return
+      if (ntp <= 0) then
+         n = 1
+      else
+         n = ntp
+      end if
+      allocate(symba_tpA%nplenc(n))
+      allocate(symba_tpA%levelg(n))
+      allocate(symba_tpA%levelm(n))
 
-      allocate(symba_tpA%nplenc(ntp))
-      allocate(symba_tpA%levelg(ntp))
-      allocate(symba_tpA%levelm(ntp))
-
-      symba_tpA%nplenc = 0
-      symba_tpA%levelg = 0
-      symba_tpA%levelm = 0
+      symba_tpA%nplenc(:) = 0
+      symba_tpA%levelg(:) = 0
+      symba_tpA%levelm(:) = 0
       call helio_tp_allocate(symba_tpA%helio,ntp)
       return
    end subroutine symba_tp_allocate
@@ -165,20 +199,25 @@ module module_swiftestalloc
 
       integer(I4B), intent(in)                :: npltpenc
       type(symba_pltpenc), intent(inout)        :: pltpenc_list
+      integer(I4B)                            :: n
 
-      if (npltpenc <= 0) return
+      if (npltpenc <= 0)  then
+         n = 1
+      else
+         n = npltpenc
+      end if
 
-      allocate(pltpenc_list%lvdotr(npltpenc))
-      allocate(pltpenc_list%status(npltpenc))
-      allocate(pltpenc_list%level(npltpenc))
-      allocate(pltpenc_list%indexpl(npltpenc))
-      allocate(pltpenc_list%indextp(npltpenc))
+      allocate(pltpenc_list%lvdotr(n))
+      allocate(pltpenc_list%status(n))
+      allocate(pltpenc_list%level(n))
+      allocate(pltpenc_list%indexpl(n))
+      allocate(pltpenc_list%indextp(n))
 
-      pltpenc_list%lvdotr = .false.
-      pltpenc_list%status = 0
-      pltpenc_list%level = 0
-      pltpenc_list%indexpl = 1
-      pltpenc_list%indextp = 1
+      pltpenc_list%lvdotr(:) = .false.
+      pltpenc_list%status(:) = 0
+      pltpenc_list%level(:) = 0
+      pltpenc_list%indexpl(:) = 1
+      pltpenc_list%indextp(:) = 1
       return
    end subroutine symba_pltpenc_allocate
 
