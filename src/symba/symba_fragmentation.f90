@@ -271,7 +271,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           denvec(2) = denproj
           denvec(3) = dentot
 
-          rres(:) = (3.0_DP * mres(:)  / (4.0_DP * PI * denvec(:))) ** (1.0_DP/3.0_DP)
+          rres(:) = (3 * mres(:)  / (4 * PI * denvec(:)))**(1.0_DP/3.0_DP)
 
           mres(:) = (mres(:) / MU2KG) * GU
           rres(:) = rres(:) / DU2M
