@@ -62,6 +62,7 @@ SUBROUTINE symba_getacch(lextra_force, t, npl, nplm, symba_plA, j2rp2, j4rp4, np
      
      ahp(:,:) = 0.0_DP
      ahm(:,:) = 0.0_DP
+     symba_plA%helio%ah(:,:) = 0.0_DP
 
      !$omp parallel do schedule(static) default(private) &
      !$omp shared(nplm, npl, symba_plA) &
@@ -82,7 +83,7 @@ SUBROUTINE symba_getacch(lextra_force, t, npl, nplm, symba_plA, j2rp2, j4rp4, np
           END DO
      END DO
      !$omp end parallel do
-     symba_plA%helio%ah(:,:) = ahp(:, :) + ahm(:,:)
+     symba_plA%helio%ah(:,1:npl) = ahp(:, :) + ahm(:,:)
 
      DO i = 1, nplplenc
           index_i = plplenc_list%index1(i)

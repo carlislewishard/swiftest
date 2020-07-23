@@ -164,6 +164,8 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
                x1(:) = x1(:) + mtmp*symba_plA%helio%swiftest%xh(:,index1_child)
                v1(:) = v1(:) + mtmp*symba_plA%helio%swiftest%vb(:,index1_child)
             END DO
+          else
+            allocate(array_index1_child(1))
           end if
           den1 =  m1 / vol1
           rad1 = ((3.0_DP * m1) / (den1 * 4.0_DP * PI)) ** (1.0_DP / 3.0_DP)
@@ -202,6 +204,8 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
                x2(:) = x2(:) + mtmp*symba_plA%helio%swiftest%xh(:,index2_child)
                v2(:) = v2(:) + mtmp*symba_plA%helio%swiftest%vb(:,index2_child)
             END DO
+          else
+            allocate(array_index2_child(1))
           end if 
           den2 =  m2 / vol2
           rad2 = ((3.0_DP * m2) / (den2 * 4.0_DP * PI)) ** (1.0_DP / 3.0_DP)

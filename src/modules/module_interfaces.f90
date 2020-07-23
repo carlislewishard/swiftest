@@ -751,7 +751,7 @@ MODULE module_interfaces
           TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
           TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
           TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
-          INTEGER(I4B), DIMENSION(:), INTENT(INOUT)      :: array_index1_child, array_index2_child
+          INTEGER(I4B), DIMENSION(:), INTENT(IN)      :: array_index1_child, array_index2_child
 
           END SUBROUTINE symba_casemerge
      END INTERFACE

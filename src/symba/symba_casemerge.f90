@@ -52,17 +52,17 @@ SUBROUTINE symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
      TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
      TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
      TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
-     INTEGER(I4B), DIMENSION(npl), INTENT(INOUT)      :: array_index1_child, array_index2_child
+     INTEGER(I4B), DIMENSION(:), INTENT(IN)           :: array_index1_child, array_index2_child
 
 ! Internals
  
      INTEGER(I4B)                 :: i, j, k, stat1, stat2, index1, index2, indexchild
      INTEGER(I4B)                 :: index1_child, index2_child, index1_parent, index2_parent
-     INTEGER(I4B)                 :: name1, name2
+     INTEGER(I4B)                 :: name1, name2, nchild1, nchild2, mergename, mergestat
      REAL(DP)                     :: mtot
      REAL(DP)                     :: eold, enew, mass1, mass2
      REAL(DP), DIMENSION(NDIM)    :: xr, xnew, vnew
-     INTEGER(I4B), DIMENSION(npl) :: array_keep_child, array_rm_child
+     INTEGER(I4B), DIMENSION(:), ALLOCATABLE :: array_keep_child, array_rm_child
 
 ! Executable code
 
@@ -76,6 +76,8 @@ SUBROUTINE symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
    mass2 = symba_plA%helio%swiftest%mass(index2)
    stat1 = symba_plA%helio%swiftest%status(index1)
    stat2 = symba_plA%helio%swiftest%status(index2)
+   nchild1 = symba_plA%nchild(index1_parent)
+   nchild2 = symba_plA%nchild(index2_parent)
 
    mtot = m1 + m2
    xnew(:) = (m1*x1(:) + m2*x2(:))/mtot
@@ -91,13 +93,13 @@ SUBROUTINE symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
 
    DO k = 1, nplplenc
       IF (plplenc_list%status(k) == ACTIVE) THEN
-         DO i = 0, symba_plA%nchild(index1_parent)
+         DO i = 0, nchild1
             IF (i == 0) THEN 
                index1_child = index1_parent
             ELSE
                index1_child = array_index1_child(i)
             END IF 
-            DO j = 0, symba_plA%nchild(index2_parent)
+            DO j = 0, nchild2
                IF (j == 0) THEN
                   index2_child = index2_parent
                ELSE
@@ -120,33 +122,42 @@ SUBROUTINE symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
    symba_plA%helio%swiftest%vb(:,index2_parent) = vnew(:)
 
    ! The children of parent one are the children we are keeping
-   array_keep_child(1:npl) = symba_plA%index_child(1:npl,index1_parent)
-   ! Go through the children of the kept parent and add those children to the array of kept children
-   DO i = 1, symba_plA%nchild(index1_parent)
-      indexchild = array_keep_child(i)
-      symba_plA%helio%swiftest%xh(:,indexchild) = xnew(:)
-      symba_plA%helio%swiftest%vb(:,indexchild) = vnew(:)
-   END DO
+
+   
+   if (nchild1 > 0) then
+      allocate(array_keep_child(nchild1))
+      array_keep_child(:) = symba_plA%index_child(1:nchild1, index1_parent)
+      ! Go through the children of the kept parent and add those children to the array of kept children
+      DO i = 1, nchild1
+         indexchild = array_keep_child(i)
+         symba_plA%helio%swiftest%xh(:, indexchild) = xnew(:)
+         symba_plA%helio%swiftest%vb(:, indexchild) = vnew(:)
+      END DO
+   end if
+
    ! the removed parent is assigned as a new child to the list of children of the kept parent
    ! gives kept parent a new child 
-   symba_plA%index_child((symba_plA%nchild(index1_parent)+1),index1_parent) = index2_parent
-   array_rm_child(1:npl) = symba_plA%index_child(1:npl,index2_parent)
-   ! the parent of the removed parent is assigned to be the kept parent 
-   ! gives removed parent a new parent
+   symba_plA%index_child((nchild1 + 1), index1_parent) = index2_parent
+
    symba_plA%index_parent(index2) = index1_parent
    ! go through the children of the removed parent and add those children to the array of removed children 
-   DO i = 1, symba_plA%nchild(index2_parent)
-      symba_plA%index_parent(array_rm_child(i)) = index1_parent
-      indexchild = array_rm_child(i)
-      symba_plA%helio%swiftest%xh(:,indexchild) = xnew(:)
-      symba_plA%helio%swiftest%vb(:,indexchild) = vnew(:)
-   END DO
+   if (nchild2 > 0) then 
+      allocate(array_rm_child(nchild2))
+      array_rm_child(:) = symba_plA%index_child(1:nchild2, index2_parent)
+      ! the parent of the removed parent is assigned to be the kept parent 
+      ! gives removed parent a new parent
+      DO i = 1, nchild2
+         symba_plA%index_parent(array_rm_child(i)) = index1_parent
+         indexchild = array_rm_child(i)
+         symba_plA%helio%swiftest%xh(:,indexchild) = xnew(:)
+         symba_plA%helio%swiftest%vb(:,indexchild) = vnew(:)
    ! go through the children of the removed parent and add those children to the list of children of the kept parent
-   DO i = 1, symba_plA%nchild(index2_parent)
-      symba_plA%index_child(symba_plA%nchild(index1_parent)+i+1,index1_parent)= array_rm_child(i)
-   END DO 
+         symba_plA%index_child(nchild1 + i + 1, index1_parent) = indexchild
+      END DO 
+   end if
    ! updates the number of children of the kept parent
    symba_plA%nchild(index1_parent) = symba_plA%nchild(index1_parent) + symba_plA%nchild(index2_parent) + 1
+
 
    nmergesub = nmergesub + 1
    mergesub_list%name(nmergesub) = name1
@@ -173,11 +184,11 @@ SUBROUTINE symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
       mergeadd_list%name(nmergeadd) = name1
       mergeadd_list%status(nmergeadd) = stat1
    END IF
-   mergeadd_list%ncomp = 2
+   mergeadd_list%ncomp(nmergeadd) = 2
    mergeadd_list%xh(:,nmergeadd) = xnew(:)
    mergeadd_list%vh(:,nmergeadd) = vnew(:) - vbs(:)
    mergeadd_list%mass(nmergeadd) = mtot
-   mergeadd_list%radius(nmergeadd) = (rad1**3.0_DP + rad2**3.0_DP)**(1.0_DP/3.0_DP)
+   mergeadd_list%radius(nmergeadd) = (rad1**3 + rad2**3)**(1.0_DP/3.0_DP)
 
    RETURN 
 END SUBROUTINE symba_casemerge
