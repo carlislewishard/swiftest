@@ -6,22 +6,24 @@
 !  Package     : util
 !  Language    : Fortran 90/95
 !
-!  Description : Index input real array into ascending numerical order using Quicksort algorithm
+!  Description : Determine the collisional regime of two colliding bodies.
 !
 !  Input
-!    Arguments : arr   : array to index
+!    Arguments : 
 !    Terminal  : none
 !    File      : none
 !
 !  Output
-!    Arguments : index : index table for sorted array
+!    Arguments : 
 !    Terminal  : error message
 !    File      : none
 !
-!  Invocation  : CALL util_regime(symba_plA, index1, index2)
+!  Invocation  : CALL util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2, regime, Mlr, Mslr, mtiny)
 !
-!  Notes       : Adapted from Numerical Recipes in Fortran 90: The Art of Parallel Scientific Computing, by Press, Teukolsky,
-!                Vetterling, and Flannery, 2nd ed., pp. 1173-4
+!  Notes       : Reference:
+!                 Leinhardt, Z.M., Stewart, S.T., 2012. Collisions between Gravity-dominated Bodies. I. Outcome Regimes and Scaling 
+!                    Laws 745, 79. https://doi.org/10.1088/0004-637X/745/1/79
+!
 !
 !**********************************************************************************************************************************
 SUBROUTINE util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2, regime, Mlr, Mslr, mtiny)
