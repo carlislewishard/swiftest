@@ -80,15 +80,15 @@ SUBROUTINE symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
    nchild2 = symba_plA%nchild(index2_parent)
 
    mtot = m1 + m2
-   xnew(:) = (m1*x1(:) + m2*x2(:))/mtot
-   vnew(:) = (m1*v1(:) + m2*v2(:))/mtot
+   xnew(:) = (m1 * x1(:) + m2 * x2(:)) / mtot
+   vnew(:) = (m1 * v1(:) + m2 * v2(:)) / mtot
    
    WRITE(*, *) "Merging particles ", name1, " and ", name2, " at time t = ",t
 
-   eold = 0.5_DP*(m1*DOT_PRODUCT(v1(:), v1(:)) + m2*DOT_PRODUCT(v2(:), v2(:)))
+   eold = 0.5_DP * (m1 * DOT_PRODUCT(v1(:), v1(:)) + m2 * DOT_PRODUCT(v2(:), v2(:)))
    xr(:) = x2(:) - x1(:)
-   eold = eold - m1*m2/SQRT(DOT_PRODUCT(xr(:), xr(:)))
-   enew = 0.5_DP*mtot*DOT_PRODUCT(vnew(:), vnew(:))
+   eold = eold - m1 * m2 / NORM2(xr(:))
+   enew = 0.5_DP * mtot * DOT_PRODUCT(vnew(:), vnew(:))
    eoffset = eoffset + eold - enew
 
    DO k = 1, nplplenc

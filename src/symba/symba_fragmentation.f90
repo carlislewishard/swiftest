@@ -137,8 +137,8 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           index1_parent = symba_plA%index_parent(index1)
           m1 = symba_plA%helio%swiftest%mass(index1_parent)
           mass1 = m1 
-          x1(:) = m1*symba_plA%helio%swiftest%xh(:,index1_parent)
-          v1(:) = m1*symba_plA%helio%swiftest%vb(:,index1_parent)
+          x1(:) = m1 * symba_plA%helio%swiftest%xh(:,index1_parent)
+          v1(:) = m1 * symba_plA%helio%swiftest%vb(:,index1_parent)
           nchild1 = symba_plA%nchild(index1_parent)  
 
           mmax = m1
@@ -161,23 +161,23 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
                     stat1 = symba_plA%helio%swiftest%status(index1_child)
                END IF
                m1 = m1 + mtmp
-               x1(:) = x1(:) + mtmp*symba_plA%helio%swiftest%xh(:,index1_child)
-               v1(:) = v1(:) + mtmp*symba_plA%helio%swiftest%vb(:,index1_child)
+               x1(:) = x1(:) + mtmp * symba_plA%helio%swiftest%xh(:, index1_child)
+               v1(:) = v1(:) + mtmp * symba_plA%helio%swiftest%vb(:, index1_child)
             END DO
           else
             allocate(array_index1_child(1))
           end if
           den1 =  m1 / vol1
-          rad1 = ((3 * m1) / (den1 * 4 * PI)) ** (1.0_DP / 3.0_DP)
-          x1(:) = x1(:)/m1
-          v1(:) = v1(:)/m1
+          rad1 = ((3 * m1) / (den1 * 4 * PI))**(1.0_DP / 3.0_DP)
+          x1(:) = x1(:) / m1
+          v1(:) = v1(:) / m1
 
           index2_parent = symba_plA%index_parent(index2)
           m2 = symba_plA%helio%swiftest%mass(index2_parent)
           mass2 = m2
           rad2 = symba_plA%helio%swiftest%radius(index2_parent)
-          x2(:) = m2*symba_plA%helio%swiftest%xh(:,index2_parent)
-          v2(:) = m2*symba_plA%helio%swiftest%vb(:,index2_parent)
+          x2(:) = m2 * symba_plA%helio%swiftest%xh(:,index2_parent)
+          v2(:) = m2 * symba_plA%helio%swiftest%vb(:,index2_parent)
           mmax = m2
           name2 = symba_plA%helio%swiftest%name(index2_parent)
           index_big2 = index2_parent
@@ -192,7 +192,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
             DO i = 1, nchild2
                index2_child = array_index2_child(i)
                mtmp = symba_plA%helio%swiftest%mass(index2_child)
-               vchild =  ((4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(index2_child)**3)
+               vchild =  (4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(index2_child)**3
                vol2 = vol2 + vchild
                IF (mtmp > mmax) THEN
                     mmax = mtmp
@@ -201,16 +201,16 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
                     stat2 = symba_plA%helio%swiftest%status(index2_child)
                END IF
                m2 = m2 + mtmp
-               x2(:) = x2(:) + mtmp*symba_plA%helio%swiftest%xh(:,index2_child)
-               v2(:) = v2(:) + mtmp*symba_plA%helio%swiftest%vb(:,index2_child)
+               x2(:) = x2(:) + mtmp * symba_plA%helio%swiftest%xh(:, index2_child)
+               v2(:) = v2(:) + mtmp * symba_plA%helio%swiftest%vb(:, index2_child)
             END DO
           else
             allocate(array_index2_child(1))
           end if 
           den2 =  m2 / vol2
           rad2 = ((3 * m2) / (den2 * 4 * PI))**(1.0_DP / 3.0_DP)
-          x2(:) = x2(:)/m2
-          v2(:) = v2(:)/m2
+          x2(:) = x2(:) / m2
+          v2(:) = v2(:) / m2
 
           m1_si = (m1 / GU) * MU2KG 
           m2_si = (m2 / GU) * MU2KG
@@ -220,8 +220,8 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           x2_si(:) = x2(:) * DU2M
           v1_si(:) = v1(:) * DU2M / TU2S
           v2_si(:) = v2(:) * DU2M / TU2S
-          den1_si = (den1 / GU) * MU2KG / (DU2M**3)
-          den2_si = (den2 / GU) * MU2KG / (DU2M**3)
+          den1_si = (den1 / GU) * MU2KG / DU2M**3
+          den2_si = (den2 / GU) * MU2KG / DU2M**3
           vbs_si = vbs_instep(:) * DU2M / TU2S 
 
           mres(:) = 0.0_DP
@@ -271,7 +271,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           denvec(2) = denproj
           denvec(3) = dentot
 
-          rres(:) = (3 * mres(:)  / (4 * PI * denvec(:)))**(1.0_DP/3.0_DP)
+          rres(:) = (3 * mres(:)  / (4 * PI * denvec(:)))**(1.0_DP / 3.0_DP)
 
           mres(:) = (mres(:) / MU2KG) * GU
           rres(:) = rres(:) / DU2M
