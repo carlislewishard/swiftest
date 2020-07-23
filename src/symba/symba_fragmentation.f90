@@ -145,14 +145,14 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           name1 = symba_plA%helio%swiftest%name(index1_parent)
           index_big1 = index1_parent
           stat1 = symba_plA%helio%swiftest%status(index1_parent)
-          vol1 =  ((4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(index1_parent)**3)
+          vol1 =  (4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(index1_parent)**3
           if (nchild1 > 0) then
             allocate(array_index1_child(nchild1))
             array_index1_child(:) = symba_plA%index_child(1:nchild1, index1_parent)
             DO i = 1, nchild1 ! initialize an array of children
                index1_child = array_index1_child(i)
                mtmp = symba_plA%helio%swiftest%mass(index1_child)
-               vchild = ((4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(index1_child)**3)
+               vchild = (4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(index1_child)**3
                vol1 = vol1 + vchild
                IF (mtmp > mmax) THEN
                     mmax = mtmp
@@ -184,7 +184,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           stat2 = symba_plA%helio%swiftest%status(index2_parent)
           nchild2 = symba_plA%nchild(index2_parent)  
 
-          vol2 = ((4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(index2_parent)**3)
+          vol2 = (4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(index2_parent)**3
 
           if (nchild2 > 0) then
             allocate(array_index2_child(nchild2))
