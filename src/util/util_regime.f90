@@ -113,7 +113,7 @@ SUBROUTINE util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, de
       vcr = vescp * (c1 * fgamma * theta ** c5 + c2 * fgamma + c3 * theta ** c5 + c4)
       bcrit = rad1/(rad1+rad2)
 
-      IF ((m1 < 10*MTINY).OR.(m2 < 10*MTINY)) THEN 
+      IF ((m1 < 1*MTINY).OR.(m2 < 1*MTINY)) THEN 
         regime = COLLRESOLVE_REGIME_MERGE !perfect merging regime
         Mlr = mtot
         Mslr = 0.0_DP
