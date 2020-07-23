@@ -751,7 +751,7 @@ MODULE module_interfaces
           TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
           TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
           TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
-          INTEGER(I4B), DIMENSION(npl), INTENT(INOUT)      :: array_index1_child, array_index2_child
+          INTEGER(I4B), DIMENSION(:), INTENT(INOUT)      :: array_index1_child, array_index2_child
 
           END SUBROUTINE symba_casemerge
      END INTERFACE
@@ -777,7 +777,7 @@ MODULE module_interfaces
           TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
           TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
           INTEGER(I4B), INTENT(IN)                         :: regime
-          INTEGER(I4B), DIMENSION(npl), INTENT(INOUT)      :: array_index1_child, array_index2_child
+          INTEGER(I4B), DIMENSION(:), INTENT(INOUT)      :: array_index1_child, array_index2_child
 
           END SUBROUTINE symba_caseresolve
      END INTERFACE
@@ -924,7 +924,7 @@ MODULE module_interfaces
                INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub, fragmax
                REAL(DP), INTENT(IN)                             :: t, dt
                REAL(DP), INTENT(INOUT)                          :: eoffset, mtiny
-               REAL(DP), DIMENSION(NDIM), INTENT(IN)            :: vbs
+               REAL(DP), DIMENSION(:), INTENT(IN)            :: vbs
                CHARACTER(*), INTENT(IN)                         :: encounter_file, out_type
                TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
                TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list

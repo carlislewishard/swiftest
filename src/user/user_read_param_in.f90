@@ -85,6 +85,7 @@ contains
          write(*,*) 'DU2M: ',DU2M
          ierr = -1
       end if
+      GU = GC / (DU2M**3 / (MU2KG * TU2S**2))
    end if 
    !Added mtiny to the argument list rather than from the terminal
    if (param%mtiny < 0.0_DP) then

@@ -48,7 +48,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
      INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub, fragmax
      REAL(DP), INTENT(IN)                             :: t, dt
      REAL(DP), INTENT(INOUT)                          :: eoffset, mtiny
-     REAL(DP), DIMENSION(NDIM), INTENT(IN)            :: vbs
+     REAL(DP), DIMENSION(:), INTENT(IN)               :: vbs
      CHARACTER(*), INTENT(IN)                         :: encounter_file, out_type
      TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
      TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
@@ -61,14 +61,14 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
      REAL(DP), DIMENSION(NDIM, 3)   :: pres, vres
      INTEGER(I4B)                   :: regime 
      INTEGER(I4B)                   :: index1, index2, index1_child, index2_child, index1_parent, index2_parent
-     INTEGER(I4B)                   :: name1, name2, index_big1, index_big2, stat1, stat2
+     INTEGER(I4B)                   :: name1, name2, index_big1, index_big2, stat1, stat2, nchild1, nchild2
      REAL(DP)                       :: r2, rlim, rlim2, vdotr, tcr2, dt2, a, e, q
      REAL(DP)                       :: rad1, rad2, m1, m2, den1, den2, vol1, vol2, vchild, dentarg, denproj, dentot, Mcenter
      REAL(DP)                       :: mass1, mass2, mmax, mtmp, mtot, m1_si, m2_si
      REAL(DP), DIMENSION(NDIM)      :: xr, vr, x1, v1, x2, v2, x1_si, x2_si, v1_si, v2_si, xproj, xtarg, vproj, vtarg, vbs_si
      REAL(DP)                       :: den1_si, den2_si, rad1_si, rad2_si, rproj, rtarg, mtiny_si
      LOGICAL(LGT)                   :: lfrag_add, lmerge
-     INTEGER(I4B), DIMENSION(npl)   :: array_index1_child, array_index2_child
+     INTEGER(I4B), DIMENSION(:), allocatable   :: array_index1_child, array_index2_child
      REAL(DP)                       :: Mlr, Mslr, mtarg, mproj
      real(DP)                       :: first_add_vhz, second_add_vhz, first_add_vbz, second_add_vbz
      integer(I4B)                   :: first_add_name, second_add_name, first_add_index, second_add_index
@@ -139,15 +139,17 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           mass1 = m1 
           x1(:) = m1*symba_plA%helio%swiftest%xh(:,index1_parent)
           v1(:) = m1*symba_plA%helio%swiftest%vb(:,index1_parent)
+          nchild1 = symba_plA%nchild(index1_parent)  
 
           mmax = m1
           name1 = symba_plA%helio%swiftest%name(index1_parent)
           index_big1 = index1_parent
           stat1 = symba_plA%helio%swiftest%status(index1_parent)
-          array_index1_child(1:npl) = symba_plA%index_child(1:npl,index1_parent)
-          
           vol1 =  ((4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(index1_parent)**3.0_DP)
-          DO i = 1, symba_plA%nchild(index1_parent) ! initialize an array of children
+          if (nchild1 > 0) then
+            allocate(array_index1_child(nchild1))
+            array_index1_child(:) = symba_plA%index_child(1:nchild1, index1_parent)
+            DO i = 1, nchild1 ! initialize an array of children
                index1_child = array_index1_child(i)
                mtmp = symba_plA%helio%swiftest%mass(index1_child)
                vchild = ((4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(index1_child)**3.0_DP)
@@ -161,7 +163,8 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
                m1 = m1 + mtmp
                x1(:) = x1(:) + mtmp*symba_plA%helio%swiftest%xh(:,index1_child)
                v1(:) = v1(:) + mtmp*symba_plA%helio%swiftest%vb(:,index1_child)
-          END DO
+            END DO
+          end if
           den1 =  m1 / vol1
           rad1 = ((3.0_DP * m1) / (den1 * 4.0_DP * PI)) ** (1.0_DP / 3.0_DP)
           x1(:) = x1(:)/m1
@@ -177,10 +180,14 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           name2 = symba_plA%helio%swiftest%name(index2_parent)
           index_big2 = index2_parent
           stat2 = symba_plA%helio%swiftest%status(index2_parent)
-          array_index2_child(1:npl) = symba_plA%index_child(1:npl,index2_parent)
+          nchild2 = symba_plA%nchild(index2_parent)  
 
           vol2 = ((4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(index2_parent)**3.0_DP)
-          DO i = 1, symba_plA%nchild(index2_parent)
+
+          if (nchild2 > 0) then
+            allocate(array_index2_child(nchild2))
+            array_index2_child(:) = symba_plA%index_child(1:nchild2, index2_parent)
+            DO i = 1, nchild2
                index2_child = array_index2_child(i)
                mtmp = symba_plA%helio%swiftest%mass(index2_child)
                vchild =  ((4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(index2_child)**3.0_DP)
@@ -194,8 +201,8 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
                m2 = m2 + mtmp
                x2(:) = x2(:) + mtmp*symba_plA%helio%swiftest%xh(:,index2_child)
                v2(:) = v2(:) + mtmp*symba_plA%helio%swiftest%vb(:,index2_child)
-          END DO
-          GU = GC / (DU2M**3 / (MU2KG * TU2S**2))
+            END DO
+          end if 
           den2 =  m2 / vol2
           rad2 = ((3.0_DP * m2) / (den2 * 4.0_DP * PI)) ** (1.0_DP / 3.0_DP)
           x2(:) = x2(:)/m2

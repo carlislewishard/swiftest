@@ -56,7 +56,7 @@ SUBROUTINE symba_caseresolve (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_l
      TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
      TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
      INTEGER(I4B), INTENT(IN)                         :: regime
-     INTEGER(I4B), DIMENSION(npl), INTENT(INOUT)      :: array_index1_child, array_index2_child
+     INTEGER(I4B), DIMENSION(:), INTENT(INOUT)      :: array_index1_child, array_index2_child
 
 ! Internals
 
