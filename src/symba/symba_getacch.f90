@@ -52,11 +52,12 @@ SUBROUTINE symba_getacch(lextra_force, t, npl, nplm, symba_plA, j2rp2, j4rp4, np
 
 ! Internals
      INTEGER(I4B)                                 :: i, j, index_i, index_j
-     REAL(DP)                                     :: rji2, irij3, faci, facj, r2
+     REAL(DP)                                     :: rji2, irij3, faci, facj, r2, rlim2
      REAL(DP), DIMENSION(NDIM)                    :: dx
      REAL(DP), DIMENSION(npl)                     :: irh
      REAL(DP), DIMENSION(NDIM, npl)               :: aobl
      REAL(DP), DIMENSION(NDIM, npl)               :: ahp, ahm
+
 
 ! Executable code
      
@@ -73,12 +74,16 @@ SUBROUTINE symba_getacch(lextra_force, t, npl, nplm, symba_plA, j2rp2, j4rp4, np
                IF ((.NOT. symba_plA%lmerged(i)) .OR. (.NOT. symba_plA%lmerged(j)) .OR. &
                    (symba_plA%index_parent(i) /= symba_plA%index_parent(j))) THEN
                     dx(:) = symba_plA%helio%swiftest%xh(:,j) - symba_plA%helio%swiftest%xh(:,i)
+                    rlim2 = (symba_plA%helio%swiftest%radius(i) + symba_plA%helio%swiftest%radius(j))**2
                     rji2 = DOT_PRODUCT(dx(:), dx(:))
-                    irij3 = 1.0_DP/(rji2*SQRT(rji2))
-                    faci = symba_plA%helio%swiftest%mass(i)*irij3
-                    facj = symba_plA%helio%swiftest%mass(j)*irij3
-                    ahp(:, i) = ahp(:, i) + facj * dx(:)
-                    ahm(:, j) = ahm(:, j) - faci * dx(:)
+                    if (rji2 > rlim2) then !If false, we likely have recent fragments with coincident positions. 
+                                           !  so ignore in this step and let the merge code deal with it in the next
+                       irij3 = 1.0_DP / (rji2 * SQRT(rji2))
+                       faci = symba_plA%helio%swiftest%mass(i)*irij3
+                       facj = symba_plA%helio%swiftest%mass(j)*irij3
+                       ahp(:, i) = ahp(:, i) + facj * dx(:)
+                       ahm(:, j) = ahm(:, j) - faci * dx(:)
+                    end if
                END IF
           END DO
      END DO
@@ -91,18 +96,22 @@ SUBROUTINE symba_getacch(lextra_force, t, npl, nplm, symba_plA, j2rp2, j4rp4, np
           IF ((.NOT. symba_plA%lmerged(index_i)) .OR. (.NOT. symba_plA%lmerged(index_j))  &
                 .OR. (symba_plA%index_parent(index_i) /= symba_plA%index_parent(index_j))) THEN !need to update parent/children
                dx(:) = symba_plA%helio%swiftest%xh(:,index_j) - symba_plA%helio%swiftest%xh(:,index_i)
+               rlim2 = (symba_plA%helio%swiftest%radius(i) + symba_plA%helio%swiftest%radius(j))**2
                rji2 = DOT_PRODUCT(dx(:), dx(:))
-               irij3 = 1.0_DP/(rji2*SQRT(rji2))
-               faci = symba_plA%helio%swiftest%mass(index_i)*irij3
-               facj = symba_plA%helio%swiftest%mass(index_j)*irij3
-               symba_plA%helio%ah(:,index_i) = symba_plA%helio%ah(:,index_i) - facj*dx(:)
-               symba_plA%helio%ah(:,index_j) = symba_plA%helio%ah(:,index_j) + faci*dx(:)
+               if (rji2 > rlim2) then !If false, we likely have recent fragments with coincident positions. 
+                                      !  so ignore in this step and let the merge code deal with it in the next
+                  irij3 = 1.0_DP / (rji2 * SQRT(rji2))
+                  faci = symba_plA%helio%swiftest%mass(index_i) * irij3
+                  facj = symba_plA%helio%swiftest%mass(index_j) * irij3
+                  symba_plA%helio%ah(:, index_i) = symba_plA%helio%ah(:, index_i) - facj * dx(:)
+                  symba_plA%helio%ah(:, index_j) = symba_plA%helio%ah(:, index_j) + faci * dx(:)
+               end if
           END IF
      END DO
      IF (j2rp2 /= 0.0_DP) THEN
           DO i = 2, npl
                r2 = DOT_PRODUCT(symba_plA%helio%swiftest%xh(:,i), symba_plA%helio%swiftest%xh(:,i))
-               irh(i) = 1.0_DP/SQRT(r2)
+               irh(i) = 1.0_DP / SQRT(r2)
           END DO
           CALL obl_acc(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, symba_plA%helio%swiftest%xh(:,:), irh, aobl)
           DO i = 2, npl
