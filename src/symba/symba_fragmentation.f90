@@ -168,7 +168,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
             allocate(array_index1_child(1))
           end if
           den1 =  m1 / vol1
-          rad1 = ((3.0_DP * m1) / (den1 * 4.0_DP * PI)) ** (1.0_DP / 3.0_DP)
+          rad1 = ((3 * m1) / (den1 * 4 * PI)) ** (1.0_DP / 3.0_DP)
           x1(:) = x1(:)/m1
           v1(:) = v1(:)/m1
 
@@ -184,7 +184,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           stat2 = symba_plA%helio%swiftest%status(index2_parent)
           nchild2 = symba_plA%nchild(index2_parent)  
 
-          vol2 = ((4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(index2_parent)**3.0_DP)
+          vol2 = ((4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(index2_parent)**3)
 
           if (nchild2 > 0) then
             allocate(array_index2_child(nchild2))
@@ -192,7 +192,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
             DO i = 1, nchild2
                index2_child = array_index2_child(i)
                mtmp = symba_plA%helio%swiftest%mass(index2_child)
-               vchild =  ((4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(index2_child)**3.0_DP)
+               vchild =  ((4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(index2_child)**3)
                vol2 = vol2 + vchild
                IF (mtmp > mmax) THEN
                     mmax = mtmp
@@ -208,7 +208,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
             allocate(array_index2_child(1))
           end if 
           den2 =  m2 / vol2
-          rad2 = ((3.0_DP * m2) / (den2 * 4.0_DP * PI)) ** (1.0_DP / 3.0_DP)
+          rad2 = ((3 * m2) / (den2 * 4 * PI))**(1.0_DP / 3.0_DP)
           x2(:) = x2(:)/m2
           v2(:) = v2(:)/m2
 
@@ -220,8 +220,8 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           x2_si(:) = x2(:) * DU2M
           v1_si(:) = v1(:) * DU2M / TU2S
           v2_si(:) = v2(:) * DU2M / TU2S
-          den1_si = (den1 / GU) * MU2KG / (DU2M ** 3.0_DP)
-          den2_si = (den2 / GU) * MU2KG / (DU2M ** 3.0_DP)
+          den1_si = (den1 / GU) * MU2KG / (DU2M**3)
+          den2_si = (den2 / GU) * MU2KG / (DU2M**3)
           vbs_si = vbs_instep(:) * DU2M / TU2S 
 
           mres(:) = 0.0_DP
