@@ -51,7 +51,7 @@ SUBROUTINE util_mom(m1, xh1, vb1, m2, xh2, vb2, frags_added, nstart, m_frag, r_c
    REAL(DP), DIMENSION(NDIM)                              :: xr, l, kk, p, v_f, x_f, angmom_frag, angmom_fragi, angmom_com_frag
    REAL(DP), DIMENSION(NDIM)                              :: angmom_f, angmom_before, angmom_after
    integer(I4B), save                                     :: thetashift = 0
-   integer(I4B), parameter                                :: SHIFTMAX = 3
+   integer(I4B), parameter                                :: SHIFTMAX = 9
    real(DP)                                               :: phase_ang
    real(DP), dimension(NDIM)                              :: p_com, v_com, mp_frag, mv_frag, p_com_frag, v_com_frag
 
