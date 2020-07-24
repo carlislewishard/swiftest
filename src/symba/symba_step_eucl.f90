@@ -146,19 +146,19 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
 
           symba_plA%lmerged(k_plpl(1,plpl_encounters_indices)) = .FALSE. ! they have not merged YET
           symba_plA%nplenc(k_plpl(1,plpl_encounters_indices)) = symba_plA%nplenc(k_plpl(1,plpl_encounters_indices)) + 1 ! number of particles that planet "i" has close encountered
-          symba_plA%levelg(k_plpl(1,plpl_encounters_indices)) = 0 ! recursion level
-          symba_plA%levelm(k_plpl(1,plpl_encounters_indices)) = 0 ! recursion level
+          symba_plA%levelg(k_plpl(1,plpl_encounters_indices)) = irec ! recursion level
+          symba_plA%levelm(k_plpl(1,plpl_encounters_indices)) = irec ! recursion level
           symba_plA%nchild(k_plpl(1,plpl_encounters_indices)) = 0 
           ! for the j particle
           symba_plA%lmerged(k_plpl(2,plpl_encounters_indices)) = .FALSE.
           symba_plA%nplenc(k_plpl(2,plpl_encounters_indices)) = symba_plA%nplenc(k_plpl(2,plpl_encounters_indices)) + 1
-          symba_plA%levelg(k_plpl(2,plpl_encounters_indices)) = 0
-          symba_plA%levelm(k_plpl(2,plpl_encounters_indices)) = 0
+          symba_plA%levelg(k_plpl(2,plpl_encounters_indices)) = irec
+          symba_plA%levelm(k_plpl(2,plpl_encounters_indices)) = irec
           symba_plA%nchild(k_plpl(2,plpl_encounters_indices)) = 0
 
           plplenc_list%status(1:nplplenc) = ACTIVE ! you are in an encounter
           plplenc_list%lvdotr(1:nplplenc) = plpl_lvdotr(plpl_encounters_indices)! flag of relative accelerations to say if there will be a close encounter in next timestep 
-          plplenc_list%level(1:nplplenc)  = 0 ! recursion level
+          plplenc_list%level(1:nplplenc)  = irec ! recursion level
           plplenc_list%index1(1:nplplenc) = k_plpl(1,plpl_encounters_indices) ! index of first planet in encounter
           plplenc_list%index2(1:nplplenc) = k_plpl(2,plpl_encounters_indices) ! index of second planet in encounter
           deallocate(plpl_encounters_indices)
