@@ -56,8 +56,8 @@ SIMDVEC = -vec -simd -xhost -align all -assume contiguous_assumed_shape -vecabi=
 PAR = -parallel -qopenmp 
 
 FORTRAN = ifort
-FFLAGS  = -O3 -qopt-report=5 -no-wrap-margin $(SIMDVEC) $(PAR) $(STRICTREAL) 
-#FFLAGS  = $(IDEBUG)
+#FFLAGS  = -O3 -qopt-report=5 -no-wrap-margin $(SIMDVEC) $(PAR) $(STRICTREAL) 
+FFLAGS  = $(IDEBUG)
 
 #debug flags
 

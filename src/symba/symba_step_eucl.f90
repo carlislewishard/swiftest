@@ -110,6 +110,7 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      symba_tpA%nplenc(:) = 0 
      symba_tpA%levelg(:) = -1
      symba_tpA%levelm(:) = -1 
+
      nplplenc = 0 ! number of encounters in the entire run 
      npltpenc = 0
 
