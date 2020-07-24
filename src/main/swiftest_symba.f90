@@ -43,7 +43,7 @@ program swiftest_symba
 
    ! Internals
    logical                       :: lfrag_add
-   integer(I4B)                  :: npl, ntp, ntp0, nsppl, nsptp, iout, idump, iloop, idebug
+   integer(I4B)                  :: npl, nplm, ntp, ntp0, nsppl, nsptp, iout, idump, iloop, idebug
    integer(I4B)                  :: nplplenc, npltpenc, nmergeadd, nmergesub, fragmax
    real(DP)                      :: t, tfrac, tbase, mtiny, ke, pe, te, eoffset, Ltot_orig, Ltot_now, Lerror
    real(DP), dimension(ndim)     :: htot
@@ -167,6 +167,10 @@ program swiftest_symba
       open(unit = egyiu, file = energy_file, form = "formatted", status = "replace", action = "write")
    end if
    300 format(8(1x, e23.16))
+   nplm = count(symba_plA%helio%swiftest%mass>mtiny)
+   CALL util_dist_index_plpl(npl, nplm, num_plpl_comparisons, k_plpl)
+   CALL util_dist_index_pltp(nplm, ntp, num_pltp_comparisons, k_pltp)
+
    write(*, *) " *************** Main Loop *************** "
    call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot)
    if (param%lenergy) then 
@@ -312,11 +316,3 @@ program swiftest_symba
 
 end program swiftest_symba
 
- 310 FORMAT(7(1X, A23))
-     start = omp_get_wtime()
-     ! call cpu_time(start)     
-     nplm = count(symba_plA%helio%swiftest%mass>mtiny)
-     CALL util_dist_index_plpl(npl, nplm, num_plpl_comparisons, k_plpl)
-
-     CALL util_dist_index_pltp(nplm, ntp, num_pltp_comparisons, k_pltp)
-     WRITE(*, *) " *************** MAIN LOOP *************** "
