@@ -60,6 +60,8 @@ program swiftest_symba
    INTEGER(I8B)                  :: clock_count, count_rate, count_max
    CHARACTER(len=STRMAX)         :: arg
    INTEGER(I4B)                  :: ierr
+   INTEGER(I4B), DIMENSION(:,:), ALLOCATABLE :: k_plpl, k_pltp
+   INTEGER(I4B)                              :: num_plpl_comparisons, num_pltp_comparisons
 
 ! Executable code
    call system_clock(clock_count, count_rate, count_max)
@@ -189,19 +191,24 @@ program swiftest_symba
             qmin_ahi, j2rp2, j4rp4, eoffset)
       call symba_discard_tp(t, npl, ntp, nsptp, symba_plA, symba_tpA, dt, rmin, rmax, rmaxu, qmin, qmin_coord, &    ! check this 
             qmin_alo, qmin_ahi, param%lclose, param%lrhill_present)
-      if ((ldiscard .eqv. .true.) .or. (ldiscard_tp .eqv. .true.) .or. (lfrag_add .eqv. .true.)) then
-
+      if (ldiscard .or. ldiscard_tp .or. lfrag_add) then
          call symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
             discard_tpA,param)
-
-         if ((ldiscard .eqv. .true.) .or. (ldiscard_tp .eqv. .true.)) then
+         if (ldiscard .or. ldiscard_tp) then
             call io_discard_write_symba(t, mtiny, npl, ntp, nsppl, nsptp, nmergesub, symba_plA, &
                discard_plA, discard_tpA, mergeadd_list, mergesub_list, discard_file, param%lbig_discard) 
             nmergeadd = 0
             nmergesub = 0
             nsppl = 0
             nsptp = 0
-         end if 
+            deallocate(k_plpl)
+            nplm = count(symba_plA%helio%swiftest%mass(1:npl) > mtiny)
+            CALL util_dist_index_plpl(npl, nplm, num_plpl_comparisons, k_plpl)
+            if (ntp > 0) then
+                 deallocate(k_pltp)
+                 call util_dist_index_pltp(nplm, ntp, num_pltp_comparisons, k_pltp)          
+            end if 
+         end if
          call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot)
          if (param%lenergy) then 
             write(egyiu,300) t, ke, pe, te, htot, eoffset

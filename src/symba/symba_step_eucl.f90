@@ -94,6 +94,7 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      INTEGER(I4B)              :: i, j, irec, nplm, k, counter
      INTEGER(I4B), ALLOCATABLE :: plpl_encounters_indices(:), pltp_encounters_indices(:)
      REAL(DP), DIMENSION(NDIM) :: xr, vr
+     LOGICAL, SAVE             :: lfirst = .true.
      
      INTEGER(I4B), ALLOCATABLE, DIMENSION(:) :: pltp_encounters, pltp_lvdotr
      INTEGER(I4B), ALLOCATABLE, DIMENSION(:) :: plpl_encounters, plpl_lvdotr
