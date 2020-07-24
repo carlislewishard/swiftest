@@ -64,11 +64,10 @@ SUBROUTINE symba_chk_eucl(num_encounters, k_plpl, symba_plA, dt, lencounter, lvd
      rcritmax = (symba_plA%helio%swiftest%rhill(2) + symba_plA%helio%swiftest%rhill(3)) * term2
      r2critmax = rcritmax * rcritmax
 
-!$omp parallel do default(none) schedule(static) &
-!$omp num_threads(min(omp_get_max_threads(),ceiling(num_encounters/10000.))) &
-!$omp private(k, rcrit, r2crit, r2, vdotr, v2, tmin, r2min, xr, vr) &
-!$omp shared(num_encounters, lvdotr, lencounter, k_plpl, dt, term2, r2critmax, symba_plA) &
-!$omp reduction(+:nplplenc)
+     !$omp parallel do default(private) schedule(static) &
+     !$omp num_threads(min(omp_get_max_threads(),ceiling(num_encounters/10000.))) &
+     !$omp shared(num_encounters, lvdotr, lencounter, k_plpl, dt, term2, r2critmax, symba_plA) &
+     !$omp reduction(+:nplplenc)
 
      do k = 1,num_encounters
           xr(:) = symba_plA%helio%swiftest%xh(:,k_plpl(2,k)) - symba_plA%helio%swiftest%xh(:,k_plpl(1,k))
@@ -106,7 +105,7 @@ SUBROUTINE symba_chk_eucl(num_encounters, k_plpl, symba_plA, dt, lencounter, lvd
           endif
      enddo
 
-!$omp end parallel do
+   !$omp end parallel do
      
      RETURN
 
