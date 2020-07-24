@@ -180,9 +180,15 @@ program swiftest_symba
       Ltot_orig = NORM2(htot)
    end if
    do while ((t < tstop) .and. ((ntp0 == 0) .or. (ntp > 0)))
-      call symba_step(t, dt, param,npl,ntp,symba_plA, symba_tpA,nplplenc, npltpenc,&
-            plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
-            eoffset, fragmax)
+      if(num_plpl_comparisons > 100000) then
+         call symba_step_eucl(t, dt, param,npl,ntp,symba_pla, symba_tpa,nplplenc, npltpenc,&
+               plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
+               eoffset, fragmax, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
+      else
+         call symba_step(t, dt, param,npl,ntp,symba_plA, symba_tpA,nplplenc, npltpenc,&
+               plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
+               eoffset, fragmax)
+      end if
       ldiscard = .false. 
       ldiscard_tp = .false.
       lfrag_add = .false.

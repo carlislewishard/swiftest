@@ -92,9 +92,7 @@ SUBROUTINE symba_step(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
 
 ! Executable code
 
-    do i = 1, npl
-      symba_plA%index_parent(i) = i
-    end do
+    symba_plA%index_parent(1:npl) = (/ (i, i=1,npl)/)
     symba_plA%nplenc(:) = 0
     symba_plA%ntpenc(:) = 0
     symba_plA%levelg(:) = -1
@@ -103,9 +101,6 @@ SUBROUTINE symba_step(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
     symba_tpA%nplenc(:) = 0 
     symba_tpA%levelg(:) = -1
     symba_tpA%levelm(:) = -1
-
-
-     !THERE SHOULD BE SOME PARALLEL BITS IN HERE
 
      nplplenc = 0
      npltpenc = 0

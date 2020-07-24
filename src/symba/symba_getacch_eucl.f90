@@ -59,9 +59,9 @@ SUBROUTINE symba_getacch_eucl(lextra_force, t, npl, nplm, nplmax, symba_plA, j2r
 ! Internals
      LOGICAL(LGT), SAVE                           :: lmalloc = .TRUE.
      INTEGER(I4B)                                 :: i, j, index_i, index_j, k, counter
-     REAL(DP)                                     :: rji2, irij3, faci, facj, r2, fac
+     REAL(DP)                                     :: rji2, irij3, faci, facj, r2, fac, rlim2
      REAL(DP), DIMENSION(NDIM)                    :: dx
-     REAL(DP), DIMENSION(NDIM, npl)               :: ah
+     REAL(DP), DIMENSION(NDIM, npl)               :: ahp, ahm
      REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE    :: irh
      REAL(DP), DIMENSION(:, :), ALLOCATABLE, SAVE :: xh, aobl
      ! REAL(DP), ALLOCATABLE, DIMENSION(:,:) :: dist_plpl_array
@@ -69,8 +69,9 @@ SUBROUTINE symba_getacch_eucl(lextra_force, t, npl, nplm, nplmax, symba_plA, j2r
 
 !Executable code
  
-     symba_plA%helio%ah(:,2:npl) = 0.0_DP
-     ah(:,2:npl) = 0.0_DP
+     ahp(:,:) = 0.0_DP
+     ahm(:,:) = 0.0_DP
+     symba_plA%helio%ah(:,:) = 0.0_DP
      
      ! CALL util_dist_eucl_plpl(npl,symba_plA%helio%swiftest%xh, num_plpl_comparisons, k_plpl, dist_plpl_array) ! does not care about mtiny
 
@@ -78,46 +79,51 @@ SUBROUTINE symba_getacch_eucl(lextra_force, t, npl, nplm, nplmax, symba_plA, j2r
 ! For now, we will keep it in the serial operation, so we can easily compare
 ! it to the older swifter versions
 
-!$omp parallel do default(none) schedule(static) &
-!$omp num_threads(min(omp_get_max_threads(),ceiling(num_plpl_comparisons/10000.))) &
-!$omp shared (num_plpl_comparisons, k_plpl, symba_plA) &
-!$omp private (i, j, k, dx, rji2, irij3, faci, facj) &
-!$omp reduction(+:ah)
+     !$omp parallel do default(private) schedule(static) &
+     !$omp num_threads(min(omp_get_max_threads(),ceiling(num_plpl_comparisons/10000.))) &
+     !$omp shared (num_plpl_comparisons, k_plpl, symba_plA) &
+     !$omp reduction(+:ahp) &
+     !$omp reduction(-:ahm)
      DO k = 1, num_plpl_comparisons
           i = k_plpl(1,k)
           j = k_plpl(2,k)
           
           IF ((.NOT. symba_plA%lmerged(i) .OR. (.NOT. symba_plA%lmerged(j)) .OR. &
                (symba_plA%index_parent(i) /= symba_plA%index_parent(j)))) THEN
-               
-               dx(:) = symba_plA%helio%swiftest%xh(:,k_plpl(2,k)) - symba_plA%helio%swiftest%xh(:,k_plpl(1,k))
+               dx(:) = symba_plA%helio%swiftest%xh(:,j) - symba_plA%helio%swiftest%xh(:,i)
+               rlim2 = (symba_plA%helio%swiftest%radius(i) + symba_plA%helio%swiftest%radius(j))**2
                rji2 = DOT_PRODUCT(dx(:), dx(:))
-               irij3 = 1.0_DP/(rji2*SQRT(rji2))
-               faci = symba_plA%helio%swiftest%mass(i)*irij3
-               facj = symba_plA%helio%swiftest%mass(j)*irij3
-               ah(:,i) = ah(:,i) + facj*dx(:)
-               ah(:,j) = ah(:,j) - faci*dx(:)
-
+               if (rji2 > rlim2) then !If false, we likely have recent fragments with coincident positions. 
+                                      !  so ignore in this step and let the merge code deal with it in the nex
+                  irij3 = 1.0_DP/(rji2*SQRT(rji2))
+                  faci = symba_plA%helio%swiftest%mass(i)*irij3
+                  facj = symba_plA%helio%swiftest%mass(j)*irij3
+                  ahp(:,i) = ahp(:,i) + facj*dx(:)
+                  ahm(:,j) = ahm(:,j) - faci*dx(:)
+               end if
           ENDIF
      END DO
-!$omp end parallel do
+     !$omp end parallel do
+     symba_plA%helio%ah(:,1:npl) = ahp(:, :) + ahm(:,:)
 
-     symba_plA%helio%ah(:,2:npl) = ah(:,2:npl)
-
-     DO i = 1, nplplenc
-          index_i = plplenc_list%index1(i)
-          index_j = plplenc_list%index2(i)
-          IF ((.NOT. symba_plA%lmerged(index_i)) .OR. (.NOT. symba_plA%lmerged(index_j))  &
-                .OR. (symba_plA%index_parent(index_i) /= symba_plA%index_parent(index_j))) THEN !need to update parent/children
-               dx(:) = symba_plA%helio%swiftest%xh(:,index_j) - symba_plA%helio%swiftest%xh(:,index_i)
-               rji2 = DOT_PRODUCT(dx(:), dx(:))
-               irij3 = 1.0_DP/(rji2*SQRT(rji2))
-               faci = symba_plA%helio%swiftest%mass(index_i)*irij3
-               facj = symba_plA%helio%swiftest%mass(index_j)*irij3
-               symba_plA%helio%ah(:,index_i) = symba_plA%helio%ah(:,index_i) - facj*dx(:)
-               symba_plA%helio%ah(:,index_j) = symba_plA%helio%ah(:,index_j) + faci*dx(:)
-          END IF
-     END DO
+      DO i = 1, nplplenc
+         index_i = plplenc_list%index1(i)
+         index_j = plplenc_list%index2(i)
+         IF ((.NOT. symba_plA%lmerged(index_i)) .OR. (.NOT. symba_plA%lmerged(index_j))  &
+               .OR. (symba_plA%index_parent(index_i) /= symba_plA%index_parent(index_j))) THEN !need to update parent/children
+           dx(:) = symba_plA%helio%swiftest%xh(:,index_j) - symba_plA%helio%swiftest%xh(:,index_i)
+           rlim2 = (symba_plA%helio%swiftest%radius(i) + symba_plA%helio%swiftest%radius(j))**2
+           rji2 = DOT_PRODUCT(dx(:), dx(:))
+           if (rji2 > rlim2) then !If false, we likely have recent fragments with coincident positions. 
+                                  !  so ignore in this step and let the merge code deal with it in the next
+              irij3 = 1.0_DP / (rji2 * SQRT(rji2))
+              faci = symba_plA%helio%swiftest%mass(index_i) * irij3
+              facj = symba_plA%helio%swiftest%mass(index_j) * irij3
+              symba_plA%helio%ah(:, index_i) = symba_plA%helio%ah(:, index_i) - facj * dx(:)
+              symba_plA%helio%ah(:, index_j) = symba_plA%helio%ah(:, index_j) + faci * dx(:)
+           end if
+         END IF
+      END DO
 
      IF (j2rp2 /= 0.0_DP) THEN
           IF (lmalloc) THEN
