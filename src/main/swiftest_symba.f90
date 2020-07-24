@@ -47,7 +47,7 @@ program swiftest_symba
    integer(I4B)                  :: nplplenc, npltpenc, nmergeadd, nmergesub, fragmax
    real(DP)                      :: t, tfrac, tbase, mtiny, ke, pe, te, eoffset, Ltot_orig, Ltot_now, Lerror
    real(DP), dimension(ndim)     :: htot
-   character(strmax)             :: inparfile
+   character(strmax)             :: inparfile, thresh
    type(symba_pl)                :: symba_plA
    type(symba_tp)                :: symba_tpA
    type(swiftest_tp)             :: discard_tpA
@@ -62,6 +62,7 @@ program swiftest_symba
    INTEGER(I4B)                  :: ierr
    INTEGER(I4B), DIMENSION(:,:), ALLOCATABLE :: k_plpl, k_pltp
    INTEGER(I4B)                              :: num_plpl_comparisons, num_pltp_comparisons
+   integer(I4B)                  :: eucl_threshold = 1000000
 
 ! Executable code
    call system_clock(clock_count, count_rate, count_max)
@@ -74,6 +75,14 @@ program swiftest_symba
        write(*, 100, advance = "NO") "Enter name of parameter data file: "
        read(*, 100) inparfile
    end if
+   
+   call get_command_argument(2, thresh, status = ierr) 
+   if (ierr == 0) then
+      read(thresh,*) eucl_threshold
+   end if
+
+   write(*,*) 'Eucl loop blocking number of comparisons threshold: ', eucl_threshold
+
 
    100 format(a)
    inparfile = trim(adjustl(inparfile))
@@ -180,7 +189,7 @@ program swiftest_symba
       Ltot_orig = NORM2(htot)
    end if
    do while ((t < tstop) .and. ((ntp0 == 0) .or. (ntp > 0)))
-      if(num_plpl_comparisons > 100000) then
+      if(num_plpl_comparisons > eucl_threshold) then
          call symba_step_eucl(t, dt, param,npl,ntp,symba_pla, symba_tpa,nplplenc, npltpenc,&
                plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
                eoffset, fragmax, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
