@@ -71,6 +71,7 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      USE swiftest_data_structures
      USE module_helio
      USE module_symba
+     USE module_swiftestalloc
      USE module_interfaces, EXCEPT_THIS_ONE => symba_step_eucl
      IMPLICIT NONE
 
@@ -127,7 +128,9 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      ! here i'll order the encounters
      ! nplplenc = count(plpl_encounters > 0)
      ! print *,'step nplplenc: ',nplplenc
-     if(nplplenc>0)then
+     if (nplplenc > 0) then
+        call symba_plplenc_deallocate(plplenc_list)
+        call symba_plplenc_allocate(plplenc_list, nplplenc) 
 
           do k = 1, nplplenc
             do i = 1, 2

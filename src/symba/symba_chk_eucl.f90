@@ -51,68 +51,69 @@ SUBROUTINE symba_chk_eucl(num_plpl_comparisons, k_plpl, symba_plA, dt, plpl_enco
      INTEGER(I4B), INTENT(OUT)                              :: nplplenc
 
 ! Internals
-     logical, dimension(num_plpl_comparisons) :: lencounter 
+     logical, dimension(num_plpl_comparisons) :: lencounter, loc_lvdotr 
+     integer(I4B), dimension(num_plpl_comparisons) :: indnum
      ! LOGICAL(LGT) :: iflag lvdotr_flag
      REAL(DP)     :: rcrit, r2crit, vdotr, r2, v2, tmin, r2min, term2, rcritmax, r2critmax
      INTEGER(I4B) :: i, k
      REAL(DP), DIMENSION(NDIM):: xr, vr
-     !real(DP), dimension(num_plpl_comparisons) :: ind = (/ (i, i = 1, num_plpl_comparisons) /)
+
+    
 
 ! Executable code
 
      nplplenc = 0
-     lencounter(:) = .false.
-     allocate(lvdotr(num_plpl_comparisons))
 
      term2 = RHSCALE*RSHELL**0
 
      rcritmax = (symba_plA%helio%swiftest%rhill(2) + symba_plA%helio%swiftest%rhill(3)) * term2
      r2critmax = rcritmax * rcritmax
 
-     !$omp parallel do default(private) schedule(static) &
-     !$omp num_threads(min(omp_get_max_threads(),ceiling(num_plpl_comparisons/10000.))) &
-     !$omp shared(num_plpl_comparisons, lvdotr, lencounter, k_plpl, dt, term2, r2critmax, symba_plA) 
-     do k = 1,num_plpl_comparisons
-          xr(:) = symba_plA%helio%swiftest%xh(:,k_plpl(2,k)) - symba_plA%helio%swiftest%xh(:,k_plpl(1,k))
+      !$omp parallel do default(private) schedule(static) &
+      !$omp num_threads(min(omp_get_max_threads(),ceiling(num_plpl_comparisons/10000.))) &
+      !$omp shared(num_plpl_comparisons, loc_lvdotr, lencounter, k_plpl, dt, term2, r2critmax, symba_plA, indnum)
+      do k = 1, num_plpl_comparisons
+         indnum(k) = k
+         lencounter(k) = .false.
+         xr(:) = symba_plA%helio%swiftest%xh(:,k_plpl(2,k)) - symba_plA%helio%swiftest%xh(:,k_plpl(1,k))
 
-          r2 = DOT_PRODUCT(xr(:), xr(:)) 
-          if (r2<r2critmax) then
-               rcrit = (symba_plA%helio%swiftest%rhill(k_plpl(2,k)) + symba_plA%helio%swiftest%rhill(k_plpl(1,k))) * term2
-               r2crit = rcrit*rcrit 
+         r2 = dot_product(xr(:), xr(:)) 
+         if (r2 < r2critmax) then
+            rcrit = (symba_plA%helio%swiftest%rhill(k_plpl(2,k)) + symba_plA%helio%swiftest%rhill(k_plpl(1,k))) * term2
+            r2crit = rcrit*rcrit 
 
-               vr(:) = symba_plA%helio%swiftest%vh(:,k_plpl(2,k)) - symba_plA%helio%swiftest%vh(:,k_plpl(1,k))
+            vr(:) = symba_plA%helio%swiftest%vh(:,k_plpl(2,k)) - symba_plA%helio%swiftest%vh(:,k_plpl(1,k))
 
-               vdotr = DOT_PRODUCT(vr(:), xr(:))
+            vdotr = dot_product(vr(:), xr(:))
 
-               lvdotr(k) = (vdotr < 0.0_DP)
+            loc_lvdotr(k) = (vdotr < 0.0_DP)
 
-               IF (r2 < r2crit) THEN
-                    lencounter(k) = .true.
-               ELSE
-                    IF (vdotr < 0.0_DP) THEN
-                         v2 = DOT_PRODUCT(vr(:), vr(:))
-                         tmin = -vdotr/  v2
-                         IF (tmin < dt) THEN
-                              r2min = r2 - vdotr * vdotr / v2
-                         ELSE
-                              r2min = r2 + 2 * vdotr * dt + v2*dt*dt
-                         END IF
-                         r2min = MIN(r2min, r2)
-                         IF (r2min <= r2crit) then
-                              lencounter(k) = .true.
-                         endif
-                    END IF
-               END IF
-          endif
-     enddo
-   !$omp end parallel do
-     nplplenc = count(lencounter(:))
-     allocate(plpl_encounters(nplplenc))
-     if (nplplenc > 0) then
-        plpl_encounters(:) = pack((/ (i, i = 1, num_plpl_comparisons) /), lencounter(:))
-        lvdotr(:) = pack(lvdotr(:), lencounter(:))
-     end if
-     RETURN
+            if (r2 < r2crit) then
+               lencounter(k) = .true.
+            else
+               if (vdotr < 0.0_dp) then
+                  v2 = dot_product(vr(:), vr(:))
+                  tmin = -vdotr /  v2
+                  if (tmin < dt) then
+                     r2min = r2 - vdotr * vdotr / v2
+                  else
+                     r2min = r2 + 2 * vdotr * dt + v2 * dt * dt
+                  end if
+                  r2min = min(r2min, r2)
+                  if (r2min <= r2crit) lencounter(k) = .true.
+               end if
+            end if
+         endif
+      end do
+     !$omp end parallel do
+      nplplenc = count(lencounter(:))
+      if (nplplenc > 0) then
+         allocate(plpl_encounters(nplplenc))
+         allocate(lvdotr(nplplenc))
+         plpl_encounters(:) = pack(indnum(:), lencounter(:))
+         lvdotr(:) = pack(loc_lvdotr(:), lencounter(:))
+      end if
+      return
 
 END SUBROUTINE symba_chk_eucl
 !**********************************************************************************************************************************
