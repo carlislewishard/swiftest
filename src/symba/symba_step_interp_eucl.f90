@@ -60,7 +60,7 @@
 !**********************************************************************************************************************************
 SUBROUTINE symba_step_interp_eucl(lextra_force, lclose, t, npl, nplm, nplmax, ntp, ntpmax, symba_plA, symba_tpA, j2rp2, j4rp4, dt,&
      eoffset, mtiny, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list,&
-     encounter_file, out_type, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
+     encounter_file, out_type, fragmax, param, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
 
 ! Modules
      USE swiftest
@@ -74,7 +74,7 @@ SUBROUTINE symba_step_interp_eucl(lextra_force, lclose, t, npl, nplm, nplmax, nt
 ! Arguments
      LOGICAL(LGT), INTENT(IN)                         :: lextra_force, lclose
      INTEGER(I4B), INTENT(IN)                         :: npl, nplm, nplmax, ntp, ntpmax, nplplenc, npltpenc
-     INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub
+     INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub, fragmax
      REAL(DP), INTENT(IN)                             :: t, j2rp2, j4rp4, dt, mtiny
      REAL(DP), INTENT(INOUT)                          :: eoffset
      CHARACTER(*), INTENT(IN)                         :: encounter_file, out_type
@@ -83,6 +83,7 @@ SUBROUTINE symba_step_interp_eucl(lextra_force, lclose, t, npl, nplm, nplmax, nt
      TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
      TYPE(symba_pltpenc), INTENT(INOUT)               :: pltpenc_list
      TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
+     type(user_input_parameters), intent(in)          :: param
      INTEGER(I4B), INTENT(IN)                         :: num_plpl_comparisons, num_pltp_comparisons
      INTEGER(I4B), DIMENSION(:,:),INTENT(IN) :: k_plpl 
      INTEGER(I4B), DIMENSION(:,:),INTENT(IN) :: k_pltp
@@ -126,8 +127,10 @@ SUBROUTINE symba_step_interp_eucl(lextra_force, lclose, t, npl, nplm, nplmax, nt
      IF (ntp > 0) CALL symba_helio_drift_tp(irec, ntp, symba_tpA, symba_plA%helio%swiftest%mass(1), dt)
      irec = 0
 
-     CALL symba_step_recur(lclose, t, irec, npl, nplm, ntp, symba_plA, symba_tpA, dt, eoffset, nplplenc, npltpenc,&
-          plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, encounter_file, out_type)
+     CALL symba_step_recur(lclose, t, irec, npl, nplm, ntp, symba_plA, symba_tpA, dt, eoffset, nplplenc, npltpenc,              &
+          plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, encounter_file, out_type, &
+          nplmax, ntpmax, fragmax, param)
+
      IF (ntp > 0) THEN
           DO i = 2, npl
                xend(:, i) = symba_plA%helio%swiftest%xh(:,i)
