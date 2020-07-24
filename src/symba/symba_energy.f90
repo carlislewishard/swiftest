@@ -56,6 +56,11 @@ SUBROUTINE symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, htot)
      htot = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
      ke = 0.0_DP
      pe = 0.0_DP
+
+!$omp parallel do default(none) &
+!$omp shared (swiftest_plA, npl) &
+!$omp private (i, x, v, mass, h, htot, v2, dx, r2) &
+!$omp reduction (+:ke, pe)
      DO i = 1, npl - 1
           x(:) = swiftest_plA%xb(:,i)
           v(:) = swiftest_plA%vb(:,i)
@@ -74,6 +79,8 @@ SUBROUTINE symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, htot)
                END IF
           END DO
      END DO
+!$omp end parallel do
+     i = npl ! needed to account for the parllelization above
      x(:) = swiftest_plA%xb(:,i)
      v(:) = swiftest_plA%vb(:,i)
      mass = swiftest_plA%mass(i)

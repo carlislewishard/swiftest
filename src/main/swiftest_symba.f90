@@ -311,3 +311,12 @@ program swiftest_symba
    stop
 
 end program swiftest_symba
+
+ 310 FORMAT(7(1X, A23))
+     start = omp_get_wtime()
+     ! call cpu_time(start)     
+     nplm = count(symba_plA%helio%swiftest%mass>mtiny)
+     CALL util_dist_index_plpl(npl, nplm, num_plpl_comparisons, k_plpl)
+
+     CALL util_dist_index_pltp(nplm, ntp, num_pltp_comparisons, k_pltp)
+     WRITE(*, *) " *************** MAIN LOOP *************** "
