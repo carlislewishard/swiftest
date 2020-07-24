@@ -102,21 +102,19 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      
 ! Executable code
 
-     ! initialize planets
+     symba_plA%index_parent(1:npl) = (/ (i, i=1, npl) /)
      symba_plA%nplenc(:) = 0
      symba_plA%ntpenc(:) = 0
      symba_plA%levelg(:) = -1
      symba_plA%levelm(:) = -1
-     symba_plA%index_child(:,:) = 0
+     symba_plA%index_child(:, :) = 0
      symba_tpA%nplenc(:) = 0 
      symba_tpA%levelg(:) = -1
      symba_tpA%levelm(:) = -1 
 
-     nplplenc = 0 ! number of encounters in the entire run 
+     nplplenc = 0 
      npltpenc = 0
 
-     nplplenc = 0
-     npltpenc = 0
      irec = 0
 
 ! ALL THIS NEEDS TO BE CHANGED TO THE TREE SEARCH FUNCTION FOR ENCOUNTERS
