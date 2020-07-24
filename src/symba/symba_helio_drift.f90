@@ -41,24 +41,45 @@ SUBROUTINE symba_helio_drift(irec, npl, symba_plA, dt)
      TYPE(symba_pl), INTENT(INOUT)  :: symba_plA
 
 ! Internals
-     INTEGER(I4B)              :: i, iflag
+     INTEGER(I4B)              :: i, ndrift
      REAL(DP)                  :: mu
+     integer(I4B), dimension(:), allocatable :: iflag
+     real(DP), dimension(:,:), allocatable :: xh, vb
+     logical(LGT), dimension(:), allocatable :: dodrift 
+     integer(I4B) :: ibad
 
 ! Executable code
      mu = symba_plA%helio%swiftest%mass(1)
-     DO i = 2, npl
-          IF ((symba_plA%levelg(i) == irec) .AND. (symba_plA%helio%swiftest%status(i) == ACTIVE)) THEN
-               CALL drift_one(mu, symba_plA%helio%swiftest%xh(:,i), symba_plA%helio%swiftest%vb(:,i), dt, iflag)
-               IF (iflag /= 0) THEN
-                    WRITE(*, *) " Planet ", symba_plA%helio%swiftest%name(i), " is lost!!!!!!!!!!"
-                    WRITE(*, *) mu, dt
-                    WRITE(*, *) symba_plA%helio%swiftest%xh(:,i)
-                    WRITE(*, *) symba_plA%helio%swiftest%vb(:,i)
-                    WRITE(*, *) " STOPPING "
-                    CALL util_exit(FAILURE)
-               END IF
-          END IF
-     END DO
+     allocate(dodrift(npl))
+     dodrift(2:npl) = (symba_plA%levelg(2:npl) == irec) .AND. (symba_plA%helio%swiftest%status(2:npl) == ACTIVE) 
+     ndrift = count(dodrift(2:npl))
+     if (ndrift == 0) return
+     do i = 2, npl
+       if (dodrift(i)) then
+         if (symba_plA%helio%swiftest%xh(1, i) /= symba_plA%helio%swiftest%xh(1, i)) then
+            write(*,*) 'planet ',i,' is bad!'
+         end if
+      end if
+   end do
+     allocate(xh(NDIM, ndrift))
+     allocate(vb(NDIM, ndrift))
+     allocate(iflag(ndrift))
+     iflag = 0
+     do i = 1, NDIM
+       xh(i,:) = pack(symba_plA%helio%swiftest%xh(i,2:npl), dodrift(2:npl))
+       vb(i,:) = pack(symba_plA%helio%swiftest%vb(i,2:npl), dodrift(2:npl))
+     end do
+     CALL drift_one(mu, xh(:,1:ndrift), vb(:,1:ndrift), dt, iflag(1:ndrift), ndrift)
+     if (any(iflag(:) /= 0)) then
+         write(*,*) "symba_helio_drift error"
+         WRITE(*, *) " STOPPING "
+         CALL util_exit(FAILURE)
+     end if
+     do i = 1, NDIM
+         symba_plA%helio%swiftest%xh(i,2:npl) = unpack(xh(i, 1:ndrift), dodrift(2:npl), symba_plA%helio%swiftest%xh(i,2:npl))
+         symba_plA%helio%swiftest%vb(i,2:npl) = unpack(vb(i, 1:ndrift), dodrift(2:npl), symba_plA%helio%swiftest%vb(i,2:npl))
+     end do
+      
 
      RETURN
 

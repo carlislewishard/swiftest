@@ -83,15 +83,15 @@ RECURSIVE SUBROUTINE symba_step_recur(lclose, t, ireci, npl, nplm, ntp, symba_pl
 ! Internals
      LOGICAL(LGT)              :: lencounter
      INTEGER(I4B)              :: i, j, irecp, icflg, index_i, index_j, index_pl, index_tp
-     REAL(DP)                  :: dtl, dth, sgn, mtiny
+     REAL(DP)                  :: dtl, dth, sgn, mtiny, rji2, rlim2
      REAL(DP), DIMENSION(NDIM) :: xr, vr, vbs
 
 ! Executable code
 
      mtiny = param%mtiny
-     dtl = dt0/(NTENC**ireci)
-     dth = 0.5_DP*dtl
-     IF (dtl/dt0 < TINY) THEN
+     dtl = dt0 / (NTENC**ireci)
+     dth = 0.5_DP * dtl
+     IF (dtl / dt0 < TINY) THEN
           WRITE(*, *) "SWIFTEST Warning:"
           WRITE(*, *) "   In symba_step_recur, local time step is too small"
           WRITE(*, *) "   Roundoff error will be important!"
@@ -101,6 +101,8 @@ RECURSIVE SUBROUTINE symba_step_recur(lclose, t, ireci, npl, nplm, ntp, symba_pl
 
      IF (ireci == 0) THEN
           icflg = 0
+          !$omp parallel do schedule (static) default(private) if(nplplenc > omp_get_max_threads())  &
+          !$omp shared(symba_plA, plplenc_list, nplplenc, irecp, icflg, ireci, dtl)
           DO i = 1, nplplenc
                IF ((plplenc_list%status(i) == ACTIVE) .AND. (plplenc_list%level(i) == ireci)) THEN
                     index_i  = plplenc_list%index1(i)
@@ -110,16 +112,26 @@ RECURSIVE SUBROUTINE symba_step_recur(lclose, t, ireci, npl, nplm, ntp, symba_pl
                     CALL symba_chk(xr(:), vr(:), symba_plA%helio%swiftest%rhill(index_i),     &  
                          symba_plA%helio%swiftest%rhill(index_j), dtl, irecp, lencounter,                  &
                          plplenc_list%lvdotr(i))
-                    IF (lencounter) THEN
-                         icflg = 1
-                         symba_plA%levelg(index_i) = irecp
-                         symba_plA%levelm(index_i) = MAX(irecp, symba_plA%levelm(index_i))
-                         symba_plA%levelg(index_j) = irecp
-                         symba_plA%levelm(index_j) = MAX(irecp, symba_plA%levelm(index_j))
-                         plplenc_list%level(i) = irecp
+                    IF (lencounter) THEN 
+                         rlim2 = (symba_plA%helio%swiftest%radius(index_i) + symba_plA%helio%swiftest%radius(index_j))**2
+                         rji2 = DOT_PRODUCT(xr(:), xr(:))! Check to see if these are physically overlapping bodies first, which we should ignore
+                         if (rji2 > rlim2) then
+                           !$omp critical
+                           icflg = 1
+                           symba_plA%levelg(index_i) = irecp
+                           symba_plA%levelm(index_i) = MAX(irecp, symba_plA%levelm(index_i))
+                           symba_plA%levelg(index_j) = irecp
+                           symba_plA%levelm(index_j) = MAX(irecp, symba_plA%levelm(index_j))
+                           plplenc_list%level(i) = irecp
+                           !$omp end critical
+                         end if
                     END IF
                END IF
           END DO
+          !$omp end parallel do
+
+          !$omp parallel do schedule (static) default(private) if(npltpenc > omp_get_max_threads())  &
+          !$omp shared(symba_plA, symba_tpA, pltpenc_list, npltpenc, irecp, icflg, ireci, dtl)
           DO i = 1, npltpenc
                IF ((pltpenc_list%status(i) == ACTIVE) .AND. (pltpenc_list%level(i) == ireci)) THEN
                     index_pl  = pltpenc_list%indexpl(i)
@@ -130,15 +142,22 @@ RECURSIVE SUBROUTINE symba_step_recur(lclose, t, ireci, npl, nplm, ntp, symba_pl
                     CALL symba_chk(xr(:), vr(:), symba_plA%helio%swiftest%rhill(index_pl), 0.0_DP,   &
                          dtl, irecp, lencounter, pltpenc_list%lvdotr(i))
                     IF (lencounter) THEN
-                         icflg = 1
-                         symba_plA%levelg(index_pl) = irecp
-                         symba_plA%levelm(index_pl) = MAX(irecp, symba_plA%levelm(index_pl))
-                         symba_tpA%levelg(index_tp) = irecp
-                         symba_tpA%levelm(index_tp) = MAX(irecp, symba_tpA%levelm(index_tp))
-                         pltpenc_list%level(i) = irecp
+                        rlim2 = symba_plA%helio%swiftest%radius(index_pl)**2
+                        rji2 = DOT_PRODUCT(xr(:), xr(:))! Check to see if these are physically overlapping bodies first, which we should ignore
+                        if (rji2 > rlim2) then
+                           !$omp critical
+                           icflg = 1
+                           symba_plA%levelg(index_pl) = irecp
+                           symba_plA%levelm(index_pl) = MAX(irecp, symba_plA%levelm(index_pl))
+                           symba_tpA%levelg(index_tp) = irecp
+                           symba_tpA%levelm(index_tp) = MAX(irecp, symba_tpA%levelm(index_tp))
+                           pltpenc_list%level(i) = irecp
+                           !$omp end critical
+                        end if
                     END IF
                END IF
           END DO
+          !$omp end parallel do
           lencounter = (icflg == 1)
           sgn = 1.0_DP
           CALL symba_kick(irecp, nplplenc, npltpenc, plplenc_list, pltpenc_list, dth, sgn,symba_plA, symba_tpA)
@@ -208,12 +227,16 @@ RECURSIVE SUBROUTINE symba_step_recur(lclose, t, ireci, npl, nplm, ntp, symba_pl
                               symba_plA%helio%swiftest%rhill(index_j), dtl, irecp, lencounter,             &
                               plplenc_list%lvdotr(i))
                          IF (lencounter) THEN
+                           rlim2 = (symba_plA%helio%swiftest%radius(index_i) + symba_plA%helio%swiftest%radius(index_j))**2
+                           rji2 = DOT_PRODUCT(xr(:), xr(:))! Check to see if these are physically overlapping bodies first, which we should ignore
+                           if (rji2 > rlim2) then
                               icflg = 1
                               symba_plA%levelg(index_i) = irecp
                               symba_plA%levelm(index_i) = MAX(irecp, symba_plA%levelm(index_i))
                               symba_plA%levelg(index_j) = irecp
                               symba_plA%levelm(index_j) = MAX(irecp, symba_plA%levelm(index_j))
                               plplenc_list%level(i) = irecp
+                           end if
                          END IF
                     END IF
                END DO
@@ -226,12 +249,16 @@ RECURSIVE SUBROUTINE symba_step_recur(lclose, t, ireci, npl, nplm, ntp, symba_pl
                          CALL symba_chk(xr(:), vr(:), symba_plA%helio%swiftest%rhill(index_pl), 0.0_DP, &     
                               dtl, irecp, lencounter, pltpenc_list%lvdotr(i))
                          IF (lencounter) THEN
+                           rlim2 = symba_plA%helio%swiftest%radius(index_pl)**2
+                           rji2 = DOT_PRODUCT(xr(:), xr(:))! Check to see if these are physically overlapping bodies first, which we should ignore
+                           if (rji2 > rlim2) then
                               icflg = 1
                               symba_plA%levelg(index_pl) = irecp
                               symba_plA%levelm(index_pl) = MAX(irecp, symba_plA%levelm(index_pl))
                               symba_tpA%levelg(index_tp) = irecp
                               symba_tpA%levelm(index_tp) = MAX(irecp, symba_tpA%levelm(index_tp))
                               pltpenc_list%level(i) = irecp
+                           end if
                          END IF
                     END IF
                END DO

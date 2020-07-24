@@ -160,12 +160,12 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE drift_dan(mu, x0, v0, dt0, iflag)
+          SUBROUTINE drift_dan(mu, px, py, pz, vx, vy, vz, dt0, iflag)
                USE swiftest_globals
                IMPLICIT NONE
                INTEGER(I4B), INTENT(OUT)                :: iflag
                REAL(DP), INTENT(IN)                     :: mu, dt0
-               REAL(DP), DIMENSION(NDIM), INTENT(INOUT) :: x0, v0
+               REAL(DP), INTENT(INOUT) :: px, py, pz, vx, vy, vz
           END SUBROUTINE drift_dan
      END INTERFACE
 
@@ -248,12 +248,13 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE drift_one(mu, x, v, dt, iflag)
+          SUBROUTINE drift_one(mu, x, v, dt, iflag, n)
                USE swiftest_globals
                IMPLICIT NONE
-               INTEGER(I4B), INTENT(OUT)                :: iflag
+               INTEGER(I4B), dimension(:), INTENT(OUT)                :: iflag
                REAL(DP), INTENT(IN)                     :: mu, dt
-               REAL(DP), DIMENSION(NDIM), INTENT(INOUT) :: x, v
+               REAL(DP), DIMENSION(:,:), INTENT(INOUT) :: x, v
+               integer(I4B), intent(in)                :: n
           END SUBROUTINE drift_one
      END INTERFACE
 
