@@ -90,14 +90,14 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      INTEGER(I4B), DIMENSION(:,:), INTENT(IN)  :: k_pltp
 
 ! Internals
-     LOGICAL(LGT)              :: lencounter, lvdotr
+     LOGICAL(LGT)              :: lencounter
      INTEGER(I4B)              :: i, j, irec, nplm, k, counter
-     INTEGER(I4B), ALLOCATABLE :: plpl_encounters_indices(:), pltp_encounters_indices(:)
+     INTEGER(I4B), DIMENSION(:), ALLOCATABLE :: plpl_encounters, pltp_encounters_indices
      REAL(DP), DIMENSION(NDIM) :: xr, vr
      LOGICAL, SAVE             :: lfirst = .true.
      
      INTEGER(I4B), ALLOCATABLE, DIMENSION(:) :: pltp_encounters, pltp_lvdotr
-     INTEGER(I4B), ALLOCATABLE, DIMENSION(:) :: plpl_encounters, plpl_lvdotr
+     logical(lgt), allocatable, dimension(:) :: plpl_lvdotr
      
 ! Executable code
 
@@ -119,10 +119,6 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      irec = 0
 
 ! ALL THIS NEEDS TO BE CHANGED TO THE TREE SEARCH FUNCTION FOR ENCOUNTERS
-     allocate(plpl_encounters(num_plpl_comparisons))
-     allocate(plpl_lvdotr(num_plpl_comparisons))
-     plpl_encounters = 0
-     plpl_lvdotr = 0
 
      ! CALL util_dist_eucl_plpl(npl,symba_plA%helio%swiftest%xh, num_plpl_comparisons, k_plpl, dist_plpl_array) 
      ! CALL util_dist_eucl_plpl(npl,symba_plA%helio%swiftest%vh, num_plpl_comparisons, k_plpl, vel_plpl_array) 
@@ -133,39 +129,25 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      ! print *,'step nplplenc: ',nplplenc
      if(nplplenc>0)then
 
-          allocate(plpl_encounters_indices(nplplenc))
+          do k = 1, nplplenc
+            do i = 1, 2
+               symba_plA%lmerged(k_plpl(i, plpl_encounters(k))) = .FALSE. ! they have not merged YET
+               symba_plA%nplenc(k_plpl(i, plpl_encounters(k))) = symba_plA%nplenc(k_plpl(i, plpl_encounters(k))) + 1 ! number of particles that planet "i" has close encountered
+               symba_plA%levelg(k_plpl(i, plpl_encounters(k))) = irec ! recursion level
+               symba_plA%levelm(k_plpl(i, plpl_encounters(k))) = irec ! recursion level
+               symba_plA%nchild(k_plpl(i, plpl_encounters(k))) = 0 
+            end do
 
-          ! plpl_encounters_indices = pack(plpl_encounters,plpl_encounters > 0)
-          ! so it turns out this is significantly faster than the pack command
-          counter = 1
-          do k = 1,num_plpl_comparisons
-               if(plpl_encounters(k).gt.0)then
-                    plpl_encounters_indices(counter) = k
-                    counter = counter + 1
-               endif
-          enddo
-
-          symba_plA%lmerged(k_plpl(1,plpl_encounters_indices)) = .FALSE. ! they have not merged YET
-          symba_plA%nplenc(k_plpl(1,plpl_encounters_indices)) = symba_plA%nplenc(k_plpl(1,plpl_encounters_indices)) + 1 ! number of particles that planet "i" has close encountered
-          symba_plA%levelg(k_plpl(1,plpl_encounters_indices)) = irec ! recursion level
-          symba_plA%levelm(k_plpl(1,plpl_encounters_indices)) = irec ! recursion level
-          symba_plA%nchild(k_plpl(1,plpl_encounters_indices)) = 0 
-          ! for the j particle
-          symba_plA%lmerged(k_plpl(2,plpl_encounters_indices)) = .FALSE.
-          symba_plA%nplenc(k_plpl(2,plpl_encounters_indices)) = symba_plA%nplenc(k_plpl(2,plpl_encounters_indices)) + 1
-          symba_plA%levelg(k_plpl(2,plpl_encounters_indices)) = irec
-          symba_plA%levelm(k_plpl(2,plpl_encounters_indices)) = irec
-          symba_plA%nchild(k_plpl(2,plpl_encounters_indices)) = 0
-
-          plplenc_list%status(1:nplplenc) = ACTIVE ! you are in an encounter
-          plplenc_list%lvdotr(1:nplplenc) = plpl_lvdotr(plpl_encounters_indices)! flag of relative accelerations to say if there will be a close encounter in next timestep 
-          plplenc_list%level(1:nplplenc)  = irec ! recursion level
-          plplenc_list%index1(1:nplplenc) = k_plpl(1,plpl_encounters_indices) ! index of first planet in encounter
-          plplenc_list%index2(1:nplplenc) = k_plpl(2,plpl_encounters_indices) ! index of second planet in encounter
-          deallocate(plpl_encounters_indices)
+            plplenc_list%status(k) = ACTIVE ! you are in an encounter
+            plplenc_list%lvdotr(k) = plpl_lvdotr(plpl_encounters(k))! flag of relative accelerations to say if there will be a close encounter in next timestep 
+            plplenc_list%level(k)  = irec ! recursion level
+            plplenc_list%index1(k) = k_plpl(1,plpl_encounters(k)) ! index of first planet in encounter
+            plplenc_list%index2(k) = k_plpl(2,plpl_encounters(k)) ! index of second planet in encounter
+          end do
+          deallocate(plpl_encounters)
      endif
      
-     deallocate(plpl_encounters, plpl_lvdotr)
+     !deallocate(plpl_encounters, plpl_lvdotr)
 
      if(ntp>0)then
          allocate(pltp_encounters(num_pltp_comparisons))
@@ -195,19 +177,19 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
                     endif
                enddo
 
-               symba_plA%ntpenc(k_pltp(1,pltp_encounters_indices)) = symba_plA%ntpenc(k_pltp(1,pltp_encounters_indices)) + 1
-               symba_plA%levelg(k_pltp(1,pltp_encounters_indices)) = 0
-               symba_plA%levelm(k_pltp(1,pltp_encounters_indices)) = 0
+               symba_plA%ntpenc(k_pltp(1,pltp_encounters_indices(:))) = symba_plA%ntpenc(k_pltp(1,pltp_encounters_indices(:))) + 1
+               symba_plA%levelg(k_pltp(1,pltp_encounters_indices(:))) = 0
+               symba_plA%levelm(k_pltp(1,pltp_encounters_indices(:))) = 0
 
-               symba_tpA%nplenc(k_pltp(2,pltp_encounters_indices)) = symba_tpA%nplenc(k_pltp(2,pltp_encounters_indices)) + 1
-               symba_tpA%levelg(k_pltp(2,pltp_encounters_indices)) = 0
-               symba_tpA%levelm(k_pltp(2,pltp_encounters_indices)) = 0
+               symba_tpA%nplenc(k_pltp(2,pltp_encounters_indices(:))) = symba_tpA%nplenc(k_pltp(2,pltp_encounters_indices(:))) + 1
+               symba_tpA%levelg(k_pltp(2,pltp_encounters_indices(:))) = 0
+               symba_tpA%levelm(k_pltp(2,pltp_encounters_indices(:))) = 0
 
                pltpenc_list%status(1:npltpenc) = ACTIVE
-               pltpenc_list%lvdotr(1:npltpenc) = pltp_lvdotr(pltp_encounters_indices)
+               pltpenc_list%lvdotr(1:npltpenc) = pltp_lvdotr(pltp_encounters_indices(:))
                pltpenc_list%level(1:npltpenc) = 0
-               pltpenc_list%indexpl(1:npltpenc) = k_pltp(1,pltp_encounters_indices)
-               pltpenc_list%indextp(1:npltpenc) = k_pltp(1,pltp_encounters_indices)
+               pltpenc_list%indexpl(1:npltpenc) = k_pltp(1,pltp_encounters_indices(:))
+               pltpenc_list%indextp(1:npltpenc) = k_pltp(1,pltp_encounters_indices(:))
 
                deallocate(pltp_encounters_indices)
           endif

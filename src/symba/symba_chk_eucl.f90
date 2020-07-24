@@ -29,7 +29,7 @@
 !  Notes       : Adapted from Hal Levison's Swift routine symba5_chk.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE symba_chk_eucl(num_encounters, k_plpl, symba_plA, dt, lencounter, lvdotr, nplplenc)
+SUBROUTINE symba_chk_eucl(num_plpl_comparisons, k_plpl, symba_plA, dt, plpl_encounters, lvdotr, nplplenc)
 
 ! Modules
      USE swiftest
@@ -42,22 +42,27 @@ SUBROUTINE symba_chk_eucl(num_encounters, k_plpl, symba_plA, dt, lencounter, lvd
      IMPLICIT NONE
 
 ! Arguments
-     TYPE(symba_pl), INTENT(IN)                    :: symba_plA
-     INTEGER(I4B), DIMENSION(:), INTENT(OUT) :: lencounter, lvdotr
-     INTEGER(I4B), INTENT(IN)           :: num_encounters
-     INTEGER(I4B), DIMENSION(:,:), INTENT(IN)     :: k_plpl
-     REAL(DP), INTENT(IN)               :: dt
-     INTEGER(I4B), INTENT(INOUT)        :: nplplenc
+     INTEGER(I4B), INTENT(IN)                               :: num_plpl_comparisons
+     INTEGER(I4B), DIMENSION(:,:), INTENT(IN)               :: k_plpl
+     TYPE(symba_pl), INTENT(IN)                             :: symba_plA
+     REAL(DP), INTENT(IN)                                   :: dt
+     INTEGER(I4B), DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: plpl_encounters
+     LOGICAL(LGT), DIMENSION(:), ALLOCATABLE, intent(inout) :: lvdotr
+     INTEGER(I4B), INTENT(OUT)                              :: nplplenc
 
 ! Internals
+     logical, dimension(num_plpl_comparisons) :: lencounter 
      ! LOGICAL(LGT) :: iflag lvdotr_flag
      REAL(DP)     :: rcrit, r2crit, vdotr, r2, v2, tmin, r2min, term2, rcritmax, r2critmax
-     INTEGER(I4B) :: k
+     INTEGER(I4B) :: i, k
      REAL(DP), DIMENSION(NDIM):: xr, vr
+     !real(DP), dimension(num_plpl_comparisons) :: ind = (/ (i, i = 1, num_plpl_comparisons) /)
 
 ! Executable code
 
      nplplenc = 0
+     lencounter(:) = .false.
+     allocate(lvdotr(num_plpl_comparisons))
 
      term2 = RHSCALE*RSHELL**0
 
@@ -65,11 +70,9 @@ SUBROUTINE symba_chk_eucl(num_encounters, k_plpl, symba_plA, dt, lencounter, lvd
      r2critmax = rcritmax * rcritmax
 
      !$omp parallel do default(private) schedule(static) &
-     !$omp num_threads(min(omp_get_max_threads(),ceiling(num_encounters/10000.))) &
-     !$omp shared(num_encounters, lvdotr, lencounter, k_plpl, dt, term2, r2critmax, symba_plA) &
-     !$omp reduction(+:nplplenc)
-
-     do k = 1,num_encounters
+     !$omp num_threads(min(omp_get_max_threads(),ceiling(num_plpl_comparisons/10000.))) &
+     !$omp shared(num_plpl_comparisons, lvdotr, lencounter, k_plpl, dt, term2, r2critmax, symba_plA) 
+     do k = 1,num_plpl_comparisons
           xr(:) = symba_plA%helio%swiftest%xh(:,k_plpl(2,k)) - symba_plA%helio%swiftest%xh(:,k_plpl(1,k))
 
           r2 = DOT_PRODUCT(xr(:), xr(:)) 
@@ -81,32 +84,33 @@ SUBROUTINE symba_chk_eucl(num_encounters, k_plpl, symba_plA, dt, lencounter, lvd
 
                vdotr = DOT_PRODUCT(vr(:), xr(:))
 
-               IF (vdotr < 0.0_DP) lvdotr(k) = k
+               lvdotr(k) = (vdotr < 0.0_DP)
 
                IF (r2 < r2crit) THEN
-                    lencounter(k) = k
-                    nplplenc = nplplenc + 1
+                    lencounter(k) = .true.
                ELSE
                     IF (vdotr < 0.0_DP) THEN
                          v2 = DOT_PRODUCT(vr(:), vr(:))
-                         tmin = -vdotr/v2
+                         tmin = -vdotr/  v2
                          IF (tmin < dt) THEN
-                              r2min = r2 - vdotr*vdotr/v2
+                              r2min = r2 - vdotr * vdotr / v2
                          ELSE
-                              r2min = r2 + 2.0_DP*vdotr*dt + v2*dt*dt
+                              r2min = r2 + 2 * vdotr * dt + v2*dt*dt
                          END IF
                          r2min = MIN(r2min, r2)
                          IF (r2min <= r2crit) then
-                              lencounter(k) = k
-                              nplplenc = nplplenc + 1
+                              lencounter(k) = .true.
                          endif
                     END IF
                END IF
           endif
      enddo
-
    !$omp end parallel do
-     
+     nplplenc = count(lencounter(:))
+     if (nplplenc > 0) then
+        plpl_encounters(:) = pack((/ (i, i = 1, num_plpl_comparisons) /), lencounter(:))
+        lvdotr(:) = pack(lvdotr(:), lencounter(:))
+     end if
      RETURN
 
 END SUBROUTINE symba_chk_eucl
