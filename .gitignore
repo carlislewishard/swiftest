@@ -2,7 +2,7 @@
 *
 # Now, whitelist anything that's a directory
 !*/
-!*/python
+!python_routines/*
 # whitelist only the files that ever need to be tracked
 !*.f90
 !CHANGELOG 
@@ -12,11 +12,10 @@
 !example/cleanup
 !example/swifter_symba_omp
 !Makefile
-*/Makefile
+src/*/Makefile
 !Makefile.Defines
-*/Makefile.Defines
+src/*/Makefile.Defines
 !.gitignore
-!*.py
 
 #fxdr library
 !fxdr*/*.c
@@ -46,4 +45,7 @@ collresolve/config.h
 
 example/
 
-Makefile.Defines
+#Documentation
+!docs/*
+!docs/*/*
+!docs/*/*/*
