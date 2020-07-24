@@ -107,6 +107,7 @@ SUBROUTINE symba_chk_eucl(num_plpl_comparisons, k_plpl, symba_plA, dt, plpl_enco
      enddo
    !$omp end parallel do
      nplplenc = count(lencounter(:))
+     allocate(plpl_encounters(nplplenc))
      if (nplplenc > 0) then
         plpl_encounters(:) = pack((/ (i, i = 1, num_plpl_comparisons) /), lencounter(:))
         lvdotr(:) = pack(lvdotr(:), lencounter(:))
