@@ -29,6 +29,7 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE drift_dan(mu, px, py, pz, vx, vy, vz, dt0, iflag)
+   !$omp declare simd(drift_dan)
 
 ! Modules
      USE swiftest

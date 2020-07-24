@@ -29,6 +29,7 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE drift_kepu_stumpff(x, c0, c1, c2, c3)
+    !$omp declare simd(drift_kepu_stumpff)
 
 ! Modules
      USE swiftest

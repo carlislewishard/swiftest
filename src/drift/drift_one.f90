@@ -37,7 +37,7 @@ SUBROUTINE drift_one(mu, x, v, dt, iflag, n)
 
 ! Arguments
      INTEGER(I4B), dimension(:), INTENT(OUT) :: iflag
-     REAL(DP), INTENT(IN)                     :: mu, dt
+     REAL(DP), INTENT(IN)                    :: mu, dt
      REAL(DP), DIMENSION(:,:), INTENT(INOUT) :: x, v
      integer(I4B), intent(in)                :: n
 
@@ -65,6 +65,7 @@ SUBROUTINE drift_one(mu, x, v, dt, iflag, n)
      vx(:) = v(1, :)
      vy(:) = v(2, :)
      vz(:) = v(3, :)
+     !$omp simd
      do i = 1, n
          CALL drift_dan(muvec(i), px(i), py(i), pz(i), vx(i), vy(i), vz(i), dttmp(i), iflag(i))
      end do
@@ -80,6 +81,7 @@ SUBROUTINE drift_one(mu, x, v, dt, iflag, n)
          dttmp(:) = 0.1_DP * pack(dttmp(:), badrun(:))
          iflag(:) = pack(iflag(:), badrun(:))
          do k = 1, 10
+            !$omp simd
             do i = 1, count(badrun(:))
                call drift_dan(muvec(i), px(i), py(i), pz(i), vx(i), vy(i), vz(i), dttmp(i), iflag(i))
             end do

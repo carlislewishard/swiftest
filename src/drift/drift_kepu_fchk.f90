@@ -29,6 +29,7 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE drift_kepu_fchk(dt, r0, mu, alpha, u, s, f)
+     !$omp declare simd(drift_kepu_fchk)
 
 ! Modules
      USE swiftest
