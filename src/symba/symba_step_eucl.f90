@@ -140,7 +140,7 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
             end do
 
             plplenc_list%status(k) = ACTIVE ! you are in an encounter
-            plplenc_list%lvdotr(k) = plpl_lvdotr(plpl_encounters(k))! flag of relative accelerations to say if there will be a close encounter in next timestep 
+            plplenc_list%lvdotr(k) = plpl_lvdotr(k)! flag of relative accelerations to say if there will be a close encounter in next timestep 
             plplenc_list%level(k)  = irec ! recursion level
             plplenc_list%index1(k) = k_plpl(1, plpl_encounters(k)) ! index of first planet in encounter
             plplenc_list%index2(k) = k_plpl(2, plpl_encounters(k)) ! index of second planet in encounter
