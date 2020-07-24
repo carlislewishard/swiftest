@@ -43,8 +43,9 @@ SUBROUTINE symba_getacch_tp_eucl(lextra_force, t, npl, nplm, nplmax, ntp, ntpmax
      npltpenc, pltpenc_list, num_pltp_comparisons, k_pltp)
 
 ! Modules
-     USE module_parameters
-     USE module_swiftest
+     USE swiftest
+     USE swiftest_globals
+     USE swiftest_data_structures
      USE module_helio
      USE module_symba
      USE module_interfaces, EXCEPT_THIS_ONE => symba_getacch_tp_eucl
@@ -55,11 +56,11 @@ SUBROUTINE symba_getacch_tp_eucl(lextra_force, t, npl, nplm, nplmax, ntp, ntpmax
      LOGICAL(LGT), INTENT(IN)                      :: lextra_force
      INTEGER(I4B), INTENT(IN)                      :: npl, nplm, nplmax, ntp, ntpmax, npltpenc, num_pltp_comparisons
      REAL(DP), INTENT(IN)                          :: t, j2rp2, j4rp4
-     REAL(DP), DIMENSION(NDIM, npl), INTENT(IN)    :: xh
+     REAL(DP), DIMENSION(:, :), INTENT(IN)    :: xh
      TYPE(symba_pl), INTENT(INOUT)                 :: symba_plA
      TYPE(symba_tp), INTENT(INOUT)                 :: symba_tpA
      TYPE(symba_pltpenc), INTENT(IN)               :: pltpenc_list
-     INTEGER(I4B), DIMENSION(2,num_pltp_comparisons), INTENT(IN) :: k_pltp
+     INTEGER(I4B), DIMENSION(:,:), INTENT(IN) :: k_pltp
 
 
 ! Internals

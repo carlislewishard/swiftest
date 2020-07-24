@@ -32,8 +32,9 @@
 SUBROUTINE symba_chk_eucl_pltp(num_encounters, k_pltp, symba_plA, symba_tpA, dt, lencounter, lvdotr, npltpenc)
 
 ! Modules
-     USE module_parameters
-     USE module_swiftest
+     USE swiftest
+     USE swiftest_globals
+     USE swiftest_data_structures
      USE module_helio
      USE module_symba
      USE module_interfaces, EXCEPT_THIS_ONE => symba_chk_eucl_pltp
@@ -42,9 +43,9 @@ SUBROUTINE symba_chk_eucl_pltp(num_encounters, k_pltp, symba_plA, symba_tpA, dt,
 ! Arguments
      TYPE(symba_pl), INTENT(IN)                    :: symba_plA
      TYPE(symba_tp), INTENT(IN)                    :: symba_tpA
-     INTEGER(I4B), DIMENSION(num_encounters), INTENT(OUT) :: lencounter, lvdotr
+     INTEGER(I4B), DIMENSION(:), INTENT(OUT) :: lencounter, lvdotr
      INTEGER(I4B), INTENT(IN)           :: num_encounters
-     INTEGER(I4B), DIMENSION(2,num_encounters), INTENT(IN)     :: k_pltp
+     INTEGER(I4B), DIMENSION(:,:), INTENT(IN)     :: k_pltp
      REAL(DP), INTENT(IN)               :: dt
      INTEGER(I4B), INTENT(INOUT)        :: npltpenc
 

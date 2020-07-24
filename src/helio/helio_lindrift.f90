@@ -37,7 +37,7 @@ SUBROUTINE helio_lindrift(npl, swiftest_plA, dt, pt)
 ! Arguments
      INTEGER(I4B), INTENT(IN)                          :: npl
      REAL(DP), INTENT(IN)                              :: dt
-     REAL(DP), DIMENSION(NDIM), INTENT(OUT)            :: pt
+     REAL(DP), DIMENSION(:), INTENT(OUT)            :: pt
      TYPE(swiftest_pl), INTENT(INOUT)    :: swiftest_plA
 
 ! Internals

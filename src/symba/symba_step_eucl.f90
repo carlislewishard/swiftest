@@ -66,8 +66,9 @@ SUBROUTINE symba_step_eucl(lfirst, lextra_force, lclose, t, npl, nplmax, ntp, nt
      encounter_file, out_type, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
 
 ! Modules
-     USE module_parameters
-     USE module_swiftest
+     USE swiftest
+     USE swiftest_globals
+     USE swiftest_data_structures
      USE module_helio
      USE module_symba
      USE module_interfaces, EXCEPT_THIS_ONE => symba_step_eucl
@@ -87,8 +88,8 @@ SUBROUTINE symba_step_eucl(lfirst, lextra_force, lclose, t, npl, nplmax, ntp, nt
      TYPE(symba_pltpenc), INTENT(INOUT)               :: pltpenc_list
      TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
      INTEGER(I4B), INTENT(IN)                         :: num_plpl_comparisons, num_pltp_comparisons
-     INTEGER(I4B), DIMENSION(2,num_plpl_comparisons), INTENT(IN) :: k_plpl
-     INTEGER(I4B), DIMENSION(2,num_pltp_comparisons), INTENT(IN)  :: k_pltp
+     INTEGER(I4B), DIMENSION(:,:), INTENT(IN) :: k_plpl
+     INTEGER(I4B), DIMENSION(:,:), INTENT(IN)  :: k_pltp
 
 ! Internals
      LOGICAL(LGT)              :: lencounter, lvdotr

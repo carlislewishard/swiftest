@@ -38,8 +38,9 @@ SUBROUTINE symba_getacch_eucl(lextra_force, t, npl, nplm, nplmax, symba_plA, j2r
      num_plpl_comparisons, k_plpl)
 
 ! Modules
-     USE module_parameters
-     USE module_swiftest
+     USE swiftest
+     USE swiftest_globals
+     USE swiftest_data_structures
      USE module_helio
      USE module_symba
      USE module_interfaces, EXCEPT_THIS_ONE => symba_getacch_eucl
@@ -52,7 +53,7 @@ SUBROUTINE symba_getacch_eucl(lextra_force, t, npl, nplm, nplmax, symba_plA, j2r
      REAL(DP), INTENT(IN)                          :: t, j2rp2, j4rp4
      TYPE(symba_pl), INTENT(INOUT)                 :: symba_plA
      TYPE(symba_plplenc), INTENT(INOUT)            :: plplenc_list
-     INTEGER(I4B), DIMENSION(2,num_plpl_comparisons), INTENT(IN) :: k_plpl
+     INTEGER(I4B), DIMENSION(:,:), INTENT(IN) :: k_plpl
 
 
 ! Internals

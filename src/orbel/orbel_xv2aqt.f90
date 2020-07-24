@@ -41,7 +41,7 @@ SUBROUTINE orbel_xv2aqt(x, v, mu, a, q, capm, tperi)
 
 ! Arguments
      REAL(DP), INTENT(IN)                  :: mu
-     REAL(DP), DIMENSION(NDIM), INTENT(IN) :: x, v
+     REAL(DP), DIMENSION(:), INTENT(IN) :: x, v
      REAL(DP), INTENT(OUT)                 :: a, q, capm, tperi
 
 ! Internals

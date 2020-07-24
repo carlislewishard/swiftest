@@ -28,8 +28,9 @@
 SUBROUTINE util_dist_index_plpl(npl, nplm, num_comparisons, k_plpl)
 
 ! Modules
-     USE module_parameters
-     USE module_swiftest
+     USE swiftest
+     USE swiftest_globals
+     USE swiftest_data_structures
      USE module_interfaces, EXCEPT_THIS_ONE => util_dist_index_plpl
      IMPLICIT NONE
 

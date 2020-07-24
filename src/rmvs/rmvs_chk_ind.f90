@@ -35,7 +35,7 @@ SUBROUTINE rmvs_chk_ind(xr, vr, dt, r2crit, iflag)
 
 ! Arguments
      REAL(DP), INTENT(IN)                  :: dt, r2crit
-     REAL(DP), DIMENSION(NDIM), INTENT(IN) :: xr, vr
+     REAL(DP), DIMENSION(:), INTENT(IN) :: xr, vr
      INTEGER(I4B), INTENT(OUT)             :: iflag
 
 ! Internals

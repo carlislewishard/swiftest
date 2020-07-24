@@ -32,19 +32,20 @@
 SUBROUTINE util_dist_eucl_pltp(npl, ntp, planets, test_particles, num_pltp_comparisons, k_pltp, outvar)
 
 ! Modules
-     USE module_parameters
-     USE module_swiftest
+     USE swiftest
+     USE swiftest_globals
+     USE swiftest_data_structures
      USE module_symba
      USE module_interfaces, EXCEPT_THIS_ONE => util_dist_eucl_pltp
      IMPLICIT NONE
 
 ! Arguments
      INTEGER(I4B), INTENT(IN) :: npl, ntp
-     INTEGER(I4B), DIMENSION(2,num_pltp_comparisons),INTENT(IN) :: k_pltp
+     INTEGER(I4B), DIMENSION(:,:),INTENT(IN) :: k_pltp
      INTEGER(I4B), INTENT(IN) :: num_pltp_comparisons
-     REAL(DP),DIMENSION(NDIM,npl),INTENT(IN) :: planets
-     REAL(DP),DIMENSION(NDIM,ntp),INTENT(IN) :: test_particles
-     REAL(DP), DIMENSION(NDIM,num_pltp_comparisons),INTENT(INOUT) :: outvar
+     REAL(DP),DIMENSION(:,:),INTENT(IN) :: planets
+     REAL(DP),DIMENSION(:,:),INTENT(IN) :: test_particles
+     REAL(DP), DIMENSION(:,:),INTENT(INOUT) :: outvar
 
 ! Internals
      INTEGER(I4B)              :: k

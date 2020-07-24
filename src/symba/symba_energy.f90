@@ -41,7 +41,7 @@ SUBROUTINE symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, htot)
      INTEGER(I4B), INTENT(IN)               :: npl
      REAL(DP), INTENT(IN)                   :: j2rp2, j4rp4
      REAL(DP), INTENT(OUT)                  :: ke, pe, te
-     REAL(DP), DIMENSION(NDIM), INTENT(OUT) :: htot
+     REAL(DP), DIMENSION(:), INTENT(OUT) :: htot
      TYPE(swiftest_pl), INTENT(INOUT)       :: swiftest_plA
 
 ! Internals

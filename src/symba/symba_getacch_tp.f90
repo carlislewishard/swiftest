@@ -43,8 +43,9 @@ SUBROUTINE symba_getacch_tp(lextra_force, t, npl, nplm, nplmax, ntp, ntpmax, sym
      pltpenc_list)
 
 ! Modules
-     USE module_parameters
-     USE module_swiftest
+     USE swiftest
+     USE swiftest_globals
+     USE swiftest_data_structures
      USE module_helio
      USE module_symba
      USE module_interfaces, EXCEPT_THIS_ONE => symba_getacch_tp
@@ -54,7 +55,7 @@ SUBROUTINE symba_getacch_tp(lextra_force, t, npl, nplm, nplmax, ntp, ntpmax, sym
      LOGICAL(LGT), INTENT(IN)                      :: lextra_force
      INTEGER(I4B), INTENT(IN)                      :: npl, nplm, nplmax, ntp, ntpmax, npltpenc
      REAL(DP), INTENT(IN)                          :: t, j2rp2, j4rp4
-     REAL(DP), DIMENSION(NDIM, npl), INTENT(IN)    :: xh
+     REAL(DP), DIMENSION(:, :), INTENT(IN)    :: xh
      TYPE(symba_pl), INTENT(INOUT)                 :: symba_plA
      TYPE(symba_tp), INTENT(INOUT)                 :: symba_tpA
      TYPE(symba_pltpenc), INTENT(IN)               :: pltpenc_list
@@ -68,14 +69,7 @@ SUBROUTINE symba_getacch_tp(lextra_force, t, npl, nplm, nplmax, ntp, ntpmax, sym
      REAL(DP), DIMENSION(:, :), ALLOCATABLE, SAVE :: aobl, xht, aoblt
 
 ! Executable code
-     !Removed by D. Minton
-     !helio_tpP => symba_tp1P%helio
-     !^^^^^^^^^^^^^^^^^^^^
-     ! OpenMP parallelization added by D. Minton
      DO i = 1, ntp
-          !Added by D. Minton
-          !helio_tpP => symba_tp1P%symba_tpPA(i)%thisP%helio
-          !^^^^^^^^^^^^^^^^^^
           symba_tpA%helio%ah(:,i) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
           IF (symba_tpA%helio%swiftest%status(i) == ACTIVE) THEN
                !swifter_plP => swifter_pl1P

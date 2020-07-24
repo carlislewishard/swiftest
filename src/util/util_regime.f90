@@ -42,7 +42,7 @@ SUBROUTINE util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, de
      INTEGER(I4B), INTENT(OUT)                 :: regime
      REAL(DP), INTENT(OUT)                     :: Mlr, Mslr
      REAL(DP), INTENT(IN)                      :: Mcenter, m1, m2, rad1, rad2, den1, den2, mtiny 
-     REAL(DP), DIMENSION(NDIM), INTENT(IN)     :: xh1, xh2, vb1, vb2
+     REAL(DP), DIMENSION(:), INTENT(IN)     :: xh1, xh2, vb1, vb2
 
 ! Internals
      REAL(DP)                      :: a1, alpha, Aint, b, bcrit, E, fgamma, l, Lint, mu, phi, theta

@@ -36,7 +36,7 @@ SUBROUTINE orbel_xv2aeq(x, v, mu, a, e, q)
 
 ! Arguments
      REAL(DP), INTENT(IN)                  :: mu
-     REAL(DP), DIMENSION(NDIM), INTENT(IN) :: x, v
+     REAL(DP), DIMENSION(:), INTENT(IN) :: x, v
      REAL(DP), INTENT(OUT)                 :: a, e, q
 
 ! Internals

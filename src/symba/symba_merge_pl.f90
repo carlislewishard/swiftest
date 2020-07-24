@@ -58,7 +58,7 @@ SUBROUTINE symba_merge_pl(t, dt, index_enc, nplplenc, plplenc_list, nmergeadd, n
      INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub
      REAL(DP), INTENT(IN)                             :: t, dt
      REAL(DP), INTENT(INOUT)                          :: eoffset
-     REAL(DP), DIMENSION(NDIM), INTENT(IN)            :: vbs
+     REAL(DP), DIMENSION(:), INTENT(IN)            :: vbs
      CHARACTER(*), INTENT(IN)                         :: encounter_file, out_type
      TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
      TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list

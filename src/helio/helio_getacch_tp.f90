@@ -46,7 +46,7 @@ SUBROUTINE helio_getacch_tp(lflag, lextra_force, t, npl, nplmax, ntp, ntpmax, he
      LOGICAL(LGT), INTENT(IN)                   :: lflag, lextra_force
      INTEGER(I4B), INTENT(IN)                   :: npl, nplmax, ntp, ntpmax
      REAL(DP), INTENT(IN)                       :: t, j2rp2, j4rp4
-     REAL(DP), DIMENSION(NDIM, npl), INTENT(IN) :: xh
+     REAL(DP), DIMENSION(:, :), INTENT(IN) :: xh
      TYPE(helio_pl), INTENT(INOUT) :: helio_plA
      TYPE(helio_tp), INTENT(INOUT) :: helio_tpA
 
