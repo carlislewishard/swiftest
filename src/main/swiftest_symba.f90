@@ -43,11 +43,11 @@ program swiftest_symba
 
    ! Internals
    logical                       :: lfrag_add
-   integer(I4B)                  :: npl, ntp, ntp0, nsppl, nsptp, iout, idump, iloop, idebug
+   integer(I4B)                  :: npl, nplm, ntp, ntp0, nsppl, nsptp, iout, idump, iloop, idebug
    integer(I4B)                  :: nplplenc, npltpenc, nmergeadd, nmergesub, fragmax
    real(DP)                      :: t, tfrac, tbase, mtiny, ke, pe, te, eoffset, Ltot_orig, Ltot_now, Lerror
    real(DP), dimension(ndim)     :: htot
-   character(strmax)             :: inparfile
+   character(strmax)             :: inparfile, thresh
    type(symba_pl)                :: symba_plA
    type(symba_tp)                :: symba_tpA
    type(swiftest_tp)             :: discard_tpA
@@ -60,6 +60,9 @@ program swiftest_symba
    INTEGER(I8B)                  :: clock_count, count_rate, count_max
    CHARACTER(len=STRMAX)         :: arg
    INTEGER(I4B)                  :: ierr
+   INTEGER(I4B), DIMENSION(:,:), ALLOCATABLE :: k_plpl, k_pltp
+   INTEGER(I4B)                              :: num_plpl_comparisons, num_pltp_comparisons
+   integer(I8B)                  :: eucl_threshold = 1000000
 
 ! Executable code
    call system_clock(clock_count, count_rate, count_max)
@@ -72,7 +75,7 @@ program swiftest_symba
        write(*, 100, advance = "NO") "Enter name of parameter data file: "
        read(*, 100) inparfile
    end if
-
+   
    100 format(a)
    inparfile = trim(adjustl(inparfile))
    ! read in the param.in file and get simulation parameters
@@ -167,6 +170,10 @@ program swiftest_symba
       open(unit = egyiu, file = energy_file, form = "formatted", status = "replace", action = "write")
    end if
    300 format(8(1x, e23.16))
+   nplm = count(symba_plA%helio%swiftest%mass>mtiny)
+   CALL util_dist_index_plpl(npl, nplm, num_plpl_comparisons, k_plpl)
+   CALL util_dist_index_pltp(nplm, ntp, num_pltp_comparisons, k_pltp)
+
    write(*, *) " *************** Main Loop *************** "
    call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot)
    if (param%lenergy) then 
@@ -174,9 +181,15 @@ program swiftest_symba
       Ltot_orig = NORM2(htot)
    end if
    do while ((t < tstop) .and. ((ntp0 == 0) .or. (ntp > 0)))
-      call symba_step(t, dt, param,npl,ntp,symba_plA, symba_tpA,nplplenc, npltpenc,&
-            plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
-            eoffset, fragmax)
+      if(num_plpl_comparisons > param%eucl_threshold) then
+         call symba_step_eucl(t, dt, param,npl,ntp,symba_pla, symba_tpa,nplplenc, npltpenc,&
+               plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
+               eoffset, fragmax, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
+      else
+         call symba_step(t, dt, param,npl,ntp,symba_plA, symba_tpA,nplplenc, npltpenc,&
+               plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
+               eoffset, fragmax)
+      end if
       ldiscard = .false. 
       ldiscard_tp = .false.
       lfrag_add = .false.
@@ -185,19 +198,24 @@ program swiftest_symba
             qmin_ahi, j2rp2, j4rp4, eoffset)
       call symba_discard_tp(t, npl, ntp, nsptp, symba_plA, symba_tpA, dt, rmin, rmax, rmaxu, qmin, qmin_coord, &    ! check this 
             qmin_alo, qmin_ahi, param%lclose, param%lrhill_present)
-      if ((ldiscard .eqv. .true.) .or. (ldiscard_tp .eqv. .true.) .or. (lfrag_add .eqv. .true.)) then
-
+      if (ldiscard .or. ldiscard_tp .or. lfrag_add) then
          call symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
             discard_tpA,param)
-
-         if ((ldiscard .eqv. .true.) .or. (ldiscard_tp .eqv. .true.)) then
+         if (ldiscard .or. ldiscard_tp) then
             call io_discard_write_symba(t, mtiny, npl, ntp, nsppl, nsptp, nmergesub, symba_plA, &
                discard_plA, discard_tpA, mergeadd_list, mergesub_list, discard_file, param%lbig_discard) 
             nmergeadd = 0
             nmergesub = 0
             nsppl = 0
             nsptp = 0
-         end if 
+            deallocate(k_plpl)
+            nplm = count(symba_plA%helio%swiftest%mass(1:npl) > mtiny)
+            CALL util_dist_index_plpl(npl, nplm, num_plpl_comparisons, k_plpl)
+            if (ntp > 0) then
+                 deallocate(k_pltp)
+                 call util_dist_index_pltp(nplm, ntp, num_pltp_comparisons, k_pltp)          
+            end if 
+         end if
          call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot)
          if (param%lenergy) then 
             write(egyiu,300) t, ke, pe, te, htot, eoffset
@@ -311,3 +329,4 @@ program swiftest_symba
    stop
 
 end program swiftest_symba
+

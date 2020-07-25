@@ -101,6 +101,8 @@ RECURSIVE SUBROUTINE symba_step_recur(lclose, t, ireci, npl, nplm, ntp, symba_pl
 
      IF (ireci == 0) THEN
           icflg = 0
+          !$omp parallel do schedule (static) default(private) if(nplplenc > omp_get_max_threads())  &
+          !$omp shared(symba_plA, plplenc_list, nplplenc, irecp, icflg, ireci, dtl)
           DO i = 1, nplplenc
                IF ((plplenc_list%status(i) == ACTIVE) .AND. (plplenc_list%level(i) == ireci)) THEN
                     index_i  = plplenc_list%index1(i)
@@ -114,16 +116,22 @@ RECURSIVE SUBROUTINE symba_step_recur(lclose, t, ireci, npl, nplm, ntp, symba_pl
                          rlim2 = (symba_plA%helio%swiftest%radius(index_i) + symba_plA%helio%swiftest%radius(index_j))**2
                          rji2 = DOT_PRODUCT(xr(:), xr(:))! Check to see if these are physically overlapping bodies first, which we should ignore
                          if (rji2 > rlim2) then
+                           !$omp critical
                            icflg = 1
                            symba_plA%levelg(index_i) = irecp
                            symba_plA%levelm(index_i) = MAX(irecp, symba_plA%levelm(index_i))
                            symba_plA%levelg(index_j) = irecp
                            symba_plA%levelm(index_j) = MAX(irecp, symba_plA%levelm(index_j))
                            plplenc_list%level(i) = irecp
+                           !$omp end critical
                          end if
                     END IF
                END IF
           END DO
+          !$omp end parallel do
+
+          !$omp parallel do schedule (static) default(private) if(npltpenc > omp_get_max_threads())  &
+          !$omp shared(symba_plA, symba_tpA, pltpenc_list, npltpenc, irecp, icflg, ireci, dtl)
           DO i = 1, npltpenc
                IF ((pltpenc_list%status(i) == ACTIVE) .AND. (pltpenc_list%level(i) == ireci)) THEN
                     index_pl  = pltpenc_list%indexpl(i)
@@ -137,16 +145,19 @@ RECURSIVE SUBROUTINE symba_step_recur(lclose, t, ireci, npl, nplm, ntp, symba_pl
                         rlim2 = symba_plA%helio%swiftest%radius(index_pl)**2
                         rji2 = DOT_PRODUCT(xr(:), xr(:))! Check to see if these are physically overlapping bodies first, which we should ignore
                         if (rji2 > rlim2) then
+                           !$omp critical
                            icflg = 1
                            symba_plA%levelg(index_pl) = irecp
                            symba_plA%levelm(index_pl) = MAX(irecp, symba_plA%levelm(index_pl))
                            symba_tpA%levelg(index_tp) = irecp
                            symba_tpA%levelm(index_tp) = MAX(irecp, symba_tpA%levelm(index_tp))
                            pltpenc_list%level(i) = irecp
+                           !$omp end critical
                         end if
                     END IF
                END IF
           END DO
+          !$omp end parallel do
           lencounter = (icflg == 1)
           sgn = 1.0_DP
           CALL symba_kick(irecp, nplplenc, npltpenc, plplenc_list, pltpenc_list, dth, sgn,symba_plA, symba_tpA)

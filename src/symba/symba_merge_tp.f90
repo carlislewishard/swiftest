@@ -42,7 +42,7 @@ SUBROUTINE symba_merge_tp(t, dt, index_enc, pltpenc_list, vbs, encounter_file, o
 ! Arguments
      INTEGER(I4B), INTENT(IN)                         :: index_enc
      REAL(DP), INTENT(IN)                             :: t, dt
-     REAL(DP), DIMENSION(NDIM), INTENT(IN)            :: vbs
+     REAL(DP), DIMENSION(:), INTENT(IN)            :: vbs
      CHARACTER(*), INTENT(IN)                         :: encounter_file, out_type
      TYPE(symba_pltpenc), INTENT(INOUT)               :: pltpenc_list
      TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA

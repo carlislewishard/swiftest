@@ -42,17 +42,20 @@ SUBROUTINE symba_helio_drift_tp(irec, ntp, symba_tpA, mu, dt)
      TYPE(symba_tp), INTENT(INOUT) :: symba_tpA
 
 ! Internals
-     INTEGER(I4B)              :: i, iflag
+     INTEGER(I4B)              :: i
+     integer(I4B), dimension(:), allocatable :: iflag
 
 ! Executable code
+     if (ntp == 0) return
+     allocate(iflag(ntp))
+     CALL drift_one(mu, symba_tpA%helio%swiftest%xh(:,:), symba_tpA%helio%swiftest%vb(:,:), dt, iflag(:), ntp)
      DO i = 1, ntp
-          IF ((symba_tpA%levelg(i) == irec) .AND. (symba_tpA%helio%swiftest%status(i) == ACTIVE)) THEN
-               CALL drift_one(mu, symba_tpA%helio%swiftest%xh(:,i), symba_tpA%helio%swiftest%vb(:,i), dt, iflag)
-               IF (iflag /= 0) THEN
+          !IF ((symba_tpA%levelg(i) == irec) .AND. (symba_tpA%helio%swiftest%status(i) == ACTIVE)) THEN
+               IF (iflag(i) /= 0) THEN
                     symba_tpA%helio%swiftest%status(i) = DISCARDED_DRIFTERR
                     WRITE(*, *) "Particle ", symba_tpA%helio%swiftest%name(i), " lost due to error in Danby drift"
                END IF
-          END IF
+          !END IF
      END DO
 
      RETURN

@@ -38,7 +38,7 @@ SUBROUTINE discard_pl_close(dx, dv, dt, r2crit, iflag, r2min)
 ! Arguments
      INTEGER(I4B), INTENT(OUT)             :: iflag
      REAL(DP), INTENT(IN)                  :: dt, r2crit
-     REAL(DP), DIMENSION(NDIM), INTENT(IN) :: dx, dv
+     REAL(DP), DIMENSION(:), INTENT(IN) :: dx, dv
      REAL(DP), INTENT(OUT)                 :: r2min
 
 ! Internals

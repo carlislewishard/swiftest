@@ -49,7 +49,7 @@ SUBROUTINE orbel_xv2el(x, v, mu, a, e, inc, capom, omega, capm)
 
 ! Arguments
      REAL(DP), INTENT(IN)                  :: mu
-     REAL(DP), DIMENSION(NDIM), INTENT(IN) :: x, v
+     REAL(DP), DIMENSION(:), INTENT(IN) :: x, v
      REAL(DP), INTENT(OUT)                 :: a, e, inc, capom, omega, capm
 
 ! Internals

@@ -34,7 +34,7 @@ SUBROUTINE coord_vh2vb_tp(ntp, swiftest_tpA, vs)
 
 ! Arguments
      INTEGER(I4B), INTENT(IN)              :: ntp
-     REAL(DP), DIMENSION(NDIM), INTENT(IN) :: vs
+     REAL(DP), DIMENSION(:), INTENT(IN) :: vs
      TYPE(swiftest_tp), INTENT(INOUT)      :: swiftest_tpA
 
 ! Internals

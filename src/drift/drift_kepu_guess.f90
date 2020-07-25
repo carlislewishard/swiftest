@@ -28,6 +28,7 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE drift_kepu_guess(dt, r0, mu, alpha, u, s)
+     !$omp declare simd(drift_kepu_guess)
 
 ! Modules
      USE swiftest

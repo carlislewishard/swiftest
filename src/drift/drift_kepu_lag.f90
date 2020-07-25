@@ -36,6 +36,7 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE drift_kepu_lag(s, dt, r0, mu, alpha, u, fp, c1, c2, c3, iflag)
+    !$omp declare simd(drift_kepu_lag)
 
 ! Modules
      USE swiftest
