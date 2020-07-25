@@ -76,14 +76,6 @@ program swiftest_symba
        read(*, 100) inparfile
    end if
    
-   call get_command_argument(2, thresh, status = ierr) 
-   if (ierr == 0) then
-      read(thresh,*) eucl_threshold
-   end if
-
-   write(*,*) 'Eucl loop blocking number of comparisons threshold: ', eucl_threshold
-
-
    100 format(a)
    inparfile = trim(adjustl(inparfile))
    ! read in the param.in file and get simulation parameters
@@ -189,7 +181,7 @@ program swiftest_symba
       Ltot_orig = NORM2(htot)
    end if
    do while ((t < tstop) .and. ((ntp0 == 0) .or. (ntp > 0)))
-      if(num_plpl_comparisons > eucl_threshold) then
+      if(num_plpl_comparisons > param%eucl_threshold) then
          call symba_step_eucl(t, dt, param,npl,ntp,symba_pla, symba_tpa,nplplenc, npltpenc,&
                plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
                eoffset, fragmax, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
