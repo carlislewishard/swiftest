@@ -3,6 +3,7 @@
 # Now, whitelist anything that's a directory
 !*/
 !python_routines/*
+!python/*
 # whitelist only the files that ever need to be tracked
 !*.f90
 !CHANGELOG 
@@ -16,6 +17,8 @@ src/*/Makefile
 !Makefile.Defines
 src/*/Makefile.Defines
 !.gitignore
+!*.py
+!*.ipynb
 
 #fxdr library
 !fxdr*/*.c
