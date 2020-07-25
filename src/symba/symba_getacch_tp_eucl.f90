@@ -54,7 +54,8 @@ SUBROUTINE symba_getacch_tp_eucl(lextra_force, t, npl, nplm, nplmax, ntp, ntpmax
 
 ! Arguments
      LOGICAL(LGT), INTENT(IN)                      :: lextra_force
-     INTEGER(I4B), INTENT(IN)                      :: npl, nplm, nplmax, ntp, ntpmax, npltpenc, num_pltp_comparisons
+     INTEGER(I4B), INTENT(IN)                      :: npl, nplm, nplmax, ntp, ntpmax, npltpenc
+     INTEGER(I8B), intent(in)                      :: num_pltp_comparisons
      REAL(DP), INTENT(IN)                          :: t, j2rp2, j4rp4
      REAL(DP), DIMENSION(:, :), INTENT(IN)    :: xh
      TYPE(symba_pl), INTENT(INOUT)                 :: symba_plA

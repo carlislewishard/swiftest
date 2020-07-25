@@ -61,7 +61,7 @@ program swiftest_symba
    CHARACTER(len=STRMAX)         :: arg
    INTEGER(I4B)                  :: ierr
    INTEGER(I4B), DIMENSION(:,:), ALLOCATABLE :: k_plpl, k_pltp
-   INTEGER(I4B)                              :: num_plpl_comparisons, num_pltp_comparisons
+   INTEGER(I8B)                  :: num_plpl_comparisons, num_pltp_comparisons
    integer(I8B)                  :: eucl_threshold = 1000000
 
 ! Executable code

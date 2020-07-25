@@ -42,7 +42,7 @@ SUBROUTINE symba_chk_eucl(num_plpl_comparisons, k_plpl, symba_plA, dt, plpl_enco
      IMPLICIT NONE
 
 ! Arguments
-     INTEGER(I4B), INTENT(IN)                               :: num_plpl_comparisons
+     INTEGER(I8B), INTENT(IN)                               :: num_plpl_comparisons
      INTEGER(I4B), DIMENSION(:,:), INTENT(IN)               :: k_plpl
      TYPE(symba_pl), INTENT(IN)                             :: symba_plA
      REAL(DP), INTENT(IN)                                   :: dt
@@ -52,7 +52,7 @@ SUBROUTINE symba_chk_eucl(num_plpl_comparisons, k_plpl, symba_plA, dt, plpl_enco
 
 ! Internals
      logical, dimension(num_plpl_comparisons) :: lencounter, loc_lvdotr 
-     integer(I4B), dimension(num_plpl_comparisons) :: indnum
+     integer(I8B), dimension(num_plpl_comparisons) :: indnum
      ! LOGICAL(LGT) :: iflag lvdotr_flag
      REAL(DP)     :: rcrit, r2crit, vdotr, r2, v2, tmin, r2min, term2, rcritmax, r2critmax
      INTEGER(I4B) :: i, k

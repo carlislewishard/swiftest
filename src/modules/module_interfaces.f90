@@ -1291,7 +1291,7 @@ MODULE module_interfaces
                USE swiftest_data_structures
                USE module_symba
                IMPLICIT NONE
-               INTEGER(I4B), INTENT(IN)                               :: num_plpl_comparisons
+               INTEGER(I8B), INTENT(IN)                               :: num_plpl_comparisons
                INTEGER(I4B), DIMENSION(:,:), INTENT(IN)               :: k_plpl
                TYPE(symba_pl), INTENT(IN)                             :: symba_plA
                REAL(DP), INTENT(IN)                                   :: dt
@@ -1326,7 +1326,8 @@ MODULE module_interfaces
                USE module_symba
                IMPLICIT NONE
                LOGICAL(LGT), INTENT(IN)                      :: lextra_force
-               INTEGER(I4B), INTENT(IN)                      :: npl, nplm, nplmax, nplplenc, num_plpl_comparisons
+               INTEGER(I4B), INTENT(IN)                      :: npl, nplm, nplmax, nplplenc
+               INTEGER(I8B), INTENT(IN)                      :: num_plpl_comparisons
                REAL(DP), INTENT(IN)                          :: t, j2rp2, j4rp4
                TYPE(symba_pl), INTENT(INOUT)                 :: symba_plA
                TYPE(symba_plplenc), INTENT(IN)               :: plplenc_list
@@ -1342,7 +1343,8 @@ MODULE module_interfaces
                USE module_symba
                IMPLICIT NONE
                LOGICAL(LGT), INTENT(IN)                      :: lextra_force
-               INTEGER(I4B), INTENT(IN)                      :: npl, nplm, nplmax, ntp, ntpmax, npltpenc, num_pltp_comparisons
+               INTEGER(I4B), INTENT(IN)                      :: npl, nplm, nplmax, ntp, ntpmax, npltpenc
+               INTEGER(I8B), intent(in)                      :: num_pltp_comparisons
                REAL(DP), INTENT(IN)                          :: t, j2rp2, j4rp4
                REAL(DP), DIMENSION(:, :), INTENT(IN)    :: xh
                TYPE(symba_pl), INTENT(INOUT)                 :: symba_plA

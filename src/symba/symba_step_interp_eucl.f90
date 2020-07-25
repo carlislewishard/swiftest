@@ -84,7 +84,7 @@ SUBROUTINE symba_step_interp_eucl(lextra_force, lclose, t, npl, nplm, nplmax, nt
      TYPE(symba_pltpenc), INTENT(INOUT)               :: pltpenc_list
      TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
      type(user_input_parameters), intent(in)          :: param
-     INTEGER(I4B), INTENT(IN)                         :: num_plpl_comparisons, num_pltp_comparisons
+     INTEGER(I8B), INTENT(IN)                         :: num_plpl_comparisons, num_pltp_comparisons
      INTEGER(I4B), DIMENSION(:,:),INTENT(IN) :: k_plpl 
      INTEGER(I4B), DIMENSION(:,:),INTENT(IN) :: k_pltp
 
