@@ -37,7 +37,7 @@ SUBROUTINE util_dist_index_pltp(nplm, ntp, num_comparisons, k_pltp)
 ! Arguments
      INTEGER(I4B), INTENT(IN)  :: nplm, ntp
      INTEGER(I4B), DIMENSION(:,:),ALLOCATABLE,INTENT(OUT) :: k_pltp
-     INTEGER(I4B), INTENT(OUT) :: num_comparisons
+     INTEGER(I8B), INTENT(OUT) :: num_comparisons
 
 ! Internals
      INTEGER(I4B)              :: i,j,ii,jj,nb,np,nt,counter,ii_end,jj_end

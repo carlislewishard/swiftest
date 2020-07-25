@@ -1415,7 +1415,7 @@ MODULE module_interfaces
             IMPLICIT NONE
             INTEGER(I4B), INTENT(IN)  :: npl, nplm
             INTEGER(I4B), DIMENSION(:,:),ALLOCATABLE,INTENT(OUT) :: k_plpl
-            INTEGER(I4B), INTENT(OUT) :: num_comparisons
+            INTEGER(I8B), INTENT(OUT) :: num_comparisons
          END SUBROUTINE
       END INTERFACE
 
@@ -1426,7 +1426,7 @@ MODULE module_interfaces
           IMPLICIT NONE
           INTEGER(I4B), INTENT(IN)  :: nplm, ntp
           INTEGER(I4B), DIMENSION(:,:),ALLOCATABLE,INTENT(OUT) :: k_pltp
-          INTEGER(I4B), INTENT(OUT) :: num_comparisons
+          INTEGER(I8B), INTENT(OUT) :: num_comparisons
      END SUBROUTINE util_dist_index_pltp
    END INTERFACE
 
@@ -1437,7 +1437,7 @@ INTERFACE
           IMPLICIT NONE
           INTEGER(I4B), INTENT(IN)  :: npl
           INTEGER(I4B), DIMENSION(:,:),INTENT(IN) :: k_plpl
-          INTEGER(I4B), INTENT(IN) :: num_comparisons
+          INTEGER(I8B), INTENT(IN) :: num_comparisons
           REAL(DP),DIMENSION(:,:),INTENT(IN) :: invar
           REAL(DP), DIMENSION(:,:),INTENT(INOUT) :: outvar
      END SUBROUTINE util_dist_eucl_plpl
