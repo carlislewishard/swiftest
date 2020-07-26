@@ -42,8 +42,8 @@ SUBROUTINE util_dist_index_plpl(npl, nplm, num_comparisons, k_plpl)
 ! Internals
      INTEGER(I8B)              :: i,j, counter, npl8, nplm8
 
-     npl8 = int(npl, kind=I8B)
-     nplm8 = int(nplm, kind=I8B)
+     npl8 = int(npl, kind = I8B)
+     nplm8 = int(nplm, kind = I8B)
 ! Executable code
      num_comparisons = ((npl8 - 1_I8B) * (npl8 - 2_I8B) / 2_I8B) - & ! number of entries in a strict lower triangle, nplm x npl, minus first column
                        ((npl8 - nplm8 - 1_I8B) * ((npl8 - nplm8 - 1_I8B) + 1_I8B) / 2_I8B)
