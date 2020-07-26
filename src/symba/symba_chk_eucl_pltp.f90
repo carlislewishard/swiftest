@@ -43,8 +43,8 @@ SUBROUTINE symba_chk_eucl_pltp(num_encounters, k_pltp, symba_plA, symba_tpA, dt,
 ! Arguments
      TYPE(symba_pl), INTENT(IN)                    :: symba_plA
      TYPE(symba_tp), INTENT(IN)                    :: symba_tpA
-     INTEGER(I4B), DIMENSION(:), INTENT(OUT) :: lencounter, lvdotr
-     INTEGER(I4B), INTENT(IN)           :: num_encounters
+     INTEGER(I8B), DIMENSION(:), INTENT(OUT) :: lencounter, lvdotr
+     INTEGER(I8B), INTENT(IN)           :: num_encounters
      INTEGER(I4B), DIMENSION(:,:), INTENT(IN)     :: k_pltp
      REAL(DP), INTENT(IN)               :: dt
      INTEGER(I4B), INTENT(INOUT)        :: npltpenc
@@ -52,7 +52,7 @@ SUBROUTINE symba_chk_eucl_pltp(num_encounters, k_pltp, symba_plA, symba_tpA, dt,
 ! Internals
      ! LOGICAL(LGT) :: iflag lvdotr_flag
      REAL(DP)     :: rcrit, r2crit, vdotr, r2, v2, tmin, r2min, term2, rcritmax, r2critmax
-     INTEGER(I4B) :: k
+     INTEGER(I8B) :: k
      REAL(DP), DIMENSION(NDIM) :: xr, vr
 
 ! Executable code
