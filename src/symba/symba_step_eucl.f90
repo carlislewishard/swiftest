@@ -92,8 +92,8 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
 
 ! Internals
      LOGICAL(LGT)              :: lencounter
-     INTEGER(I4B)              :: i, j, irec, nplm
-     INTEGER(I8B)              :: k, counter
+     INTEGER(I4B)              :: irec, nplm
+     INTEGER(I8B)              :: i, j, k, counter
      INTEGER(I4B), DIMENSION(:), ALLOCATABLE :: plpl_encounters
      INTEGER(I8B), DIMENSION(:), ALLOCATABLE :: pltp_encounters_indices
      REAL(DP), DIMENSION(NDIM) :: xr, vr
