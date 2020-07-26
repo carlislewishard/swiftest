@@ -40,7 +40,8 @@ SUBROUTINE util_dist_index_plpl(npl, nplm, num_comparisons, k_plpl)
      INTEGER(I8B), INTENT(OUT) :: num_comparisons
 
 ! Internals
-     INTEGER(I4B)              :: i,j,counter
+     INTEGER(I4B)              :: i,j
+     INTEGER(I8B)              :: counter
 
 ! Executable code
      num_comparisons = ((npl - 1) * (npl - 2) / 2) - ( (npl-nplm-1) * ((npl-nplm-1)+1)/2 )! number of entries in a strict lower triangle, nplm x npl, minus first column
