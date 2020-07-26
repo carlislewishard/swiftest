@@ -80,10 +80,9 @@ SUBROUTINE symba_getacch_tp_eucl(lextra_force, t, npl, nplm, nplmax, ntp, ntpmax
      ! CALL util_dist_eucl_pltp(npl, ntp, symba_plA%helio%swiftest%xh, symba_tpA%helio%swiftest%xh, &
      !      num_pltp_comparisons, k_pltp, dist_pltp_array)
 
-!$omp parallel do default(none) schedule(static) &
+!$omp parallel do default(shared) schedule(static) &
 !$omp shared(num_pltp_comparisons, symba_plA, symba_tpA, k_pltp) &
-!$omp private(k, i, j, dx, r2, fac) &
-!$omp reduction(+:ah)
+!$omp reduction(-:ah)
      do k = 1,num_pltp_comparisons
           j = k_pltp(2,k)
           IF (symba_tpA%helio%swiftest%status(j) == ACTIVE) THEN
