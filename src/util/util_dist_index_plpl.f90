@@ -40,11 +40,14 @@ SUBROUTINE util_dist_index_plpl(npl, nplm, num_comparisons, k_plpl)
      INTEGER(I8B), INTENT(OUT) :: num_comparisons
 
 ! Internals
-     INTEGER(I8B)              :: i,j, counter
+     INTEGER(I8B)              :: i,j, counter, npl8, nplm8
 
+     npl8 = int(npl, kind=I8B)
+     nplm8 = int(nplm, kind=I8B)
 ! Executable code
-     num_comparisons = ((npl - 1) * (npl - 2) / 2) - ( (npl-nplm-1) * ((npl-nplm-1)+1)/2 )! number of entries in a strict lower triangle, nplm x npl, minus first column
-     allocate(k_plpl(2,num_comparisons))
+     num_comparisons = ((npl8 - 1_I8B) * (npl8 - 2_I8B) / 2_I8B) - & ! number of entries in a strict lower triangle, nplm x npl, minus first column
+                       ((npl8 - nplm8 - 1_I8B) * ((npl8 - nplm8 - 1_I8B) + 1_I8B) / 2_I8B)
+     allocate(k_plpl(2, num_comparisons))
      ! this is a 'fancier' code, but so far i think it runs slower
      ! so leaving it in, but commenting it out
      ! i think it's because of the 'mod' call, but i haven't profiled it yet
