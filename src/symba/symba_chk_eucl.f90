@@ -55,7 +55,7 @@ SUBROUTINE symba_chk_eucl(num_plpl_comparisons, k_plpl, symba_plA, dt, plpl_enco
      integer(I8B), dimension(num_plpl_comparisons) :: indnum
      ! LOGICAL(LGT) :: iflag lvdotr_flag
      REAL(DP)     :: rcrit, r2crit, vdotr, r2, v2, tmin, r2min, term2, rcritmax, r2critmax
-     INTEGER(I4B) :: i, k
+     INTEGER(I8B) :: i, k
      REAL(DP), DIMENSION(NDIM):: xr, vr
 
     

@@ -45,7 +45,7 @@ SUBROUTINE util_dist_eucl_plpl(npl, invar, num_comparisons, k_plpl, outvar)
      REAL(DP), DIMENSION(:,:),INTENT(INOUT) :: outvar
 
 ! Internals
-     INTEGER(I4B) :: k
+     INTEGER(I8B) :: k
      
 ! Executable code
 

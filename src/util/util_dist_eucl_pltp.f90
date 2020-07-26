@@ -42,13 +42,13 @@ SUBROUTINE util_dist_eucl_pltp(npl, ntp, planets, test_particles, num_pltp_compa
 ! Arguments
      INTEGER(I4B), INTENT(IN) :: npl, ntp
      INTEGER(I4B), DIMENSION(:,:),INTENT(IN) :: k_pltp
-     INTEGER(I4B), INTENT(IN) :: num_pltp_comparisons
+     INTEGER(I8B), INTENT(IN) :: num_pltp_comparisons
      REAL(DP),DIMENSION(:,:),INTENT(IN) :: planets
      REAL(DP),DIMENSION(:,:),INTENT(IN) :: test_particles
      REAL(DP), DIMENSION(:,:),INTENT(INOUT) :: outvar
 
 ! Internals
-     INTEGER(I4B)              :: k
+     INTEGER(I8B)              :: k
      
 ! Executable code
 
