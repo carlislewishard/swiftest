@@ -57,7 +57,7 @@ PAR = -parallel -qopenmp
 HEAPARR = -heap-arrays 1048576 
 
 FORTRAN = ifort
-FFLAGS  = -O3 -qopt-report=5 -no-wrap-margin $(HEAPARR) $(SIMDVEC) $(PAR) $(STRICTREAL) 
+FFLAGS  = -O3 -qopt-report=5 -no-wrap-margin -traceback $(HEAPARR) $(SIMDVEC) $(PAR) $(STRICTREAL) 
 #FFLAGS  = $(IDEBUG) $(HEAPARR)
 
 #debug flags
