@@ -1295,8 +1295,8 @@ MODULE module_interfaces
                INTEGER(I4B), DIMENSION(:,:), INTENT(IN)               :: k_plpl
                TYPE(symba_pl), INTENT(IN)                             :: symba_plA
                REAL(DP), INTENT(IN)                                   :: dt
-               INTEGER(I4B), DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: plpl_encounters
-               LOGICAL(LGT), DIMENSION(:), ALLOCATABLE, intent(inout) :: lvdotr
+               INTEGER(I8B), DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: plpl_encounters
+               LOGICAL(LGT), DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: lvdotr
                INTEGER(I4B), INTENT(OUT)                              :: nplplenc
           END SUBROUTINE symba_chk_eucl
      END INTERFACE
@@ -1309,7 +1309,7 @@ MODULE module_interfaces
                IMPLICIT NONE
                TYPE(symba_pl), INTENT(IN)                    :: symba_plA
                TYPE(symba_tp), INTENT(IN)                    :: symba_tpA
-               INTEGER(I4B), DIMENSION(:), INTENT(OUT) :: lencounter, lvdotr
+               LOGICAL(LGT), DIMENSION(:), INTENT(OUT) :: lencounter, lvdotr
                INTEGER(I8B), INTENT(IN)           :: num_encounters
                INTEGER(I4B), DIMENSION(:,:),INTENT(IN)   :: k_pltp
                REAL(DP), INTENT(IN)               :: dt

@@ -43,7 +43,7 @@ SUBROUTINE symba_chk_eucl_pltp(num_encounters, k_pltp, symba_plA, symba_tpA, dt,
 ! Arguments
      TYPE(symba_pl), INTENT(IN)                    :: symba_plA
      TYPE(symba_tp), INTENT(IN)                    :: symba_tpA
-     INTEGER(I8B), DIMENSION(:), INTENT(OUT) :: lencounter, lvdotr
+     LOGICAL(LGT), DIMENSION(:), INTENT(OUT) :: lencounter, lvdotr
      INTEGER(I8B), INTENT(IN)           :: num_encounters
      INTEGER(I4B), DIMENSION(:,:), INTENT(IN)     :: k_pltp
      REAL(DP), INTENT(IN)               :: dt
@@ -80,10 +80,11 @@ SUBROUTINE symba_chk_eucl_pltp(num_encounters, k_pltp, symba_plA, symba_tpA, dt,
 
                vdotr = DOT_PRODUCT(vr(:), xr(:))
 
-               IF (vdotr < 0.0_DP) lvdotr(k) = k
+               lvdotr(k) = (vdotr < 0.0_DP) 
+               lencounter(k) = .false.
 
                IF (r2 < r2crit) THEN
-                    lencounter(k) = k
+                    lencounter(k) = .true.
                     npltpenc = npltpenc + 1
                ELSE
                     IF (vdotr < 0.0_DP) THEN
@@ -96,7 +97,7 @@ SUBROUTINE symba_chk_eucl_pltp(num_encounters, k_pltp, symba_plA, symba_tpA, dt,
                          END IF
                          r2min = MIN(r2min, r2)
                          IF (r2min <= r2crit)then
-                              lencounter(k) = k
+                              lencounter(k) = .true.
                               npltpenc = npltpenc + 1
                          endif
                     END IF

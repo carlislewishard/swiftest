@@ -94,13 +94,13 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      LOGICAL(LGT)              :: lencounter
      INTEGER(I4B)              :: irec, nplm
      INTEGER(I8B)              :: i, j, k, counter
-     INTEGER(I4B), DIMENSION(:), ALLOCATABLE :: plpl_encounters
+     INTEGER(I8B), DIMENSION(:), ALLOCATABLE :: plpl_encounters
      INTEGER(I8B), DIMENSION(:), ALLOCATABLE :: pltp_encounters_indices
      REAL(DP), DIMENSION(NDIM) :: xr, vr
      LOGICAL, SAVE             :: lfirst = .true.
      
-     INTEGER(I4B), ALLOCATABLE, DIMENSION(:) :: pltp_encounters, pltp_lvdotr
-     logical(lgt), allocatable, dimension(:) :: plpl_lvdotr
+     LOGICAL(LGT), ALLOCATABLE, DIMENSION(:) :: pltp_lencounters
+     LOGICAL(lgt), ALLOCATABLE, DIMENSION(:) :: plpl_lvdotr, pltp_lvdotr
      
 ! Executable code
 
@@ -147,22 +147,22 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
             plplenc_list%index1(k) = k_plpl(1, plpl_encounters(k)) ! index of first planet in encounter
             plplenc_list%index2(k) = k_plpl(2, plpl_encounters(k)) ! index of second planet in encounter
           end do
-          deallocate(plpl_encounters)
+          deallocate(plpl_encounters, plpl_lvdotr)
      endif
      
      if(ntp>0)then
-         allocate(pltp_encounters(num_pltp_comparisons))
+         allocate(pltp_lencounters(num_pltp_comparisons))
          allocate(pltp_lvdotr(num_pltp_comparisons))
 
 
-         pltp_encounters = 0
-         pltp_lvdotr = 0
+         pltp_lencounters = .false.
+         pltp_lvdotr = .false.
 
           ! CALL util_dist_eucl_pltp(npl, ntp, symba_plA%helio%swiftest%xh, symba_tpA%helio%swiftest%xh, &
           !      num_pltp_comparisons, k_pltp, dist_pltp_array)
           ! CALL util_dist_eucl_pltp(npl, ntp, symba_plA%helio%swiftest%vh, symba_tpA%helio%swiftest%vh, &
           !      num_pltp_comparisons, k_pltp, vel_pltp_array)
-          CALL symba_chk_eucl_pltp(num_pltp_comparisons, k_pltp, symba_plA, symba_tpA, dt, pltp_encounters, pltp_lvdotr, npltpenc)
+          CALL symba_chk_eucl_pltp(num_pltp_comparisons, k_pltp, symba_plA, symba_tpA, dt, pltp_lencounters, pltp_lvdotr, npltpenc)
      
           ! npltpenc = count(pltp_encounters > 0)
           ! print *,'step npltpenc: ',npltpenc
@@ -172,7 +172,7 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
 
                counter = 1
                do k = 1,num_pltp_comparisons
-                    if(pltp_encounters(k).gt.0)then
+                    if(pltp_lencounters(k))then
                          pltp_encounters_indices(counter) = k
                          counter = counter + 1
                     endif
@@ -195,7 +195,7 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
                deallocate(pltp_encounters_indices)
           endif
 
-          deallocate(pltp_encounters, pltp_lvdotr)
+          deallocate(pltp_lencounters, pltp_lvdotr)
      endif
      
 ! END OF THINGS THAT NEED TO BE CHANGED IN THE TREE
