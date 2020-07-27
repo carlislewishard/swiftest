@@ -1383,9 +1383,9 @@ MODULE module_interfaces
 
 
      INTERFACE
-         SUBROUTINE symba_step_interp_eucl(lextra_force, lclose, t, npl, nplm, nplmax, ntp, ntpmax, symba_plA, symba_tpA, j2rp2, j4rp4, dt,   &
-            eoffset, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list,          &
-            encounter_file, out_type, fragmax, param, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
+         SUBROUTINE symba_step_interp_eucl(lextra_force, lclose, t, npl, nplm, nplmax, ntp, ntpmax, symba_plA, symba_tpA,&
+            j2rp2, j4rp4, dt, eoffset, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list,&
+            mergesub_list,encounter_file, out_type, fragmax, param, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_symba
