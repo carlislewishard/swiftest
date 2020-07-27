@@ -376,6 +376,8 @@ def swifter2xr(param):
     dims  = ['time','id', 'vec']
     pl = []
     tp = []
+    nplarr = []
+    ntparr = []
     with FortranFile(param['BIN_OUT'], 'r') as f:
         for t, npl, plid, pvec, plab, \
               ntp, tpid, tvec, tlab in swifter_stream(f, param):
@@ -387,6 +389,8 @@ def swifter2xr(param):
             #Create xarray DataArrays out of each body type
             plxr = xr.DataArray(plframe, dims = dims, coords = {'time' : t, 'id' : plid, 'vec' : plab})
             tpxr = xr.DataArray(tpframe, dims = dims, coords = {'time' : t, 'id' : tpid, 'vec' : tlab})
+            nplarr.append(npl)
+            ntparr.append(ntp)
 
             pl.append(plxr)
             tp.append(tpxr)
@@ -397,6 +401,7 @@ def swifter2xr(param):
         plds = plda.to_dataset(dim='vec')
         tpds = tpda.to_dataset(dim='vec')
         ds = xr.combine_by_coords([plds, tpds])
+
     return ds
 
 def swiftest2xr(config):
@@ -405,6 +410,8 @@ def swiftest2xr(config):
     dims  = ['time','id', 'vec']
     pl = []
     tp = []
+    nplarr = []
+    ntparr = []
     print(f'Reading frames from file {config["BIN_OUT"]}')
     with FortranFile(config['BIN_OUT'], 'r') as f:
         for t, npl, plid, pvec, plab, \
@@ -417,7 +424,8 @@ def swiftest2xr(config):
             #Create xarray DataArrays out of each body type
             plxr = xr.DataArray(plframe, dims = dims, coords = {'time' : t, 'id' : plid, 'vec' : plab})
             tpxr = xr.DataArray(tpframe, dims = dims, coords = {'time' : t, 'id' : tpid, 'vec' : tlab})
-
+            nplarr.append(npl[0])
+            ntparr.append(ntp[0])
             pl.append(plxr)
             tp.append(tpxr)
 
@@ -429,6 +437,7 @@ def swiftest2xr(config):
     plds = plda.to_dataset(dim = 'vec')
     tpds = tpda.to_dataset(dim = 'vec')
     ds = xr.combine_by_coords([plds, tpds])
+    ds = ds.assign_coords({"npl" : nplarr, "ntp" : ntparr})
     return ds
 
 if __name__ == '__main__':
