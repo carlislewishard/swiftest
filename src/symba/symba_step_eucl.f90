@@ -63,7 +63,7 @@
 !**********************************************************************************************************************************
 SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
    nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, &
-   mergeadd_list, mergesub_list, eoffset, fragmax, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
+   mergeadd_list, mergesub_list, eoffset, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
 
 ! Modules
      USE swiftest
@@ -76,9 +76,9 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      IMPLICIT NONE
 
 ! Arguments
-     TYPE(user_input_parameters)                      :: param        ! Derived type containing user defined parameters 
+     TYPE(user_input_parameters), INTENT(INOUT)       :: param        ! Derived type containing user defined parameters 
      INTEGER(I4B), INTENT(IN)                         :: npl, ntp
-     INTEGER(I4B), INTENT(INOUT)                      :: nplplenc, npltpenc, nmergeadd, nmergesub, fragmax
+     INTEGER(I4B), INTENT(INOUT)                      :: nplplenc, npltpenc, nmergeadd, nmergesub
      REAL(DP), INTENT(IN)                             :: t, dt
      REAL(DP), INTENT(INOUT)                          :: eoffset
      TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
@@ -119,15 +119,13 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
 
      irec = 0
 
+     if (.not. allocated(mergeadd_list%status)) call symba_merger_allocate(mergeadd_list, 1)
+     if (.not. allocated(mergesub_list%status)) call symba_merger_allocate(mergesub_list, 1)
+
 ! ALL THIS NEEDS TO BE CHANGED TO THE TREE SEARCH FUNCTION FOR ENCOUNTERS
 
-     ! CALL util_dist_eucl_plpl(npl,symba_plA%helio%swiftest%xh, num_plpl_comparisons, k_plpl, dist_plpl_array) 
-     ! CALL util_dist_eucl_plpl(npl,symba_plA%helio%swiftest%vh, num_plpl_comparisons, k_plpl, vel_plpl_array) 
      CALL symba_chk_eucl(num_plpl_comparisons, k_plpl, symba_plA, dt, plpl_encounters, plpl_lvdotr, nplplenc)
 
-     ! here i'll order the encounters
-     ! nplplenc = count(plpl_encounters > 0)
-     ! print *,'step nplplenc: ',nplplenc
      if (nplplenc > 0) then
         call symba_plplenc_deallocate(plplenc_list)
         call symba_plplenc_allocate(plplenc_list, nplplenc) 
@@ -209,7 +207,7 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
                   ntp, param%ntpmax, symba_plA, symba_tpA, param%j2rp2, param%j4rp4,   &
                   dt, eoffset, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, &
                   nmergesub, mergeadd_list, mergesub_list, param%encounter_file, param%out_type, &
-                  fragmax, param, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
+                  param, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
           lfirst = .TRUE.
      ELSE ! otherwise we can just advance the particles
          CALL symba_step_helio(lfirst, param%lextra_force, t, npl, nplm, param%nplmax, ntp,&

@@ -61,12 +61,11 @@ SUBROUTINE symba_getacch_tp(lextra_force, t, npl, nplm, nplmax, ntp, ntpmax, sym
      TYPE(symba_pltpenc), INTENT(IN)               :: pltpenc_list
 
 ! Internals
-     LOGICAL(LGT), SAVE                           :: lmalloc = .TRUE.
      INTEGER(I4B)                                 :: i, j, index_pl, index_tp
      REAL(DP)                                     :: rji2, irij3, faci, facj, r2, fac, mu
      REAL(DP), DIMENSION(NDIM)                    :: dx
-     REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE    :: irh, irht
-     REAL(DP), DIMENSION(:, :), ALLOCATABLE, SAVE :: aobl, xht, aoblt
+     REAL(DP), DIMENSION(:), ALLOCATABLE          :: irh, irht
+     REAL(DP), DIMENSION(:, :), ALLOCATABLE       :: aobl, xht, aoblt
 
 ! Executable code
      DO i = 1, ntp
@@ -99,26 +98,29 @@ SUBROUTINE symba_getacch_tp(lextra_force, t, npl, nplm, nplmax, ntp, ntpmax, sym
           END IF
      END DO
      IF (j2rp2 /= 0.0_DP) THEN
-          IF (lmalloc) THEN
-               ALLOCATE(aobl(NDIM, nplmax), irh(nplmax), xht(NDIM, ntpmax), aoblt(NDIM, ntpmax), irht(ntpmax))
-               lmalloc = .FALSE.
-          END IF
-          DO i = 2, npl
-               r2 = DOT_PRODUCT(xh(:, i), xh(:, i))
-               irh(i) = 1.0_DP/SQRT(r2)
-          END DO
-          CALL obl_acc(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, symba_plA%helio%swiftest%xh(:,:), irh, aobl)
-          mu = symba_plA%helio%swiftest%mass(1)
-          DO i = 1, ntp
-               xht(:, i) = symba_tpA%helio%swiftest%xh(:,i) !optimize
-               r2 = DOT_PRODUCT(xht(:, i), xht(:, i))
-               irht(i) = 1.0_DP/SQRT(r2)
-          END DO
-          CALL obl_acc_tp(ntp, xht, j2rp2, j4rp4, irht, aoblt, mu)
-          DO i = 1, ntp
-               IF (symba_tpA%helio%swiftest%status(i) == ACTIVE) &
-               symba_tpA%helio%ah(:,i) = symba_tpA%helio%ah(:,i) + aoblt(:, i) - aobl(:, 1)
-          END DO
+         if (npl > 0) then
+            ALLOCATE(aobl(NDIM, npl), irh(npl))
+         end if
+         if (ntp > 0) then
+            ALLOCATE(xht(NDIM, ntp), aoblt(NDIM, ntp), irht(ntp))
+         end if
+         DO i = 2, npl
+            r2 = DOT_PRODUCT(xh(:, i), xh(:, i))
+            irh(i) = 1.0_DP/SQRT(r2)
+         END DO
+         CALL obl_acc(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, symba_plA%helio%swiftest%xh(:,:), irh, aobl)
+         mu = symba_plA%helio%swiftest%mass(1)
+         DO i = 1, ntp
+            xht(:, i) = symba_tpA%helio%swiftest%xh(:,i) !optimize
+            r2 = DOT_PRODUCT(xht(:, i), xht(:, i))
+            irht(i) = 1.0_DP/SQRT(r2)
+         END DO
+         CALL obl_acc_tp(ntp, xht, j2rp2, j4rp4, irht, aoblt, mu)
+         DO i = 1, ntp
+            IF (symba_tpA%helio%swiftest%status(i) == ACTIVE) &
+            symba_tpA%helio%ah(:,i) = symba_tpA%helio%ah(:,i) + aoblt(:, i) - aobl(:, 1)
+         END DO
+         deallocate(aobl, irh, xht, aoblt, irht)
      END IF
      IF (lextra_force) CALL symba_user_getacch_tp(t, ntp, symba_tpA)
 

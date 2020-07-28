@@ -47,11 +47,10 @@ SUBROUTINE symba_helio_getacch(lflag, lextra_force, t, npl, nplm, nplmax, helio_
      TYPE(helio_pl), INTENT(INOUT)                :: helio_plA
 
 ! Internals
-     LOGICAL(LGT), SAVE                           :: lmalloc = .TRUE.
      INTEGER(I4B)                                 :: i
      REAL(DP)                                     :: r2
-     REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE    :: irh
-     REAL(DP), DIMENSION(:, :), ALLOCATABLE, SAVE :: xh, aobl
+     REAL(DP), DIMENSION(npl)                     :: irh
+     REAL(DP), DIMENSION(NDIM, npl)               :: xh, aobl
 
 
 ! Executable code
@@ -62,10 +61,6 @@ SUBROUTINE symba_helio_getacch(lflag, lextra_force, t, npl, nplm, nplmax, helio_
           CALL symba_helio_getacch_int(npl, nplm, helio_plA) 
      END IF
      IF (j2rp2 /= 0.0_DP) THEN
-          IF (lmalloc) THEN
-               ALLOCATE(xh(NDIM, nplmax), aobl(NDIM, nplmax), irh(nplmax))
-               lmalloc = .FALSE.
-          END IF
           DO i = 2, npl
                xh(:, i) = helio_plA%swiftest%xh(:,i)
                r2 = DOT_PRODUCT(xh(:, i), xh(:, i))

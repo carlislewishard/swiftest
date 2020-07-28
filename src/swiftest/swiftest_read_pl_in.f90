@@ -35,8 +35,8 @@ contains
 
    if (is_ascii) then
       read(LUN, *, iostat = ierr) self%name(1), self%mass(1)
-      self%rhill(1) = 0.0_dp
-      self%radius(1) = 0.0_dp
+      self%rhill(1) = 0.0_DP
+      self%radius(1) = 0.0_DP
       read(LUN, *, iostat = ierr) self%xh(:,1)
       read(LUN, *, iostat = ierr) self%vh(:,1)
       if (ierr /= 0) then
@@ -44,7 +44,7 @@ contains
          return
       end if
       do i = 1, NDIM
-         if ((self%xh(i,1) /= 0.0_dp) .or. (self%vh(i,1) /= 0.0_dp)) then
+         if ((self%xh(i,1) /= 0.0_DP) .or. (self%vh(i,1) /= 0.0_DP)) then
             write(*, *) "Swiftest error:"
             write(*, *) " Input must be in heliocentric coordinates."
             write(*, *) " position/velocity components of body 1 are"
@@ -58,14 +58,14 @@ contains
             read(LUN, *, iostat = ierr) self%name(i), self%mass(i), self%rhill(i)
          else
             read(LUN, *, iostat = ierr) self%name(i), self%mass(i)
-            self%rhill(i) = 0.0_dp
+            self%rhill(i) = 0.0_DP
          end if
          if (ierr /= 0 ) exit
          if (param%lclose) then
             read(LUN, *, iostat = ierr) self%radius(i)
             if (ierr /= 0 ) exit
          else
-            self%radius(i) = 0.0_dp
+            self%radius(i) = 0.0_DP
          end if
          read(LUN, *, iostat = ierr) self%xh(:,i)
          read(LUN, *, iostat = ierr) self%vh(:,i)
@@ -78,13 +78,13 @@ contains
       if (param%lrhill_present) then
          read(LUN, iostat = ierr) self%rhill(:)
       else
-         self%rhill(:) = 0.0_dp
+         self%rhill(:) = 0.0_DP
       end if
       self%status(:) = ACTIVE
       if (param%lclose) then
          read(LUN, iostat = ierr) self%radius(:)
       else
-         self%radius(:) = 0.0_dp
+         self%radius(:) = 0.0_DP
       end if
       read(LUN, iostat = ierr) self%xh(:,:)
       read(LUN, iostat = ierr) self%vh(:,:)
@@ -95,6 +95,8 @@ contains
       write(*,*) 'Error reading in massive body initial conditions from ',trim(adjustl(param%inplfile))
       call util_exit(FAILURE)
    end if
+
+   param%nplmax = max(param%nplmax, maxval(self%name(:)))
 
    return
    end procedure swiftest_read_pl_in

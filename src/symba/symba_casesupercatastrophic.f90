@@ -33,19 +33,20 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-   symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, xh_1, xh_2, vb_1, vb_2,mtiny, npl)
+   symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, mres, rres, m1, m2, rad1, rad2, xh_1, xh_2, vb_1, vb_2,mtiny, npl)
 
 ! Modules
    USE swiftest
    USE module_helio
    USE module_symba
+   USE module_swiftestalloc
    USE module_interfaces, EXCEPT_THIS_ONE => symba_casesupercatastrophic
    IMPLICIT NONE
 
 ! Arguments
-   INTEGER(I4B), INTENT(IN)                         :: index_enc, nplmax, ntpmax, npl
+   INTEGER(I4B), INTENT(IN)                         :: index_enc, npl
    INTEGER(I4B), INTENT(IN)                         :: nplplenc
-   INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub, fragmax
+   INTEGER(I4B), INTENT(INOUT)                      :: nplmax, ntpmax, nmergeadd, nmergesub
    REAL(DP), INTENT(IN)                             :: t, dt, mtiny
    REAL(DP), INTENT(INOUT)                          :: eoffset, m1, m2, rad1, rad2
    REAL(DP), DIMENSION(:), INTENT(INOUT)            :: mres, rres
@@ -75,6 +76,8 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
    
    ! Set the maximum number of fragments to be added in a Supercatastrophic Disruption collision (nfrag)
    nfrag = 10
+   call symba_merger_size_check(mergeadd_list, nmergeadd + nfrag)  
+
    ! Pull in the information about the two particles involved in the collision  
    index1 = plplenc_list%index1(index_enc)
    index2 = plplenc_list%index2(index_enc)
@@ -92,9 +95,9 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
    vh_2(:) = vb_2(:) - vbs(:) !symba_plA%helio%swiftest%vh(:,index2)
 
    ! Find energy pre-frag
-   eold = 0.5_DP*(m1*DOT_PRODUCT(vb_1(:), vb_1(:)) + m2*DOT_PRODUCT(vb_2(:), vb_2(:)))
+   eold = 0.5_DP * (m1 * DOT_PRODUCT(vb_1(:), vb_1(:)) + m2 * DOT_PRODUCT(vb_2(:), vb_2(:)))
    xr(:) = xh_2(:) - xh_1(:)
-   eold = eold - (m1*m2/(SQRT(DOT_PRODUCT(xr(:), xr(:)))))
+   eold = eold - m1 * m2 / NORM2(xr(:)) 
 
    WRITE(*, *) "Supercatastrophic disruption between particles ", name1, " and ", name2, " at time t = ",t
 
@@ -161,8 +164,8 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
       m1m2_10 = 0.1_DP * (m1 + m2) ! one tenth the total initial mass of the system used to check the size of the fragments
       nstart = nmergeadd
 
-      d_p1 = (3.0_DP * m1) / (4.0_DP * PI * (rad1 ** 3.0_DP))
-      d_p2 = (3.0_DP * m2) / (4.0_DP * PI * (rad2 ** 3.0_DP))
+      d_p1 = (3 * m1) / (4 * PI * rad1**3)
+      d_p2 = (3 * m2) / (4 * PI * rad2**3)
       avg_d = ((m1 * d_p1) + (m2 * d_p2)) / (m1 + m2)
 
          ! If we are adding the first and largest fragment (lr), check to see if its mass is SMALLER than one tenth the total
@@ -172,18 +175,18 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
          DO i = 1, nfrag
             frags_added = frags_added + 1
             nmergeadd = nmergeadd + 1
-            mergeadd_list%name(nmergeadd) = nplmax + ntpmax + fragmax + i
+            mergeadd_list%name(nmergeadd) = nplmax + ntpmax + i
             mergeadd_list%status(nmergeadd) = SUPERCATASTROPHIC
             mergeadd_list%ncomp(nmergeadd) = 2
             mergeadd_list%mass(nmergeadd) = m1m2_10
-            mergeadd_list%radius(nmergeadd) = ((3.0_DP * mergeadd_list%mass(nmergeadd)) / (4.0_DP * PI * avg_d))  & 
+            mergeadd_list%radius(nmergeadd) = ((3 * mergeadd_list%mass(nmergeadd)) / (4 * PI * avg_d))  & 
                               ** (1.0_DP / 3.0_DP)
             mtot = mtot + mergeadd_list%mass(nmergeadd) 
          END DO 
       ELSE
          frags_added = frags_added + 1
          nmergeadd = nmergeadd + 1
-         mergeadd_list%name(nmergeadd) = nplmax + ntpmax + fragmax + i
+         mergeadd_list%name(nmergeadd) = nplmax + ntpmax + i
          mergeadd_list%status(nmergeadd) = SUPERCATASTROPHIC
          mergeadd_list%ncomp(nmergeadd) = 2
          mergeadd_list%mass(nmergeadd) = mres(1)
@@ -193,21 +196,22 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
          DO i = 2, nfrag
             frags_added = frags_added + 1
             nmergeadd = nmergeadd + 1
-            mergeadd_list%name(nmergeadd) = nplmax + ntpmax + fragmax + i
+            mergeadd_list%name(nmergeadd) = nplmax + ntpmax + i
             mergeadd_list%status(nmergeadd) = SUPERCATASTROPHIC
             mergeadd_list%ncomp(nmergeadd) = 2
             mergeadd_list%mass(nmergeadd) = (m1 + m2 - mres(1)) / (nfrag - 1)
-            mergeadd_list%radius(nmergeadd) = ((3.0_DP * mergeadd_list%mass(nmergeadd)) / (4.0_DP * PI * avg_d))  & 
+            mergeadd_list%radius(nmergeadd) = ((3 * mergeadd_list%mass(nmergeadd)) / (4 * PI * avg_d))  & 
                   ** (1.0_DP / 3.0_DP)  
             mtot = mtot + mergeadd_list%mass(nmergeadd)
          END DO
       END IF 
 
-   r_circle = (rhill_p1 + rhill_p2) / (2.0_DP*sin(PI / frags_added))
-   theta = (2.0_DP * PI) / frags_added
+   r_circle = (rhill_p1 + rhill_p2) / (2 * sin(PI / frags_added))
+   theta = (2 * PI) / frags_added
 
    ALLOCATE(m_frag(frags_added))
-   m_frag(1:frags_added) = mergeadd_list%mass(nstart + 1 :nstart + frags_added)
+
+   m_frag(1:frags_added) = mergeadd_list%mass(nstart + 1:nstart + frags_added)
 
    ALLOCATE(x_frag(NDIM, frags_added))
    ALLOCATE(v_frag(NDIM, frags_added))
@@ -226,6 +230,7 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
    deallocate(v_frag)
 
    ! Add both particles involved in the collision to mergesub_list
+   call symba_merger_size_check(mergesub_list, nmergesub + 2)  
    nmergesub = nmergesub + 1
    mergesub_list%name(nmergesub) = name1
    mergesub_list%status(nmergesub) = SUPERCATASTROPHIC
@@ -246,10 +251,10 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
    WRITE(*, *) "Number of fragments added: ", frags_added
    ! Calculate energy after frag                                                                           
    vnew(:) = mv(:) / mtot    ! COM of new fragments                               
-   enew = 0.5_DP*mtot*DOT_PRODUCT(vnew(:), vnew(:))
+   enew = 0.5_DP * mtot * DOT_PRODUCT(vnew(:), vnew(:))
    eoffset = eoffset + eold - enew
-   ! Update fragmax to account for new fragments
-   fragmax = fragmax + frags_added
+   ! Update nplmax to account for new fragments
+   nplmax = nplmax + frags_added
 
    RETURN 
 END SUBROUTINE symba_casesupercatastrophic

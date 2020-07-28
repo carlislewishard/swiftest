@@ -701,15 +701,15 @@ MODULE module_interfaces
 
      INTERFACE
           SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-          symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny, npl)
+          symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, mres, rres, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny, npl)
           USE swiftest_globals
           USE swiftest_data_structures
           USE module_helio
           USE module_symba
           IMPLICIT NONE
-          INTEGER(I4B), INTENT(IN)                         :: index_enc, nplmax, ntpmax, npl
+          INTEGER(I4B), INTENT(IN)                         :: index_enc, npl
           INTEGER(I4B), INTENT(IN)                         :: nplplenc
-          INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub, fragmax
+          INTEGER(I4B), INTENT(INOUT)                      :: nplmax, ntpmax, nmergeadd, nmergesub
           REAL(DP), INTENT(IN)                             :: t, dt,mtiny
           REAL(DP), INTENT(INOUT)                          :: eoffset, m1, m2, rad1, rad2
           REAL(DP), DIMENSION(:), INTENT(INOUT)            :: mres, rres
@@ -724,15 +724,15 @@ MODULE module_interfaces
 
      INTERFACE
           SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-          symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny, npl)
+          symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, mres, rres, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny, npl)
           USE swiftest_globals
           USE swiftest_data_structures
           USE module_helio
           USE module_symba
           IMPLICIT NONE
-          INTEGER(I4B), INTENT(IN)                         :: index_enc, nplmax, ntpmax, npl
+          INTEGER(I4B), INTENT(IN)                         :: index_enc, npl
           INTEGER(I4B), INTENT(IN)                         :: nplplenc
-          INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub, fragmax
+          INTEGER(I4B), INTENT(INOUT)                      :: nplmax, ntpmax, nmergeadd, nmergesub
           REAL(DP), INTENT(IN)                             :: t, dt, mtiny
           REAL(DP), INTENT(INOUT)                          :: eoffset, m1, m2, rad1, rad2
           REAL(DP), DIMENSION(:), INTENT(INOUT)            :: mres, rres
@@ -769,42 +769,42 @@ MODULE module_interfaces
 
      INTERFACE
           SUBROUTINE symba_caseresolve (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-          npl, symba_plA, nplplenc, plplenc_list, regime, nplmax, ntpmax, fragmax, mres, rres, array_index1_child, &
+          npl, symba_plA, nplplenc, plplenc_list, regime, nplmax, ntpmax, mres, rres, array_index1_child, &
           array_index2_child, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny)
           USE swiftest_globals
           USE swiftest_data_structures
           USE module_helio
           USE module_symba
           IMPLICIT NONE
-          INTEGER(I4B), INTENT(IN)                         :: index_enc, nplmax, ntpmax
-          INTEGER(I4B), INTENT(IN)                         :: npl, nplplenc
-          INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub, fragmax
-          REAL(DP), INTENT(IN)                             :: t, dt, mtiny
-          REAL(DP), INTENT(INOUT)                          :: eoffset, m1, m2, rad1, rad2
-          REAL(DP), DIMENSION(:), INTENT(INOUT)            :: mres, rres
-          REAL(DP), DIMENSION(:), INTENT(IN)            :: vbs
-          REAL(DP), DIMENSION(:), INTENT(INOUT)         :: x1, x2, v1, v2
-          TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
-          TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
-          TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
-          INTEGER(I4B), INTENT(IN)                         :: regime
-          INTEGER(I4B), DIMENSION(:), INTENT(INOUT)      :: array_index1_child, array_index2_child
+          INTEGER(I4B), INTENT(IN)                     :: index_enc
+          INTEGER(I4B), INTENT(IN)                     :: npl, nplplenc
+          INTEGER(I4B), INTENT(INOUT)                  :: nplmax, ntpmax, nmergeadd, nmergesub
+          REAL(DP), INTENT(IN)                         :: t, dt, mtiny
+          REAL(DP), INTENT(INOUT)                      :: eoffset, m1, m2, rad1, rad2
+          REAL(DP), DIMENSION(:), INTENT(INOUT)        :: mres, rres
+          REAL(DP), DIMENSION(:), INTENT(IN)           :: vbs
+          REAL(DP), DIMENSION(:), INTENT(INOUT)        :: x1, x2, v1, v2
+          TYPE(symba_plplenc), INTENT(INOUT)           :: plplenc_list
+          TYPE(symba_merger), INTENT(INOUT)            :: mergeadd_list, mergesub_list
+          TYPE(symba_pl), INTENT(INOUT)                :: symba_plA
+          INTEGER(I4B), INTENT(IN)                     :: regime
+          INTEGER(I4B), DIMENSION(:), INTENT(INOUT)    :: array_index1_child, array_index2_child
 
           END SUBROUTINE symba_caseresolve
      END INTERFACE
 
      INTERFACE
           SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
-               eoffset, vbs, symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, &
+               eoffset, vbs, symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, mres, rres, m1, m2, rad1, &
                rad2, x1, x2, v1, v2, mtiny, npl)
           USE swiftest_globals
           USE swiftest_data_structures
           USE module_helio
           USE module_symba
           IMPLICIT NONE
-          INTEGER(I4B), INTENT(IN)                         :: index_enc, nplmax, ntpmax, npl
+          INTEGER(I4B), INTENT(IN)                         :: index_enc, npl
           INTEGER(I4B), INTENT(IN)                         :: nplplenc
-          INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub, fragmax
+          INTEGER(I4B), INTENT(INOUT)                      :: nplmax, ntpmax, nmergeadd, nmergesub
           REAL(DP), INTENT(IN)                             :: t, dt, mtiny
           REAL(DP), INTENT(INOUT)                          :: eoffset, m1, m2, rad1, rad2
           REAL(DP), DIMENSION(:), INTENT(INOUT)            :: mres, rres
@@ -924,7 +924,7 @@ MODULE module_interfaces
      INTERFACE
           SUBROUTINE symba_fragmentation(t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, &
                mergesub_list, eoffset, vbs, encounter_file, out_type, npl, symba_plA, nplplenc, &
-               plplenc_list, nplmax, ntpmax, fragmax, mtiny)
+               plplenc_list, nplmax, ntpmax, mtiny)
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_helio
@@ -932,7 +932,7 @@ MODULE module_interfaces
                IMPLICIT NONE
                INTEGER(I4B), INTENT(IN)                         :: index_enc, nplmax, ntpmax
                INTEGER(I4B), INTENT(IN)                         :: npl,  nplplenc
-               INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub, fragmax
+               INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub
                REAL(DP), INTENT(IN)                             :: t, dt
                REAL(DP), INTENT(INOUT)                          :: eoffset, mtiny
                REAL(DP), DIMENSION(:), INTENT(IN)            :: vbs
@@ -1157,16 +1157,16 @@ MODULE module_interfaces
      INTERFACE
           SUBROUTINE symba_step(t,dt,param,npl, ntp,symba_plA, symba_tpA,  &
                          nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, &
-                         mergeadd_list, mergesub_list, eoffset, fragmax)
+                         mergeadd_list, mergesub_list, eoffset)
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_helio
                USE module_symba
                use user
                IMPLICIT NONE
-               TYPE(user_input_parameters)                      :: param        ! Derived type containing user defined parameters 
+               TYPE(user_input_parameters), INTENT(INOUT)       :: param        ! Derived type containing user defined parameters 
                INTEGER(I4B), INTENT(IN)                         :: npl, ntp
-               INTEGER(I4B), INTENT(INOUT)                      :: nplplenc, npltpenc, nmergeadd, nmergesub, fragmax
+               INTEGER(I4B), INTENT(INOUT)                      :: nplplenc, npltpenc, nmergeadd, nmergesub
                REAL(DP), INTENT(IN)                             :: t, dt
                REAL(DP), INTENT(INOUT)                          :: eoffset
                TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
@@ -1215,7 +1215,7 @@ MODULE module_interfaces
      INTERFACE
           SUBROUTINE symba_step_interp(lextra_force, lclose, t, npl, nplm, nplmax, ntp, ntpmax, symba_plA, symba_tpA, j2rp2,    &
                j4rp4, dt, eoffset, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list,    &
-               mergesub_list, encounter_file, out_type, fragmax, param)
+               mergesub_list, encounter_file, out_type, param)
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_helio
@@ -1224,7 +1224,7 @@ MODULE module_interfaces
                IMPLICIT NONE
                LOGICAL(LGT), INTENT(IN)           :: lextra_force, lclose
                INTEGER(I4B), INTENT(IN)           :: npl, nplm, nplmax, ntp, ntpmax, nplplenc, npltpenc
-               INTEGER(I4B), INTENT(INOUT)        :: nmergeadd, nmergesub, fragmax
+               INTEGER(I4B), INTENT(INOUT)        :: nmergeadd, nmergesub
                REAL(DP), INTENT(IN)               :: t, j2rp2, j4rp4, dt
                REAL(DP), INTENT(INOUT)            :: eoffset
                CHARACTER(*), INTENT(IN)           :: encounter_file, out_type
@@ -1240,7 +1240,7 @@ MODULE module_interfaces
      INTERFACE
           RECURSIVE SUBROUTINE symba_step_recur(lclose, t, ireci, npl, nplm, ntp, symba_plA, symba_tpA, dt0, eoffset, nplplenc, &
                npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, encounter_file, & 
-               out_type, nplmax, ntpmax, fragmax, param)
+               out_type, nplmax, ntpmax, param)
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_helio
@@ -1249,7 +1249,7 @@ MODULE module_interfaces
                IMPLICIT NONE
                LOGICAL(LGT), INTENT(IN)           :: lclose
                INTEGER(I4B), INTENT(IN)           :: ireci, npl, nplm, ntp, nplplenc, npltpenc, nplmax, ntpmax
-               INTEGER(I4B), INTENT(INOUT)        :: nmergeadd, nmergesub, fragmax
+               INTEGER(I4B), INTENT(INOUT)        :: nmergeadd, nmergesub
                REAL(DP), INTENT(IN)               :: t, dt0
                REAL(DP), INTENT(INOUT)            :: eoffset
                CHARACTER(*), INTENT(IN)           :: encounter_file, out_type
@@ -1358,16 +1358,16 @@ MODULE module_interfaces
      INTERFACE
           SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,  &
             nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, &
-            mergeadd_list, mergesub_list, eoffset, fragmax, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
+            mergeadd_list, mergesub_list, eoffset, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_helio
                USE module_symba
                use user
                IMPLICIT NONE
-               TYPE(user_input_parameters)                      :: param        ! Derived type containing user defined parameters 
+               TYPE(user_input_parameters), INTENT(INOUT)       :: param        ! Derived type containing user defined parameters 
                INTEGER(I4B), INTENT(IN)                         :: npl, ntp
-               INTEGER(I4B), INTENT(INOUT)                      :: nplplenc, npltpenc, nmergeadd, nmergesub, fragmax
+               INTEGER(I4B), INTENT(INOUT)                      :: nplplenc, npltpenc, nmergeadd, nmergesub
                REAL(DP), INTENT(IN)                             :: t, dt
                REAL(DP), INTENT(INOUT)                          :: eoffset
                TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
@@ -1375,9 +1375,9 @@ MODULE module_interfaces
                TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
                TYPE(symba_pltpenc), INTENT(INOUT)               :: pltpenc_list
                TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
-               INTEGER(I8B), INTENT(IN)           :: num_plpl_comparisons, num_pltp_comparisons
-               INTEGER(I4B), DIMENSION(:,:),INTENT(IN) :: k_plpl
-               INTEGER(I4B), DIMENSION(:,:),INTENT(IN) :: k_pltp
+               INTEGER(I8B), INTENT(IN)                         :: num_plpl_comparisons, num_pltp_comparisons
+               INTEGER(I4B), DIMENSION(:,:),INTENT(IN)          :: k_plpl
+               INTEGER(I4B), DIMENSION(:,:),INTENT(IN)          :: k_pltp
           END SUBROUTINE symba_step_eucl
      END INTERFACE
 
@@ -1385,15 +1385,15 @@ MODULE module_interfaces
      INTERFACE
          SUBROUTINE symba_step_interp_eucl(lextra_force, lclose, t, npl, nplm, nplmax, ntp, ntpmax, symba_plA, symba_tpA,&
             j2rp2, j4rp4, dt, eoffset, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list,&
-            mergesub_list,encounter_file, out_type, fragmax, param, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
+            mergesub_list,encounter_file, out_type, param, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_symba
                USE user
                IMPLICIT NONE
                LOGICAL(LGT), INTENT(IN)                  :: lextra_force, lclose
-               INTEGER(I4B), INTENT(IN)                  :: npl, nplm, nplmax, ntp, ntpmax, nplplenc, npltpenc
-               INTEGER(I4B), INTENT(INOUT)               :: nmergeadd, nmergesub, fragmax
+               INTEGER(I4B), INTENT(IN)                  :: npl, nplm, ntp, nplplenc, npltpenc
+               INTEGER(I4B), INTENT(INOUT)               :: nplmax, ntpmax, nmergeadd, nmergesub
                REAL(DP), INTENT(IN)                      :: t, j2rp2, j4rp4, dt
                REAL(DP), INTENT(INOUT)                   :: eoffset
                CHARACTER(*), INTENT(IN)                  :: encounter_file, out_type

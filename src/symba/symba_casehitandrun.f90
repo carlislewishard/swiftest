@@ -33,19 +33,20 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-   symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mres, rres, m1, m2, rad1, rad2, xh_1, xh_2, vb_1, vb_2, mtiny, npl)
+   symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, mres, rres, m1, m2, rad1, rad2, xh_1, xh_2, vb_1, vb_2, mtiny, npl)
 
 ! Modules
    USE swiftest
    USE module_helio
    USE module_symba
+   USE module_swiftestalloc
    USE module_interfaces, EXCEPT_THIS_ONE => symba_casehitandrun
    IMPLICIT NONE
 
 ! Arguments
-   INTEGER(I4B), INTENT(IN)                         :: index_enc, nplmax, ntpmax, npl
+   INTEGER(I4B), INTENT(IN)                         :: index_enc, npl
    INTEGER(I4B), INTENT(IN)                         :: nplplenc
-   INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub, fragmax
+   INTEGER(I4B), INTENT(INOUT)                      :: nplmax, ntpmax, nmergeadd, nmergesub
    REAL(DP), INTENT(IN)                             :: t, dt, mtiny
    REAL(DP), INTENT(INOUT)                          :: eoffset, m1, m2, rad1, rad2
    REAL(DP), DIMENSION(:), INTENT(INOUT)            :: mres, rres
@@ -77,6 +78,8 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
    ! Set the maximum number of fragments to be added in a Hit and Run collision (nfrag)
    nfrag = 4
+   call symba_merger_size_check(mergeadd_list, nmergeadd + nfrag)  
+
    ! Pull in the information about the two particles involved in the collision 
    index1 = plplenc_list%index1(index_enc)
    index2 = plplenc_list%index2(index_enc)
@@ -210,7 +213,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
    ! Pure Hit & Run
    IF ((mres(2) > mass_rm * 0.9_DP).OR.(mres(2)<nfrag*mtiny)) THEN
-      !frags_added does NOT get incremented on in a perfect merger because then fragmax would be fragmax + 1
+      !frags_added does NOT get incremented on in a perfect merger because then nplmax would be nplmax + 1
       !this screws up the naming of new fragments in subsequent disruptions or supercatastrophic disruptions or
       !imperfect hit & runs. In other words, in a hit & run, frags_added is only incremented on in imperfect 
       !hit & runs. 
@@ -227,14 +230,14 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    ELSE
       m_rm = mass_rm
       r_rm = rad_rm
-      d_rm = (3.0_DP * m_rm) / (4.0_DP * PI * (r_rm ** 3.0_DP))
+      d_rm = (3 * m_rm) / (4 * PI * r_rm**3)
       frags_added = frags_added + 1
       nmergeadd = nmergeadd + 1
       mergeadd_list%status(nmergeadd) = HIT_AND_RUN
       mergeadd_list%ncomp(nmergeadd) = 2
-      mergeadd_list%name(nmergeadd) = nplmax + ntpmax + fragmax + 1
+      mergeadd_list%name(nmergeadd) = nplmax + ntpmax +  1
       mergeadd_list%mass(nmergeadd) = mres(2)
-      mergeadd_list%radius(nmergeadd) = ((3.0_DP * mergeadd_list%mass(nmergeadd)) / (4.0_DP * PI * d_rm))  & 
+      mergeadd_list%radius(nmergeadd) = ((3 * mergeadd_list%mass(nmergeadd)) / (4 * PI * d_rm))  & 
             ** (1.0_DP / 3.0_DP) 
       mtot = mtot + mergeadd_list%mass(nmergeadd)
    ! Imperfect Hit & Run       
@@ -244,9 +247,9 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
             nmergeadd = nmergeadd + 1
             mergeadd_list%status(nmergeadd) = HIT_AND_RUN
             mergeadd_list%ncomp(nmergeadd) = 2
-            mergeadd_list%name(nmergeadd) = nplmax + ntpmax + fragmax + i
+            mergeadd_list%name(nmergeadd) = nplmax + ntpmax + i
             mergeadd_list%mass(nmergeadd) = m_rem / (nfrag) 
-            mergeadd_list%radius(nmergeadd) = ((3.0_DP * mergeadd_list%mass(nmergeadd)) / (4.0_DP * PI * d_rm))  & 
+            mergeadd_list%radius(nmergeadd) = ((3 * mergeadd_list%mass(nmergeadd)) / (4 * PI * d_rm))  & 
                ** (1.0_DP / 3.0_DP) 
             mtot = mtot + mergeadd_list%mass(nmergeadd)
          END DO
@@ -254,7 +257,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
    IF (frags_added > 0) THEN
          r_circle = (rhill_keep + rhill_rm) / (2.0_DP*sin(PI / frags_added))
-         theta = (2.0_DP * PI) / (frags_added)
+         theta = (2 * PI) / (frags_added)
          ALLOCATE(m_frag(frags_added))
          m_frag(1:frags_added) = mergeadd_list%mass(nstart + 1 :nstart + frags_added)
 
@@ -277,6 +280,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    END IF
 
    ! Add both particles involved in the collision to mergesub_list
+   call symba_merger_size_check(mergesub_list, nmergesub + 2)  
    nmergesub = nmergesub + 1
    mergesub_list%name(nmergesub) = name1
    mergesub_list%status(nmergesub) = HIT_AND_RUN 
@@ -312,10 +316,11 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
    ! Calculate energy after frag                                                                           
    vnew(:) = mv(:) / mtot    ! COM of new fragments                               
-   enew = 0.5_DP*mtot*DOT_PRODUCT(vnew(:), vnew(:))
+   enew = 0.5_DP * mtot * DOT_PRODUCT(vnew(:), vnew(:))
    eoffset = eoffset + eold - enew
-   ! Update fragmax to account for new fragments made in imperfect hit & runs
-   fragmax = fragmax + frags_added
+
+   ! Update nplmax to account for new fragments made in imperfect hit & runs
+   nplmax = nplmax + frags_added
    RETURN 
 END SUBROUTINE symba_casehitandrun
 

@@ -38,13 +38,13 @@ module swiftest_data_structures
    interface
 
       module subroutine swiftest_read_pl_in(self,param) 
-         class(swiftest_pl), intent(inout)  :: self  !! Swiftest data structure to store massive body initial conditions
-         type(user_input_parameters),intent(in) :: param    !! Input collection of user-defined parameters
+         class(swiftest_pl), intent(inout)         :: self  !! Swiftest data structure to store massive body initial conditions
+         type(user_input_parameters),intent(inout) :: param    !! Input collection of user-defined parameters
       end subroutine swiftest_read_pl_in
 
       module subroutine swiftest_read_tp_in(self,param) 
-         class(swiftest_tp), intent(inout)  :: self  !! Swiftest data structure to store massive body initial conditions
-         type(user_input_parameters),intent(in) :: param    !! Input collection of user-defined parameters
+         class(swiftest_tp), intent(inout)         :: self  !! Swiftest data structure to store massive body initial conditions
+         type(user_input_parameters),intent(inout) :: param    !! Input collection of user-defined parameters
       end subroutine swiftest_read_tp_in
    end interface
 

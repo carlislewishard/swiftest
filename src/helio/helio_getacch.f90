@@ -44,38 +44,29 @@ SUBROUTINE helio_getacch(lflag, lextra_force, t, npl, nplmax, helio_plA, j2rp2, 
      REAL(DP), INTENT(IN)     :: t, j2rp2, j4rp4
 
 ! Internals
-     LOGICAL(LGT), SAVE                             :: lmalloc = .TRUE.
      INTEGER(I4B)                                   :: i
      REAL(DP)                                       :: r2
-     REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE      :: irh
-     REAL(DP), DIMENSION(:, :), ALLOCATABLE, SAVE   :: xh, aobl
+     REAL(DP), DIMENSION(npl)                       :: irh
+     REAL(DP), DIMENSION(NDIM, npl)                 :: xh, aobl
      TYPE(helio_pl), INTENT(INOUT)                  :: helio_plA
 
 ! Executable code
      IF (lflag) THEN
-          DO i = 2, npl
-               helio_plA%ahi(:,i) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
-          END DO
-          CALL helio_getacch_int(npl, helio_plA)
+         helio_plA%ahi(:,2:npl) = 0.0_DP
+         CALL helio_getacch_int(npl, helio_plA)
      END IF
      IF (j2rp2 /= 0.0_DP) THEN
-          IF (lmalloc) THEN
-               ALLOCATE(xh(NDIM, nplmax), aobl(NDIM, nplmax), irh(nplmax))
-               lmalloc = .FALSE.
-          END IF
           DO i = 2, npl
                xh(:, i) = helio_plA%swiftest%xh(:,i)
                r2 = DOT_PRODUCT(xh(:, i), xh(:, i))
                irh(i) = 1.0_DP/SQRT(r2)
           END DO
           CALL obl_acc(npl, helio_plA%swiftest, j2rp2, j4rp4, xh, irh, aobl)
-          DO i = 2, npl
-               helio_plA%ah(:,i) = helio_plA%ahi(:,i) + aobl(:, i) - aobl(:, 1)
-          END DO
+          do i = 1, NDIM
+            helio_plA%ah(i,2:npl) = helio_plA%ahi(i,2:npl) + aobl(i, 2:npl) - aobl(i, 1)
+          end do
      ELSE
-          DO i = 2, npl
-               helio_plA%ah(:,i) = helio_plA%ahi(:,i)
-          END DO
+         helio_plA%ah(:,2:npl) = helio_plA%ahi(:,2:npl)
      END IF
      IF (lextra_force) CALL helio_user_getacch(t, npl, helio_plA)
 

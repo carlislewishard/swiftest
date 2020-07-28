@@ -39,6 +39,7 @@ SUBROUTINE symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
      USE swiftest
      USE module_helio
      USE module_symba
+     USE module_swiftestalloc 
      USE module_interfaces, EXCEPT_THIS_ONE => symba_casemerge
      IMPLICIT NONE
 
@@ -159,6 +160,7 @@ SUBROUTINE symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
    symba_plA%nchild(index1_parent) = symba_plA%nchild(index1_parent) + symba_plA%nchild(index2_parent) + 1
 
 
+   call symba_merger_size_check(mergesub_list, nmergesub + 2)  
    nmergesub = nmergesub + 1
    mergesub_list%name(nmergesub) = name1
    mergesub_list%status(nmergesub) = MERGED
@@ -176,6 +178,7 @@ SUBROUTINE symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
    mergesub_list%radius(nmergesub) = rad2
    mergesub_list%nadded(nmergesub) = 1
 
+   call symba_merger_size_check(mergeadd_list, nmergeadd + 2)  
    nmergeadd = nmergeadd + 1
    IF (m2 > m1) THEN
       mergeadd_list%name(nmergeadd) = name2

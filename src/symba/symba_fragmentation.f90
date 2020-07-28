@@ -33,7 +33,7 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-     encounter_file, out_type, npl, symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, fragmax, mtiny)
+     encounter_file, out_type, npl, symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, mtiny)
 
 ! Modules
      USE swiftest
@@ -43,9 +43,9 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
      IMPLICIT NONE
 
 ! Arguments
-     INTEGER(I4B), INTENT(IN)                         :: index_enc, nplmax, ntpmax
+     INTEGER(I4B), INTENT(IN)                         :: index_enc
      INTEGER(I4B), INTENT(IN)                         :: npl, nplplenc
-     INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub, fragmax
+     INTEGER(I4B), INTENT(INOUT)                      :: nplmax, ntpmax, nmergeadd, nmergesub
      REAL(DP), INTENT(IN)                             :: t, dt
      REAL(DP), INTENT(INOUT)                          :: eoffset, mtiny
      REAL(DP), DIMENSION(:), INTENT(IN)               :: vbs
@@ -57,7 +57,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 ! Internals
  
      INTEGER(I4B)                   :: model, nres, i, itarg, iproj
-     REAL(DP), DIMENSION(3)         :: mres, rres
+     REAL(DP), DIMENSION(NDIM)      :: mres, rres
      REAL(DP), DIMENSION(NDIM, 3)   :: pres, vres
      INTEGER(I4B)                   :: regime 
      INTEGER(I4B)                   :: index1, index2, index1_child, index2_child, index1_parent, index2_parent
@@ -277,7 +277,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           rres(:) = rres(:) / DU2M
 
           CALL symba_caseresolve(t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs_instep, & 
-          npl, symba_plA, nplplenc, plplenc_list, regime, nplmax, ntpmax, fragmax, mres, rres, array_index1_child, &
+          npl, symba_plA, nplplenc, plplenc_list, regime, nplmax, ntpmax, mres, rres, array_index1_child, &
           array_index2_child, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny)
      END IF 
      RETURN

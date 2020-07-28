@@ -51,11 +51,10 @@ SUBROUTINE helio_getacch_tp(lflag, lextra_force, t, npl, nplmax, ntp, ntpmax, he
      TYPE(helio_tp), INTENT(INOUT) :: helio_tpA
 
 ! Internals
-     LOGICAL(LGT), SAVE                           :: lmalloc = .TRUE.
-     INTEGER(I4B)                                 :: i
+     INTEGER(I4B)                                 :: i, n
      REAL(DP)                                     :: r2, mu
-     REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE    :: irh, irht
-     REAL(DP), DIMENSION(:, :), ALLOCATABLE, SAVE :: aobl, xht, aoblt
+     REAL(DP), DIMENSION(:), ALLOCATABLE          :: irh, irht
+     REAL(DP), DIMENSION(:, :), ALLOCATABLE       :: aobl, xht, aoblt
 
 ! Executable code
      IF (lflag) THEN
@@ -65,29 +64,32 @@ SUBROUTINE helio_getacch_tp(lflag, lextra_force, t, npl, nplmax, ntp, ntpmax, he
           CALL helio_getacch_int_tp(npl, ntp, helio_plA%swiftest, helio_tpA)
      END IF
      IF (j2rp2 /= 0.0_DP) THEN
-          IF (lmalloc) THEN
-               ALLOCATE(aobl(NDIM, nplmax), irh(nplmax), xht(NDIM, ntpmax), aoblt(NDIM, ntpmax), irht(ntpmax))
-               lmalloc = .FALSE.
-          END IF
-          DO i = 2, npl
-               r2 = DOT_PRODUCT(xh(:, i), xh(:, i))
-               irh(i) = 1.0_DP/SQRT(r2)
-          END DO
-          CALL obl_acc(npl, helio_plA%swiftest, j2rp2, j4rp4, xh, irh, aobl)
-          mu = helio_plA%swiftest%mass(1)
-          DO i = 1, ntp
-               xht(:, i) = helio_tpA%swiftest%xh(:,i)
-               r2 = DOT_PRODUCT(xht(:, i), xht(:, i))
-               irht(i) = 1.0_DP/SQRT(r2)
-          END DO
-          CALL obl_acc_tp(ntp, xht, j2rp2, j4rp4, irht, aoblt, mu)
-          DO i = 1, ntp
-               helio_tpA%ah(:,i) = helio_tpA%ahi(:,i) + aoblt(:, i) - aobl(:, 1)
-          END DO
+         if (npl > 0) then
+            ALLOCATE(aobl(NDIM, npl), irh(npl))
+         end if
+         if (ntp > 0) then
+            ALLOCATE(xht(NDIM, ntp), aoblt(NDIM, ntp), irht(ntp))
+         end if
+         DO i = 2, npl
+            r2 = DOT_PRODUCT(xh(:, i), xh(:, i))
+            irh(i) = 1.0_DP/SQRT(r2)
+         END DO
+         CALL obl_acc(npl, helio_plA%swiftest, j2rp2, j4rp4, xh, irh, aobl)
+         mu = helio_plA%swiftest%mass(1)
+         DO i = 1, ntp
+            xht(:, i) = helio_tpA%swiftest%xh(:,i)
+            r2 = DOT_PRODUCT(xht(:, i), xht(:, i))
+            irht(i) = 1.0_DP/SQRT(r2)
+         END DO
+         CALL obl_acc_tp(ntp, xht, j2rp2, j4rp4, irht, aoblt, mu)
+         DO i = 1, ntp
+            helio_tpA%ah(:,i) = helio_tpA%ahi(:,i) + aoblt(:, i) - aobl(:, 1)
+         END DO
+         deallocate(aobl, xht, aoblt, irht)
      ELSE
-          DO i = 1, ntp
-               helio_tpA%ah(:,i) = helio_tpA%ahi(:,i)
-          END DO
+         DO i = 1, ntp
+            helio_tpA%ah(:,i) = helio_tpA%ahi(:,i)
+         END DO
      END IF
      IF (lextra_force) CALL helio_user_getacch_tp(t, ntp, helio_tpA)
 

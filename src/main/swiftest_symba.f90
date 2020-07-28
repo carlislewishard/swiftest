@@ -44,7 +44,7 @@ program swiftest_symba
    ! Internals
    logical                       :: lfrag_add
    integer(I4B)                  :: npl, nplm, ntp, ntp0, nsppl, nsptp, iout, idump, iloop, idebug
-   integer(I4B)                  :: nplplenc, npltpenc, nmergeadd, nmergesub, fragmax
+   integer(I4B)                  :: nplplenc, npltpenc, nmergeadd, nmergesub
    real(DP)                      :: t, tfrac, tbase, mtiny, ke, pe, te, eoffset, Ltot_orig, Ltot_now, Lerror
    real(DP), dimension(ndim)     :: htot
    character(strmax)             :: inparfile, thresh
@@ -113,8 +113,8 @@ program swiftest_symba
       write(*, *) "   Integrator SyMBA requires massive body Hill sphere radii on input"
       call util_exit(failure)
    end if
-   ! read in the total number of bodies from the input files
 
+   ! reads in initial conditions of all massive bodies from input file
    call symba_plA%helio%swiftest%read_from_file(param)
    call symba_tpA%helio%swiftest%read_from_file(param)
 
@@ -132,16 +132,10 @@ program swiftest_symba
       call symba_tpA%helio%swiftest%read_from_file(param)
    !**************************************************
 
-   ! create arrays of data structures big enough to store the number of bodies we are adding
-   call symba_merger_allocate(mergeadd_list,BIG*npl)
-   call symba_merger_allocate(mergesub_list,npl)
-   call symba_plplenc_allocate(plplenc_list, BIG*npl)
-
    if (ntp > 0) then
       call symba_pltpenc_allocate(pltpenc_list, ntp)
    end if
 
-   ! reads in initial conditions of all massive bodies from input file
 
    ! reorder by mass 
    call symba_reorder_pl(npl, symba_plA)
@@ -157,7 +151,6 @@ program swiftest_symba
    nsppl = 0
    nsptp = 0
    eoffset = 0.0_DP
-   fragmax = 0 
    nplmax = npl
    ntpmax = ntp
    if (istep_out > 0) then
@@ -183,17 +176,17 @@ program swiftest_symba
       if(num_plpl_comparisons > param%eucl_threshold) then
          call symba_step_eucl(t, dt, param,npl,ntp,symba_pla, symba_tpa,nplplenc, npltpenc,&
                plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
-               eoffset, fragmax, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
+               eoffset, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
       else
-         call symba_step(t, dt, param,npl,ntp,symba_plA, symba_tpA,nplplenc, npltpenc,&
+         call symba_step(t, dt, param,npl,ntp,symba_plA, symba_tpA, nplplenc, npltpenc,&
                plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
-               eoffset, fragmax)
+               eoffset)
       end if
       ldiscard = .false. 
       ldiscard_tp = .false.
       lfrag_add = .false.
       call symba_discard_merge_pl(t, npl, symba_plA, nplplenc, plplenc_list)                                  ! check this 
-      call symba_discard_pl(t, npl, nplmax, nsppl, symba_plA, rmin, rmax, rmaxu, qmin, qmin_coord, qmin_alo,    &    ! check this 
+      call symba_discard_pl(t, npl, param%nplmax, nsppl, symba_plA, rmin, rmax, rmaxu, qmin, qmin_coord, qmin_alo,    &    ! check this 
             qmin_ahi, j2rp2, j4rp4, eoffset)
       call symba_discard_tp(t, npl, ntp, nsptp, symba_plA, symba_tpA, dt, rmin, rmax, rmaxu, qmin, qmin_coord, &    ! check this 
             qmin_alo, qmin_ahi, param%lclose, param%lrhill_present)

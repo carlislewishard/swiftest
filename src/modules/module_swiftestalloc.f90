@@ -8,9 +8,6 @@ module module_swiftestalloc
 
    contains 
 
-
-
-
    subroutine helio_pl_allocate(helio_plA, npl)
       use module_helio
       implicit none
@@ -107,39 +104,39 @@ module module_swiftestalloc
       return
    end subroutine symba_plplenc_allocate
 
-   subroutine symba_merger_allocate(mergeadd_list, nmergeadd)
+   subroutine symba_merger_allocate(merger_list, nmerger)
       use module_symba
       implicit none
 
-      integer(I4B), intent(in)                :: nmergeadd
-      type(symba_merger), intent(inout)       :: mergeadd_list
+      integer(I4B), intent(in)                :: nmerger
+      type(symba_merger), intent(inout)       :: merger_list
       integer(I4B)                            :: n
 
-      if (nmergeadd <= 0) then
+      if (nmerger <= 0) then
          n = 0
       else
-         n = nmergeadd
+         n = nmerger
       end if
 
-      allocate(mergeadd_list%name(n))
-      allocate(mergeadd_list%index_ps(n))
-      allocate(mergeadd_list%status(n))
-      allocate(mergeadd_list%ncomp(n))
-      allocate(mergeadd_list%nadded(n))
-      allocate(mergeadd_list%xh(NDIM, n))
-      allocate(mergeadd_list%vh(NDIM, n))
-      allocate(mergeadd_list%mass(n))
-      allocate(mergeadd_list%radius(n))
+      allocate(merger_list%name(n))
+      allocate(merger_list%index_ps(n))
+      allocate(merger_list%status(n))
+      allocate(merger_list%ncomp(n))
+      allocate(merger_list%nadded(n))
+      allocate(merger_list%xh(NDIM, n))
+      allocate(merger_list%vh(NDIM, n))
+      allocate(merger_list%mass(n))
+      allocate(merger_list%radius(n))
 
-      mergeadd_list%name(:) = 0
-      mergeadd_list%index_ps(:) = 1
-      mergeadd_list%status(:) = 0
-      mergeadd_list%ncomp(:) = 0
-      mergeadd_list%nadded(:) = 0
-      mergeadd_list%xh(:, :) = 0.0_DP
-      mergeadd_list%vh(:, :) = 0.0_DP
-      mergeadd_list%mass(:) = 0.0_DP
-      mergeadd_list%radius(:) = 0.0_DP
+      merger_list%name(:) = 0
+      merger_list%index_ps(:) = 1
+      merger_list%status(:) = 0
+      merger_list%ncomp(:) = 0
+      merger_list%nadded(:) = 0
+      merger_list%xh(:, :) = 0.0_DP
+      merger_list%vh(:, :) = 0.0_DP
+      merger_list%mass(:) = 0.0_DP
+      merger_list%radius(:) = 0.0_DP
 
       return
    end subroutine symba_merger_allocate
@@ -230,8 +227,8 @@ module module_swiftestalloc
 
       type(helio_pl), intent(inout)        :: helio_plA
 
-      deallocate(helio_plA%ah)
-      deallocate(helio_plA%ahi)
+      if (allocated(helio_plA%ah)) deallocate(helio_plA%ah)
+      if (allocated(helio_plA%ahi)) deallocate(helio_plA%ahi)
       call helio_plA%swiftest%dealloc()
       return
    end subroutine helio_pl_deallocate
@@ -243,17 +240,17 @@ module module_swiftestalloc
 
       type(symba_pl), intent(inout)        :: symba_plA
 
-      deallocate(symba_plA%lmerged)
-      deallocate(symba_plA%nplenc)
-      deallocate(symba_plA%ntpenc)
-      deallocate(symba_plA%levelg)
-      deallocate(symba_plA%levelm)
-      deallocate(symba_plA%nchild)
-      deallocate(symba_plA%isperi)
-      deallocate(symba_plA%peri)
-      deallocate(symba_plA%atp)
-      deallocate(symba_plA%index_parent)
-      deallocate(symba_plA%index_child)
+      if (allocated(symba_plA%lmerged)) deallocate(symba_plA%lmerged)
+      if (allocated(symba_plA%nplenc)) deallocate(symba_plA%nplenc)
+      if (allocated(symba_plA%ntpenc)) deallocate(symba_plA%ntpenc)
+      if (allocated(symba_plA%levelg)) deallocate(symba_plA%levelg)
+      if (allocated(symba_plA%levelm)) deallocate(symba_plA%levelm)
+      if (allocated(symba_plA%nchild)) deallocate(symba_plA%nchild)
+      if (allocated(symba_plA%isperi)) deallocate(symba_plA%isperi)
+      if (allocated(symba_plA%peri)) deallocate(symba_plA%peri)
+      if (allocated(symba_plA%atp)) deallocate(symba_plA%atp)
+      if (allocated(symba_plA%index_parent)) deallocate(symba_plA%index_parent)
+      if (allocated(symba_plA%index_child)) deallocate(symba_plA%index_child)
       call helio_pl_deallocate(symba_plA%helio)
       return
    end subroutine symba_pl_deallocate
@@ -264,13 +261,13 @@ module module_swiftestalloc
 
       type(symba_plplenc), intent(inout)        :: plplenc_list
 
-      deallocate(plplenc_list%lvdotr)
-      deallocate(plplenc_list%status)
-      deallocate(plplenc_list%level)
-      deallocate(plplenc_list%index1)
-      deallocate(plplenc_list%index2)
-      deallocate(plplenc_list%enc_child)
-      deallocate(plplenc_list%enc_parent)
+      if (allocated(plplenc_list%lvdotr)) deallocate(plplenc_list%lvdotr)
+      if (allocated(plplenc_list%status)) deallocate(plplenc_list%status)
+      if (allocated(plplenc_list%level)) deallocate(plplenc_list%level)
+      if (allocated(plplenc_list%index1)) deallocate(plplenc_list%index1)
+      if (allocated(plplenc_list%index2)) deallocate(plplenc_list%index2)
+      if (allocated(plplenc_list%enc_child)) deallocate(plplenc_list%enc_child)
+      if (allocated(plplenc_list%enc_parent)) deallocate(plplenc_list%enc_parent)
       return
    end subroutine symba_plplenc_deallocate
 
@@ -280,15 +277,15 @@ module module_swiftestalloc
 
       type(symba_merger), intent(inout)        :: mergeadd_list
 
-      deallocate(mergeadd_list%name)
-      deallocate(mergeadd_list%index_ps)
-      deallocate(mergeadd_list%status)
-      deallocate(mergeadd_list%ncomp)
-      deallocate(mergeadd_list%nadded)
-      deallocate(mergeadd_list%xh)
-      deallocate(mergeadd_list%vh)
-      deallocate(mergeadd_list%mass)
-      deallocate(mergeadd_list%radius)
+      if (allocated(mergeadd_list%name)) deallocate(mergeadd_list%name)
+      if (allocated(mergeadd_list%index_ps)) deallocate(mergeadd_list%index_ps)
+      if (allocated(mergeadd_list%status)) deallocate(mergeadd_list%status)
+      if (allocated(mergeadd_list%ncomp)) deallocate(mergeadd_list%ncomp)
+      if (allocated(mergeadd_list%nadded)) deallocate(mergeadd_list%nadded)
+      if (allocated(mergeadd_list%xh)) deallocate(mergeadd_list%xh)
+      if (allocated(mergeadd_list%vh)) deallocate(mergeadd_list%vh)
+      if (allocated(mergeadd_list%mass)) deallocate(mergeadd_list%mass)
+      if (allocated(mergeadd_list%radius)) deallocate(mergeadd_list%radius)
       return
    end subroutine symba_merger_deallocate
 
@@ -298,8 +295,8 @@ module module_swiftestalloc
 
       type(helio_tp), intent(inout)        :: helio_tpA
 
-      deallocate(helio_tpA%ah)
-      deallocate(helio_tpA%ahi)
+      if (allocated(helio_tpA%ah)) deallocate(helio_tpA%ah)
+      if (allocated(helio_tpA%ahi)) deallocate(helio_tpA%ahi)
       call helio_tpA%swiftest%dealloc()
       return
    end subroutine helio_tp_deallocate
@@ -311,9 +308,9 @@ module module_swiftestalloc
 
       type(symba_tp), intent(inout)        :: symba_tpA
 
-      deallocate(symba_tpA%nplenc)
-      deallocate(symba_tpA%levelg)
-      deallocate(symba_tpA%levelm)
+      if (allocated(symba_tpA%nplenc)) deallocate(symba_tpA%nplenc)
+      if (allocated(symba_tpA%levelg)) deallocate(symba_tpA%levelg)
+      if (allocated(symba_tpA%levelm)) deallocate(symba_tpA%levelm)
 
       return
    end subroutine symba_tp_deallocate
@@ -324,13 +321,143 @@ module module_swiftestalloc
 
       type(symba_pltpenc), intent(inout)        :: pltpenc_list
 
-      deallocate(pltpenc_list%lvdotr)
-      deallocate(pltpenc_list%status)
-      deallocate(pltpenc_list%level)
-      deallocate(pltpenc_list%indexpl)
-      deallocate(pltpenc_list%indextp)
+      if (allocated(pltpenc_list%lvdotr)) deallocate(pltpenc_list%lvdotr)
+      if (allocated(pltpenc_list%status)) deallocate(pltpenc_list%status)
+      if (allocated(pltpenc_list%level)) deallocate(pltpenc_list%level)
+      if (allocated(pltpenc_list%indexpl)) deallocate(pltpenc_list%indexpl)
+      if (allocated(pltpenc_list%indextp)) deallocate(pltpenc_list%indextp)
       return
    end subroutine symba_pltpenc_deallocate
+
+   subroutine symba_plplenc_copy(plplenc_list_in, plplenc_list_out, n)
+      use module_symba
+      implicit none
+
+      type(symba_plplenc), intent(in)        :: plplenc_list_in
+      type(symba_plplenc), intent(inout)     :: plplenc_list_out
+      integer(I4B), intent(in)               :: n
+
+      plplenc_list_out%lvdotr(1:n) = plplenc_list_in%lvdotr(1:n)
+      plplenc_list_out%status(1:n) = plplenc_list_in%status(1:n)
+      plplenc_list_out%level(1:n) = plplenc_list_in%level(1:n)
+      plplenc_list_out%index1(1:n) = plplenc_list_in%index1(1:n)
+      plplenc_list_out%index2(1:n) = plplenc_list_in%index2(1:n)
+      plplenc_list_out%enc_child(1:n) = plplenc_list_in%enc_child(1:n)
+      plplenc_list_out%enc_parent(1:n) = plplenc_list_in%enc_parent(1:n)
+      return
+   end subroutine symba_plplenc_copy
+
+   subroutine symba_pltpenc_copy(pltpenc_list_in, pltpenc_list_out, n)
+      use module_symba
+      implicit none
+
+      type(symba_pltpenc), intent(in)        :: pltpenc_list_in
+      type(symba_pltpenc), intent(inout)     :: pltpenc_list_out
+      integer(I4B), intent(in)               :: n
+
+      pltpenc_list_out%lvdotr(1:n) = pltpenc_list_in%lvdotr(1:n)
+      pltpenc_list_out%status(1:n) = pltpenc_list_in%status(1:n)
+      pltpenc_list_out%level(1:n) = pltpenc_list_in%level(1:n)
+      pltpenc_list_out%indexpl(1:n) = pltpenc_list_in%indexpl(1:n)
+      pltpenc_list_out%indextp(1:n) = pltpenc_list_in%indextp(1:n)
+
+      return
+   end subroutine symba_pltpenc_copy
+
+   subroutine symba_merger_copy(merger_list_in, merger_list_out, n)
+      use module_symba
+      implicit none
+
+      type(symba_merger), intent(in)        :: merger_list_in
+      type(symba_merger), intent(inout)     :: merger_list_out
+      integer(I4B), intent(in)              :: n
+
+      merger_list_out%name(1:n) = merger_list_in%name(1:n)
+      merger_list_out%index_ps(1:n) = merger_list_in%index_ps(1:n)
+      merger_list_out%status(1:n) = merger_list_in%status(1:n)
+      merger_list_out%ncomp(1:n) = merger_list_in%ncomp(1:n)
+      merger_list_out%nadded(1:n) = merger_list_in%nadded(1:n)
+      merger_list_out%xh(:, 1:n) = merger_list_in%xh(:, 1:n)
+      merger_list_out%vh(:, 1:n) = merger_list_in%vh(:, 1:n)
+      merger_list_out%mass(1:n) = merger_list_in%mass(1:n)
+      merger_list_out%radius(1:n) = merger_list_in%radius(1:n)
+      return
+   end subroutine symba_merger_copy
+
+   subroutine symba_plplenc_size_check(plplenc_list, n)
+      !! author: David A. Minton
+      !!
+      !! Checks the current size of the plplenc_list against the required size and extends 
+      !! it by a factor of 2 if it is too small 
+      use module_symba
+      implicit none
+
+      type(symba_plplenc), intent(inout)    :: plplenc_list
+      integer(I4B), intent(in)              :: n 
+      type(symba_plplenc)                   :: plplenc_temp
+
+      if (n <= size(plplenc_list%status)) return
+
+      call symba_plplenc_allocate(plplenc_temp, n)
+      call symba_plplenc_copy(plplenc_list, plplenc_temp,n - 1)
+      call symba_plplenc_deallocate(plplenc_list)
+      call symba_plplenc_allocate(plplenc_list, 2 * n)
+      call symba_plplenc_copy(plplenc_temp, plplenc_list, n - 1)
+      call symba_plplenc_deallocate(plplenc_temp)
+
+      return
+
+   end subroutine symba_plplenc_size_check
+
+   subroutine symba_pltpenc_size_check(pltpenc_list, n)
+      !! author: David A. Minton
+      !!
+      !! Checks the current size of the pltpenc_list against the required size and extends 
+      !! it by a factor of 2 if it is too small 
+      use module_symba
+      implicit none
+
+      type(symba_pltpenc), intent(inout)    :: pltpenc_list
+      integer(I4B), intent(in)              :: n 
+      type(symba_pltpenc)                   :: pltpenc_temp
+
+      if (n <= size(pltpenc_list%status)) return
+
+      call symba_pltpenc_allocate(pltpenc_temp, n)
+      call symba_pltpenc_copy(pltpenc_list, pltpenc_temp,n - 1)
+      call symba_pltpenc_deallocate(pltpenc_list)
+      call symba_pltpenc_allocate(pltpenc_list, 2 * n)
+      call symba_pltpenc_copy(pltpenc_temp, pltpenc_list, n - 1)
+      call symba_pltpenc_deallocate(pltpenc_temp)
+
+      return
+
+   end subroutine symba_pltpenc_size_check
+
+   subroutine symba_merger_size_check(merger_list, n)
+      !! author: David A. Minton
+      !!
+      !! Checks the current size of the merger_list against the required size and extends 
+      !! it by a factor of 2 if it is too small 
+      use module_symba
+      implicit none
+
+      type(symba_merger), intent(inout)   :: merger_list
+      integer(I4B), intent(in)            :: n 
+      type(symba_merger)                  :: merger_temp
+
+      if (n <= size(merger_list%status)) return
+
+      call symba_merger_allocate(merger_temp, n)
+      call symba_merger_copy(merger_list, merger_temp,n - 1)
+      call symba_merger_deallocate(merger_list)
+      call symba_merger_allocate(merger_list, 2 * n)
+      call symba_merger_copy(merger_temp, merger_list, n - 1)
+      call symba_merger_deallocate(merger_temp)
+
+      return
+
+   end subroutine symba_merger_size_check
 
 
 end module module_swiftestalloc

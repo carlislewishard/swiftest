@@ -63,19 +63,20 @@
 !**********************************************************************************************************************************
 SUBROUTINE symba_step(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
                nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub,&
-               mergeadd_list, mergesub_list, eoffset, fragmax)
+               mergeadd_list, mergesub_list, eoffset)
 
 ! Modules
      USE swiftest
      USE module_helio
      USE module_symba
+     USE module_swiftestalloc
      USE module_interfaces, EXCEPT_THIS_ONE => symba_step
      IMPLICIT NONE
 
 ! Arguments
-     TYPE(user_input_parameters)                      :: param        ! Derived type containing user defined parameters 
+     TYPE(user_input_parameters), INTENT(INOUT)       :: param        ! Derived type containing user defined parameters 
      INTEGER(I4B), INTENT(IN)                         :: npl, ntp
-     INTEGER(I4B), INTENT(INOUT)                      :: nplplenc, npltpenc, nmergeadd, nmergesub, fragmax
+     INTEGER(I4B), INTENT(INOUT)                      :: nplplenc, npltpenc, nmergeadd, nmergesub
      REAL(DP), INTENT(IN)                             :: t, dt
      REAL(DP), INTENT(INOUT)                          :: eoffset
      TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
@@ -88,25 +89,31 @@ SUBROUTINE symba_step(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      INTEGER(I4B)              :: i, j, k, irec, nplm
      REAL(DP), DIMENSION(NDIM) :: xr, vr
      LOGICAL, SAVE             :: lfirst = .true.
+     TYPE(symba_plplenc)       :: plplenc_temp
+     TYPE(symba_pltpenc)       :: pltpenc_temp
   
 
 ! Executable code
 
-    symba_plA%index_parent(1:npl) = (/ (i, i=1, npl) /)
-    symba_plA%nplenc(:) = 0
-    symba_plA%ntpenc(:) = 0
-    symba_plA%levelg(:) = -1
-    symba_plA%levelm(:) = -1
-    symba_plA%index_child(:, :) = 0
-    symba_tpA%nplenc(:) = 0 
-    symba_tpA%levelg(:) = -1
-    symba_tpA%levelm(:) = -1
+   symba_plA%index_parent(1:npl) = (/ (i, i=1, npl) /)
+   symba_plA%nplenc(:) = 0
+   symba_plA%ntpenc(:) = 0
+   symba_plA%levelg(:) = -1
+   symba_plA%levelm(:) = -1
+   symba_plA%index_child(:, :) = 0
+   symba_tpA%nplenc(:) = 0 
+   symba_tpA%levelg(:) = -1
+   symba_tpA%levelm(:) = -1
 
-     nplplenc = 0
-     npltpenc = 0
-     irec = 0
+   nplplenc = 0
+   npltpenc = 0
+   irec = 0
 
-     nplm = count(symba_plA%helio%swiftest%mass(1:npl) >= param%mtiny)
+   nplm = count(symba_plA%helio%swiftest%mass(1:npl) >= param%mtiny)
+   if (.not. allocated(plplenc_list%status)) call symba_plplenc_allocate(plplenc_list, 1)
+   if (.not. allocated(pltpenc_list%status)) call symba_pltpenc_allocate(pltpenc_list, 1)
+   if (.not. allocated(mergeadd_list%status)) call symba_merger_allocate(mergeadd_list, 1)
+   if (.not. allocated(mergesub_list%status)) call symba_merger_allocate(mergesub_list, 1)
 
      DO i = 2, nplm
          !$omp parallel do schedule(static) default(private) &
@@ -117,24 +124,25 @@ SUBROUTINE symba_step(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
                CALL symba_chk(xr(:), vr(:), symba_plA%helio%swiftest%rhill(i), &
                     symba_plA%helio%swiftest%rhill(j), dt, irec, lencounter, lvdotr)
                IF (lencounter) THEN
-                    !$omp critical
-                    nplplenc = nplplenc + 1
-                    plplenc_list%status(nplplenc) = ACTIVE
-                    plplenc_list%lvdotr(nplplenc) = lvdotr
-                    plplenc_list%level(nplplenc) = irec
-                    plplenc_list%index1(nplplenc) = i
-                    plplenc_list%index2(nplplenc) = j
-                    symba_plA%lmerged(i) = .FALSE.
-                    symba_plA%nplenc(i) = symba_plA%nplenc(i) + 1
-                    symba_plA%levelg(i) = irec
-                    symba_plA%levelm(i) = irec
-                    symba_plA%nchild(i) = 0 
-                    symba_plA%lmerged(j) = .FALSE.
-                    symba_plA%nplenc(j) = symba_plA%nplenc(j) + 1
-                    symba_plA%levelg(j) = irec
-                    symba_plA%levelm(j) = irec
-                    symba_plA%nchild(j) = 0
-                    !$omp end critical
+                  !$omp critical
+                  nplplenc = nplplenc + 1
+                  call symba_plplenc_size_check(plplenc_list, nplplenc)
+                  plplenc_list%status(nplplenc) = ACTIVE
+                  plplenc_list%lvdotr(nplplenc) = lvdotr
+                  plplenc_list%level(nplplenc) = irec
+                  plplenc_list%index1(nplplenc) = i
+                  plplenc_list%index2(nplplenc) = j
+                  symba_plA%lmerged(i) = .FALSE.
+                  symba_plA%nplenc(i) = symba_plA%nplenc(i) + 1
+                  symba_plA%levelg(i) = irec
+                  symba_plA%levelm(i) = irec
+                  symba_plA%nchild(i) = 0 
+                  symba_plA%lmerged(j) = .FALSE.
+                  symba_plA%nplenc(j) = symba_plA%nplenc(j) + 1
+                  symba_plA%levelg(j) = irec
+                  symba_plA%levelm(j) = irec
+                  symba_plA%nchild(j) = 0
+                  !$omp end critical
                END IF
           END DO
          !$omp end parallel do
@@ -143,24 +151,19 @@ SUBROUTINE symba_step(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
                vr(:) = symba_tpA%helio%swiftest%vh(:,j) - symba_plA%helio%swiftest%vh(:,i)
                CALL symba_chk(xr(:), vr(:), symba_plA%helio%swiftest%rhill(i), 0.0_DP, dt, irec, lencounter, lvdotr)
                IF (lencounter) THEN
-                    npltpenc = npltpenc + 1
-                    symba_plA%ntpenc(i) = symba_plA%ntpenc(i) + 1
-                    symba_plA%levelg(i) = irec
-                    symba_plA%levelm(i) = irec
-                    symba_tpA%nplenc(j) = symba_tpA%nplenc(j) + 1
-                    symba_tpA%levelg(j) = irec
-                    symba_tpA%levelm(j) = irec
-                    IF (npltpenc > NENMAX) THEN
-                         WRITE(*, *) "SWIFTER Error:"
-                         WRITE(*, *) "   PL-TP encounter list is full."
-                         WRITE(*, *) "   STOPPING..."
-                         CALL util_exit(FAILURE)
-                    END IF
-                    pltpenc_list%status(npltpenc) = ACTIVE
-                    pltpenc_list%lvdotr(npltpenc) = lvdotr
-                    pltpenc_list%level(npltpenc) = irec
-                    pltpenc_list%indexpl(npltpenc) = i
-                    pltpenc_list%indextp(npltpenc) = j
+                  npltpenc = npltpenc + 1
+                  call symba_pltpenc_size_check(pltpenc_list, npltpenc)
+                  symba_plA%ntpenc(i) = symba_plA%ntpenc(i) + 1
+                  symba_plA%levelg(i) = irec
+                  symba_plA%levelm(i) = irec
+                  symba_tpA%nplenc(j) = symba_tpA%nplenc(j) + 1
+                  symba_tpA%levelg(j) = irec
+                  symba_tpA%levelm(j) = irec
+                  pltpenc_list%status(npltpenc) = ACTIVE
+                  pltpenc_list%lvdotr(npltpenc) = lvdotr
+                  pltpenc_list%level(npltpenc) = irec
+                  pltpenc_list%indexpl(npltpenc) = i
+                  pltpenc_list%indextp(npltpenc) = j
                END IF
           END DO
      END DO
@@ -171,7 +174,7 @@ SUBROUTINE symba_step(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
                ntp, param%ntpmax, symba_plA, symba_tpA, param%j2rp2, param%j4rp4,   &
                dt, eoffset, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, &
                nmergesub, mergeadd_list, mergesub_list, param%encounter_file, param%out_type, &
-               fragmax, param)
+               param)
           lfirst = .TRUE.
      ELSE 
           CALL symba_step_helio(lfirst, param%lextra_force, t, npl, nplm, param%nplmax, ntp,&
@@ -180,7 +183,6 @@ SUBROUTINE symba_step(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      END IF
 
 
-     !deallocate(plvdotr, pstatus, plevel, pindex1, pindex2)
      RETURN
 
 END SUBROUTINE symba_step
