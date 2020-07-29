@@ -270,8 +270,8 @@ program swiftest_symba
                te_error = (te - te_orig) / te_orig
                te_off_error = (te + eoffset - te_orig) / te_orig
                tfrac = (t - t0)/(tstop - t0)
-               write(*, 200) t, tfrac, npl, ntp
             end if
+            write(*, 200) t, tfrac, npl, ntp
 200         format(" Time = ", es12.5, "; fraction done = ", f5.3, "; number of active pl, tp = ", i5, ", ", i5)
 
             call system_clock(clock_count)
@@ -331,6 +331,20 @@ program swiftest_symba
       if (allocated(discard_tpA%name)) call swiftest_tp_deallocate(discard_tpA)
 
    end do
+
+   if (param%lenergy) then
+      if(num_plpl_comparisons > param%eucl_threshold) then
+         call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, te, htot)
+      else
+         call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot)
+      end if
+      Ltot_now = norm2(htot)
+      Lerror = (Ltot_now - Ltot_orig) / Ltot_orig
+      te_error = (te - te_orig) / te_orig
+      te_off_error = (te + eoffset - te_orig) / te_orig
+      write(*,*) 'Final angular momentum and energy errors'
+      write(*, 205) Lerror, te_error, te_off_error
+   end if
    call param%dump_to_file(t)
    call io_dump_pl(npl, symba_plA%helio%swiftest, param%lclose, param%lrhill_present)
    call io_dump_tp(ntp, symba_tpA%helio%swiftest)
