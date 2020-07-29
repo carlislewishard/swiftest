@@ -68,7 +68,7 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
    REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xbs, vh_1, vh_2
    REAL(DP), DIMENSION(:, :), ALLOCATABLE           :: x_frag, v_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE              :: m_frag
-   INTEGER(I4B), DIMENSION(:), allocatable          :: array_index1_child, array_index2_child
+   INTEGER(I4B), DIMENSION(NCHILDMAX)   :: array_index1_child, array_index2_child
 
 
 
