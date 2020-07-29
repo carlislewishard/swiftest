@@ -49,14 +49,13 @@ SUBROUTINE util_dist_eucl_plpl(npl, invar, num_comparisons, k_plpl, outvar)
      
 ! Executable code
 
-!$omp parallel do schedule(static) default(none) &
-!$omp num_threads(min(omp_get_max_threads(),ceiling(num_comparisons/10000.))) &
-!$omp shared (outvar, invar, num_comparisons, k_plpl) &
-!$omp private(k)
-      do k = 1,num_comparisons
-           outvar(:,k) = invar(:,k_plpl(2,k)) - invar(:,k_plpl(1,k))
-      enddo
-!$omp end parallel do
+   !$omp parallel do schedule(static) default(none) &
+   !$omp shared (outvar, invar, num_comparisons, k_plpl) &
+   !$omp private(k)
+   do k = 1,num_comparisons
+      outvar(:,k) = invar(:,k_plpl(2,k)) - invar(:,k_plpl(1,k))
+   end do
+   !$omp end parallel do
 
      RETURN
 
