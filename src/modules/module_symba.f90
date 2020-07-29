@@ -33,7 +33,7 @@ MODULE module_symba
      INTEGER(I4B), PARAMETER :: NTENC = 3
      REAL(DP), PARAMETER     :: RHSCALE = 6.5_DP
      REAL(DP), PARAMETER     :: RSHELL = 0.48075_DP
-     INTEGER(I4B), PARAMETER :: NCHILDMAX = 100
+     INTEGER(I4B), PARAMETER :: NCHILDMAX = 500
 
      type symba_pl
           logical(LGT), dimension(:),     allocatable :: lmerged ! flag indicating whether body has merged with another this time step

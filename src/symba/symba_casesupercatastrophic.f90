@@ -68,7 +68,7 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
    REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xbs, vh_1, vh_2
    REAL(DP), DIMENSION(:, :), ALLOCATABLE           :: x_frag, v_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE              :: m_frag
-   INTEGER(I4B), DIMENSION(npl)                     :: array_index1_child, array_index2_child
+   INTEGER(I4B), DIMENSION(:), allocatable          :: array_index1_child, array_index2_child
 
 
 
@@ -116,8 +116,8 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
    symba_plA%helio%swiftest%status(index2) = SUPERCATASTROPHIC
    symba_plA%helio%swiftest%status(index1_parent) = SUPERCATASTROPHIC
    symba_plA%helio%swiftest%status(index2_parent) = SUPERCATASTROPHIC
-   array_index1_child(1:npl) = symba_plA%index_child(1:npl,index1_parent)
-   array_index2_child(1:npl) = symba_plA%index_child(1:npl,index2_parent)
+   array_index1_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,index1_parent)
+   array_index2_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,index2_parent)
    DO k = 1, nplplenc                                          !go through the encounter list and for particles actively encoutering, get their children
       IF (plplenc_list%status(k) == ACTIVE) THEN
          DO i = 0, symba_plA%nchild(index1_parent)
