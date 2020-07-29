@@ -72,7 +72,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    REAL(DP), DIMENSION(:), ALLOCATABLE              :: m_frag
    REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xh_keep, xh_rm, vh_keep, vh_rm, xbs, xb_keep 
    REAL(DP), DIMENSION(NDIM)                        :: xb_rm, vb_keep, vb_rm, vtmp
-   INTEGER(I4B), DIMENSION(npl)                     :: array_index1_child, array_index2_child
+   INTEGER(I4B), DIMENSION(NCHILDMAX)               :: array_index1_child, array_index2_child
 
 ! Executable code
 
@@ -156,8 +156,8 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
    symba_plA%helio%swiftest%status(index1_parent) = HIT_AND_RUN
    symba_plA%helio%swiftest%status(index2_parent) = HIT_AND_RUN
-   array_index1_child(1:npl) = symba_plA%index_child(1:npl,index1_parent)
-   array_index2_child(1:npl) = symba_plA%index_child(1:npl,index2_parent)
+   array_index1_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,index1_parent)
+   array_index2_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,index2_parent)
    DO k = 1, nplplenc                                          !go through the encounter list and for particles actively encoutering, get their children
       IF (plplenc_list%status(k) == ACTIVE) THEN
          DO i = 0, symba_plA%nchild(index1_parent)
