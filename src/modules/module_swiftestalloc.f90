@@ -271,21 +271,21 @@ module module_swiftestalloc
       return
    end subroutine symba_plplenc_deallocate
 
-   subroutine symba_merger_deallocate(mergeadd_list)
+   subroutine symba_merger_deallocate(merger_list)
       use module_symba
       implicit none
 
-      type(symba_merger), intent(inout)        :: mergeadd_list
+      type(symba_merger), intent(inout)        :: merger_list
 
-      if (allocated(mergeadd_list%name)) deallocate(mergeadd_list%name)
-      if (allocated(mergeadd_list%index_ps)) deallocate(mergeadd_list%index_ps)
-      if (allocated(mergeadd_list%status)) deallocate(mergeadd_list%status)
-      if (allocated(mergeadd_list%ncomp)) deallocate(mergeadd_list%ncomp)
-      if (allocated(mergeadd_list%nadded)) deallocate(mergeadd_list%nadded)
-      if (allocated(mergeadd_list%xh)) deallocate(mergeadd_list%xh)
-      if (allocated(mergeadd_list%vh)) deallocate(mergeadd_list%vh)
-      if (allocated(mergeadd_list%mass)) deallocate(mergeadd_list%mass)
-      if (allocated(mergeadd_list%radius)) deallocate(mergeadd_list%radius)
+      if (allocated(merger_list%name)) deallocate(merger_list%name)
+      if (allocated(merger_list%index_ps)) deallocate(merger_list%index_ps)
+      if (allocated(merger_list%status)) deallocate(merger_list%status)
+      if (allocated(merger_list%ncomp)) deallocate(merger_list%ncomp)
+      if (allocated(merger_list%nadded)) deallocate(merger_list%nadded)
+      if (allocated(merger_list%xh)) deallocate(merger_list%xh)
+      if (allocated(merger_list%vh)) deallocate(merger_list%vh)
+      if (allocated(merger_list%mass)) deallocate(merger_list%mass)
+      if (allocated(merger_list%radius)) deallocate(merger_list%radius)
       return
    end subroutine symba_merger_deallocate
 
@@ -384,75 +384,81 @@ module module_swiftestalloc
       return
    end subroutine symba_merger_copy
 
-   subroutine symba_plplenc_size_check(plplenc_list, n)
+   subroutine symba_plplenc_size_check(plplenc_list, nrequested)
       !! author: David A. Minton
       !!
       !! Checks the current size of the plplenc_list against the required size and extends 
-      !! it by a factor of 2 if it is too small 
+      !! it by a factor of 2 more than requested if it is too small 
       use module_symba
       implicit none
 
       type(symba_plplenc), intent(inout)    :: plplenc_list
-      integer(I4B), intent(in)              :: n 
+      integer(I4B), intent(in)              :: nrequested
       type(symba_plplenc)                   :: plplenc_temp
+      integer(I4B)                          :: nold
 
-      if (n <= size(plplenc_list%status)) return
+      nold = size(plplenc_list%status)
+      if (nrequested <= nold) return
 
-      call symba_plplenc_allocate(plplenc_temp, n - 1)
-      call symba_plplenc_copy(plplenc_list, plplenc_temp,n - 1)
+      call symba_plplenc_allocate(plplenc_temp, nold)
+      call symba_plplenc_copy(plplenc_list, plplenc_temp, nold)
       call symba_plplenc_deallocate(plplenc_list)
-      call symba_plplenc_allocate(plplenc_list, 2 * n)
-      call symba_plplenc_copy(plplenc_temp, plplenc_list, n - 1)
+      call symba_plplenc_allocate(plplenc_list, 2 * nrequested)
+      call symba_plplenc_copy(plplenc_temp, plplenc_list, nold)
       call symba_plplenc_deallocate(plplenc_temp)
 
       return
 
    end subroutine symba_plplenc_size_check
 
-   subroutine symba_pltpenc_size_check(pltpenc_list, n)
+   subroutine symba_pltpenc_size_check(pltpenc_list, nrequested)
       !! author: David A. Minton
       !!
       !! Checks the current size of the pltpenc_list against the required size and extends 
-      !! it by a factor of 2 if it is too small 
+      !! it by a factor of 2 more than requested if it is too small 
       use module_symba
       implicit none
 
       type(symba_pltpenc), intent(inout)    :: pltpenc_list
-      integer(I4B), intent(in)              :: n 
+      integer(I4B), intent(in)              :: nrequested 
       type(symba_pltpenc)                   :: pltpenc_temp
+      integer(I4B)                          :: nold
 
-      if (n <= size(pltpenc_list%status)) return
+      nold = size(pltpenc_list%status)
+      if (nrequested <= nold) return
 
-      call symba_pltpenc_allocate(pltpenc_temp, n - 1)
-      call symba_pltpenc_copy(pltpenc_list, pltpenc_temp,n - 1)
+      call symba_pltpenc_allocate(pltpenc_temp, nold)
+      call symba_pltpenc_copy(pltpenc_list, pltpenc_temp, nold)
       call symba_pltpenc_deallocate(pltpenc_list)
-      call symba_pltpenc_allocate(pltpenc_list, 2 * n)
-      call symba_pltpenc_copy(pltpenc_temp, pltpenc_list, n - 1)
+      call symba_pltpenc_allocate(pltpenc_list, 2 * nrequested)
+      call symba_pltpenc_copy(pltpenc_temp, pltpenc_list, nold)
       call symba_pltpenc_deallocate(pltpenc_temp)
 
       return
 
    end subroutine symba_pltpenc_size_check
 
-   subroutine symba_merger_size_check(merger_list, n)
+   subroutine symba_merger_size_check(merger_list, nrequested)
       !! author: David A. Minton
       !!
       !! Checks the current size of the merger_list against the required size and extends 
-      !! it by a factor of 2 if it is too small 
+      !! it by a factor of 2 more than requested if it is too small 
       use module_symba
       implicit none
 
       type(symba_merger), intent(inout)   :: merger_list
-      integer(I4B), intent(in)            :: n 
+      integer(I4B), intent(in)            :: nrequested
       type(symba_merger)                  :: merger_temp
+      integer(I4B)                        :: nold
 
-      if (n <= size(merger_list%status)) return
+      nold = size(merger_list%status)
+      if (nrequested <= nold) return
 
-      call symba_merger_allocate(merger_temp, n - 1)
-      call symba_merger_copy(merger_list, merger_temp, n - 1)
+      call symba_merger_allocate(merger_temp, nold)
+      call symba_merger_copy(merger_list, merger_temp, nold)
       call symba_merger_deallocate(merger_list)
-      call symba_merger_allocate(merger_list, 2 * n)
-      call symba_merger_copy(merger_temp, merger_list, n - 1)
+      call symba_merger_allocate(merger_list, 2 * nrequested)
+      call symba_merger_copy(merger_temp, merger_list, nold)
       call symba_merger_deallocate(merger_temp)
 
       return
