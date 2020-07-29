@@ -50,6 +50,7 @@ SUBROUTINE symba_merge_pl(t, dt, index_enc, nplplenc, plplenc_list, nmergeadd, n
      USE swiftest
      USE module_helio
      USE module_symba
+     USE module_swiftestalloc
      USE module_interfaces, EXCEPT_THIS_ONE => symba_merge_pl
      IMPLICIT NONE
 
