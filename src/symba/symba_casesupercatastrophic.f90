@@ -157,9 +157,7 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
    END IF
    ! If not, continue through all possible fragments to be added
       mtot = 0.0_DP ! running total mass of new fragments
-      mv(1) = 0.0_DP   ! running sum of m*v of new fragments to be used in COM calculation
-      mv(2) = 0.0_DP   ! running sum of m*v of new fragments to be used in COM calculation
-      mv(3) = 0.0_DP   ! running sum of m*v of new fragments to be used in COM calculation
+      mv(:) = 0.0_DP   ! running sum of m*v of new fragments to be used in COM calculation
       frags_added = 0 ! running total number of new fragments
       m1m2_10 = 0.1_DP * (m1 + m2) ! one tenth the total initial mass of the system used to check the size of the fragments
       nstart = nmergeadd
