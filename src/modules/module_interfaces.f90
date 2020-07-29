@@ -1284,6 +1284,20 @@ MODULE module_interfaces
           END SUBROUTINE symba_user_getacch_tp
      END INTERFACE
 
+     INTERFACE
+         SUBROUTINE symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, te, htot)
+               USE swiftest_globals
+               USE swiftest_data_structures
+               IMPLICIT NONE
+               INTEGER(I4B), INTENT(IN)             :: npl
+               REAL(DP), INTENT(IN)                 :: j2rp2, j4rp4
+               INTEGER(I4B), DIMENSION(:,:), INTENT(IN) :: k_plpl
+               INTEGER(I8B), INTENT(IN)             :: num_plpl_comparisons
+               REAL(DP), INTENT(OUT)                :: ke, pe, te
+               REAL(DP), DIMENSION(:), INTENT(OUT)  :: htot
+               TYPE(swiftest_pl), INTENT(INOUT)     :: swiftest_plA
+         END SUBROUTINE symba_energy_eucl
+     END INTERFACE
 
      INTERFACE 
           SUBROUTINE symba_chk_eucl(num_plpl_comparisons, k_plpl, symba_plA, dt, plpl_encounters, lvdotr, nplplenc)

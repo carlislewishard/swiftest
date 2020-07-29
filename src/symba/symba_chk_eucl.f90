@@ -55,7 +55,8 @@ SUBROUTINE symba_chk_eucl(num_plpl_comparisons, k_plpl, symba_plA, dt, plpl_enco
      integer(I8B), dimension(:), allocatable :: indnum, itmp
      ! LOGICAL(LGT) :: iflag lvdotr_flag
      REAL(DP)     :: rcrit, r2crit, vdotr, r2, v2, tmin, r2min, term2, rcritmax, r2critmax
-     INTEGER(I8B) :: i, k, npl
+     INTEGER(I4B) :: i, j, npl
+     INTEGER(I8B) :: k
      REAL(DP), DIMENSION(NDIM):: xr, vr
 
     
@@ -76,13 +77,15 @@ SUBROUTINE symba_chk_eucl(num_plpl_comparisons, k_plpl, symba_plA, dt, plpl_enco
       !$omp parallel do default(private) schedule(static) &
       !$omp shared(num_plpl_comparisons, nplplenc,  loc_lvdotr, lencounter, k_plpl, dt, term2, r2critmax, symba_plA, indnum)
       do k = 1, num_plpl_comparisons
-         xr(:) = symba_plA%helio%swiftest%xh(:,k_plpl(2,k)) - symba_plA%helio%swiftest%xh(:,k_plpl(1,k))
+         i = k_plpl(1, k)
+         j = k_plpl(2, k)
+         xr(:) = symba_plA%helio%swiftest%xh(:, j) - symba_plA%helio%swiftest%xh(:, i)
 
          r2 = dot_product(xr(:), xr(:)) 
          if (r2 < r2critmax) then
-            rcrit = (symba_plA%helio%swiftest%rhill(k_plpl(2,k)) + symba_plA%helio%swiftest%rhill(k_plpl(1,k))) * term2
-            r2crit = rcrit*rcrit 
-            vr(:) = symba_plA%helio%swiftest%vh(:,k_plpl(2,k)) - symba_plA%helio%swiftest%vh(:,k_plpl(1,k))
+            rcrit = (symba_plA%helio%swiftest%rhill(j) + symba_plA%helio%swiftest%rhill(i)) * term2
+            r2crit = rcrit * rcrit 
+            vr(:) = symba_plA%helio%swiftest%vh(:, j) - symba_plA%helio%swiftest%vh(:, i)
             vdotr = dot_product(vr(:), xr(:))
             if (r2 < r2crit) then
                !$omp critical
@@ -91,7 +94,7 @@ SUBROUTINE symba_chk_eucl(num_plpl_comparisons, k_plpl, symba_plA, dt, plpl_enco
                   allocate(ltmp, source = loc_lvdotr)
                   deallocate(loc_lvdotr)
                   allocate(loc_lvdotr(nplplenc * 2))
-                  loc_lvdotr(1:nplplenc-1) = ltmp(1:nplplenc)
+                  loc_lvdotr(1:nplplenc - 1) = ltmp(1:nplplenc)
                   allocate(itmp, source = indnum)
                   deallocate(indnum)
                   allocate(indnum(nplplenc * 2))
