@@ -180,6 +180,7 @@ SUBROUTINE symba_merge_pl(t, dt, index_enc, nplplenc, plplenc_list, nmergeadd, n
           xnew(:) = (m1*x1(:) + m2*x2(:))/mtot
           vnew(:) = (m1*v1(:) + m2*v2(:))/mtot
           WRITE(*, *) "Merging particles ", name1, " and ", name2, " at time t = ",t
+          call symba_merger_size_check(mergesub_list, nmergesub + 2) 
           nmergesub = nmergesub + 1
           mergesub_list%name(nmergesub) = name1
           mergesub_list%status(nmergesub) = MERGED
@@ -194,6 +195,7 @@ SUBROUTINE symba_merge_pl(t, dt, index_enc, nplplenc, plplenc_list, nmergeadd, n
           mergesub_list%vh(:,nmergesub) = v2(:) - vbs(:)
           mergesub_list%mass(nmergesub) = mass2
           mergesub_list%radius(nmergesub) = rad2
+          call symba_merger_size_check(mergeadd_list, nmergeadd + 1) 
           nmergeadd = nmergeadd + 1
           IF (m2 > m1) THEN
                index_keep = index_big2
