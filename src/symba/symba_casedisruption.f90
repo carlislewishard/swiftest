@@ -71,7 +71,7 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    !REAL(DP), DIMENSION(symba_plA%helio%swiftest%nbody)                         :: m_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE              :: m_frag
    REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xbs, xbscrossvbs, vh_1, vh_2
-   INTEGER(I4B), DIMENSION(npl)                     :: array_index1_child, array_index2_child
+   INTEGER(I4B), DIMENSION(NCHILDMAX)               :: array_index1_child, array_index2_child
    TYPE(symba_merger)                               :: mergeadd_temp, mergesub_temp
 
 ! Executable code
@@ -108,8 +108,8 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    symba_plA%helio%swiftest%status(index2) = DISRUPTION
    symba_plA%helio%swiftest%status(index1_parent) = DISRUPTION
    symba_plA%helio%swiftest%status(index2_parent) = DISRUPTION
-   array_index1_child(1:npl) = symba_plA%index_child(1:npl,index1_parent)
-   array_index2_child(1:npl) = symba_plA%index_child(1:npl,index2_parent)
+   array_index1_child(1:npl) = symba_plA%index_child(1:NCHILDMAX,index1_parent)
+   array_index2_child(1:npl) = symba_plA%index_child(1:NCHILDMAX,index2_parent)
    DO k = 1, nplplenc                                          !go through the encounter list and for particles actively encoutering, get their children
       IF (plplenc_list%status(k) == ACTIVE) THEN
          DO i = 0, symba_plA%nchild(index1_parent)

@@ -55,7 +55,7 @@ module module_swiftestalloc
       allocate(symba_plA%peri(n))
       allocate(symba_plA%atp(n))
       allocate(symba_plA%index_parent(n))
-      allocate(symba_plA%index_child(n, n))
+      allocate(symba_plA%index_child(NCHILDMAX, n))
 
       symba_plA%lmerged(:) = .false.
       symba_plA%nplenc(:) = 0
