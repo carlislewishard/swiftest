@@ -178,7 +178,7 @@ SUBROUTINE symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
    mergesub_list%radius(nmergesub) = rad2
    mergesub_list%nadded(nmergesub) = 1
 
-   call symba_merger_size_check(mergeadd_list, nmergeadd + 2)  
+   call symba_merger_size_check(mergeadd_list, nmergeadd + 1)  
    nmergeadd = nmergeadd + 1
    IF (m2 > m1) THEN
       mergeadd_list%name(nmergeadd) = name2

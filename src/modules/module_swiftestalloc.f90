@@ -398,7 +398,7 @@ module module_swiftestalloc
 
       if (n <= size(plplenc_list%status)) return
 
-      call symba_plplenc_allocate(plplenc_temp, n)
+      call symba_plplenc_allocate(plplenc_temp, n - 1)
       call symba_plplenc_copy(plplenc_list, plplenc_temp,n - 1)
       call symba_plplenc_deallocate(plplenc_list)
       call symba_plplenc_allocate(plplenc_list, 2 * n)
@@ -423,7 +423,7 @@ module module_swiftestalloc
 
       if (n <= size(pltpenc_list%status)) return
 
-      call symba_pltpenc_allocate(pltpenc_temp, n)
+      call symba_pltpenc_allocate(pltpenc_temp, n - 1)
       call symba_pltpenc_copy(pltpenc_list, pltpenc_temp,n - 1)
       call symba_pltpenc_deallocate(pltpenc_list)
       call symba_pltpenc_allocate(pltpenc_list, 2 * n)
@@ -448,8 +448,8 @@ module module_swiftestalloc
 
       if (n <= size(merger_list%status)) return
 
-      call symba_merger_allocate(merger_temp, n)
-      call symba_merger_copy(merger_list, merger_temp,n - 1)
+      call symba_merger_allocate(merger_temp, n - 1)
+      call symba_merger_copy(merger_list, merger_temp, n - 1)
       call symba_merger_deallocate(merger_list)
       call symba_merger_allocate(merger_list, 2 * n)
       call symba_merger_copy(merger_temp, merger_list, n - 1)
