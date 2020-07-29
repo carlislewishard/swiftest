@@ -50,9 +50,9 @@ contains
    else
       write(unit, Pfmt) "!ISTEP_DUMP" 
    end if
-   if (param%j2rp2 > TINY) then
+   if (param%j2rp2 > VSMALL) then
       write(unit, Rfmt) "J2 ",param%j2rp2
-      if (param%j4rp4 > TINY) then
+      if (param%j4rp4 > VSMALL) then
          write(unit, Rfmt) "J4 ",param%j4rp4
       else
          write(unit, Pfmt) "!J4 "
