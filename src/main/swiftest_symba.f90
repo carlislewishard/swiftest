@@ -153,10 +153,10 @@ program swiftest_symba
    eoffset = 0.0_DP
    nplmax = npl
    ntpmax = ntp
-   if (istep_out > 0) then
+   if ((istep_out > 0).and.(out_stat == "NEW")) then
       call io_write_frame(t, symba_plA%helio%swiftest, symba_tpA%helio%swiftest, outfile, out_type, out_form, out_stat)
    end if
-   if (out_stat == "old") then
+   if (out_stat == "OLD") then
       open(unit = egyiu, file = energy_file, form = "formatted", status = "old", action = "write", position = "append")
    else 
       open(unit = egyiu, file = energy_file, form = "formatted", status = "replace", action = "write")
