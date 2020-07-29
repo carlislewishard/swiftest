@@ -81,7 +81,6 @@ SUBROUTINE symba_getacch_eucl(lextra_force, t, npl, nplm, nplmax, symba_plA, j2r
 ! it to the older swifter versions
 
      !$omp parallel do default(private) schedule(static) &
-     !$omp num_threads(min(omp_get_max_threads(),ceiling(num_plpl_comparisons/10000.))) &
      !$omp shared (num_plpl_comparisons, k_plpl, symba_plA) &
      !$omp reduction(+:ahp) &
      !$omp reduction(-:ahm)
@@ -99,8 +98,8 @@ SUBROUTINE symba_getacch_eucl(lextra_force, t, npl, nplm, nplmax, symba_plA, j2r
                   irij3 = 1.0_DP/(rji2*SQRT(rji2))
                   faci = symba_plA%helio%swiftest%mass(i)*irij3
                   facj = symba_plA%helio%swiftest%mass(j)*irij3
-                  ahp(:,i) = ahp(:,i) + facj*dx(:)
-                  ahm(:,j) = ahm(:,j) - faci*dx(:)
+                  ahp(:,i) = ahp(:,i) + facj * dx(:)
+                  ahm(:,j) = ahm(:,j) - faci * dx(:)
                end if
           ENDIF
      END DO

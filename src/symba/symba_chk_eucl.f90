@@ -74,7 +74,6 @@ SUBROUTINE symba_chk_eucl(num_plpl_comparisons, k_plpl, symba_plA, dt, plpl_enco
      r2critmax = rcritmax * rcritmax
 
       !$omp parallel do default(private) schedule(static) &
-      !$omp num_threads(min(omp_get_max_threads(),ceiling(num_plpl_comparisons/10000.))) &
       !$omp shared(num_plpl_comparisons, nplplenc,  loc_lvdotr, lencounter, k_plpl, dt, term2, r2critmax, symba_plA, indnum)
       do k = 1, num_plpl_comparisons
          xr(:) = symba_plA%helio%swiftest%xh(:,k_plpl(2,k)) - symba_plA%helio%swiftest%xh(:,k_plpl(1,k))
