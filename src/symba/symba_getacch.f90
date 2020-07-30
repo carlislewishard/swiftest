@@ -13,7 +13,6 @@
 !                t            : time
 !                npl          : number of planets
 !                nplm         : number of planets with mass > mtiny
-!                nplmax       : maximum allowed number of planets
 !                symba_pl1P   : pointer to head of SyMBA planet structure linked-list
 !                j2rp2        : J2 * R**2 for the Sun
 !                j4rp4        : J4 * R**4 for the Sun
@@ -27,7 +26,7 @@
 !    Terminal  : none
 !    File      : none
 !
-!  Invocation  : CALL symba_getacch(lextra_force, t, npl, nplm, nplmax, symba_pl1P, j2rp2, j4rp4, nplplenc, plplenc_list)
+!  Invocation  : CALL symba_getacch(lextra_force, t, npl, nplm, symba_pl1P, j2rp2, j4rp4, nplplenc, plplenc_list)
 !
 !  Notes       : Adapted from Hal Levison's Swift routine symba5_getacch.f
 !

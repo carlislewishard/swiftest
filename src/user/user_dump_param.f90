@@ -7,6 +7,8 @@ contains
    !!
    !! Adapted from David E. Kaufmann's Swifter routine io_dump_param.f90
    !! Adapted from Martin Duncan's Swift routine io_dump_param.f
+   use swiftest
+   use module_interfaces
    implicit none
 
    type(user_input_parameters)  :: param_dump !! Data type of dumped parameter file

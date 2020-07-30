@@ -7,10 +7,12 @@ contains
    !!
    !! Adapted from David E. Kaufmann's Swifter routine swiftest_init_pl.f90
    !! Adapted from Martin Duncan's Swift routine swiftest_init_pl.f
+   use swiftest
+   use module_interfaces
    implicit none
 
    integer(I4B), parameter :: LUN = 7              !! Unit number of input file
-   integer(I4B)            :: i, iu, ierr, npl
+   integer(I4B)            :: i, ierr, npl
    logical                 :: is_ascii 
 
    ierr = 0
@@ -96,7 +98,7 @@ contains
       call util_exit(FAILURE)
    end if
 
-   param%nplmax = max(param%nplmax, maxval(self%name(:)))
+   param%plmaxname = max(param%plmaxname, maxval(self%name(:)))
 
    return
    end procedure swiftest_read_pl_in

@@ -51,7 +51,7 @@ SUBROUTINE symba_chk_eucl(num_plpl_comparisons, k_plpl, symba_plA, dt, plpl_enco
      INTEGER(I4B), INTENT(OUT)                              :: nplplenc
 
 ! Internals
-     logical, dimension(:), allocatable :: lencounter, loc_lvdotr, ltmp
+     logical, dimension(:), allocatable :: loc_lvdotr, ltmp
      integer(I8B), dimension(:), allocatable :: indnum, itmp
      ! LOGICAL(LGT) :: iflag lvdotr_flag
      REAL(DP)     :: rcrit, r2crit, vdotr, r2, v2, tmin, r2min, term2, rcritmax, r2critmax
@@ -75,7 +75,7 @@ SUBROUTINE symba_chk_eucl(num_plpl_comparisons, k_plpl, symba_plA, dt, plpl_enco
      r2critmax = rcritmax * rcritmax
 
       !$omp parallel do default(private) schedule(static) &
-      !$omp shared(num_plpl_comparisons, nplplenc,  loc_lvdotr, lencounter, k_plpl, dt, term2, r2critmax, symba_plA, indnum)
+      !$omp shared(num_plpl_comparisons, nplplenc,  loc_lvdotr, k_plpl, dt, term2, r2critmax, symba_plA, indnum)
       do k = 1, num_plpl_comparisons
          i = k_plpl(1, k)
          j = k_plpl(2, k)

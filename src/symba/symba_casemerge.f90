@@ -33,7 +33,7 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-     npl, symba_plA, nplplenc, plplenc_list, array_index1_child, array_index2_child, m1, m2, rad1, rad2, x1, x2, v1, v2)
+     symba_plA, nplplenc, plplenc_list, array_index1_child, array_index2_child, m1, m2, rad1, rad2, x1, x2, v1, v2)
 
 ! Modules
      USE swiftest
@@ -44,7 +44,7 @@ SUBROUTINE symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
      IMPLICIT NONE
 
 ! Arguments
-     INTEGER(I4B), INTENT(IN)                         :: index_enc, npl, nplplenc
+     INTEGER(I4B), INTENT(IN)                         :: index_enc, nplplenc
      INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub
      REAL(DP), INTENT(IN)                             :: t
      REAL(DP), INTENT(INOUT)                          :: eoffset, m1, m2, rad1, rad2
@@ -59,7 +59,7 @@ SUBROUTINE symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
  
      INTEGER(I4B)                 :: i, j, k, stat1, stat2, index1, index2, indexchild
      INTEGER(I4B)                 :: index1_child, index2_child, index1_parent, index2_parent
-     INTEGER(I4B)                 :: name1, name2, nchild1, nchild2, mergename, mergestat
+     INTEGER(I4B)                 :: name1, name2, nchild1, nchild2
      REAL(DP)                     :: mtot
      REAL(DP)                     :: eold, enew, mass1, mass2
      REAL(DP), DIMENSION(NDIM)    :: xr, xnew, vnew

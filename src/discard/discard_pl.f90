@@ -56,9 +56,7 @@ SUBROUTINE discard_pl(t, dt, npl, ntp, swiftest_plA, swiftest_tpA)
                     CALL discard_pl_close(dx(:), dv(:), dt, radius*radius, isp, r2min)
                     IF (isp /= 0) THEN
                          swiftest_tpA%status(i) = DISCARDED_PLR
-                         ldiscard = .TRUE.
                          WRITE(*, *) "Particle ", swiftest_tpA%name(i), " too close to Planet ", swiftest_plA%name(i), " at t = ", t
-                         ldiscard_tp = .TRUE.
                          EXIT
                     END IF
                END DO

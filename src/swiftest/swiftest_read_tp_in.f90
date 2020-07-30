@@ -7,10 +7,12 @@ contains
    !!
    !! Adapted from David E. Kaufmann's Swifter routine io_init_pl.f90
    !! Adapted from Martin Duncan's Swift routine io_init_tp.f
+   use swiftest
+   use module_interfaces
    implicit none
 
    integer(I4B), parameter  :: LUN = 7              !! Unit number of input file
-   integer(I4B)             :: i, iu, ierr, ntp
+   integer(I4B)             :: i, ierr, ntp
    logical                  :: is_ascii
 
 

@@ -16,8 +16,6 @@ program swiftest_symba
 
    ! Arguments
    type(user_input_parameters)  :: param    ! derived type containing user-defined parameters
-   integer(I4B)      :: nplmax         ! maximum number of planets
-   integer(I4B)      :: ntpmax         ! maximum number of test particles
    integer(I4B)      :: istep_out      ! time steps between binary outputs
    integer(I4B)      :: istep_dump     ! time steps between dumps
    real(DP)          :: t0             ! integration start time
@@ -42,13 +40,13 @@ program swiftest_symba
    character(strmax) :: out_stat       ! open status for output binary file
 
    ! Internals
-   logical                       :: lfrag_add
-   integer(I4B)                  :: npl, nplm, ntp, ntp0, nsppl, nsptp, iout, idump, iloop, idebug
+   logical                       :: lfrag_add, ldiscard, ldiscard_tp
+   integer(I4B)                  :: npl, nplm, ntp, ntp0, nsppl, nsptp, iout, idump, iloop
    integer(I4B)                  :: nplplenc, npltpenc, nmergeadd, nmergesub
    real(DP)                      :: t, tfrac, tbase, mtiny, ke, pe, te, tei, tef, eoffset
    real(DP), dimension(NDIM)     :: htot
    real(DP)                      :: te_orig, te_error, te_off_error, Ltot_orig, Ltot_now, Lerror
-   character(STRMAX)             :: inparfile, thresh
+   character(STRMAX)             :: inparfile
    type(symba_pl)                :: symba_plA
    type(symba_tp)                :: symba_tpA
    type(swiftest_tp)             :: discard_tpA
@@ -59,7 +57,6 @@ program swiftest_symba
    integer(I4B), parameter       :: egyiu = 72
    real(DP)                      :: start, finish
    INTEGER(I8B)                  :: clock_count, count_rate, count_max
-   CHARACTER(len=STRMAX)         :: arg
    INTEGER(I4B)                  :: ierr
    INTEGER(I4B), DIMENSION(:,:), ALLOCATABLE :: k_plpl, k_pltp
    INTEGER(I8B)                  :: num_plpl_comparisons, num_pltp_comparisons
@@ -82,8 +79,6 @@ program swiftest_symba
    param%lmtiny = .true. ! Turn this on for SyMBA
 
    ! temporary until the conversion to the derived type argument list is complete
-   nplmax = param%nplmax
-   ntpmax = param%ntpmax
    t0 = param%t0
    tstop = param%tstop
    dt = param%dt
@@ -150,8 +145,6 @@ program swiftest_symba
    nmergesub = 0
    nsppl = 0
    nsptp = 0
-   nplmax = npl
-   ntpmax = ntp
    if ((istep_out > 0).and.(out_stat == "NEW")) then
       call io_write_frame(t, symba_plA%helio%swiftest, symba_tpA%helio%swiftest, outfile, out_type, out_form, out_stat)
    end if
@@ -199,16 +192,15 @@ program swiftest_symba
             call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, tei, htot)
          end if
       end if
-      call symba_discard_merge_pl(t, npl, symba_plA, nplplenc, plplenc_list)                                  
-      call symba_discard_pl(t, npl, param%nplmax, nsppl, symba_plA, rmin, rmax, rmaxu, qmin, qmin_coord, qmin_alo, &    
-            qmin_ahi, j2rp2, j4rp4, eoffset)
-      call symba_discard_tp(t, npl, ntp, nsptp, symba_plA, symba_tpA, dt, rmin, rmax, rmaxu, qmin, qmin_coord, &    
-            qmin_alo, qmin_ahi, param%lclose, param%lrhill_present)
+      call symba_discard_merge_pl(npl, symba_plA, nplplenc, plplenc_list, ldiscard)                                  
+      call symba_discard_pl(t, npl, symba_plA, rmin, rmax, rmaxu, qmin, qmin_coord, qmin_alo, qmin_ahi, ldiscard)
+      call symba_discard_tp(t, npl, ntp, symba_plA, symba_tpA, dt, rmin, rmax, rmaxu, qmin, qmin_coord, &    
+            qmin_alo, qmin_ahi, param%lrhill_present, ldiscard_tp)
       if (ldiscard .or. ldiscard_tp .or. lfrag_add) then
          call symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
-            discard_tpA,param)
+            discard_tpA, param, ldiscard, ldiscard_tp)
          if (ldiscard .or. ldiscard_tp) then
-            call io_discard_write_symba(t, mtiny, npl, ntp, nsppl, nsptp, nmergesub, symba_plA, &
+            call io_discard_write_symba(t, mtiny, npl, nsppl, nsptp, nmergesub, symba_plA, &
                discard_plA, discard_tpA, mergeadd_list, mergesub_list, discard_file, param%lbig_discard) 
             nmergeadd = 0
             nmergesub = 0

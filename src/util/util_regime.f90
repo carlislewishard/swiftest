@@ -68,18 +68,18 @@ SUBROUTINE util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, de
      real(DP)                      :: mresidual
 
 ! Executable code
-      vimp = NORM2(vb2(:) - vb1(:))
-      b = calc_b(xh2, vb2, rad2, xh1, vb1, rad1)
+      vimp = norm2(vb2(:) - vb1(:))
+      b = calc_b(xh2, vb2, xh1, vb1)
       l = (rad1 + rad2) * (1 - b)
-      E = (NORM2(vb1)**2) / 2.0_DP - GC * Mcenter / NORM2(xh1)
+      E = (norm2(vb1)**2) / 2.0_DP - GC * Mcenter / norm2(xh1)
       a1 = - GC * Mcenter / 2.0_DP / E
       mtot = m1 + m2 
       mu = (m1 * m2) / mtot
       IF (l < 2 * rad2) THEN
             !Calculate mint
-            Phi = 2 * ACOS((l - rad2) / rad2)
+            Phi = 2 * acos((l - rad2) / rad2)
             Aint = (rad2**2) * (PI - (Phi - sin(Phi)) / 2.0_DP)
-            Lint = 2 * (rad2**2 - (rad2 - l / 2.0_DP) ** 2) ** (1.0_DP/2.0_DP)
+            Lint = 2 * sqrt(rad2**2 - (rad2 - l / 2.0_DP) ** 2) 
             mint = Aint * Lint  ![kg]
             alpha = (l**2) * (3 * rad2 - l) / (4 * (rad2**3))
       ELSE
@@ -88,7 +88,7 @@ SUBROUTINE util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, de
       END IF 
       Rp = (3 * (m1 / den1 + alpha * m2 / den2) / (4 * PI))**(1.0_DP/3.0_DP) ! (Mustill et al. 2019)
      !Calculate vescp
-      vescp = SQRT(2 * GC * (mtot) / (Rp)) !Mustill et al. 2018 Eq 6 
+      vescp = sqrt(2 * GC * (mtot) / (Rp)) !Mustill et al. 2018 Eq 6 
      !Calculate Rhill
       Rhill = a1 * (m1 / 3.0_DP / (Mcenter + m1))**(1.0_DP/3.0_DP)
      !Calculate Vhill
@@ -106,7 +106,7 @@ SUBROUTINE util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, de
       QR = mu*(vimp**2) / mtot / 2.0_DP
       !QRD_lr = calc_QRD_lr(m2, m1, mint)
      !Calculate Mass largest remnant Mlr 
-      Mlr = (1.0_DP - QR / QRD_pstar / 2.0_DP) * (mtot)  ! [kg] #(Eq 5)
+      Mlr = (1.0_DP - QR / QRD_pstar / 2.0_DP) * mtot  ! [kg] #(Eq 5)
      !Calculate vsupercat
       QR_supercat = 1.8_DP * QRD_pstar
       vsupercat = sqrt(2 * QR_supercat * mtot / mu)
@@ -226,17 +226,16 @@ function calc_QRD_rev(Mp,Mtarg,mint,den1,den2, vimp) result(ans)
    return
 end function calc_QRD_rev
 
-function calc_b(proj_pos, proj_vel, proj_r, targ_pos, targ_vel, targ_r) result(b)
+function calc_b(proj_pos, proj_vel, targ_pos, targ_vel) result(ans)
   implicit none
-  real(DP), intent(in), DIMENSION(3) :: proj_pos, proj_vel, targ_pos, targ_vel
-  real(DP), intent(in)               :: proj_r, targ_r
-  real(DP)                           :: angle, b  
-  real(DP), DIMENSION(3)             :: Vimp, distance         
+  real(DP), intent(in), dimension(:) :: proj_pos, proj_vel, targ_pos, targ_vel
+  real(DP)                           :: angle, ans 
+  real(DP), dimension(NDIM)          :: imp_vel, distance         
 
-    Vimp = proj_vel - targ_vel
+    imp_vel = proj_vel - targ_vel
     distance = proj_pos - targ_pos
-    angle = ACOS(DOT_PRODUCT(Vimp,distance)/NORM2(Vimp)/NORM2(distance))      
-    b = SIN(angle)
+    angle = acos(dot_product(imp_vel, distance) / norm2(imp_vel) / norm2(distance))      
+    ans = sin(angle)
   return 
 end function calc_b
 

@@ -46,7 +46,7 @@ SUBROUTINE io_dump_pl(npl, swiftest_plA, lclose, lrhill_present)
      TYPE(swiftest_pl), INTENT(INOUT) :: swiftest_plA
 
 ! Internals
-   INTEGER(I4B)                     :: i, iu, ierr
+   INTEGER(I4B)                     :: ierr
    INTEGER(I4B), SAVE               :: idx = 1
    integer(I4B),parameter             :: LUN = 7
 

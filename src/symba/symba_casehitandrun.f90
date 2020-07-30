@@ -33,7 +33,7 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-   symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, mres, rres, m1, m2, rad1, rad2, xh_1, xh_2, vb_1, vb_2, mtiny, npl)
+   symba_plA, nplplenc, plplenc_list, plmaxname, tpmaxname, mres, m1, m2, rad1, rad2, xh_1, xh_2, vb_1, vb_2, mtiny)
 
 ! Modules
    USE swiftest
@@ -44,12 +44,12 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    IMPLICIT NONE
 
 ! Arguments
-   INTEGER(I4B), INTENT(IN)                         :: index_enc, npl
+   INTEGER(I4B), INTENT(IN)                         :: index_enc
    INTEGER(I4B), INTENT(IN)                         :: nplplenc
-   INTEGER(I4B), INTENT(INOUT)                      :: nplmax, ntpmax, nmergeadd, nmergesub
+   INTEGER(I4B), INTENT(INOUT)                      :: plmaxname, tpmaxname, nmergeadd, nmergesub
    REAL(DP), INTENT(IN)                             :: t, dt, mtiny
    REAL(DP), INTENT(INOUT)                          :: eoffset, m1, m2, rad1, rad2
-   REAL(DP), DIMENSION(:), INTENT(INOUT)            :: mres, rres
+   REAL(DP), DIMENSION(:), INTENT(INOUT)            :: mres
    REAL(DP), DIMENSION(:), INTENT(IN)               :: vbs
    REAL(DP), DIMENSION(:), INTENT(INOUT)            :: xh_1, xh_2, vb_1, vb_2
    TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
@@ -60,18 +60,16 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    INTEGER(I4B)                                     :: nfrag, i, k, index1, index2, frags_added, j, index1_child, index2_child 
    INTEGER(I4B)                                     :: index1_parent, index2_parent, index_keep_parent, index_rm_parent
    INTEGER(I4B)                                     :: name1, name2, index_keep, index_rm, name_keep, name_rm, nstart
-   real(DP)                                         :: first_add_vz, second_add_vz, first_add_pz, second_add_pz
-   real(DP)                                         :: first_add_name, second_add_name
-   REAL(DP)                                         :: mtot, msun, d_rm, m_rm, r_rm, x_rm, y_rm, z_rm, vx_rm, vy_rm, vz_rm 
+   REAL(DP)                                         :: mtot, msun, d_rm, m_rm, r_rm
    REAL(DP)                                         :: rhill_keep, r_circle, theta, radius1, radius2, e, q, semimajor_encounter
-   REAL(DP)                                         :: m_rem, m_test, mass1, mass2, enew, eold, semimajor_inward, A, B, v_col
-   REAL(DP)                                         :: x_com, y_com, z_com, vx_com, vy_com, vz_com, mass_keep, mass_rm, rhill_rm
+   REAL(DP)                                         :: m_rem, mass1, mass2, enew, eold, semimajor_inward
+   REAL(DP)                                         :: mass_keep, mass_rm, rhill_rm
    REAL(DP)                                         :: rad_keep, rad_rm
    REAL(DP)                                         :: r_smallestcircle
    REAL(DP), DIMENSION(:, :), ALLOCATABLE           :: x_frag, v_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE              :: m_frag
-   REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xh_keep, xh_rm, vh_keep, vh_rm, xbs, xb_keep 
-   REAL(DP), DIMENSION(NDIM)                        :: xb_rm, vb_keep, vb_rm, vtmp
+   REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xh_keep, xh_rm, vh_keep, vh_rm, xbs
+   REAL(DP), DIMENSION(NDIM)                        :: vb_keep, vb_rm
    INTEGER(I4B), DIMENSION(NCHILDMAX)               :: array_index1_child, array_index2_child
 
 ! Executable code
@@ -102,12 +100,10 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       mass_rm = m1
       rad_keep = rad2
       rad_rm = rad1
-      xh_keep = xh_2 !symba_plA%helio%swiftest%xh(:,index2)
-      xh_rm = xh_1 !symba_plA%helio%swiftest%xh(:,index1)
-      !xb_keep = symba_plA%helio%swiftest%xb(:,index2)
-      !xb_rm = symba_plA%helio%swiftest%xb(:,index1)
-      vb_keep = vb_2 !symba_plA%helio%swiftest%vb(:,index2)
-      vb_rm = vb_1 !symba_plA%helio%swiftest%vb(:,index1)
+      xh_keep = xh_2 
+      xh_rm = xh_1 
+      vb_keep = vb_2 
+      vb_rm = vb_1 
       vh_keep = vb_rm - vbs
       vh_rm = vb_keep - vbs
       index_keep_parent = index2_parent
@@ -121,12 +117,10 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       mass_rm = m2
       rad_keep = rad1
       rad_rm = rad2
-      xh_keep = xh_1 !symba_plA%helio%swiftest%xh(:,index1)
-      xh_rm = xh_2 !symba_plA%helio%swiftest%xh(:,index2)
-      !xb_keep = symba_plA%helio%swiftest%xb(:,index1)
-      !xb_rm = symba_plA%helio%swiftest%xb(:,index2)
-      vb_keep = vb_1 !symba_plA%helio%swiftest%vb(:,index1)
-      vb_rm = vb_2 !symba_plA%helio%swiftest%vb(:,index2)
+      xh_keep = xh_1 
+      xh_rm = xh_2 
+      vb_keep = vb_1 
+      vb_rm = vb_2 
       vh_keep = vb_keep - vbs
       vh_rm = vb_rm - vbs
       index_keep_parent = index1_parent
@@ -212,8 +206,8 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    mtot = mtot + mergeadd_list%mass(nmergeadd) 
 
    ! Pure Hit & Run
-   IF ((mres(2) > mass_rm * 0.9_DP).OR.(mres(2)<nfrag*mtiny)) THEN
-      !frags_added does NOT get incremented on in a perfect merger because then nplmax would be nplmax + 1
+   IF ((mres(2) > mass_rm * 0.9_DP).OR.(mres(2) < nfrag * mtiny)) THEN
+      !frags_added does NOT get incremented on in a perfect merger because then plmaxname would be plmaxname + 1
       !this screws up the naming of new fragments in subsequent disruptions or supercatastrophic disruptions or
       !imperfect hit & runs. In other words, in a hit & run, frags_added is only incremented on in imperfect 
       !hit & runs. 
@@ -235,7 +229,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       nmergeadd = nmergeadd + 1
       mergeadd_list%status(nmergeadd) = HIT_AND_RUN
       mergeadd_list%ncomp(nmergeadd) = 2
-      mergeadd_list%name(nmergeadd) = nplmax + ntpmax +  1
+      mergeadd_list%name(nmergeadd) = max(plmaxname, tpmaxname) +  1
       mergeadd_list%mass(nmergeadd) = mres(2)
       mergeadd_list%radius(nmergeadd) = ((3 * mergeadd_list%mass(nmergeadd)) / (4 * PI * d_rm))  & 
             ** (1.0_DP / 3.0_DP) 
@@ -247,7 +241,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
             nmergeadd = nmergeadd + 1
             mergeadd_list%status(nmergeadd) = HIT_AND_RUN
             mergeadd_list%ncomp(nmergeadd) = 2
-            mergeadd_list%name(nmergeadd) = nplmax + ntpmax + i
+            mergeadd_list%name(nmergeadd) = max(plmaxname, tpmaxname) + i
             mergeadd_list%mass(nmergeadd) = m_rem / (nfrag) 
             mergeadd_list%radius(nmergeadd) = ((3 * mergeadd_list%mass(nmergeadd)) / (4 * PI * d_rm))  & 
                ** (1.0_DP / 3.0_DP) 
@@ -319,8 +313,8 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    enew = 0.5_DP * mtot * DOT_PRODUCT(vnew(:), vnew(:))
    eoffset = eoffset + eold - enew
 
-   ! Update nplmax to account for new fragments made in imperfect hit & runs
-   nplmax = nplmax + frags_added
+   ! Update plmaxname to account for new fragments made in imperfect hit & runs
+   plmaxname = max(plmaxname, tpmaxname) + frags_added
    RETURN 
 END SUBROUTINE symba_casehitandrun
 

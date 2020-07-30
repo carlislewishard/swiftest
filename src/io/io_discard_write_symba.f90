@@ -37,7 +37,7 @@
 !  Notes       : Adapted from Hal Levison's Swift routine io_discard_mass.f and io_discard_merge.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE io_discard_write_symba(t, mtiny, npl, ntp, nsppl, nsptp, nmergesub, symba_plA, & 
+SUBROUTINE io_discard_write_symba(t, mtiny, npl, nsppl, nsptp, nmergesub, symba_plA, & 
      discard_plA, discard_tpA, mergeadd_list, mergesub_list, fname, lbig_discard)
 
 ! Modules
@@ -48,7 +48,7 @@ SUBROUTINE io_discard_write_symba(t, mtiny, npl, ntp, nsppl, nsptp, nmergesub, s
 
 ! Arguments
      LOGICAL(LGT), INTENT(IN)                       :: lbig_discard
-     INTEGER(I4B), INTENT(IN)                       :: npl, ntp, nsppl, nsptp, nmergesub
+     INTEGER(I4B), INTENT(IN)                       :: npl, nsppl, nsptp, nmergesub
      REAL(DP), INTENT(IN)                           :: t, mtiny
      CHARACTER(*), INTENT(IN)                       :: fname
      TYPE(symba_pl), INTENT(INOUT)                  :: symba_plA

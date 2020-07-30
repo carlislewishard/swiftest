@@ -48,7 +48,6 @@ FUNCTION io_read_hdr(iu, t, npl, ntp, iout_form, out_type)
 
 ! Internals
      INTEGER(I4B)               :: ierr
-     INTEGER(I4B), DIMENSION(3) :: nn
      REAL(SP)                   :: ttmp
 
 ! Executable code

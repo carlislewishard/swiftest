@@ -12,17 +12,13 @@ contains
    implicit none
    
 
-   logical                   :: lxdr
    logical, save             :: lfirst = .true.
    integer(I4B), parameter   :: lun = 20
    integer(I4B)              :: i, j, ierr
    integer(I4B), save        :: iu = lun, iout_form = xv
    real(DP)                  :: a, e, inc, capom, omega, capm, mu
-   real(DP), dimension(NDIM) :: xtmp, vtmp
    real(DP), dimension(2:swiftest_plA%nbody)  :: a_pl, e_pl, inc_pl, capom_pl, omega_pl, capm_pl
    real(DP), dimension(1:swiftest_tpA%nbody)  :: a_tp, e_tp, inc_tp, capom_tp, omega_tp, capm_tp
-   real(DP)                                         :: first_add_vz, second_add_vz, first_add_pz, second_add_pz
-   integer(I4B)                                  :: first_add_name, second_add_name, first_add_index, second_add_index
 
    if (lfirst) then
       select case(out_stat)

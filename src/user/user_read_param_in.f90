@@ -9,6 +9,8 @@ contains
    !! Adapted from Martin Duncan's Swift routine io_init_param.f
    !$ use omp_lib
    !use util, only: util_exit ! IMPLEMENTATION TBD
+   use swiftest
+   use module_interfaces
    implicit none
 
    integer(I4B), parameter :: LUN = 7                 !! Unit number of input file
@@ -39,8 +41,8 @@ contains
 
    close(LUN)
 
-   write(*,*) "NPLMAX         = ",param%nplmax
-   write(*,*) "NTPMAX         = ",param%ntpmax
+   write(*,*) "NPLMAX         = ",param%plmaxname
+   write(*,*) "NTPMAX         = ",param%tpmaxname
    write(*,*) "T0             = ",param%t0
    write(*,*) "TSTOP          = ",param%tstop
    write(*,*) "DT             = ",param%dt

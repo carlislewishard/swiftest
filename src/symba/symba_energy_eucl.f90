@@ -22,7 +22,7 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
 ! internals
    integer(I4B)              :: i, j
    real(DP)                  :: mass, msys, rmag, v2, oblpot
-   real(DP), dimension(NDIM) :: h, dx, x, v
+   real(DP), dimension(NDIM) :: h, x, v
    real(DP), dimension(npl)  :: irh
    integer(I8B)              :: k
 

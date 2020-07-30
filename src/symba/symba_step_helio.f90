@@ -14,9 +14,7 @@
 !                t            : time
 !                npl          : number of planets
 !                nplm         : number of planets with mass > mtiny
-!                nplmax       : maximum allowed number of planets
 !                ntp          : number of active test particles
-!                ntpmax       : maximum allowed number of test particles
 !                helio_pl1P   : pointer to head of helio planet structure linked-list
 !                helio_tp1P   : pointer to head of helio test particle structure linked-list
 !                j2rp2        : J2 * R**2 for the Sun
@@ -32,13 +30,13 @@
 !    Terminal  : none
 !    File      : none
 !
-!  Invocation  : CALL symba_step_helio(lfirst, lextra_force, t, npl, nplm, nplmax, ntp, ntpmax, helio_pl1P, helio_tp1P, j2rp2,
+!  Invocation  : CALL symba_step_helio(lfirst, lextra_force, t, npl, nplm, ntp, helio_pl1P, helio_tp1P, j2rp2,
 !                                      j4rp4, dt)
 !
 !  Notes       : 
 !
 !**********************************************************************************************************************************
-SUBROUTINE symba_step_helio(lfirst, lextra_force, t, npl, nplm, nplmax, ntp, ntpmax, helio_plA, helio_tpA, j2rp2, j4rp4, dt)
+SUBROUTINE symba_step_helio(lfirst, lextra_force, t, npl, nplm, ntp, helio_plA, helio_tpA, j2rp2, j4rp4, dt)
 
 ! Modules
      USE swiftest
@@ -50,7 +48,7 @@ SUBROUTINE symba_step_helio(lfirst, lextra_force, t, npl, nplm, nplmax, ntp, ntp
 ! Arguments
      LOGICAL(LGT), INTENT(IN)                       :: lextra_force
      LOGICAL(LGT), INTENT(INOUT)                    :: lfirst
-     INTEGER(I4B), INTENT(IN)                       :: npl, nplm, nplmax, ntp, ntpmax
+     INTEGER(I4B), INTENT(IN)                       :: npl, nplm, ntp
      REAL(DP), INTENT(IN)                           :: t, j2rp2, j4rp4, dt
      TYPE(helio_pl), INTENT(INOUT)                  :: helio_plA
      TYPE(helio_tp), INTENT(INOUT)                  :: helio_tpA
@@ -62,8 +60,8 @@ SUBROUTINE symba_step_helio(lfirst, lextra_force, t, npl, nplm, nplmax, ntp, ntp
 
 ! Executable code
      lfirsttp = lfirst
-     CALL symba_step_helio_pl(lfirst, lextra_force, t, npl, nplm, nplmax, helio_plA, j2rp2, j4rp4, dt, xbeg, xend, ptb, pte)
-     IF (ntp > 0) CALL helio_step_tp(lfirsttp, lextra_force, t, nplm, nplmax, ntp, ntpmax, helio_plA, helio_tpA, j2rp2, j4rp4,  &
+     CALL symba_step_helio_pl(lfirst, lextra_force, t, npl, nplm, helio_plA, j2rp2, j4rp4, dt, xbeg, xend, ptb, pte)
+     IF (ntp > 0) CALL helio_step_tp(lfirsttp, lextra_force, t, nplm, ntp, helio_plA, helio_tpA, j2rp2, j4rp4,  &
           dt, xbeg, xend, ptb, pte)
 
      RETURN

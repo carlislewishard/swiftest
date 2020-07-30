@@ -13,7 +13,6 @@
 !                lextra_force : logical flag indicating whether to include user-supplied accelerations
 !                t            : time
 !                npl          : number of planets
-!                nplmax       : maximum allowed number of planets
 !                helio_pl1P   : pointer to head of helio planet structure linked-list
 !                j2rp2        : J2 * R**2 for the Sun
 !                j4rp4        : J4 * R**4 for the Sun
@@ -31,12 +30,12 @@
 !    Terminal  : none
 !    File      : none
 !
-!  Invocation  : CALL helio_step_pl(lfirst, lextra_force, t, npl, nplmax, helio_pl1P, j2rp2, j4rp4, dt, xbeg, xend, ptb, pte)
+!  Invocation  : CALL helio_step_pl(lfirst, lextra_force, t, npl, helio_pl1P, j2rp2, j4rp4, dt, xbeg, xend, ptb, pte)
 !
 !  Notes       : Adapted from Hal Levison's Swift routine helio_step_pl.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE helio_step_pl(lfirst, lextra_force, t, npl, nplmax, helio_plA, j2rp2, j4rp4, dt, xbeg, xend, ptb, pte)
+SUBROUTINE helio_step_pl(lfirst, lextra_force, t, npl, helio_plA, j2rp2, j4rp4, dt, xbeg, xend, ptb, pte)
 
 ! Modules
      USE swiftest
@@ -47,7 +46,7 @@ SUBROUTINE helio_step_pl(lfirst, lextra_force, t, npl, nplmax, helio_plA, j2rp2,
 ! Arguments
      LOGICAL(LGT), INTENT(IN)                    :: lextra_force
      LOGICAL(LGT), INTENT(INOUT)                 :: lfirst
-     INTEGER(I4B), INTENT(IN)                    :: npl, nplmax
+     INTEGER(I4B), INTENT(IN)                    :: npl
      REAL(DP), INTENT(IN)                        :: t, j2rp2, j4rp4, dt
      REAL(DP), DIMENSION(:), INTENT(OUT)      :: ptb, pte
      REAL(DP), DIMENSION(:, :), INTENT(OUT) :: xbeg, xend
@@ -66,7 +65,7 @@ SUBROUTINE helio_step_pl(lfirst, lextra_force, t, npl, nplmax, helio_plA, j2rp2,
           lfirst = .FALSE.
      END IF
      CALL helio_lindrift(npl, helio_plA%swiftest, dth, ptb)
-     CALL helio_getacch(lflag, lextra_force, t, npl, nplmax, helio_plA, j2rp2, j4rp4)
+     CALL helio_getacch(lflag, lextra_force, t, npl, helio_plA, j2rp2, j4rp4)
      lflag = .TRUE.
      CALL helio_kickvb(npl, helio_plA, dth)
      DO i = 2, npl
@@ -76,7 +75,7 @@ SUBROUTINE helio_step_pl(lfirst, lextra_force, t, npl, nplmax, helio_plA, j2rp2,
      DO i = 2, npl
           xend(:, i) = helio_plA%swiftest%xh(:,i)
      END DO
-     CALL helio_getacch(lflag, lextra_force, t+dt, npl, nplmax, helio_plA, j2rp2, j4rp4)
+     CALL helio_getacch(lflag, lextra_force, t+dt, npl, helio_plA, j2rp2, j4rp4)
      CALL helio_kickvb(npl, helio_plA, dth)
      CALL helio_lindrift(npl, helio_plA%swiftest, dth, pte)
      CALL coord_vb2vh(npl, helio_plA%swiftest)

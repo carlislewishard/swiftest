@@ -33,7 +33,7 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-   symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, mres, rres, m1, m2, rad1, rad2, xh_1, xh_2, vb_1, vb_2, mtiny, npl)
+   symba_plA, nplplenc, plplenc_list, plmaxname, tpmaxname, mres, rres, m1, m2, rad1, rad2, xh_1, xh_2, vb_1, vb_2)
 
 ! Modules
    USE swiftest
@@ -46,10 +46,10 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    IMPLICIT NONE
 
 ! Arguments
-   INTEGER(I4B), INTENT(IN)                         :: index_enc, npl
+   INTEGER(I4B), INTENT(IN)                         :: index_enc
    INTEGER(I4B), INTENT(IN)                         :: nplplenc
-   INTEGER(I4B), INTENT(INOUT)                      :: nplmax, ntpmax, nmergeadd, nmergesub
-   REAL(DP), INTENT(IN)                             :: t, dt, mtiny
+   INTEGER(I4B), INTENT(INOUT)                      :: plmaxname, tpmaxname, nmergeadd, nmergesub
+   REAL(DP), INTENT(IN)                             :: t, dt
    REAL(DP), INTENT(INOUT)                          :: eoffset, m1, m2, rad1, rad2
    REAL(DP), DIMENSION(:), INTENT(INOUT)            :: mres, rres
    REAL(DP), DIMENSION(:), INTENT(IN)               :: vbs
@@ -64,15 +64,11 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    INTEGER(I4B)                                     :: name1, name2, nstart
    REAL(DP)                                         :: mtot, msun, avg_d, d_p1, d_p2, semimajor_encounter, e, q, semimajor_inward
    REAL(DP)                                         :: rhill_p1, rhill_p2, r_circle, theta, radius1, radius2, r_smallestcircle
-   REAL(DP)                                         :: m_rem, m_test, mass1, mass2, enew, eold, A, B, v_col
-   REAL(DP)                                         :: x_com, y_com, z_com, vx_com, vy_com, vz_com
-   !REAL(DP), DIMENSION(NDIM,symba_plA%helio%swiftest%nbody)                    :: x_frag, v_frag
+   REAL(DP)                                         :: m_rem, mass1, mass2, enew, eold
    REAL(DP), DIMENSION(:, :), ALLOCATABLE           :: x_frag, v_frag
-   !REAL(DP), DIMENSION(symba_plA%helio%swiftest%nbody)                         :: m_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE              :: m_frag
-   REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xbs, xbscrossvbs, vh_1, vh_2
+   REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xbs, vh_1, vh_2
    INTEGER(I4B), DIMENSION(NCHILDMAX)               :: array_index1_child, array_index2_child
-   TYPE(symba_merger)                               :: mergeadd_temp, mergesub_temp
 
 ! Executable code
 
@@ -159,7 +155,7 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    nmergeadd = nmergeadd + 1
    mergeadd_list%status(nmergeadd) = DISRUPTION
    mergeadd_list%ncomp(nmergeadd) = 2
-   mergeadd_list%name(nmergeadd) = nplmax + ntpmax + frags_added 
+   mergeadd_list%name(nmergeadd) = max(plmaxname, tpmaxname) + frags_added 
    mergeadd_list%mass(nmergeadd) = mres(1)
    mergeadd_list%radius(nmergeadd) = rres(1)
    mtot = mtot + mergeadd_list%mass(nmergeadd)
@@ -170,7 +166,7 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
       nmergeadd = nmergeadd + 1
       mergeadd_list%status(nmergeadd) = DISRUPTION
       mergeadd_list%ncomp(nmergeadd) = 2
-      mergeadd_list%name(nmergeadd) = nplmax + ntpmax + frags_added
+      mergeadd_list%name(nmergeadd) = max(plmaxname, tpmaxname) + frags_added
       mergeadd_list%mass(nmergeadd) = mres(2)
       mergeadd_list%radius(nmergeadd) = rres(2)
       mtot = mtot + mergeadd_list%mass(nmergeadd)
@@ -179,7 +175,7 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
          nmergeadd = nmergeadd + 1
          mergeadd_list%status(nmergeadd) = DISRUPTION
          mergeadd_list%ncomp(nmergeadd) = 2
-         mergeadd_list%name(nmergeadd) = nplmax + ntpmax + frags_added
+         mergeadd_list%name(nmergeadd) = max(plmaxname, tpmaxname) + frags_added
          m_rem = (m1 + m2) - (mres(1) + mres(2))
          mergeadd_list%mass(nmergeadd) = m_rem / (nfrag - 2) 
          mergeadd_list%radius(nmergeadd) = ((3 * mergeadd_list%mass(nmergeadd)) / (4 * PI * avg_d))  & 
@@ -193,7 +189,7 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
          nmergeadd = nmergeadd + 1
          mergeadd_list%status(nmergeadd) = DISRUPTION
          mergeadd_list%ncomp(nmergeadd) = 2
-         mergeadd_list%name(nmergeadd) = nplmax + ntpmax + frags_added
+         mergeadd_list%name(nmergeadd) = max(plmaxname, tpmaxname) + frags_added
          m_rem = (m1 + m2) - mres(1)
          mergeadd_list%mass(nmergeadd) = m_rem / (nfrag - 1) 
          mergeadd_list%radius(nmergeadd) = ((3 * mergeadd_list%mass(nmergeadd)) / (4 * PI * avg_d))  & 
@@ -253,7 +249,7 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    enew = 0.5_DP*mtot*DOT_PRODUCT(vnew(:), vnew(:))
    eoffset = eoffset + eold - enew
 
-   nplmax = nplmax + frags_added
+   plmaxname = max(plmaxname, tpmaxname) + frags_added
    RETURN 
 END SUBROUTINE symba_casedisruption
 

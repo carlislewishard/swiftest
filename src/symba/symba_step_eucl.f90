@@ -15,9 +15,7 @@
 !                lclose         : logical flag indicating whether to check for mergers
 !                t              : time
 !                npl            : number of planets
-!                nplmax         : maximum allowed number of planets
 !                ntp            : number of active test particles
-!                ntpmax         : maximum allowed number of test particles
 !                symba_pl1P     : pointer to head of SyMBA planet structure linked-list
 !                symba_tp1P     : pointer to head of active SyMBA test particle structure linked-list
 !                j2rp2          : J2 * R**2 for the Sun
@@ -54,7 +52,7 @@
 !    Terminal  : error message
 !    File      : none
 !
-!  Invocation  : CALL symba_step(lfirst, lextra_force, lclose, t, npl, nplmax, ntp, ntpmax, symba_pl1P, symba_tp1P, j2rp2, j4rp4,
+!  Invocation  : CALL symba_step(lfirst, lextra_force, lclose, t, npl, ntp, symba_pl1P, symba_tp1P, j2rp2, j4rp4,
 !                                dt, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list,
 !                                mergesub_list, eoffset, mtiny, encounter_file, out_type)
 !
@@ -93,10 +91,9 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
 ! Internals
      LOGICAL(LGT)              :: lencounter
      INTEGER(I4B)              :: irec, nplm
-     INTEGER(I8B)              :: i, j, k, counter
+     INTEGER(I8B)              :: i, k, counter
      INTEGER(I8B), DIMENSION(:), ALLOCATABLE :: plpl_encounters
      INTEGER(I8B), DIMENSION(:), ALLOCATABLE :: pltp_encounters_indices
-     REAL(DP), DIMENSION(NDIM) :: xr, vr
      LOGICAL, SAVE             :: lfirst = .true.
      
      LOGICAL(LGT), ALLOCATABLE, DIMENSION(:) :: pltp_lencounters
@@ -203,15 +200,13 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      lencounter = ((nplplenc > 0) .OR. (npltpenc > 0))
 
      IF (lencounter) THEN ! if there was an encounter, we need to enter symba_step_interp to see if we need recursion
-          CALL symba_step_interp_eucl(param%lextra_force, param%lclose, t, npl, nplm, param%nplmax, &
-                  ntp, param%ntpmax, symba_plA, symba_tpA, param%j2rp2, param%j4rp4,   &
-                  dt, eoffset, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, &
-                  nmergesub, mergeadd_list, mergesub_list, param%encounter_file, param%out_type, &
+          CALL symba_step_interp_eucl(t, npl, nplm, ntp, symba_plA, symba_tpA, dt, eoffset, nplplenc, npltpenc, &
+                  plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
                   param, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
           lfirst = .TRUE.
      ELSE ! otherwise we can just advance the particles
-         CALL symba_step_helio(lfirst, param%lextra_force, t, npl, nplm, param%nplmax, ntp,&
-                                 param%ntpmax, symba_plA%helio, symba_tpA%helio, &
+         CALL symba_step_helio(lfirst, param%lextra_force, t, npl, nplm, ntp,&
+                                 symba_plA%helio, symba_tpA%helio, &
                                  param%j2rp2, param%j4rp4, dt)
      END IF
 

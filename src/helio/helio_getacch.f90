@@ -13,7 +13,6 @@
 !                lextra_force : logical flag indicating whether to include user-supplied accelerations
 !                t            : time
 !                npl          : number of planets
-!                nplmax       : maximum allowed number of planets
 !                helio_pl1P   : pointer to head of helio planet structure linked-list
 !                j2rp2        : J2 * R**2 for the Sun
 !                j4rp4        : J4 * R**4 for the Sun
@@ -25,12 +24,12 @@
 !    Terminal  : none
 !    File      : none
 !
-!  Invocation  : CALL helio_getacch(lflag, lextra_force, t, npl, nplmax, helio_pl1P, j2rp2, j4rp4)
+!  Invocation  : CALL helio_getacch(lflag, lextra_force, t, npl, helio_pl1P, j2rp2, j4rp4)
 !
 !  Notes       : Adapted from Hal Levison's Swift routine helio_getacch.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE helio_getacch(lflag, lextra_force, t, npl, nplmax, helio_plA, j2rp2, j4rp4)
+SUBROUTINE helio_getacch(lflag, lextra_force, t, npl, helio_plA, j2rp2, j4rp4)
 
 ! Modules
      USE swiftest
@@ -40,7 +39,7 @@ SUBROUTINE helio_getacch(lflag, lextra_force, t, npl, nplmax, helio_plA, j2rp2, 
 
 ! Arguments
      LOGICAL(LGT), INTENT(IN) :: lflag, lextra_force
-     INTEGER(I4B), INTENT(IN) :: npl, nplmax
+     INTEGER(I4B), INTENT(IN) :: npl
      REAL(DP), INTENT(IN)     :: t, j2rp2, j4rp4
 
 ! Internals

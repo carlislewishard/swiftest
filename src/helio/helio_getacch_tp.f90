@@ -13,9 +13,7 @@
 !                lextra_force : logical flag indicating whether to include user-supplied accelerations
 !                t            : time
 !                npl          : number of planets
-!                nplmax       : maximum allowed number of planets
 !                ntp          : number of active test particles
-!                ntpmax       : maximum allowed number of test particles
 !                helio_plA   : pointer to head of helio planet structure linked-list
 !                helio_tpA   : pointer to head of active helio test particle structure linked-list
 !                xh           : heliocentric positions of planets at time t
@@ -29,12 +27,12 @@
 !    Terminal  : none
 !    File      : none
 !
-!  Invocation  : CALL helio_getacch_tp(lflag, lextra_force, t, npl, nplmax, ntp, ntpmax, helio_plA, helio_tpA, xh, j2rp2, j4rp4)
+!  Invocation  : CALL helio_getacch_tp(lflag, lextra_force, t, npl, ntp, helio_plA, helio_tpA, xh, j2rp2, j4rp4)
 !
 !  Notes       : Adapted from Hal Levison's Swift routine helio_getacch_tp.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE helio_getacch_tp(lflag, lextra_force, t, npl, nplmax, ntp, ntpmax, helio_plA, helio_tpA, xh, j2rp2, j4rp4)
+SUBROUTINE helio_getacch_tp(lflag, lextra_force, t, npl, ntp, helio_plA, helio_tpA, xh, j2rp2, j4rp4)
 
 ! Modules
      USE swiftest
@@ -44,14 +42,14 @@ SUBROUTINE helio_getacch_tp(lflag, lextra_force, t, npl, nplmax, ntp, ntpmax, he
 
 ! Arguments
      LOGICAL(LGT), INTENT(IN)                   :: lflag, lextra_force
-     INTEGER(I4B), INTENT(IN)                   :: npl, nplmax, ntp, ntpmax
+     INTEGER(I4B), INTENT(IN)                   :: npl, ntp
      REAL(DP), INTENT(IN)                       :: t, j2rp2, j4rp4
      REAL(DP), DIMENSION(:, :), INTENT(IN) :: xh
      TYPE(helio_pl), INTENT(INOUT) :: helio_plA
      TYPE(helio_tp), INTENT(INOUT) :: helio_tpA
 
 ! Internals
-     INTEGER(I4B)                                 :: i, n
+     INTEGER(I4B)                                 :: i
      REAL(DP)                                     :: r2, mu
      REAL(DP), DIMENSION(:), ALLOCATABLE          :: irh, irht
      REAL(DP), DIMENSION(:, :), ALLOCATABLE       :: aobl, xht, aoblt

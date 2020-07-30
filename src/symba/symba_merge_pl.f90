@@ -23,7 +23,6 @@
 !                eoffset        : energy offset (net energy lost in mergers)
 !                vbs            : barycentric velocity of the Sun
 !                encounter_file : name of output file for encounters
-!                out_type       : binary format of output file
 !    Terminal  : none
 !    File      : none
 !
@@ -38,13 +37,13 @@
 !    File      : none
 !
 !  Invocation  : CALL symba_merge_pl(t, dt, index, nplplenc, plplenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list,
-!                                    eoffset, vbs, encounter_file, out_type)
+!                                    eoffset, vbs, encounter_file)
 !
 !  Notes       : Adapted from Hal Levison's Swift routine symba5_merge.f
 !
 !**********************************************************************************************************************************
 SUBROUTINE symba_merge_pl(t, dt, index_enc, nplplenc, plplenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, &
-     vbs, encounter_file, out_type, npl, symba_plA)
+     vbs, encounter_file, symba_plA)
 
 ! Modules
      USE swiftest
@@ -55,12 +54,12 @@ SUBROUTINE symba_merge_pl(t, dt, index_enc, nplplenc, plplenc_list, nmergeadd, n
      IMPLICIT NONE
 
 ! Arguments
-     INTEGER(I4B), INTENT(IN)                         :: index_enc, nplplenc, npl
+     INTEGER(I4B), INTENT(IN)                         :: index_enc, nplplenc
      INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub
      REAL(DP), INTENT(IN)                             :: t, dt
      REAL(DP), INTENT(INOUT)                          :: eoffset
      REAL(DP), DIMENSION(:), INTENT(IN)            :: vbs
-     CHARACTER(*), INTENT(IN)                         :: encounter_file, out_type
+     CHARACTER(*), INTENT(IN)                         :: encounter_file
      TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
      TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
      TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
@@ -116,7 +115,7 @@ SUBROUTINE symba_merge_pl(t, dt, index_enc, nplplenc, plplenc_list, nmergeadd, n
                          v2(:) = symba_plA%helio%swiftest%vb(:,index2) - vbs(:)
 
                          CALL io_write_encounter(t, name1, name2, m1, m2, rad1, rad2, x1(:), x2(:), &
-                              v1(:), v2(:), encounter_file, out_type)
+                              v1(:), v2(:), encounter_file)
                     END IF
                END IF
           END IF
@@ -220,10 +219,6 @@ SUBROUTINE symba_merge_pl(t, dt, index_enc, nplplenc, plplenc_list, nmergeadd, n
           enew = 0.5_DP*mtot*DOT_PRODUCT(vnew(:), vnew(:))
           eoffset = eoffset + eold - enew
 
-          !WRITE(*,*) "symba_merge_pl.f90 name", mergeadd_list%name(nmergeadd)
-          !WRITE(*,*) "symba_merge_pl.f90 xh", mergeadd_list%xh(:,nmergeadd)
-          !WRITE(*,*) "symba_merge_pl.f90 vh", mergeadd_list%vh(:,nmergeadd)
-          !WRITE(*,*) "symba_merge_pl.f90 eoffset", eoffset
           DO k = 1, nplplenc                                          !go through the encounter list and for particles actively encoutering, get their children
                IF (plplenc_list%status(k) == ACTIVE) THEN
                     DO i = 0, symba_plA%nchild(index1_parent)

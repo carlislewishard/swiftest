@@ -11,8 +11,6 @@
 !  Input
 !    Arguments : t           : time
 !                npl         : number of planets
-!                nplmax      : maximum allowed number of planets
-!                nsp         : number of spilled planets
 !                symba_pl1P  : pointer to head of SyMBA planet structure linked-list
 !                symba_pld1P : pointer to head of discard SyMBA planet structure linked-list
 !                rmin        : minimum allowed heliocentric radius
@@ -22,29 +20,25 @@
 !                qmin_coord  : coordinate frame for qmin
 !                qmin_alo    : minimum semimajor axis for qmin
 !                qmin_ahi    : maximum semimajor axis for qmin
-!                j2rp2       : J2 * R**2 for the Sun
-!                j4rp4       : J4 * R**4 for the Sun
-!                eoffset     : energy offset
+!                ldiscard    : logical flag indicating that at least one body needs to be discarded this step
 !    Terminal  : none
 !    File      : none
 !
 !  Output
 !    Arguments : npl         : number of planets
-!                nsp         : number of spilled planets
 !                symba_pl1P  : pointer to head of SyMBA planet structure linked-list
 !                symba_pld1P : pointer to head of discard SyMBA planet structure linked-list
 !                eoffset     : energy offset
 !    Terminal  : none
 !    File      : none
 !
-!  Invocation  : CALL symba_discard_pl(t, npl, nplmax, nsp, symba_pl1P, symba_pld1P, rmin, rmax, rmaxu, qmin, qmin_coord,
-!                                      qmin_alo, qmin_ahi, j2rp2, j4rp4, eoffset)
+!  Invocation  : CALL symba_discard_pl(t, npl, symba_pl1P, symba_pld1P, rmin, rmax, rmaxu, qmin, qmin_coord,
+!                                      qmin_alo, qmin_ahi)
 !
 !  Notes       : Adapted from Hal Levison's Swift routine discard_massive5.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE symba_discard_pl(t, npl, nplmax, nsp, symba_plA, rmin, rmax, rmaxu, qmin, qmin_coord, qmin_alo,          &
-     qmin_ahi, j2rp2, j4rp4, eoffset)
+SUBROUTINE symba_discard_pl(t, npl, symba_plA, rmin, rmax, rmaxu, qmin, qmin_coord, qmin_alo, qmin_ahi, ldiscard)
 
 ! Modules
      USE swiftest
@@ -54,26 +48,21 @@ SUBROUTINE symba_discard_pl(t, npl, nplmax, nsp, symba_plA, rmin, rmax, rmaxu, q
      IMPLICIT NONE
 
 ! Arguments
-     INTEGER(I4B), INTENT(IN)    :: nplmax
-     INTEGER(I4B), INTENT(INOUT) :: npl, nsp
-     REAL(DP), INTENT(IN)        :: t, rmin, rmax, rmaxu, qmin, qmin_alo, qmin_ahi, j2rp2, j4rp4
-     REAL(DP), INTENT(INOUT)     :: eoffset
+     INTEGER(I4B), INTENT(INOUT) :: npl
+     REAL(DP), INTENT(IN)        :: t, rmin, rmax, rmaxu, qmin, qmin_alo, qmin_ahi
      CHARACTER(*), INTENT(IN)    :: qmin_coord
      TYPE(symba_pl)              :: symba_plA
+     LOGICAL(LGT), INTENT(INOUT) :: ldiscard
 
 ! Internals
-     LOGICAL(LGT)              :: ldiscards
-     INTEGER(I4B)              :: i
-     REAL(DP)                  :: msys, ke, pe, tei, tef
-     REAL(DP), DIMENSION(NDIM) :: htot
+     REAL(DP)                  :: msys
 
 ! Executable code
-     ldiscards = .FALSE.
      IF ((rmin >= 0.0_DP) .OR. (rmax >= 0.0_DP) .OR. (rmaxu >= 0.0_DP) .OR. ((qmin >= 0.0_DP) .AND. (qmin_coord == "BARY")))      &
           CALL coord_h2b(npl, symba_plA%helio%swiftest, msys)
      IF ((rmin >= 0.0_DP) .OR. (rmax >= 0.0_DP) .OR. (rmaxu >= 0.0_DP))                                                           &
-          CALL symba_discard_sun_pl(t, npl, msys, symba_plA%helio%swiftest, rmin, rmax, rmaxu, ldiscards)
-     IF (qmin >= 0.0_DP) CALL symba_discard_peri_pl(t, npl, symba_plA, msys, qmin, qmin_alo, qmin_ahi, qmin_coord, ldiscards)
+          CALL symba_discard_sun_pl(t, npl, msys, symba_plA%helio%swiftest, rmin, rmax, rmaxu, ldiscard)
+     IF (qmin >= 0.0_DP) CALL symba_discard_peri_pl(t, npl, symba_plA, msys, qmin, qmin_alo, qmin_ahi, qmin_coord, ldiscard)
 
      RETURN
 

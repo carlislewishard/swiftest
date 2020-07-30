@@ -16,8 +16,8 @@ module swiftest_classes
    !> User defined configuration parameters that are read in from the configuration input file. 
    !>    Each paramter is initialized to a default values. 
    type, abstract, public :: swiftest_configuration
-      integer(I4B)         :: nplmax         = -1                 !! Maximum allowed number of massive bodies
-      integer(I4B)         :: ntpmax         = -1                 !! Maximum allowed number of test particles
+      integer(I4B)         :: plmaxname         = -1                 !! Maximum allowed number of massive bodies
+      integer(I4B)         :: tpmaxname         = -1                 !! Maximum allowed number of test particles
       real(DP)             :: t0             = -1.0_DP            !! Integration start time
       real(DP)             :: t              = -1.0_DP            !! Integration current time
       real(DP)             :: tstop          = -1.0_DP            !! Integration stop time
@@ -697,13 +697,13 @@ module swiftest_classes
       end function io_get_args
 
       module function io_read_encounter(t, name1, name2, mass1, mass2, radius1, radius2, &
-                                           xh1, xh2, vh1, vh2, encounter_file, out_type)
+                                           xh1, xh2, vh1, vh2, encounter_file)
          implicit none
          integer(I4B)         :: io_read_encounter
          integer(I4B), intent(out)     :: name1, name2
          real(DP), intent(out)      :: t, mass1, mass2, radius1, radius2
          real(DP), dimension(NDIM), intent(out) :: xh1, xh2, vh1, vh2
-         character(*), intent(in)      :: encounter_file,out_type
+         character(*), intent(in)      :: encounter_file
       end function io_read_encounter
 
       module function io_read_hdr(iu, t, npl, ntp, out_form, out_type)

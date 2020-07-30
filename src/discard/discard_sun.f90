@@ -56,11 +56,9 @@ SUBROUTINE discard_sun(t, ntp, msys, swiftest_tpA, rmin, rmax, rmaxu)
                IF ((rmax >= 0.0_DP) .AND. (rh2 > rmax2)) THEN
                     swiftest_tpA%status(i) = DISCARDED_RMAX
                     WRITE(*, *) "Particle ", swiftest_tpA%name(i), " too far from Sun at t = ", t
-                    ldiscard_tp = .TRUE.
                ELSE IF ((rmin >= 0.0_DP) .AND. (rh2 < rmin2)) THEN
                     swiftest_tpA%status(i) = DISCARDED_RMIN
                     WRITE(*, *) "Particle ", swiftest_tpA%name(i), " too close to Sun at t = ", t
-                    ldiscard_tp =.TRUE.
                ELSE IF (rmaxu >= 0.0_DP) THEN
                     rb2 = DOT_PRODUCT(swiftest_tpA%xb(:,i), swiftest_tpA%xb(:,i))
                     vb2 = DOT_PRODUCT(swiftest_tpA%vb(:,i), swiftest_tpA%vb(:,i))
@@ -68,7 +66,6 @@ SUBROUTINE discard_sun(t, ntp, msys, swiftest_tpA, rmin, rmax, rmaxu)
                     IF ((energy > 0.0_DP) .AND. (rb2 > rmaxu2)) THEN
                          swiftest_tpA%status(i) = DISCARDED_RMAXU
                          WRITE(*, *) "Particle ", swiftest_tpA%name(i), " is unbound and too far from barycenter at t = ", t
-                         ldiscard_tp = .TRUE.
                     END IF
                END IF
           END IF

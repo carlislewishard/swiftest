@@ -33,7 +33,7 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-     encounter_file, out_type, npl, symba_plA, nplplenc, plplenc_list, nplmax, ntpmax, mtiny)
+     encounter_file, out_type, npl, symba_plA, nplplenc, plplenc_list, plmaxname, tpmaxname, mtiny)
 
 ! Modules
      USE swiftest
@@ -45,7 +45,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 ! Arguments
      INTEGER(I4B), INTENT(IN)                         :: index_enc
      INTEGER(I4B), INTENT(IN)                         :: npl, nplplenc
-     INTEGER(I4B), INTENT(INOUT)                      :: nplmax, ntpmax, nmergeadd, nmergesub
+     INTEGER(I4B), INTENT(INOUT)                      :: plmaxname, tpmaxname, nmergeadd, nmergesub
      REAL(DP), INTENT(IN)                             :: t, dt
      REAL(DP), INTENT(INOUT)                          :: eoffset, mtiny
      REAL(DP), DIMENSION(:), INTENT(IN)               :: vbs
@@ -70,17 +70,13 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
      LOGICAL(LGT)                   :: lfrag_add, lmerge
      INTEGER(I4B), DIMENSION(:), allocatable   :: array_index1_child, array_index2_child
      REAL(DP)                       :: Mlr, Mslr, mtarg, mproj
-     real(DP)                       :: first_add_vhz, second_add_vhz, first_add_vbz, second_add_vbz
-     integer(I4B)                   :: first_add_name, second_add_name, first_add_index, second_add_index
-     REAL(DP), DIMENSION(NDIM)      :: vbs_instep, denvec
+     REAL(DP), DIMENSION(NDIM)      ::  denvec
      
 
 ! Executable code
 
      ! Recalculates vbs 
      CALL coord_vb2vh(npl, symba_plA%helio%swiftest)
-
-     vbs_instep(:) = symba_plA%helio%swiftest%vb(:,1)
 
      lmerge = .FALSE.
      lfrag_add = .FALSE.
@@ -116,15 +112,15 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
                          m1 = symba_plA%helio%swiftest%mass(index1)
                          rad1 = symba_plA%helio%swiftest%radius(index1)
                          x1(:) = symba_plA%helio%swiftest%xh(:,index1)
-                         v1(:) = symba_plA%helio%swiftest%vb(:,index1) - vbs_instep(:)
+                         v1(:) = symba_plA%helio%swiftest%vb(:,index1) - vbs(:)
                          name2 = symba_plA%helio%swiftest%name(index2)
                          m2 = symba_plA%helio%swiftest%mass(index2)
                          rad2 = symba_plA%helio%swiftest%radius(index2)
                          x2(:) = symba_plA%helio%swiftest%xh(:,index2)
-                         v2(:) = symba_plA%helio%swiftest%vb(:,index2) - vbs_instep(:)
+                         v2(:) = symba_plA%helio%swiftest%vb(:,index2) - vbs(:)
 
                          CALL io_write_encounter(t, name1, name2, m1, m2, rad1, rad2, x1(:), x2(:), &
-                              v1(:), v2(:), encounter_file, out_type)
+                              v1(:), v2(:), encounter_file)
                     END IF
                END IF
           END IF
@@ -222,7 +218,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           v2_si(:) = v2(:) * DU2M / TU2S
           den1_si = (den1 / GU) * MU2KG / DU2M**3
           den2_si = (den2 / GU) * MU2KG / DU2M**3
-          vbs_si = vbs_instep(:) * DU2M / TU2S 
+          vbs_si = vbs(:) * DU2M / TU2S 
 
           mres(:) = 0.0_DP
           rres(:) = 0.0_DP
@@ -276,8 +272,8 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           mres(:) = (mres(:) / MU2KG) * GU
           rres(:) = rres(:) / DU2M
 
-          CALL symba_caseresolve(t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs_instep, & 
-          npl, symba_plA, nplplenc, plplenc_list, regime, nplmax, ntpmax, mres, rres, array_index1_child, &
+          CALL symba_caseresolve(t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs_si, & 
+          symba_plA, nplplenc, plplenc_list, regime, plmaxname, tpmaxname, mres, rres, array_index1_child, &
           array_index2_child, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny)
      END IF 
      RETURN

@@ -14,7 +14,6 @@
 !                t            : time
 !                npl          : number of planets
 !                nplm         : number of planets with mass > mtiny
-!                nplmax       : maximum allowed number of planets
 !                helio_pl1P   : pointer to head of helio planet structure linked-list
 !                j2rp2        : J2 * R**2 for the Sun
 !                j4rp4        : J4 * R**4 for the Sun
@@ -32,13 +31,13 @@
 !    Terminal  : none
 !    File      : none
 !
-!  Invocation  : CALL symba_step_helio_pl(lfirst, lextra_force, t, npl, nplm, nplmax, helio_pl1P, j2rp2, j4rp4, dt, xbeg, xend,
+!  Invocation  : CALL symba_step_helio_pl(lfirst, lextra_force, t, npl, nplm, helio_pl1P, j2rp2, j4rp4, dt, xbeg, xend,
 !                                         ptb, pte)
 !
 !  Notes       : Adapted from Hal Levison's Swift routines symba5_step_helio.f and helio_step_pl.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE symba_step_helio_pl(lfirst, lextra_force, t, npl, nplm, nplmax, helio_plA, j2rp2, j4rp4, dt, xbeg, xend, ptb, pte)
+SUBROUTINE symba_step_helio_pl(lfirst, lextra_force, t, npl, nplm, helio_plA, j2rp2, j4rp4, dt, xbeg, xend, ptb, pte)
 
 ! Modules
      USE swiftest
@@ -50,7 +49,7 @@ SUBROUTINE symba_step_helio_pl(lfirst, lextra_force, t, npl, nplm, nplmax, helio
 ! Arguments
      LOGICAL(LGT), INTENT(IN)                     :: lextra_force
      LOGICAL(LGT), INTENT(INOUT)                  :: lfirst
-     INTEGER(I4B), INTENT(IN)                     :: npl, nplm, nplmax
+     INTEGER(I4B), INTENT(IN)                     :: npl, nplm
      REAL(DP), INTENT(IN)                         :: t, j2rp2, j4rp4, dt
      REAL(DP), DIMENSION(:,:), INTENT(OUT)        :: xbeg, xend
      REAL(DP), DIMENSION(:), INTENT(OUT)          :: ptb, pte
@@ -73,7 +72,7 @@ SUBROUTINE symba_step_helio_pl(lfirst, lextra_force, t, npl, nplm, nplmax, helio
      
      CALL helio_lindrift(npl, helio_plA%swiftest, dth, ptb)
 
-     CALL symba_helio_getacch(lflag, lextra_force, t, npl, nplm, nplmax, helio_plA, j2rp2, j4rp4) 
+     CALL symba_helio_getacch(lflag, lextra_force, t, npl, nplm, helio_plA, j2rp2, j4rp4) 
      lflag = .TRUE.
 
      CALL helio_kickvb(npl, helio_plA, dth)
@@ -86,7 +85,7 @@ SUBROUTINE symba_step_helio_pl(lfirst, lextra_force, t, npl, nplm, nplmax, helio
      DO i = 2, nplm
           xend(:, i) = helio_plA%swiftest%xh(:,i)
      END DO
-     CALL symba_helio_getacch(lflag, lextra_force, t+dt, npl, nplm, nplmax, helio_plA, j2rp2, j4rp4) 
+     CALL symba_helio_getacch(lflag, lextra_force, t+dt, npl, nplm, helio_plA, j2rp2, j4rp4) 
 
      CALL helio_kickvb(npl, helio_plA, dth)
 

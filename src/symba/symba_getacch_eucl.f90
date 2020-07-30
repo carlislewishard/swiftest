@@ -13,7 +13,6 @@
 !                t            : time
 !                npl          : number of planets
 !                nplm         : number of planets with mass > mtiny
-!                nplmax       : maximum allowed number of planets
 !                symba_pl1P   : pointer to head of SyMBA planet structure linked-list
 !                j2rp2        : J2 * R**2 for the Sun
 !                j4rp4        : J4 * R**4 for the Sun
@@ -27,14 +26,14 @@
 !    Terminal  : none
 !    File      : none
 !
-!  Invocation  : CALL symba_getacch(lextra_force, t, npl, nplm, nplmax, symba_pl1P, j2rp2, j4rp4, nplplenc, plplenc_list)
+!  Invocation  : CALL symba_getacch(lextra_force, t, npl, nplm, symba_pl1P, j2rp2, j4rp4, nplplenc, plplenc_list)
 !
 !  Notes       : Adapted from Hal Levison's Swift routine symba5_getacch.f
 !
 !                Accelerations in an encounter are not included here
 !
 !**********************************************************************************************************************************
-SUBROUTINE symba_getacch_eucl(lextra_force, t, npl, nplm, nplmax, symba_plA, j2rp2, j4rp4, nplplenc, plplenc_list, &
+SUBROUTINE symba_getacch_eucl(lextra_force, t, npl, nplm, symba_plA, j2rp2, j4rp4, nplplenc, plplenc_list, &
      num_plpl_comparisons, k_plpl)
 
 ! Modules
@@ -49,7 +48,7 @@ SUBROUTINE symba_getacch_eucl(lextra_force, t, npl, nplm, nplmax, symba_plA, j2r
 
 ! Arguments
      LOGICAL(LGT), INTENT(IN)                      :: lextra_force
-     INTEGER(I4B), INTENT(IN)                      :: npl, nplm, nplmax, nplplenc
+     INTEGER(I4B), INTENT(IN)                      :: npl, nplm, nplplenc
      INTEGER(I8B), intent(in)                      :: num_plpl_comparisons
      REAL(DP), INTENT(IN)                          :: t, j2rp2, j4rp4
      TYPE(symba_pl), INTENT(INOUT)                 :: symba_plA
@@ -59,8 +58,8 @@ SUBROUTINE symba_getacch_eucl(lextra_force, t, npl, nplm, nplmax, symba_plA, j2r
 
 ! Internals
      LOGICAL(LGT), SAVE                           :: lmalloc = .TRUE.
-     INTEGER(I8B)                                 :: i, j, index_i, index_j, k, counter
-     REAL(DP)                                     :: rji2, irij3, faci, facj, r2, fac, rlim2
+     INTEGER(I8B)                                 :: i, j, index_i, index_j, k
+     REAL(DP)                                     :: rji2, irij3, faci, facj, r2, rlim2
      REAL(DP), DIMENSION(NDIM)                    :: dx
      REAL(DP), DIMENSION(NDIM, npl)               :: ahp, ahm
      REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE    :: irh

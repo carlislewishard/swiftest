@@ -13,9 +13,7 @@
 !                lextra_force : logical flag indicating whether to include user-supplied accelerations
 !                t            : time
 !                npl          : number of planets
-!                nplmax       : maximum allowed number of planets
 !                ntp          : number of active test particles
-!                ntpmax       : maximum allowed number of test particles
 !                helio_pl1P   : pointer to head of helio planet structure linked-list
 !                helio_tp1P   : pointer to head of active helio test particle structure linked-list
 !                j2rp2        : J2 * R**2 for the Sun
@@ -34,13 +32,13 @@
 !    Terminal  : none
 !    File      : none
 !
-!  Invocation  : CALL helio_step_tp(lfirsttp, lextra_force, t, npl, nplmax, ntp, ntpmax, helio_pl1P, helio_tp1P, j2rp2, j4rp4, dt,
+!  Invocation  : CALL helio_step_tp(lfirsttp, lextra_force, t, npl, ntp, helio_pl1P, helio_tp1P, j2rp2, j4rp4, dt,
 !                                   xbeg, xend, ptb, pte)
 !
 !  Notes       : Adapted from Hal Levison's Swift routine helio_step_tp.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE helio_step_tp(lfirsttp, lextra_force, t, npl, nplmax, ntp, ntpmax, helio_plA, helio_tpA, j2rp2, j4rp4, dt, xbeg,     &
+SUBROUTINE helio_step_tp(lfirsttp, lextra_force, t, npl, ntp, helio_plA, helio_tpA, j2rp2, j4rp4, dt, xbeg,     &
      xend, ptb, pte)
 
 ! Modules
@@ -52,7 +50,7 @@ SUBROUTINE helio_step_tp(lfirsttp, lextra_force, t, npl, nplmax, ntp, ntpmax, he
 ! Arguments
      LOGICAL(LGT), INTENT(IN)                   :: lextra_force
      LOGICAL(LGT), INTENT(INOUT)                :: lfirsttp
-     INTEGER(I4B), INTENT(IN)                   :: npl, nplmax, ntp, ntpmax
+     INTEGER(I4B), INTENT(IN)                   :: npl, ntp
      REAL(DP), INTENT(IN)                       :: t, j2rp2, j4rp4, dt
      REAL(DP), DIMENSION(:), INTENT(IN)         :: ptb, pte
      REAL(DP), DIMENSION(:, :), INTENT(IN)      :: xbeg, xend
@@ -72,11 +70,11 @@ SUBROUTINE helio_step_tp(lfirsttp, lextra_force, t, npl, nplmax, ntp, ntpmax, he
           lfirsttp = .FALSE.
      END IF
      CALL helio_lindrift_tp(ntp, helio_tpA%swiftest, dth, ptb)
-     CALL helio_getacch_tp(lflag, lextra_force, t, npl, nplmax, ntp, ntpmax, helio_plA, helio_tpA, xbeg, j2rp2, j4rp4)
+     CALL helio_getacch_tp(lflag, lextra_force, t, npl, ntp, helio_plA, helio_tpA, xbeg, j2rp2, j4rp4)
      lflag = .TRUE.
      CALL helio_kickvb_tp(ntp, helio_tpA, dth)
      CALL helio_drift_tp(ntp, helio_tpA%swiftest, mu, dt)
-     CALL helio_getacch_tp(lflag, lextra_force, t+dt, npl, nplmax, ntp, ntpmax, helio_plA, helio_tpA, xend, j2rp2, j4rp4)
+     CALL helio_getacch_tp(lflag, lextra_force, t+dt, npl, ntp, helio_plA, helio_tpA, xend, j2rp2, j4rp4)
      CALL helio_kickvb_tp(ntp, helio_tpA, dth)
      CALL helio_lindrift_tp(ntp, helio_tpA%swiftest, dth, pte)
      CALL coord_vb2vh_tp(ntp, helio_tpA%swiftest, -pte)

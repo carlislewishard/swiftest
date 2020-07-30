@@ -7,6 +7,8 @@ contains
    !! beginning with or containing "!". If "!" is present, any remaining part of the buffer including the "!" is ignored
    !!
    !! Adapted from David E. Kaufmann's Swifter routine user_get_token.f90
+   use swiftest
+   use module_interfaces
    implicit none
 
    integer(I4B) :: i,ilength

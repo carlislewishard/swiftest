@@ -46,7 +46,6 @@ SUBROUTINE symba_helio_drift(irec, npl, symba_plA, dt)
      integer(I4B), dimension(:), allocatable :: iflag
      real(DP), dimension(:,:), allocatable :: xh, vb
      logical(LGT), dimension(:), allocatable :: dodrift 
-     integer(I4B) :: ibad
 
 ! Executable code
      mu = symba_plA%helio%swiftest%mass(1)

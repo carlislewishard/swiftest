@@ -12,6 +12,8 @@ contains
    !! Adapted from Martin Duncan's Swift routine io_init_param.f
    !$ use omp_lib
    !use util, only: util_exit ! IMPLEMENTATION TBD
+   use swiftest
+   use module_interfaces
    implicit none
 
    logical                 :: t0_set = .false.        !! Is the initial time set in the input file?
@@ -37,9 +39,9 @@ contains
          param_value = user_get_token(line_trim, ifirst, ilast, iostat)
          select case (param_name)
          case ("NPLMAX")
-            read(param_value, *) param%nplmax
+            read(param_value, *) param%plmaxname
          case ("NTPMAX")
-            read(param_value, *) param%ntpmax
+            read(param_value, *) param%tpmaxname
          case ("T0")
             read(param_value, *) param%t0
             t0_set = .true.

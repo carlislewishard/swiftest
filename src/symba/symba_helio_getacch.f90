@@ -14,7 +14,6 @@
 !                t            : time
 !                npl          : number of planets
 !                nplm         : number of planets with mass > mtiny
-!                nplmax       : maximum allowed number of planets
 !                helio_pl1P   : pointer to head of helio planet structure linked-list
 !                j2rp2        : J2 * R**2 for the Sun
 !                j4rp4        : J4 * R**4 for the Sun
@@ -26,12 +25,12 @@
 !    Terminal  : none
 !    File      : none
 !
-!  Invocation  : CALL symba_helio_getacch(lflag, lextra_force, t, npl, nplm, nplmax, helio_pl1P, j2rp2, j4rp4)
+!  Invocation  : CALL symba_helio_getacch(lflag, lextra_force, t, npl, nplm, helio_pl1P, j2rp2, j4rp4)
 !
 !  Notes       : Adapted from Hal Levison's Swift routine symba5_helio_getacch.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE symba_helio_getacch(lflag, lextra_force, t, npl, nplm, nplmax, helio_plA, j2rp2, j4rp4)
+SUBROUTINE symba_helio_getacch(lflag, lextra_force, t, npl, nplm, helio_plA, j2rp2, j4rp4)
 
 ! Modules
      USE swiftest
@@ -42,7 +41,7 @@ SUBROUTINE symba_helio_getacch(lflag, lextra_force, t, npl, nplm, nplmax, helio_
 
 ! Arguments
      LOGICAL(LGT), INTENT(IN)                     :: lflag, lextra_force
-     INTEGER(I4B), INTENT(IN)                     :: npl, nplm, nplmax
+     INTEGER(I4B), INTENT(IN)                     :: npl, nplm
      REAL(DP), INTENT(IN)                         :: t, j2rp2, j4rp4
      TYPE(helio_pl), INTENT(INOUT)                :: helio_plA
 

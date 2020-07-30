@@ -11,13 +11,9 @@
 !
 !  Input
 !    Arguments : lfirst         : logical flag indicating whether current invocation is the first
-!                param%lextra_force   : logical flag indicating whether to include user-supplied accelerations
-!                param%lclose         : logical flag indicating whether to check for mergers
 !                t              : time
 !                npl            : number of planets
-!                param%nplmax         : maximum allowed number of planets
 !                ntp            : number of active test particles
-!                param%ntpmax         : maximum allowed number of test particles
 !                symba_pl1P     : pointer to head of SyMBA planet structure linked-list
 !                symba_tp1P     : pointer to head of active SyMBA test particle structure linked-list
 !                param%j2rp2          : J2 * R**2 for the Sun
@@ -32,9 +28,6 @@
 !                mergeadd_list  : array of structures of merged planets to add
 !                mergesub_list  : array of structures of merged planets to subtract
 !                eoffset        : energy offset (net energy lost in mergers)
-!                param%mtiny          : smallest self-gravitating mass
-!                param%encounter_file : name of output file for encounters
-!                param%out_type       : binary format of output file
 !    Terminal  : none
 !    File      : none
 !
@@ -54,14 +47,14 @@
 !    Terminal  : error message
 !    File      : none
 !
-!  Invocation  : CALL symba_step(lfirst, param%lextra_force, param%lclose, t, npl, param%nplmax, ntp, param%ntpmax, symba_pl1P, symba_tp1P, param%j2rp2, param%j4rp4,
+!  Invocation  : CALL symba_step(lfirst, param%lextra_force, param%lclose, t, npl, ntp, symba_pl1P, symba_tp1P, param%j2rp2, param%j4rp4,
 !                                dt, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list,
-!                                mergesub_list, eoffset, param%mtiny, param%encounter_file, param%out_type)
+!                                mergesub_list, eoffset)
 !
 !  Notes       : Adapted from Hal Levison's Swift routine symba5_step_pl.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE symba_step(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
+SUBROUTINE symba_step(t, dt, param, npl, ntp,symba_plA, symba_tpA,       &
                nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub,&
                mergeadd_list, mergesub_list, eoffset)
 
@@ -86,12 +79,9 @@ SUBROUTINE symba_step(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
 ! Internals
      LOGICAL(LGT)              :: lencounter, lvdotr
-     INTEGER(I4B)              :: i, j, k, irec, nplm
+     INTEGER(I4B)              :: i, j, irec, nplm
      REAL(DP), DIMENSION(NDIM) :: xr, vr
      LOGICAL, SAVE             :: lfirst = .true.
-     TYPE(symba_plplenc)       :: plplenc_temp
-     TYPE(symba_pltpenc)       :: pltpenc_temp
-  
 
 ! Executable code
 
@@ -170,15 +160,13 @@ SUBROUTINE symba_step(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
 
      lencounter = ((nplplenc > 0) .OR. (npltpenc > 0))
      IF (lencounter) THEN
-          CALL symba_step_interp(param%lextra_force, param%lclose, t, npl, nplm, param%nplmax, &
-               ntp, param%ntpmax, symba_plA, symba_tpA, param%j2rp2, param%j4rp4,   &
+          CALL symba_step_interp(t, npl, nplm, ntp, symba_plA, symba_tpA, &
                dt, eoffset, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, &
-               nmergesub, mergeadd_list, mergesub_list, param%encounter_file, param%out_type, &
-               param)
+               nmergesub, mergeadd_list, mergesub_list,  param)
           lfirst = .TRUE.
      ELSE 
-          CALL symba_step_helio(lfirst, param%lextra_force, t, npl, nplm, param%nplmax, ntp,&
-               param%ntpmax, symba_plA%helio, symba_tpA%helio, &
+          CALL symba_step_helio(lfirst, param%lextra_force, t, npl, nplm, ntp,&
+               symba_plA%helio, symba_tpA%helio, &
                param%j2rp2, param%j4rp4, dt)
      END IF
 

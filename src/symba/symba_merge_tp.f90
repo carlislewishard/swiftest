@@ -16,7 +16,6 @@
 !                pltpenc_list   : array of planet-test particle encounter structures
 !                vbs            : barycentric velocity of the Sun
 !                encounter_file : name of output file for encounters
-!                out_type       : binary format of output file
 !    Terminal  : none
 !    File      : none
 !
@@ -25,12 +24,12 @@
 !    Terminal  : status message
 !    File      : none
 !
-!  Invocation  : CALL symba_merge_tp(t, dt, index, npltpenc, pltpenc_list, vbs, encounter_file, out_type)
+!  Invocation  : CALL symba_merge_tp(t, dt, index, npltpenc, pltpenc_list, vbs, encounter_file)
 !
 !  Notes       : Adapted from Hal Levison's Swift routine symba5_merge.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE symba_merge_tp(t, dt, index_enc, pltpenc_list, vbs, encounter_file, out_type, symba_plA, symba_tpA)
+SUBROUTINE symba_merge_tp(t, dt, index_enc, pltpenc_list, vbs, encounter_file, symba_plA, symba_tpA)
 
 ! Modules
      USE swiftest
@@ -43,7 +42,7 @@ SUBROUTINE symba_merge_tp(t, dt, index_enc, pltpenc_list, vbs, encounter_file, o
      INTEGER(I4B), INTENT(IN)                         :: index_enc
      REAL(DP), INTENT(IN)                             :: t, dt
      REAL(DP), DIMENSION(:), INTENT(IN)            :: vbs
-     CHARACTER(*), INTENT(IN)                         :: encounter_file, out_type
+     CHARACTER(*), INTENT(IN)                         :: encounter_file
      TYPE(symba_pltpenc), INTENT(INOUT)               :: pltpenc_list
      TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
      TYPE(symba_tp), INTENT(INOUT)                    :: symba_tpA
@@ -87,7 +86,7 @@ SUBROUTINE symba_merge_tp(t, dt, index_enc, pltpenc_list, vbs, encounter_file, o
                          xh2(:) = symba_tpA%helio%swiftest%xh(:,indextp)
                          vh2(:) = symba_tpA%helio%swiftest%vb(:,indextp) - vbs(:)
                          CALL io_write_encounter(t, name1, name2, mu, 0.0_DP, rad1, 0.0_DP, &
-                              xh1(:), xh2(:), vh1(:), vh2(:), encounter_file, out_type)
+                              xh1(:), xh2(:), vh1(:), vh2(:), encounter_file)
                     END IF
                END IF
           END IF

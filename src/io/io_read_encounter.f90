@@ -10,7 +10,6 @@
 !
 !  Input
 !    Arguments : encounter_file : name of input binary file for encounters
-!                out_type       : format of input binary file
 !    Terminal  : none
 !    File      : t              : time
 !
@@ -27,14 +26,14 @@
 !    Terminal  : error message
 !    File      : none
 !
-!  Invocation  : istat = io_read_encounter(t, id1, id2, mass1, mass2, xh1, xh2, vh1, vh2, encounter_file, out_type)
+!  Invocation  : istat = io_read_encounter(t, id1, id2, mass1, mass2, xh1, xh2, vh1, vh2, encounter_file)
 !
 !  Notes       : Other than time t, there is no direct file input from this function
 !
 !                Function returns read error status (0 = OK, nonzero = ERROR)
 !
 !**********************************************************************************************************************************
-FUNCTION io_read_encounter(t, name1, name2, mass1, mass2, xh1, xh2, vh1, vh2, encounter_file, out_type)
+FUNCTION io_read_encounter(t, name1, name2, mass1, mass2, xh1, xh2, vh1, vh2, encounter_file)
 
 ! Modules
      USE swiftest
@@ -46,10 +45,9 @@ FUNCTION io_read_encounter(t, name1, name2, mass1, mass2, xh1, xh2, vh1, vh2, en
      INTEGER(I4B), INTENT(OUT)              :: name1, name2
      REAL(DP), INTENT(OUT)                  :: t, mass1, mass2
      REAL(DP), DIMENSION(:), INTENT(OUT)    :: xh1, xh2, vh1, vh2
-     CHARACTER(*), INTENT(IN)               :: encounter_file, out_type
+     CHARACTER(*), INTENT(IN)               :: encounter_file
 
 ! Internals
-     LOGICAL(LGT)            :: lxdr
      LOGICAL(LGT), SAVE      :: lfirst = .TRUE.
      INTEGER(I4B), PARAMETER :: LUN = 30
      INTEGER(I4B)            :: ierr

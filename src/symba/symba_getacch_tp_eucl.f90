@@ -13,9 +13,7 @@
 !                t            : time
 !                npl          : number of planets
 !                nplm         : number of planets with mass > mtiny
-!                nplmax       : maximum allowed number of planets
 !                ntp          : number of active test particles
-!                ntpmax       : maximum allowed number of test particles
 !                symba_pl1P   : pointer to head of SyMBA planet structure linked-list
 !                symba_tp1P   : pointer to head of active SyMBA test particle structure linked-list
 !                xh           : heliocentric positions of planets at time t
@@ -31,7 +29,7 @@
 !    Terminal  : none
 !    File      : none
 !
-!  Invocation  : CALL symba_getacch_tp(lextra_force, t, npl, nplm, nplmax, ntp, ntpmax, symba_pl1P, symba_tp1P, xh, j2rp2, j4rp4,
+!  Invocation  : CALL symba_getacch_tp(lextra_force, t, npl, nplm, ntp, symba_pl1P, symba_tp1P, xh, j2rp2, j4rp4,
 !                                      npltpenc, pltpenc_list)
 !
 !  Notes       : Adapted from Hal Levison's Swift routine symba5_getacch.f
@@ -39,7 +37,7 @@
 !                Accelerations in an encounter are not included here
 !
 !**********************************************************************************************************************************
-SUBROUTINE symba_getacch_tp_eucl(lextra_force, t, npl, nplm, nplmax, ntp, ntpmax, symba_plA, symba_tpA, xh, j2rp2, j4rp4,&
+SUBROUTINE symba_getacch_tp_eucl(lextra_force, t, npl, nplm, ntp, symba_plA, symba_tpA, xh, j2rp2, j4rp4,&
      npltpenc, pltpenc_list, num_pltp_comparisons, k_pltp)
 
 ! Modules
@@ -54,19 +52,19 @@ SUBROUTINE symba_getacch_tp_eucl(lextra_force, t, npl, nplm, nplmax, ntp, ntpmax
 
 ! Arguments
      LOGICAL(LGT), INTENT(IN)                      :: lextra_force
-     INTEGER(I4B), INTENT(IN)                      :: npl, nplm, nplmax, ntp, ntpmax, npltpenc
+     INTEGER(I4B), INTENT(IN)                      :: npl, nplm, ntp, npltpenc
      INTEGER(I8B), intent(in)                      :: num_pltp_comparisons
      REAL(DP), INTENT(IN)                          :: t, j2rp2, j4rp4
-     REAL(DP), DIMENSION(:, :), INTENT(IN)    :: xh
+     REAL(DP), DIMENSION(:, :), INTENT(IN)         :: xh
      TYPE(symba_pl), INTENT(INOUT)                 :: symba_plA
      TYPE(symba_tp), INTENT(INOUT)                 :: symba_tpA
      TYPE(symba_pltpenc), INTENT(IN)               :: pltpenc_list
-     INTEGER(I4B), DIMENSION(:,:), INTENT(IN) :: k_pltp
+     INTEGER(I4B), DIMENSION(:,:), INTENT(IN)      :: k_pltp
 
 
 ! Internals
      INTEGER(I8B)                                 :: i, j, k, index_pl, index_tp
-     REAL(DP)                                     :: rji2, irij3, faci, facj, r2, fac, mu
+     REAL(DP)                                     :: r2, fac, mu
      REAL(DP), DIMENSION(NDIM)                    :: dx
      REAL(DP), DIMENSION(:), ALLOCATABLE          :: irh, irht
      REAL(DP), DIMENSION(:, :), ALLOCATABLE       :: aobl, xht, aoblt
