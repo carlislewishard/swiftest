@@ -73,7 +73,7 @@ SUBROUTINE symba_merge_pl(t, dt, index_enc, nplplenc, plplenc_list, nmergeadd, n
      REAL(DP)                     :: r2, rlim, rlim2, vdotr, tcr2, dt2, mtot, a, e, q, m1, m2, mtmp, mmax 
      REAL(DP)                     :: eold, enew, rad1, rad2, mass1, mass2
      REAL(DP), DIMENSION(NDIM)    :: xr, vr, x1, v1, x2, v2, xnew, vnew
-     INTEGER(I4B), DIMENSION(npl) :: array_index1_child, array_index2_child, array_keep_child, array_rm_child
+     INTEGER(I4B), DIMENSION(NCHILDMAX) :: array_index1_child, array_index2_child, array_keep_child, array_rm_child
 
 ! Executable code
      lmerge = .FALSE.
