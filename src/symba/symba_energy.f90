@@ -1,7 +1,8 @@
-subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, htot)
+subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, htot, msys)
    !! author: David A. Minton
    !!
-   !! Compute total system angular momentum vector and kinetic, potential and total system energy
+   !! Compute total system angular momentum vector, kinetic, potential and total 
+   !! system energy, and total system mass
    !!  
    !! Adapted from David E. Kaufmann Swifter routine symba_energy.f90
    !!  
@@ -13,13 +14,13 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, htot)
 ! arguments
    integer(I4B), intent(in)         :: npl
    real(DP), intent(in)             :: j2rp2, j4rp4
-   real(DP), intent(out)            :: ke, pe, te
+   real(DP), intent(out)            :: ke, pe, te, msys
    real(DP), dimension(:), intent(out) :: htot
    type(swiftest_pl), intent(inout)     :: swiftest_plA
 
 ! internals
    integer(I4B)              :: i, j
-   real(DP)                  :: mass, msys, rmag, v2, oblpot
+   real(DP)                  :: mass, rmag, v2, oblpot
    real(DP), dimension(NDIM) :: h, dx, x, v
    real(DP), dimension(npl)  :: irh
 
@@ -29,7 +30,6 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, htot)
    call coord_h2b(npl, swiftest_plA, msys)
    htot = 0.0_DP
    ke = 0.0_DP
-
 
    !$omp simd private(x,v,v2,mass,h) reduction(+:ke,htot)
    do i = 1, npl 

@@ -1,4 +1,4 @@
-subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, te, htot)
+subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, te, htot, msys)
    !! author: David A. Minton
    !!
    !! Compute total system angular momentum vector and kinetic, potential and total system energy
@@ -15,13 +15,13 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
    real(DP), intent(in)                     :: j2rp2, j4rp4
    integer(I4B), dimension(:,:), intent(in) :: k_plpl
    integer(I8B), intent(in)                 :: num_plpl_comparisons
-   real(DP), intent(out)                    :: ke, pe, te
+   real(DP), intent(out)                    :: ke, pe, te, msys
    real(DP), dimension(:), intent(out)      :: htot
    type(swiftest_pl), intent(inout)         :: swiftest_plA
 
 ! internals
    integer(I4B)              :: i, j
-   real(DP)                  :: mass, msys, rmag, v2, oblpot, Mcb
+   real(DP)                  :: mass, rmag, v2, oblpot, Mcb
    real(DP), dimension(NDIM) :: h, x, v, xbcb
    real(DP), dimension(npl)  :: irh
    integer(I8B)              :: k

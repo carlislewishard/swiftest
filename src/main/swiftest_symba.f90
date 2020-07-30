@@ -43,9 +43,9 @@ program swiftest_symba
    logical                       :: lfrag_add, ldiscard, ldiscard_tp
    integer(I4B)                  :: npl, nplm, ntp, ntp0, nsppl, nsptp, iout, idump, iloop
    integer(I4B)                  :: nplplenc, npltpenc, nmergeadd, nmergesub
-   real(DP)                      :: t, tfrac, tbase, mtiny, ke, pe, te, tei, tef, eoffset
+   real(DP)                      :: t, tfrac, tbase, mtiny, ke, pe, te, tei, tef, eoffset, msys
    real(DP), dimension(NDIM)     :: htot
-   real(DP)                      :: te_orig, te_error, te_off_error, Ltot_orig, Ltot_now, Lerror
+   real(DP)                      :: te_orig, te_error, te_off_error, Ltot_orig, Ltot_now, Lerror, Mtot_orig, Mtot_now, Merror
    character(STRMAX)             :: inparfile
    type(symba_pl)                :: symba_plA
    type(symba_tp)                :: symba_tpA
@@ -153,7 +153,7 @@ program swiftest_symba
    else 
       open(unit = egyiu, file = energy_file, form = "formatted", status = "replace", action = "write")
    end if
-   300 format(8(1x, e23.16))
+   300 format(9(1x, e23.16))
    nplm = count(symba_plA%helio%swiftest%mass>mtiny)
    CALL util_dist_index_plpl(npl, nplm, num_plpl_comparisons, k_plpl)
    CALL util_dist_index_pltp(nplm, ntp, num_pltp_comparisons, k_pltp)
@@ -161,13 +161,14 @@ program swiftest_symba
    if (param%lenergy) then
       eoffset = 0.0_DP
       if(num_plpl_comparisons > param%eucl_threshold) then
-         call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, te, htot)
+         call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, te, htot, msys)
       else
-         call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot)
+         call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot, msys)
       end if
       Ltot_orig = NORM2(htot)
       te_orig = te
-      write(egyiu,300) t, ke, pe, te, htot, eoffset
+      Mtot_orig = msys
+      write(egyiu,300) t, ke, pe, te, htot, eoffset, msys
    end if
    write(*, *) " *************** Main Loop *************** "
    call system_clock(clock_count, count_rate, count_max)
@@ -187,9 +188,9 @@ program swiftest_symba
       lfrag_add = .false.
       if (param%lenergy) then
          if(num_plpl_comparisons > param%eucl_threshold) then
-            call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, tei, htot)
+            call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, tei, htot, msys)
          else
-            call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, tei, htot)
+            call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, tei, htot, msys)
          end if
       end if
       call symba_discard_merge_pl(npl, symba_plA, nplplenc, plplenc_list, ldiscard)                                  
@@ -216,12 +217,12 @@ program swiftest_symba
          end if
          if (param%lenergy) then
             if(num_plpl_comparisons > param%eucl_threshold) then
-               call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, tef, htot)
+               call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, tef, htot, msys)
             else
-               call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, tef, htot)
+               call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, tef, htot, msys)
             end if
-            eoffset = eoffset + tei - tef
-            write(egyiu,300) t, ke, pe, tef, htot, eoffset
+            eoffset = eoffset + (tei - tef)
+            write(egyiu,300) t, ke, pe, tef, htot, eoffset, msys
          end if
       end if
 
@@ -239,11 +240,11 @@ program swiftest_symba
             iout = istep_out
             if (param%lenergy) then
                if(num_plpl_comparisons > param%eucl_threshold) then
-                  call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, te, htot)
+                  call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, te, htot, msys)
                else
-                  call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot)
+                  call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot, msys)
                end if
-               write(egyiu,300) t, ke, pe, te, htot, eoffset
+               write(egyiu,300) t, ke, pe, te, htot, eoffset, msys
             end if
          end if
       end if
@@ -253,14 +254,16 @@ program swiftest_symba
          if (idump == 0) then
             if (param%lenergy) then
                if(num_plpl_comparisons > param%eucl_threshold) then
-                  call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, te, htot)
+                  call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, te, htot, msys)
                else
-                  call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot)
+                  call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot, msys)
                end if
                Ltot_now = norm2(htot)
+               Mtot_now = msys
                Lerror = (Ltot_now - Ltot_orig) / Ltot_orig
                te_error = (te - te_orig) / te_orig
-               te_off_error = (te + eoffset - te_orig) / te_orig
+               te_off_error = ((te + eoffset) - te_orig) / te_orig
+               Merror = (Mtot_now - Mtot_orig) / Mtot_orig
                tfrac = (t - t0)/(tstop - t0)
             end if
             write(*, 200) t, tfrac, npl, ntp
@@ -270,8 +273,8 @@ program swiftest_symba
             finish = clock_count / (count_rate * 1.0_DP)
             write(*,*) "      Wall time (s): ", finish - start
 
-205         format("       DL/L = ", ES12.5, "; DE/E = ", ES12.5, "; (DE+eoffset)/E = ", ES12.5)
-            if (param%lenergy) write(*, 205) Lerror, te_error, te_off_error
+205         format("       DL/L0 = ", ES12.5, "; DE/E0 = ", ES12.5, "; (DE+eoffset)/E0 = ", ES12.5, "; DM/M0 = ", ES12.5)
+            if (param%lenergy) write(*, 205) Lerror, te_error, te_off_error, Merror
 
             call param%dump_to_file(t)
             call io_dump_pl(npl, symba_plA%helio%swiftest, param%lclose, param%lrhill_present)
@@ -326,25 +329,24 @@ program swiftest_symba
 
    if (param%lenergy) then
       if(num_plpl_comparisons > param%eucl_threshold) then
-         call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, te, htot)
+         call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, te, htot, msys)
       else
-         call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot)
+         call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot, msys)
       end if
       Ltot_now = norm2(htot)
+      Mtot_now = msys
       Lerror = (Ltot_now - Ltot_orig) / Ltot_orig
+      Merror = (Mtot_now - Mtot_orig) / Mtot_orig
       te_error = (te - te_orig) / te_orig
       te_off_error = (te + eoffset - te_orig) / te_orig
       write(*,*) 'Final angular momentum and energy errors'
-      write(*, 205) Lerror, te_error, te_off_error
+      write(*, 205) Lerror, te_error, te_off_error, Merror
+      write(egyiu,300) t, ke, pe, te, htot, eoffset, msys
+      close(egyiu)
    end if
    call param%dump_to_file(t)
    call io_dump_pl(npl, symba_plA%helio%swiftest, param%lclose, param%lrhill_present)
    call io_dump_tp(ntp, symba_tpA%helio%swiftest)
-   if (param%lenergy) then 
-      call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot)
-      write(egyiu,300) t, ke, pe, te, htot, eoffset
-      close(egyiu)
-   end if
 
    call symba_pl_deallocate(symba_plA)
    call symba_merger_deallocate(mergeadd_list)
