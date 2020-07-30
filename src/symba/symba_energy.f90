@@ -31,7 +31,7 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, htot)
    ke = 0.0_DP
 
 
-   !$omp simd
+   !$omp simd private(x,v,v2,mass,h) reduction(+:ke,htot)
    do i = 1, npl 
       x(:) = swiftest_plA%xb(:, i)
       v(:) = swiftest_plA%vb(:, i)
@@ -58,6 +58,7 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, htot)
    !$omp end parallel do
 
    if (j2rp2 /= 0.0_DP) then
+      !$omp simd private(rmag)
       do i = 2, npl
          rmag = norm2(swiftest_plA%xh(:,i))
          irh(i) = 1.0_DP / rmag

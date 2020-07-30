@@ -33,7 +33,7 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
    ke = 0.0_DP
 
    ! Kinetic energy of all bodies, inclusing the central body
-   !$omp simd
+   !$omp simd private(x,v,v2,mass,h) reduction(+:ke,htot)
    do i = 1, npl 
       x(:) = swiftest_plA%xb(:, i)
       v(:) = swiftest_plA%vb(:, i)
@@ -50,7 +50,7 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
    xbcb(:) = swiftest_plA%xb(:, 1) 
    Mcb = swiftest_plA%mass(1) 
    pe = 0.0_DP
-   !$omp simd
+   !$omp simd private(rmag) reduction(-:pe)
    do i = 2, npl
       rmag = norm2(swiftest_plA%xb(:, i) - xbcb(:))
       pe = pe - Mcb * swiftest_plA%mass(i) / rmag 
@@ -70,7 +70,7 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
 
    ! Potential energy from the oblateness term
    if (j2rp2 /= 0.0_DP) then
-      !$omp simd
+      !$omp simd private(rmag)
       do i = 2, npl
          rmag = norm2(swiftest_plA%xh(:,i))
          irh(i) = 1.0_DP / rmag
