@@ -46,6 +46,7 @@ SUBROUTINE drift_one(mu, x, v, dt, iflag, n)
      real(DP), dimension(:), allocatable :: muvec, dttmp
      real(DP), dimension(:), allocatable :: px, py, pz, vx, vy, vz
      logical(DP), dimension(:), allocatable :: badrun
+     integer(I4B), dimension(:), allocatable :: biflag
 
 ! Executable code
      allocate(muvec(n))
@@ -69,6 +70,13 @@ SUBROUTINE drift_one(mu, x, v, dt, iflag, n)
      do i = 1, n
          CALL drift_dan(muvec(i), px(i), py(i), pz(i), vx(i), vy(i), vz(i), dttmp(i), iflag(i))
      end do
+     x(1, :) = px(:)
+     x(2, :) = py(:)
+     x(3, :) = pz(:)
+     v(1, :) = vx(:)
+     v(2, :) = vy(:)
+     v(3, :) = vz(:)
+
      badrun(:) = (iflag(:) /= 0)
      if (any(badrun(:))) then
          muvec(:) = pack(muvec(:), badrun(:))
@@ -79,29 +87,22 @@ SUBROUTINE drift_one(mu, x, v, dt, iflag, n)
          vy(:) = pack(vy(:), badrun(:))
          vz(:) = pack(vz(:), badrun(:))
          dttmp(:) = 0.1_DP * pack(dttmp(:), badrun(:))
-         iflag(:) = pack(iflag(:), badrun(:))
+         biflag(:) = pack(iflag(:), badrun(:))
          do k = 1, 10
             !$omp simd
             do i = 1, count(badrun(:))
-               call drift_dan(muvec(i), px(i), py(i), pz(i), vx(i), vy(i), vz(i), dttmp(i), iflag(i))
+               call drift_dan(muvec(i), px(i), py(i), pz(i), vx(i), vy(i), vz(i), dttmp(i), biflag(i))
             end do
          end do
-         if (all(iflag(:) == 0)) then
-            x(1, :) = unpack(px(:), badrun(:), x(1, :)) 
-            x(2, :) = unpack(py(:), badrun(:), x(2, :)) 
-            x(3, :) = unpack(pz(:), badrun(:), x(3, :)) 
-            v(1, :) = unpack(vx(:), badrun(:), v(1, :)) 
-            v(2, :) = unpack(vy(:), badrun(:), v(2, :)) 
-            v(3, :) = unpack(vz(:), badrun(:), v(3, :)) 
-            return
-         end if
-     end if
-      x(1, :) = px(:)
-      x(2, :) = py(:)
-      x(3, :) = pz(:)
-      v(1, :) = vx(:)
-      v(2, :) = vy(:)
-      v(3, :) = vz(:)
+         x(1, :) = unpack(px(:), badrun(:), x(1, :)) 
+         x(2, :) = unpack(py(:), badrun(:), x(2, :)) 
+         x(3, :) = unpack(pz(:), badrun(:), x(3, :)) 
+         v(1, :) = unpack(vx(:), badrun(:), v(1, :)) 
+         v(2, :) = unpack(vy(:), badrun(:), v(2, :)) 
+         v(3, :) = unpack(vz(:), badrun(:), v(3, :)) 
+         iflag(:) = unpack(biflag(:), badrun(:), iflag(:))
+      end if
+
 
      RETURN
 
