@@ -153,9 +153,9 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
          pltp_lencounters = .false.
          pltp_lvdotr = .false.
 
-          ! CALL util_dist_eucl_pltp(npl, ntp, symba_plA%helio%swiftest%xh, symba_tpA%helio%swiftest%xh, &
+          ! CALL util_dist_eucl_pltp(symba_plA%helio%swiftest%xh, symba_tpA%helio%swiftest%xh, &
           !      num_pltp_comparisons, k_pltp, dist_pltp_array)
-          ! CALL util_dist_eucl_pltp(npl, ntp, symba_plA%helio%swiftest%vh, symba_tpA%helio%swiftest%vh, &
+          ! CALL util_dist_eucl_pltp(symba_plA%helio%swiftest%vh, symba_tpA%helio%swiftest%vh, &
           !      num_pltp_comparisons, k_pltp, vel_pltp_array)
           CALL symba_chk_eucl_pltp(num_pltp_comparisons, k_pltp, symba_plA, symba_tpA, dt, pltp_lencounters, pltp_lvdotr, npltpenc)
      

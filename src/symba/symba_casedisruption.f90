@@ -209,12 +209,12 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    ALLOCATE(x_frag(NDIM, frags_added))
    ALLOCATE(v_frag(NDIM, frags_added))
 
-   CALL util_mom(m1, xh_1, vb_1, m2, xh_2, vb_2, frags_added, nstart, m_frag, r_circle, theta, x_frag, v_frag)
+   CALL util_mom(m1, xh_1, vb_1, m2, xh_2, vb_2, frags_added, m_frag, r_circle, theta, x_frag, v_frag)
 
    DO i = 1, frags_added
 
-      mergeadd_list%xh(:,nstart + i) = x_frag(:, i)! - xbs(1)!x_frag
-      mergeadd_list%vh(:,nstart + i) = v_frag(:, i) - vbs(:)!vx_frag
+      mergeadd_list%xh(:, nstart + i) = x_frag(:, i)! - xbs(1)!x_frag
+      mergeadd_list%vh(:, nstart + i) = v_frag(:, i) - vbs(:)!vx_frag
 
          ! Tracking linear momentum. 
       mv(:) = mv(:) + (mergeadd_list%mass(nstart + i) * mergeadd_list%vh(:,nstart + i))

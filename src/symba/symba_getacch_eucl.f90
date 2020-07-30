@@ -12,7 +12,6 @@
 !    Arguments : lextra_force : logical flag indicating whether to include user-supplied accelerations
 !                t            : time
 !                npl          : number of planets
-!                nplm         : number of planets with mass > mtiny
 !                symba_pl1P   : pointer to head of SyMBA planet structure linked-list
 !                j2rp2        : J2 * R**2 for the Sun
 !                j4rp4        : J4 * R**4 for the Sun
@@ -26,14 +25,14 @@
 !    Terminal  : none
 !    File      : none
 !
-!  Invocation  : CALL symba_getacch(lextra_force, t, npl, nplm, symba_pl1P, j2rp2, j4rp4, nplplenc, plplenc_list)
+!  Invocation  : CALL symba_getacch(lextra_force, t, npl, symba_pl1P, j2rp2, j4rp4, nplplenc, plplenc_list)
 !
 !  Notes       : Adapted from Hal Levison's Swift routine symba5_getacch.f
 !
 !                Accelerations in an encounter are not included here
 !
 !**********************************************************************************************************************************
-SUBROUTINE symba_getacch_eucl(lextra_force, t, npl, nplm, symba_plA, j2rp2, j4rp4, nplplenc, plplenc_list, &
+SUBROUTINE symba_getacch_eucl(lextra_force, t, npl, symba_plA, j2rp2, j4rp4, nplplenc, plplenc_list, &
      num_plpl_comparisons, k_plpl)
 
 ! Modules
@@ -48,7 +47,7 @@ SUBROUTINE symba_getacch_eucl(lextra_force, t, npl, nplm, symba_plA, j2rp2, j4rp
 
 ! Arguments
      LOGICAL(LGT), INTENT(IN)                      :: lextra_force
-     INTEGER(I4B), INTENT(IN)                      :: npl, nplm, nplplenc
+     INTEGER(I4B), INTENT(IN)                      :: npl, nplplenc
      INTEGER(I8B), intent(in)                      :: num_plpl_comparisons
      REAL(DP), INTENT(IN)                          :: t, j2rp2, j4rp4
      TYPE(symba_pl), INTENT(INOUT)                 :: symba_plA
@@ -73,7 +72,7 @@ SUBROUTINE symba_getacch_eucl(lextra_force, t, npl, nplm, symba_plA, j2rp2, j4rp
      ahm(:,:) = 0.0_DP
      symba_plA%helio%ah(:,:) = 0.0_DP
      
-     ! CALL util_dist_eucl_plpl(npl,symba_plA%helio%swiftest%xh, num_plpl_comparisons, k_plpl, dist_plpl_array) ! does not care about mtiny
+     ! CALL util_dist_eucl_plpl(symba_plA%helio%swiftest%xh, num_plpl_comparisons, k_plpl, dist_plpl_array) ! does not care about mtiny
 
 ! There is floating point arithmetic round off error in this loop
 ! For now, we will keep it in the serial operation, so we can easily compare

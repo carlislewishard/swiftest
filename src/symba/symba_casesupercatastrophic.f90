@@ -212,7 +212,7 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
 
    ALLOCATE(x_frag(NDIM, frags_added))
    ALLOCATE(v_frag(NDIM, frags_added))
-   CALL util_mom(m1, xh_1, vb_1, m2, xh_2, vb_2, frags_added, nstart, m_frag, r_circle, theta, x_frag, v_frag)
+   CALL util_mom(m1, xh_1, vb_1, m2, xh_2, vb_2, frags_added, m_frag, r_circle, theta, x_frag, v_frag)
 
    DO i=1, frags_added
 

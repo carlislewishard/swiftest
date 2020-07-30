@@ -33,7 +33,7 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-     encounter_file, out_type, npl, symba_plA, nplplenc, plplenc_list, plmaxname, tpmaxname, mtiny)
+     encounter_file, npl, symba_plA, nplplenc, plplenc_list, plmaxname, tpmaxname, mtiny)
 
 ! Modules
      USE swiftest
@@ -49,7 +49,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
      REAL(DP), INTENT(IN)                             :: t, dt
      REAL(DP), INTENT(INOUT)                          :: eoffset, mtiny
      REAL(DP), DIMENSION(:), INTENT(IN)               :: vbs
-     CHARACTER(*), INTENT(IN)                         :: encounter_file, out_type
+     CHARACTER(*), INTENT(IN)                         :: encounter_file
      TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
      TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
      TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA

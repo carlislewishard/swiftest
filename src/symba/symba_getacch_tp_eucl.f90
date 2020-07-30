@@ -12,7 +12,6 @@
 !    Arguments : lextra_force : logical flag indicating whether to include user-supplied accelerations
 !                t            : time
 !                npl          : number of planets
-!                nplm         : number of planets with mass > mtiny
 !                ntp          : number of active test particles
 !                symba_pl1P   : pointer to head of SyMBA planet structure linked-list
 !                symba_tp1P   : pointer to head of active SyMBA test particle structure linked-list
@@ -29,7 +28,7 @@
 !    Terminal  : none
 !    File      : none
 !
-!  Invocation  : CALL symba_getacch_tp(lextra_force, t, npl, nplm, ntp, symba_pl1P, symba_tp1P, xh, j2rp2, j4rp4,
+!  Invocation  : CALL symba_getacch_tp(lextra_force, t, npl, ntp, symba_pl1P, symba_tp1P, xh, j2rp2, j4rp4,
 !                                      npltpenc, pltpenc_list)
 !
 !  Notes       : Adapted from Hal Levison's Swift routine symba5_getacch.f
@@ -37,7 +36,7 @@
 !                Accelerations in an encounter are not included here
 !
 !**********************************************************************************************************************************
-SUBROUTINE symba_getacch_tp_eucl(lextra_force, t, npl, nplm, ntp, symba_plA, symba_tpA, xh, j2rp2, j4rp4,&
+SUBROUTINE symba_getacch_tp_eucl(lextra_force, t, npl, ntp, symba_plA, symba_tpA, xh, j2rp2, j4rp4,&
      npltpenc, pltpenc_list, num_pltp_comparisons, k_pltp)
 
 ! Modules
@@ -52,7 +51,7 @@ SUBROUTINE symba_getacch_tp_eucl(lextra_force, t, npl, nplm, ntp, symba_plA, sym
 
 ! Arguments
      LOGICAL(LGT), INTENT(IN)                      :: lextra_force
-     INTEGER(I4B), INTENT(IN)                      :: npl, nplm, ntp, npltpenc
+     INTEGER(I4B), INTENT(IN)                      :: npl, ntp, npltpenc
      INTEGER(I8B), intent(in)                      :: num_pltp_comparisons
      REAL(DP), INTENT(IN)                          :: t, j2rp2, j4rp4
      REAL(DP), DIMENSION(:, :), INTENT(IN)         :: xh
@@ -74,7 +73,7 @@ SUBROUTINE symba_getacch_tp_eucl(lextra_force, t, npl, nplm, ntp, symba_plA, sym
 
      ah(:,1:ntp) = 0.0_DP
 
-     ! CALL util_dist_eucl_pltp(npl, ntp, symba_plA%helio%swiftest%xh, symba_tpA%helio%swiftest%xh, &
+     ! CALL util_dist_eucl_pltp(symba_plA%helio%swiftest%xh, symba_tpA%helio%swiftest%xh, &
      !      num_pltp_comparisons, k_pltp, dist_pltp_array)
 
 !$omp parallel do default(shared) schedule(static) &
@@ -94,41 +93,10 @@ SUBROUTINE symba_getacch_tp_eucl(lextra_force, t, npl, nplm, ntp, symba_plA, sym
 
      symba_tpA%helio%ah(:,1:ntp) = ah(:,1:ntp)
 
-     !Removed by D. Minton
-     !helio_tpP => symba_tp1P%helio
-     !^^^^^^^^^^^^^^^^^^^^
-     ! OpenMP parallelization added by D. Minton
-     ! $OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) &
-     ! $OMP PRIVATE(i,helio_tpP,swifter_tpP,swifter_plP,dx,r2,fac) &
-     ! $OMP SHARED(ntp,npl,symba_tp1P,swifter_pl1P,xh) 
-     ! DO i = 1, ntp
-     !      !Added by D. Minton
-     !      !helio_tpP => symba_tp1P%symba_tpPA(i)%thisP%helio
-     !      !^^^^^^^^^^^^^^^^^^
-     !      symba_tpA%helio%ah(:,i) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
-     !      IF (symba_tpA%helio%swiftest%status(i) == ACTIVE) THEN
-     !           !swifter_plP => swifter_pl1P
-     !           !DO j = 2, nplm
-     !           DO j = 2, nplm
-     !                !swifter_plP => swifter_plP%nextP
-     !                dx(:) = symba_tpA%helio%swiftest%xh(:,i) - xh(:, j)
-     !                r2 = DOT_PRODUCT(dx(:), dx(:))
-     !                fac = symba_PlA%helio%swiftest%mass(j)/(r2*SQRT(r2))
-     !                symba_tpA%helio%ah(:,i) = symba_tpA%helio%ah(:,i) - fac*dx(:)
-     !           END DO
-     !      END IF
-     !      !Removed by D. Minton
-     !      !helio_tpP => helio_tpP%nextP
-     !      !^^^^^^^^^^^^^^^^^^^^
-     ! END DO
-     ! $OMP END PARALLEL DO
-     ! OpenMP parallelization added by D. Minton
-     ! $OMP PARALLEL DO SCHEDULE (STATIC) DEFAULT(NONE) &
-     ! $OMP PRIVATE(i,swifter_plP,helio_tpP,dx,r2,fac) &
-     ! $OMP SHARED(pltpenc_list,npltpenc)
+     !!$OMP PARALLEL DO SCHEDULE (STATIC) DEFAULT(NONE) &
+     !!$OMP PRIVATE(i,swifter_plP,helio_tpP,dx,r2,fac) &
+     !!$OMP SHARED(pltpenc_list,npltpenc)
      DO i = 1, npltpenc
-          !swifter_plP => pltpenc_list(i)%plP%helio%swifter
-          !helio_tpP => pltpenc_list(i)%tpP%helio
           index_pl = pltpenc_list%indexpl(i)
           index_tp = pltpenc_list%indextp(i)
           IF (symba_tpA%helio%swiftest%status(index_tp) == ACTIVE) THEN
@@ -138,7 +106,8 @@ SUBROUTINE symba_getacch_tp_eucl(lextra_force, t, npl, nplm, ntp, symba_plA, sym
                symba_tpA%helio%ah(:,index_tp) = symba_tpA%helio%ah(:,index_tp) + fac*dx(:)
           END IF
      END DO
-     ! $OMP END PARALLEL DO
+     !!$OMP END PARALLEL DO
+
      IF (j2rp2 /= 0.0_DP) THEN
          if (npl > 0) then
             ALLOCATE(aobl(NDIM, npl), irh(npl))

@@ -26,7 +26,7 @@
 !  Notes       : 
 !
 !**********************************************************************************************************************************
-SUBROUTINE util_dist_eucl_plpl(npl, invar, num_comparisons, k_plpl, outvar)
+SUBROUTINE util_dist_eucl_plpl(invar, num_comparisons, k_plpl, outvar)
 
 ! Modules
      USE swiftest
@@ -38,7 +38,6 @@ SUBROUTINE util_dist_eucl_plpl(npl, invar, num_comparisons, k_plpl, outvar)
      IMPLICIT NONE
 
 ! Arguments
-     INTEGER(I4B), INTENT(IN) :: npl
      INTEGER(I4B), DIMENSION(:,:),INTENT(IN) :: k_plpl
      INTEGER(I8B), INTENT(IN) :: num_comparisons
      REAL(DP),DIMENSION(:,:),INTENT(IN) :: invar

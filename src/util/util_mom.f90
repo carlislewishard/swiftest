@@ -24,7 +24,7 @@
 !  Notes       : Adapted from Hal Levison's Swift routine util_hills.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE util_mom(m1, xh1, vb1, m2, xh2, vb2, frags_added, nstart, m_frag, r_circle, theta, p_frag, vel_frag)
+SUBROUTINE util_mom(m1, xh1, vb1, m2, xh2, vb2, frags_added, m_frag, r_circle, theta, p_frag, vel_frag)
 
 !x_frag, y_frag, z_frag, vx_frag, vy_frag, vz_frag)
 
@@ -35,7 +35,7 @@ SUBROUTINE util_mom(m1, xh1, vb1, m2, xh2, vb2, frags_added, nstart, m_frag, r_c
    IMPLICIT NONE
 
 ! Arguments
-   INTEGER(I4B), INTENT(IN)                               :: frags_added, nstart
+   INTEGER(I4B), INTENT(IN)                               :: frags_added
    REAL(DP), INTENT(IN)                                   :: m1, m2, r_circle, theta
    REAL(DP), DIMENSION(:), INTENT(IN)                     :: xh1, vb1, xh2, vb2
    REAL(DP), DIMENSION(:), INTENT(IN)                     :: m_frag
@@ -48,7 +48,7 @@ SUBROUTINE util_mom(m1, xh1, vb1, m2, xh2, vb2, frags_added, nstart, m_frag, r_c
    REAL(DP)                                               :: linmom_before,  linmom_after, DL
    REAL(DP), DIMENSION(NDIM)                              :: veclinmom_after, xhvb1, xhvb2, vecangmom_after, xvrel
    REAL(DP)                                               :: p_frag_check, v_frag_check, B, m_frag_tot
-   REAL(DP), DIMENSION(NDIM)                              :: xr, l, kk, p, v_f, x_f, angmom_frag, angmom_fragi, angmom_com_frag
+   REAL(DP), DIMENSION(NDIM)                              :: xr, l, kk, p, v_f, x_f, angmom_frag, angmom_fragi
    REAL(DP), DIMENSION(NDIM)                              :: angmom_f, angmom_before, angmom_after
    integer(I4B), save                                     :: thetashift = 0
    integer(I4B), parameter                                :: SHIFTMAX = 9
@@ -98,7 +98,6 @@ SUBROUTINE util_mom(m1, xh1, vb1, m2, xh2, vb2, frags_added, nstart, m_frag, r_c
      v2el = v2esc - 2.0_DP*(m1+m2)*GC*(1.0_DP/(NORM2(xr)) - 1.0_DP/r_circle)
      A = - (SQRT(v2el))
 
-     !WRITE(*,*) "UTIL_MOM A", A
 
      B = r_circle
      DO i=1, frags_added
@@ -140,6 +139,7 @@ SUBROUTINE util_mom(m1, xh1, vb1, m2, xh2, vb2, frags_added, nstart, m_frag, r_c
      p_com_frag(:) = mp_frag(:) / SUM(m_frag(:))
      v_com_frag(:) = mv_frag(:) / SUM(m_frag(:))
      angmom_after = angmom_frag(:)
+     linmom_after = norm2(veclinmom_after)
      DL = NORM2(angmom_after(:) - angmom_before(:)) / NORM2(angmom_before(:))
 
    RETURN

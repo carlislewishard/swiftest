@@ -29,7 +29,7 @@
 ! !  Notes       : 
 ! !
 ! !**********************************************************************************************************************************
-SUBROUTINE util_dist_eucl_pltp(npl, ntp, planets, test_particles, num_pltp_comparisons, k_pltp, outvar)
+SUBROUTINE util_dist_eucl_pltp(planets, test_particles, num_pltp_comparisons, k_pltp, outvar)
 
 ! Modules
      USE swiftest
@@ -40,7 +40,6 @@ SUBROUTINE util_dist_eucl_pltp(npl, ntp, planets, test_particles, num_pltp_compa
      IMPLICIT NONE
 
 ! Arguments
-     INTEGER(I4B), INTENT(IN) :: npl, ntp
      INTEGER(I4B), DIMENSION(:,:),INTENT(IN) :: k_pltp
      INTEGER(I8B), INTENT(IN) :: num_pltp_comparisons
      REAL(DP),DIMENSION(:,:),INTENT(IN) :: planets
