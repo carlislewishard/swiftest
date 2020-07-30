@@ -43,7 +43,7 @@ program swiftest_symba
    logical                       :: lfrag_add, ldiscard, ldiscard_tp
    integer(I4B)                  :: npl, nplm, ntp, ntp0, nsppl, nsptp, iout, idump, iloop
    integer(I4B)                  :: nplplenc, npltpenc, nmergeadd, nmergesub
-   real(DP)                      :: t, tfrac, tbase, mtiny, ke, pe, te, tei, tef, eoffset, msys
+   real(DP)                      :: t, tfrac, tbase, mtiny, ke, pe, te, eoffset, msys
    real(DP), dimension(NDIM)     :: htot
    real(DP)                      :: te_orig, te_error, te_off_error, Ltot_orig, Ltot_now, Lerror, Mtot_orig, Mtot_now, Merror
    character(STRMAX)             :: inparfile
@@ -186,13 +186,6 @@ program swiftest_symba
       ldiscard = .false. 
       ldiscard_tp = .false.
       lfrag_add = .false.
-      if (param%lenergy) then
-         if(num_plpl_comparisons > param%eucl_threshold) then
-            call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, tei, htot, msys)
-         else
-            call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, tei, htot, msys)
-         end if
-      end if
       call symba_discard_merge_pl(npl, symba_plA, nplplenc, plplenc_list, ldiscard)                                  
       call symba_discard_pl(t, npl, symba_plA, rmin, rmax, rmaxu, qmin, qmin_coord, qmin_alo, qmin_ahi, ldiscard)
       call symba_discard_tp(t, npl, ntp, symba_plA, symba_tpA, dt, rmin, rmax, rmaxu, qmin, qmin_coord, &    
@@ -217,12 +210,11 @@ program swiftest_symba
          end if
          if (param%lenergy) then
             if(num_plpl_comparisons > param%eucl_threshold) then
-               call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, tef, htot, msys)
+               call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, te, htot, msys)
             else
-               call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, tef, htot, msys)
+               call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot, msys)
             end if
-            eoffset = eoffset + (tei - tef)
-            write(egyiu,300) t, ke, pe, tef, htot, eoffset, msys
+            write(egyiu,300) t, ke, pe, te, htot, eoffset, msys
          end if
       end if
 

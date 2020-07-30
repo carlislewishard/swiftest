@@ -72,8 +72,8 @@ SUBROUTINE symba_discard_merge_pl(npl, symba_plA, nplplenc, plplenc_list, ldisca
                     r3 = r**3
                     mmax = m
                     mtot = m
-                    x(:) = m*symba_plA%helio%swiftest%xh(:,enc_big)
-                    v(:) = m*symba_plA%helio%swiftest%vb(:,enc_big)
+                    x(:) = m * symba_plA%helio%swiftest%xh(:,enc_big)
+                    v(:) = m * symba_plA%helio%swiftest%vb(:,enc_big)
                     indexk = enc_big
 
                     nchild = symba_plA%nchild(enc_big)
@@ -85,8 +85,8 @@ SUBROUTINE symba_discard_merge_pl(npl, symba_plA, nplplenc, plplenc_list, ldisca
                          r = symba_plA%helio%swiftest%radius(indexchild)
                          r3 = r3 + r**3
                          mtot = mtot + m
-                         x(:) = x(:) + m*symba_plA%helio%swiftest%xh(:,indexchild)
-                         v(:) = v(:) + m*symba_plA%helio%swiftest%vb(:,indexchild)
+                         x(:) = x(:) + m * symba_plA%helio%swiftest%xh(:,indexchild)
+                         v(:) = v(:) + m * symba_plA%helio%swiftest%vb(:,indexchild)
                          IF (m > mmax) THEN
                               mmax = m
                               indexk = indexchild
