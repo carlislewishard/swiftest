@@ -924,7 +924,7 @@ MODULE module_interfaces
      INTERFACE
           SUBROUTINE symba_fragmentation(t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, &
                mergesub_list, eoffset, vbs, encounter_file, npl, symba_plA, nplplenc, &
-               plplenc_list, plmaxname, tpmaxname, mtiny)
+               plplenc_list, plmaxname, tpmaxname, mtiny, lfragmentation)
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_helio
@@ -940,6 +940,7 @@ MODULE module_interfaces
                TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
                TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
                TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
+               LOGICAL(LGT), INTENT(IN)                         :: lfragmentation
           END SUBROUTINE symba_fragmentation
      END INTERFACE
 
@@ -1044,26 +1045,6 @@ MODULE module_interfaces
                TYPE(symba_pl), INTENT(INOUT)   :: symba_plA
                TYPE(symba_tp), INTENT(INOUT)   :: symba_tpA
           END SUBROUTINE symba_kick
-     END INTERFACE
-
-     INTERFACE
-          SUBROUTINE symba_merge_pl(t, dt, index_enc, nplplenc, plplenc_list, nmergeadd, nmergesub, &
-               mergeadd_list, mergesub_list, eoffset, vbs, encounter_file, symba_plA)
-               USE swiftest_globals
-               USE swiftest_data_structures
-               USE module_helio
-               USE module_symba
-               IMPLICIT NONE
-               INTEGER(I4B), INTENT(IN)                         :: index_enc, nplplenc
-               INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub
-               REAL(DP), INTENT(IN)                             :: t, dt
-               REAL(DP), INTENT(INOUT)                          :: eoffset
-               REAL(DP), DIMENSION(:), INTENT(IN)               :: vbs
-               CHARACTER(*), INTENT(IN)                         :: encounter_file
-               TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
-               TYPE(symba_merger),  INTENT(INOUT)               :: mergeadd_list, mergesub_list
-               TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
-          END SUBROUTINE symba_merge_pl
      END INTERFACE
 
      INTERFACE

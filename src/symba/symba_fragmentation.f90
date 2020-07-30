@@ -33,7 +33,7 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-     encounter_file, npl, symba_plA, nplplenc, plplenc_list, plmaxname, tpmaxname, mtiny)
+     encounter_file, npl, symba_plA, nplplenc, plplenc_list, plmaxname, tpmaxname, mtiny, lfragmentation)
 
 ! Modules
      USE swiftest
@@ -53,6 +53,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
      TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
      TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
      TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
+     LOGICAL(LGT), INTENT(IN)                         :: lfragmentation
 
 ! Internals
  
@@ -203,78 +204,83 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           else
             allocate(array_index2_child(1))
           end if 
-          den2 =  m2 / vol2
-          rad2 = ((3 * m2) / (den2 * 4 * PI))**(1.0_DP / 3.0_DP)
-          x2(:) = x2(:) / m2
-          v2(:) = v2(:) / m2
 
-          m1_si = (m1 / GU) * MU2KG 
-          m2_si = (m2 / GU) * MU2KG
-          rad1_si = rad1 * DU2M
-          rad2_si = rad2 * DU2M
-          x1_si(:) = x1(:) * DU2M
-          x2_si(:) = x2(:) * DU2M
-          v1_si(:) = v1(:) * DU2M / TU2S
-          v2_si(:) = v2(:) * DU2M / TU2S
-          den1_si = (den1 / GU) * MU2KG / DU2M**3
-          den2_si = (den2 / GU) * MU2KG / DU2M**3
-          vbs_si = vbs(:) * DU2M / TU2S 
+          if (lfragmentation) then ! Determine the collisional regime and resolve the collision
+            den2 =  m2 / vol2
+            rad2 = ((3 * m2) / (den2 * 4 * PI))**(1.0_DP / 3.0_DP)
+            x2(:) = x2(:) / m2
+            v2(:) = v2(:) / m2
+   
+            m1_si = (m1 / GU) * MU2KG 
+            m2_si = (m2 / GU) * MU2KG
+            rad1_si = rad1 * DU2M
+            rad2_si = rad2 * DU2M
+            x1_si(:) = x1(:) * DU2M
+            x2_si(:) = x2(:) * DU2M
+            v1_si(:) = v1(:) * DU2M / TU2S
+            v2_si(:) = v2(:) * DU2M / TU2S
+            den1_si = (den1 / GU) * MU2KG / DU2M**3
+            den2_si = (den2 / GU) * MU2KG / DU2M**3
+            vbs_si = vbs(:) * DU2M / TU2S 
+   
+            mres(:) = 0.0_DP
+            rres(:) = 0.0_DP
+            pres(:,:) = 0.0_DP
+            vres(:,:) = 0.0_DP
+   
+            IF (m1_si > m2_si) THEN 
+                  itarg = index1
+                  iproj = index2
+                  dentarg = den1_si
+                  denproj = den2_si
+                  mtarg = m1_si
+                  mproj = m2_si
+                  rtarg = rad1_si
+                  rproj = rad2_si
+                  xtarg(:) = x1_si(:)
+                  xproj(:) = x2_si(:)
+                  vtarg(:) = v1_si(:)
+                  vproj(:) = v2_si(:)
+            ELSE
+                  itarg = index2
+                  iproj = index1
+                  dentarg = den2_si
+                  denproj = den1_si
+                  mtarg = m2_si
+                  mproj = m1_si
+                  rtarg = rad2_si
+                  rproj = rad1_si
+                  xtarg(:) = x2_si(:)
+                  xproj(:) = x1_si(:)
+                  vtarg(:) = v2_si(:)
+                  vproj(:) = v1_si(:)
+            END IF
+            mtot = m1_si + m2_si
+            dentot = (m1_si * den1_si + m2_si * den2_si)/ mtot
+            Mcenter = symba_plA%helio%swiftest%mass(1) * MU2KG / GU
+            mtiny_si = (mtiny / GU) * MU2KG
+            !regime = collresolve_resolve(model,mtarg,mproj,rtarg,rproj,xtarg,xproj, vtarg,vproj, nres, mres, rres, pres, vres)
+            CALL util_regime(Mcenter, mtarg, mproj, rtarg, rproj, xtarg, xproj, vtarg, vproj, dentarg, denproj, &
+                  regime, Mlr, Mslr, mtiny_si)
 
-          mres(:) = 0.0_DP
-          rres(:) = 0.0_DP
-          pres(:,:) = 0.0_DP
-          vres(:,:) = 0.0_DP
+            mres(1) = min(max(Mlr, 0.0_DP), mtot)
+            mres(2) = min(max(Mslr, 0.0_DP), mtot)
+            mres(3) = min(max(mtot - Mlr - Mslr, 0.0_DP), mtot)
+            denvec(1) = dentarg
+            denvec(2) = denproj
+            denvec(3) = dentot
 
-          IF (m1_si > m2_si) THEN 
-               itarg = index1
-               iproj = index2
-               dentarg = den1_si
-               denproj = den2_si
-               mtarg = m1_si
-               mproj = m2_si
-               rtarg = rad1_si
-               rproj = rad2_si
-               xtarg(:) = x1_si(:)
-               xproj(:) = x2_si(:)
-               vtarg(:) = v1_si(:)
-               vproj(:) = v2_si(:)
-          ELSE
-               itarg = index2
-               iproj = index1
-               dentarg = den2_si
-               denproj = den1_si
-               mtarg = m2_si
-               mproj = m1_si
-               rtarg = rad2_si
-               rproj = rad1_si
-               xtarg(:) = x2_si(:)
-               xproj(:) = x1_si(:)
-               vtarg(:) = v2_si(:)
-               vproj(:) = v1_si(:)
-          END IF
-          mtot = m1_si + m2_si
-          dentot = (m1_si * den1_si + m2_si * den2_si)/ mtot
-          Mcenter = symba_plA%helio%swiftest%mass(1) * MU2KG / GU
-          mtiny_si = (mtiny / GU) * MU2KG
-          !regime = collresolve_resolve(model,mtarg,mproj,rtarg,rproj,xtarg,xproj, vtarg,vproj, nres, mres, rres, pres, vres)
-          CALL util_regime(Mcenter, mtarg, mproj, rtarg, rproj, xtarg, xproj, vtarg, vproj, dentarg, denproj, &
-               regime, Mlr, Mslr, mtiny_si)
+            rres(:) = (3 * mres(:)  / (4 * PI * denvec(:)))**(1.0_DP / 3.0_DP)
+   
+            mres(:) = (mres(:) / MU2KG) * GU
+            rres(:) = rres(:) / DU2M
+         else ! Only do a pure merger
+            regime = COLLRESOLVE_REGIME_MERGE
+         end if
 
-          mres(1) = min(max(Mlr, 0.0_DP), mtot)
-          mres(2) = min(max(Mslr, 0.0_DP), mtot)
-          mres(3) = min(max(mtot - Mlr - Mslr, 0.0_DP), mtot)
-          denvec(1) = dentarg
-          denvec(2) = denproj
-          denvec(3) = dentot
-
-          rres(:) = (3 * mres(:)  / (4 * PI * denvec(:)))**(1.0_DP / 3.0_DP)
-
-          mres(:) = (mres(:) / MU2KG) * GU
-          rres(:) = rres(:) / DU2M
-
-          CALL symba_caseresolve(t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs_si, & 
-          symba_plA, nplplenc, plplenc_list, regime, plmaxname, tpmaxname, mres, rres, array_index1_child, &
-          array_index2_child, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny)
+         CALL symba_caseresolve(t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs_si, & 
+                                symba_plA, nplplenc, plplenc_list, regime, plmaxname, tpmaxname, mres, rres, array_index1_child, &
+                                array_index2_child, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny)
      END IF 
      RETURN
 

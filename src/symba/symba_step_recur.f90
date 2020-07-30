@@ -171,14 +171,9 @@ RECURSIVE SUBROUTINE symba_step_recur(t, ireci, npl, nplm, ntp, symba_plA, symba
                         ! Determines collisional regime if lfrag=.TRUE. for close encounter planets
                         ! CALL symba_frag_pl(...)
                         ! Determines if close encountenr leads to merger if lfrag=.FALSE.   
-                         IF (param%lfragmentation) THEN
-                            CALL symba_fragmentation (t, dtl, i, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
-                                        eoffset, vbs, param%encounter_file, npl, symba_plA, nplplenc, plplenc_list, param%plmaxname, &
-                                        param%tpmaxname, mtiny)
-                         ELSE
-                            CALL symba_merge_pl(t, dtl, i, nplplenc, plplenc_list, nmergeadd, nmergesub, mergeadd_list, &
-                              mergesub_list, eoffset, vbs, param%encounter_file, symba_plA)
-                         END IF
+                        CALL symba_fragmentation (t, dtl, i, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
+                                                  eoffset, vbs, param%encounter_file, npl, symba_plA, nplplenc, plplenc_list, param%plmaxname, &
+                                                  param%tpmaxname, mtiny, param%lfragmentation)
                      END IF
                END DO
                DO i = 1, npltpenc
@@ -274,14 +269,9 @@ RECURSIVE SUBROUTINE symba_step_recur(t, ireci, npl, nplm, ntp, symba_plA, symba
                          IF ((plplenc_list%status(i) == ACTIVE) .AND.   &
                              (symba_plA%levelg(index_i) >= ireci) .AND. &
                              (symba_plA%levelg(index_j) >= ireci))  THEN    
-                              IF (param%lfragmentation) THEN
-                                   CALL symba_fragmentation (t, dtl, i, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
-                                        eoffset, vbs, param%encounter_file, npl, symba_plA, nplplenc, plplenc_list, &
-                                        param%plmaxname, param%tpmaxname, mtiny)
-                              ELSE
-                                   CALL symba_merge_pl(t, dtl, i, nplplenc, plplenc_list, nmergeadd, nmergesub, mergeadd_list, &
-                                        mergesub_list, eoffset, vbs, param%encounter_file, symba_plA)
-                              END IF
+                             CALL symba_fragmentation(t, dtl, i, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
+                                                       eoffset, vbs, param%encounter_file, npl, symba_plA, nplplenc, plplenc_list, &
+                                                       param%plmaxname, param%tpmaxname, mtiny, param%lfragmentation)
                          END IF
                     END DO
                     DO i = 1, npltpenc
