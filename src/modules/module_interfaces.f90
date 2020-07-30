@@ -1285,13 +1285,13 @@ MODULE module_interfaces
                USE swiftest_globals
                USE swiftest_data_structures
                IMPLICIT NONE
-               INTEGER(I4B), INTENT(IN)             :: npl
-               REAL(DP), INTENT(IN)                 :: j2rp2, j4rp4
-               INTEGER(I4B), DIMENSION(:,:), INTENT(IN) :: k_plpl
-               INTEGER(I8B), INTENT(IN)             :: num_plpl_comparisons
-               REAL(DP), INTENT(OUT)                :: ke, pe, te
-               REAL(DP), DIMENSION(:), INTENT(OUT)  :: htot
-               TYPE(swiftest_pl), INTENT(INOUT)     :: swiftest_plA
+               integer(I4B), intent(in)                 :: npl
+               real(DP), intent(in)                     :: j2rp2, j4rp4
+               integer(I4B), dimension(:,:), intent(in) :: k_plpl
+               integer(I8B), intent(in)                 :: num_plpl_comparisons
+               real(DP), intent(out)                    :: ke, pe, te
+               real(DP), dimension(:), intent(out)      :: htot
+               type(swiftest_pl), intent(inout)         :: swiftest_plA
          END SUBROUTINE symba_energy_eucl
      END INTERFACE
 

@@ -11,18 +11,18 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
    implicit none
 
 ! arguments
-   integer(I4B), intent(in)         :: npl
-   real(DP), intent(in)             :: j2rp2, j4rp4
+   integer(I4B), intent(in)                 :: npl
+   real(DP), intent(in)                     :: j2rp2, j4rp4
    integer(I4B), dimension(:,:), intent(in) :: k_plpl
-   integer(I8B), intent(in)         :: num_plpl_comparisons
-   real(DP), intent(out)            :: ke, pe, te
-   real(DP), dimension(:), intent(out) :: htot
-   type(swiftest_pl), intent(inout)     :: swiftest_plA
+   integer(I8B), intent(in)                 :: num_plpl_comparisons
+   real(DP), intent(out)                    :: ke, pe, te
+   real(DP), dimension(:), intent(out)      :: htot
+   type(swiftest_pl), intent(inout)         :: swiftest_plA
 
 ! internals
    integer(I4B)              :: i, j
-   real(DP)                  :: mass, msys, rmag, v2, oblpot
-   real(DP), dimension(NDIM) :: h, x, v
+   real(DP)                  :: mass, msys, rmag, v2, oblpot, Mcb
+   real(DP), dimension(NDIM) :: h, x, v, xbcb
    real(DP), dimension(npl)  :: irh
    integer(I8B)              :: k
 
@@ -47,11 +47,13 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
    end do
 
    ! Do the central body potential energy component first
+   xbcb(:) = swiftest_plA%xb(:, 1) 
+   Mcb = swiftest_plA%mass(1) 
    pe = 0.0_DP
    !$omp simd
    do i = 2, npl
-      rmag = norm2(swiftest_plA%xb(:, i) - swiftest_plA%xb(:, 1))
-      pe = pe - swiftest_plA%mass(i) * swiftest_plA%mass(1) / rmag 
+      rmag = norm2(swiftest_plA%xb(:, i) - xbcb(:))
+      pe = pe - Mcb * swiftest_plA%mass(i) / rmag 
    end do
 
    ! Do the potential energy between pairs of massive bodies
