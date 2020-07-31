@@ -173,9 +173,14 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
          mergeadd_list%name(nmergeadd) = max(plmaxname, tpmaxname) + frags_added
          m_rem = (m1 + m2) - (mres(1) + mres(2))
          mergeadd_list%mass(nmergeadd) = m_rem / (nfrag - 2) 
-         mergeadd_list%radius(nmergeadd) = ((3 * mergeadd_list%mass(nmergeadd)) / (4 * PI * avg_d))  & 
-            ** (1.0_DP / 3.0_DP) 
          mtot = mtot + mergeadd_list%mass(nmergeadd) 
+         if (i == nfrag) then
+            ! If there is any residual mass left at the end, put it in the last body
+            m_rem = (m1 + m2) - mtot
+            mergeadd_list%mass(nmergeadd) = mergeadd_list%mass(nmergeadd) + m_rem
+         end if
+         mergeadd_list%radius(nmergeadd) = ((3 * mergeadd_list%mass(nmergeadd)) / (4 * PI * avg_d))  & 
+            ** (1.0_DP / 3.0_DP)
       END DO                           
 
    ELSE   
@@ -185,13 +190,21 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
          mergeadd_list%status(nmergeadd) = DISRUPTION
          mergeadd_list%ncomp(nmergeadd) = 2
          mergeadd_list%name(nmergeadd) = max(plmaxname, tpmaxname) + frags_added
+        
          m_rem = (m1 + m2) - mres(1)
          mergeadd_list%mass(nmergeadd) = m_rem / (nfrag - 1) 
+         mtot = mtot + mergeadd_list%mass(nmergeadd)
+         if (i == nfrag) then
+         ! If there is any residual mass left at the end, put it in the last body
+            m_rem = (m1 + m2) - mtot
+            mergeadd_list%mass(nmergeadd) = mergeadd_list%mass(nmergeadd) + m_rem
+         end if
          mergeadd_list%radius(nmergeadd) = ((3 * mergeadd_list%mass(nmergeadd)) / (4 * PI * avg_d))  & 
             ** (1.0_DP / 3.0_DP)  
-         mtot = mtot + mergeadd_list%mass(nmergeadd)
       END DO
    END IF
+
+
 
    ! Calculate the positions of the new fragments in a circle with a radius large enough to space
    ! all fragments apart by a distance of rhill_p1 + rhill_p2
@@ -200,6 +213,9 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
 
    ALLOCATE(m_frag(frags_added))
    m_frag(1:frags_added) = mergeadd_list%mass(nstart + 1 :nstart + frags_added)
+
+   mtot = sum(m_frag(1:frags_added))
+   m_rem = (m1 + m2) - mtot
 
    ALLOCATE(x_frag(NDIM, frags_added))
    ALLOCATE(v_frag(NDIM, frags_added))

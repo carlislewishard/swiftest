@@ -62,7 +62,7 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
    INTEGER(I4B)                                     :: name1, name2, nstart
    REAL(DP)                                         :: mtot, msun, avg_d, d_p1, d_p2, semimajor_encounter, e, q, semimajor_inward
    REAL(DP)                                         :: rhill_p1, rhill_p2, r_circle, theta, radius1, radius2, r_smallestcircle
-   REAL(DP)                                         :: mass1, mass2
+   REAL(DP)                                         :: mass1, mass2, m_rem
    REAL(DP)                                         :: m1m2_10
    REAL(DP), DIMENSION(NDIM)                        :: mv, xbs, vh_1, vh_2
    REAL(DP), DIMENSION(:, :), ALLOCATABLE           :: x_frag, v_frag
@@ -171,10 +171,15 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
             mergeadd_list%name(nmergeadd) = max(plmaxname, tpmaxname) + i
             mergeadd_list%status(nmergeadd) = SUPERCATASTROPHIC
             mergeadd_list%ncomp(nmergeadd) = 2
-            mergeadd_list%mass(nmergeadd) = m1m2_10
+            mergeadd_list%mass(nmergeadd) = m1m2_10                             
+            mtot = mtot + mergeadd_list%mass(nmergeadd) 
+            if (i == nfrag) then
+               ! If there is any residual mass left at the end, put it in the last body
+               m_rem = (m1 + m2) - mtot
+               mergeadd_list%mass(nmergeadd) = mergeadd_list%mass(nmergeadd) + m_rem
+            end if
             mergeadd_list%radius(nmergeadd) = ((3 * mergeadd_list%mass(nmergeadd)) / (4 * PI * avg_d))  & 
                               ** (1.0_DP / 3.0_DP)
-            mtot = mtot + mergeadd_list%mass(nmergeadd) 
          END DO 
       ELSE
          frags_added = frags_added + 1
@@ -193,11 +198,17 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
             mergeadd_list%status(nmergeadd) = SUPERCATASTROPHIC
             mergeadd_list%ncomp(nmergeadd) = 2
             mergeadd_list%mass(nmergeadd) = (m1 + m2 - mres(1)) / (nfrag - 1)
-            mergeadd_list%radius(nmergeadd) = ((3 * mergeadd_list%mass(nmergeadd)) / (4 * PI * avg_d))  & 
-                  ** (1.0_DP / 3.0_DP)  
             mtot = mtot + mergeadd_list%mass(nmergeadd)
+            if (i == nfrag) then
+               ! If there is any residual mass left at the end, put it in the last body
+               m_rem = (m1 + m2) - mtot
+               mergeadd_list%mass(nmergeadd) = mergeadd_list%mass(nmergeadd) + m_rem
+            end if
+            mergeadd_list%radius(nmergeadd) = ((3 * mergeadd_list%mass(nmergeadd)) / (4 * PI * avg_d))  & 
+            ** (1.0_DP / 3.0_DP)  
          END DO
       END IF 
+
 
    r_circle = (rhill_p1 + rhill_p2) / (2 * sin(PI / frags_added))
    theta = (2 * PI) / frags_added
@@ -205,6 +216,9 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
    ALLOCATE(m_frag(frags_added))
 
    m_frag(1:frags_added) = mergeadd_list%mass(nstart + 1:nstart + frags_added)
+
+   mtot = sum(m_frag(1:frags_added))
+   m_rem = (m1 + m2) - mtot
 
    ALLOCATE(x_frag(NDIM, frags_added))
    ALLOCATE(v_frag(NDIM, frags_added))
