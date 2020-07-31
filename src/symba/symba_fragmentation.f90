@@ -65,7 +65,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
      REAL(DP)                       :: r2, rlim, rlim2, vdotr, tcr2, dt2, a, e, q
      REAL(DP)                       :: rad1, rad2, m1, m2, den1, den2, vol1, vol2, vchild, dentarg, denproj, dentot, Mcenter
      REAL(DP)                       :: mass1, mass2, mmax, mtmp, mtot, m1_si, m2_si
-     REAL(DP), DIMENSION(NDIM)      :: xr, vr, x1, v1, x2, v2, x1_si, x2_si, v1_si, vb2_si, xproj, xtarg, vproj, vtarg, vbs_si
+     REAL(DP), DIMENSION(NDIM)      :: xr, vr, x1, v1, x2, v2, x1_si, x2_si, v1_si, v2_si, xproj, xtarg, vproj, vtarg, vbs_si
      REAL(DP)                       :: den1_si, den2_si, rad1_si, rad2_si, rproj, rtarg, mtiny_si
      LOGICAL(LGT)                   :: lfrag_add, lmerge
      INTEGER(I4B), DIMENSION(:), allocatable   :: array_index1_child, array_index2_child
@@ -200,7 +200,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
                END IF
                m2 = m2 + mtmp
                x2(:) = x2(:) + mtmp * symba_plA%helio%swiftest%xb(:, index2_child)
-               v2(:) = vb2(:) + mtmp * symba_plA%helio%swiftest%vb(:, index2_child)
+               v2(:) = v2(:) + mtmp * symba_plA%helio%swiftest%vb(:, index2_child)
             END DO
           else
             allocate(array_index2_child(1))
@@ -210,7 +210,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
             den2 =  m2 / vol2
             rad2 = ((3 * m2) / (den2 * 4 * PI))**(1.0_DP / 3.0_DP)
             x2(:) = x2(:) / m2
-            v2(:) = vb2(:) / m2
+            v2(:) = v2(:) / m2
    
             m1_si = (m1 / GU) * MU2KG 
             m2_si = (m2 / GU) * MU2KG
@@ -219,7 +219,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
             x1_si(:) = x1(:) * DU2M
             x2_si(:) = x2(:) * DU2M
             v1_si(:) = v1(:) * DU2M / TU2S
-            v2_si(:) = vb2(:) * DU2M / TU2S
+            v2_si(:) = v2(:) * DU2M / TU2S
             den1_si = (den1 / GU) * MU2KG / DU2M**3
             den2_si = (den2 / GU) * MU2KG / DU2M**3
    
