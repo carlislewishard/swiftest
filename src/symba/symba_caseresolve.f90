@@ -33,8 +33,8 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE symba_caseresolve (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-     symba_plA, nplplenc, plplenc_list, regime, plmaxname, tpmaxname, mres, rres, array_index1_child, array_index2_child, &
-     m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny)
+     symba_plA, nplplenc, plplenc_list, regime, plmaxname, tpmaxname, mres, rres, array_indexb1_child, array_indexb2_child, &
+     m1, m2, rad1, rad2, xb1, xb2, vb1, vb2, mtiny)
 
 ! Modules
      USE swiftest
@@ -44,19 +44,19 @@ SUBROUTINE symba_caseresolve (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_l
      IMPLICIT NONE
 
 ! Arguments
-     INTEGER(I4B), INTENT(IN)                         :: index_enc
-     INTEGER(I4B), INTENT(IN)                         :: nplplenc
-     INTEGER(I4B), INTENT(INOUT)                      :: plmaxname, tpmaxname, nmergeadd, nmergesub
-     REAL(DP), INTENT(IN)                             :: t, dt, mtiny
-     REAL(DP), INTENT(INOUT)                          :: eoffset, m1, m2, rad1, rad2
-     REAL(DP), DIMENSION(:), INTENT(INOUT)            :: mres, rres
+     INTEGER(I4B), INTENT(IN)                      :: index_enc
+     INTEGER(I4B), INTENT(IN)                      :: nplplenc
+     INTEGER(I4B), INTENT(INOUT)                   :: plmaxname, tpmaxname, nmergeadd, nmergesub
+     REAL(DP), INTENT(IN)                          :: t, dt, mtiny
+     REAL(DP), INTENT(INOUT)                       :: eoffset, m1, m2, rad1, rad2
+     REAL(DP), DIMENSION(:), INTENT(INOUT)         :: mres, rres
      REAL(DP), DIMENSION(:), INTENT(IN)            :: vbs
-     REAL(DP), DIMENSION(:), INTENT(INOUT)         :: x1, x2, v1, v2
-     TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
-     TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
-     TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
-     INTEGER(I4B), INTENT(IN)                         :: regime
-     INTEGER(I4B), DIMENSION(:), INTENT(INOUT)      :: array_index1_child, array_index2_child
+     REAL(DP), DIMENSION(:), INTENT(INOUT)         :: xb1, xb2, vb1, vb2
+     TYPE(symba_plplenc), INTENT(INOUT)            :: plplenc_list
+     TYPE(symba_merger), INTENT(INOUT)             :: mergeadd_list, mergesub_list
+     TYPE(symba_pl), INTENT(INOUT)                 :: symba_plA
+     INTEGER(I4B), INTENT(IN)                      :: regime
+     INTEGER(I4B), DIMENSION(:), INTENT(INOUT)     :: array_indexb1_child, array_indexb2_child
 
 ! Internals
 
@@ -66,27 +66,27 @@ SUBROUTINE symba_caseresolve (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_l
 
           CASE (COLLRESOLVE_REGIME_DISRUPTION)
                CALL symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-               symba_plA, nplplenc, plplenc_list, plmaxname, tpmaxname, mres, rres, m1, m2, rad1, rad2, x1, x2, v1, v2)
+               symba_plA, nplplenc, plplenc_list, plmaxname, tpmaxname, mres, rres, m1, m2, rad1, rad2, xb1, xb2, vb1, vb2)
 
           CASE (COLLRESOLVE_REGIME_SUPERCATASTROPHIC)
                CALL symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
                eoffset, vbs, symba_plA, nplplenc, &
                plplenc_list, plmaxname, tpmaxname, mres, rres, m1, m2, rad1, &
-               rad2, x1, x2, v1, v2)
+               rad2, xb1, xb2, vb1, vb2)
 
           CASE (COLLRESOLVE_REGIME_GRAZE_AND_MERGE)
-               CALL symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-               symba_plA, nplplenc, plplenc_list, array_index1_child, array_index2_child, m1, m2, rad1, rad2, x1, &
-               x2, v1, v2)
+               CALL symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, & 
+               symba_plA, nplplenc, plplenc_list, array_indexb1_child, array_indexb2_child, m1, m2, rad1, rad2, xb1, &
+               xb2, vb1, vb2)
 
           CASE (COLLRESOLVE_REGIME_HIT_AND_RUN)
                CALL symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-               symba_plA, nplplenc, plplenc_list, plmaxname, tpmaxname, mres, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny)
+               symba_plA, nplplenc, plplenc_list, plmaxname, tpmaxname, mres, m1, m2, rad1, rad2, xb1, xb2, vb1, vb2, mtiny)
 
           CASE (COLLRESOLVE_REGIME_MERGE)
-               CALL symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-               symba_plA, nplplenc, plplenc_list, array_index1_child, array_index2_child, m1, m2, rad1, rad2, x1, &
-               x2, v1, v2)
+               CALL symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, & 
+               symba_plA, nplplenc, plplenc_list, array_indexb1_child, array_indexb2_child, m1, m2, rad1, rad2, xb1, &
+               xb2, vb1, vb2)
 
           CASE DEFAULT 
                WRITE(*,*) "ERROR IN SYMBA_CASERESOLVE, NO REGIME SELECTED"

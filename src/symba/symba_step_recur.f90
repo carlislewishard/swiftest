@@ -172,7 +172,7 @@ RECURSIVE SUBROUTINE symba_step_recur(t, ireci, npl, nplm, ntp, symba_plA, symba
                         ! CALL symba_frag_pl(...)
                         ! Determines if close encountenr leads to merger if lfrag=.FALSE.   
                         CALL symba_fragmentation (t, dtl, i, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
-                                                  eoffset, vbs, param%encounter_file, npl, symba_plA, nplplenc, plplenc_list, param%plmaxname, &
+                                                  eoffset, param%encounter_file, npl, symba_plA, nplplenc, plplenc_list, param%plmaxname, &
                                                   param%tpmaxname, mtiny, param%lfragmentation)
                      END IF
                END DO
@@ -270,7 +270,7 @@ RECURSIVE SUBROUTINE symba_step_recur(t, ireci, npl, nplm, ntp, symba_plA, symba
                              (symba_plA%levelg(index_i) >= ireci) .AND. &
                              (symba_plA%levelg(index_j) >= ireci))  THEN    
                              CALL symba_fragmentation(t, dtl, i, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
-                                                       eoffset, vbs, param%encounter_file, npl, symba_plA, nplplenc, plplenc_list, &
+                                                       eoffset, param%encounter_file, npl, symba_plA, nplplenc, plplenc_list, &
                                                        param%plmaxname, param%tpmaxname, mtiny, param%lfragmentation)
                          END IF
                     END DO
