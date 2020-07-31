@@ -2,6 +2,12 @@ subroutine symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_lis
    encounter_file, npl, symba_plA, nplplenc, plplenc_list, plmaxname, tpmaxname, mtiny, lfragmentation)
    !! author: Jennifer L.L. Pouplin, Carlisle A. wishard, and David A. Minton
    !!
+   !! Check for merger between planets in SyMBA. If the user has turned on the FRAGMENTATION feature, it will call the 
+   !! symba_regime subroutine to determine what kind of collision will occur.
+   !! 
+   !! Adapted from David E. Kaufmann's symba_merge_pl.f90
+   !!
+   !! Adapted from Hal Levison's Swift routine symba5_merge.f
    use swiftest
    use module_helio
    use module_symba
@@ -144,7 +150,8 @@ subroutine symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_lis
    end do
    
    if (lfragmentation) then !! If user has enabled this feature, determine the collisional regime and resolve the collision
-      !! Convert all quantities to SI units before sending them to the collision regime determination subroutine 
+      ! Convert all quantities to SI units and determine which of the pair is the projectile vs. target before sending them 
+      ! to symba_regime
       mass_si(:)    = (mass(:) / GU) * MU2KG 
       radius_si(:)  = radius(:) * DU2M
       x_si(:, :)    = x(:, :) * DU2M
@@ -184,7 +191,7 @@ subroutine symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_lis
    
       mass_res(:) = (mass_res(:) / MU2KG) * GU
       radius_res(:) = radius_res(:) / DU2M
-   else !! When user has not enabled FRAGMENTATION, do every collision as a pure merger.
+   else !! When user has *not* enabled FRAGMENTATION, do every collision as a pure merger.
       regime = COLLRESOLVE_REGIME_MERGE
    end if
 
