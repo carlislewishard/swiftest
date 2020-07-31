@@ -49,7 +49,9 @@ ADVIXE_DIR = /apps/cent7/intel/advisor_2019
 ADVIXE_FLAGS = -g -O2 -qopt-report=5 -vec -vecabi=cmdtarget -simd -shared-intel -debug inline-debug-info -DTBB_DEBUG -DTBB_USE_THREADING_TOOLS -fp-model no-except -mp1 -xhost -traceback 
 
 VTUNE_FLAGS = -g -O2 -vec -simd -shared-intel -qopenmp -debug inline-debug-info -parallel-source-info=2 -parallel -DTBB_DEBUG -DTBB_USE_THREADING_TOOLS -qopenmp -fp-model no-except -mp1 -xhost -traceback 
-IDEBUG = -O0 -no-pie -no-ftz -fpe-all=0 -g -traceback -mp1 -fp-model strict -debug all -align all -pad -ip -prec-div -prec-sqrt -assume protect-parens 
+#Be sure to set the environment variable KMP_FORKJOIN_FRAMES=1 for OpenMP debuging in vtune
+
+IDEBUG = -O0 -qopt-report=5 -warn all -nogen-interfaces -no-pie -no-ftz -fpe-all=0 -g -traceback -mp1 -fp-model strict -debug all -align all -pad -ip -prec-div -prec-sqrt -assume protect-parens -CB -no-wrap-margin
 
 STRICTREAL = -mp1 -fp-model strict -prec-div -prec-sqrt -ftz -assume protect-parens 
 SIMDVEC = -vec -simd -xhost -align all -assume contiguous_assumed_shape -vecabi=cmdtarget
@@ -57,8 +59,8 @@ PAR = -parallel -qopenmp
 HEAPARR = -heap-arrays 1048576 
 
 FORTRAN = ifort
-FFLAGS  = -O3 -qopt-report=5 -no-wrap-margin -traceback $(HEAPARR) $(SIMDVEC) $(PAR) $(STRICTREAL) 
-#FFLAGS  = $(IDEBUG) $(HEAPARR)
+FFLAGS  = -qopt-report=5 -no-wrap-margin -O3 $(SIMDVEC) $(PAR) $(STRICTREAL) 
+#FFLAGS  = $(IDEBUG)
 
 #debug flags
 
