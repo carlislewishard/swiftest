@@ -76,7 +76,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 ! Executable code
 
      ! Recalculates xbs and vbs 
-     CALL coord_v2vh(npl, symba_plA%helio%swiftest)
+     CALL coord_vb2vh(npl, symba_plA%helio%swiftest)
      xbs = symba_plA%helio%swiftest%xb(:, 1)
      vbs = symba_plA%helio%swiftest%vb(:, 1)
 
