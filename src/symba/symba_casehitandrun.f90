@@ -285,7 +285,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    ELSE 
       mergesub_list%nadded(nmergesub) = frags_added
    END IF
-   mergesub_list%index_ps(nmergesub) = index1
+   mergesub_list%index_ps(nmergesub) = index_keep
 
    nmergesub = nmergesub + 1
    mergesub_list%name(nmergesub) = name2
@@ -299,7 +299,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    ELSE 
       mergesub_list%nadded(nmergesub) = frags_added
    END IF
-   mergesub_list%index_ps(nmergesub) = index2
+   mergesub_list%index_ps(nmergesub) = index_rm
 
    WRITE(*, *) "Hit and run between particles ", name1, " and ", name2, " at time t = ",t
    IF (frags_added == 0) THEN
