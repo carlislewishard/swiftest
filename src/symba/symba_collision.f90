@@ -198,20 +198,23 @@ subroutine symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_lis
       regime = COLLRESOLVE_REGIME_MERGE
    end if
 
-   ! Save the first index of the newest bodies to be added to the mergeadd/sub lists
-   subi = nmergesub + 1 
-   addi = nmergeadd + 1
+   if (param%lenergy) then
+      ! Save the first index of the newest bodies to be added to the mergeadd/sub lists
+      subi = nmergesub + 1 
+      addi = nmergeadd + 1
+   end if
 
    call symba_caseresolve(t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, vbs, & 
                           symba_plA, nplplenc, plplenc_list, regime, param%plmaxname, param%tpmaxname, mass_res, radius_res, array_index1_child, &
                           array_index2_child, mass(1), mass(2), radius(1), radius(2), x(:, 1), x(:, 2), v(:, 1), v(:, 2), mtiny)
 
 
-   ! Get the energy offset from the mergeadd/sub lists
-   subf = nmergesub 
-   addf = nmergeadd
-   
-   eoffset = eoffset + symba_mergeadd_eoffset(npl, symba_plA, mergeadd_list, mergesub_list, addi, addf, subi, subf, param)
+   if (param%lenergy) then
+      ! Get the energy offset from the mergeadd/sub lists
+      subf = nmergesub 
+      addf = nmergeadd
+      eoffset = eoffset + symba_mergeadd_eoffset(npl, symba_plA, mergeadd_list, mergesub_list, addi, addf, subi, subf, param)
+   end if
 
    deallocate(array_index1_child, array_index2_child)
    return
