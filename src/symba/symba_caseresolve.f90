@@ -32,7 +32,7 @@
 !  Notes       : Adapted from Hal Levison's Swift routine discard_mass_merge.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE symba_caseresolve (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vs, & 
+SUBROUTINE symba_caseresolve (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, vs, & 
      symba_plA, nplplenc, plplenc_list, regime, plmaxname, tpmaxname, mres, rres, array_index1_child, array_index2_child, &
      m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny)
 
@@ -48,7 +48,7 @@ SUBROUTINE symba_caseresolve (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_l
      INTEGER(I4B), INTENT(IN)                      :: nplplenc
      INTEGER(I4B), INTENT(INOUT)                   :: plmaxname, tpmaxname, nmergeadd, nmergesub
      REAL(DP), INTENT(IN)                          :: t, dt, mtiny
-     REAL(DP), INTENT(INOUT)                       :: eoffset, m1, m2, rad1, rad2
+     REAL(DP), INTENT(INOUT)                       :: m1, m2, rad1, rad2
      REAL(DP), DIMENSION(:), INTENT(INOUT)         :: mres, rres
      REAL(DP), DIMENSION(:), INTENT(IN)            :: vs
      REAL(DP), DIMENSION(:), INTENT(INOUT)         :: x1, x2, v1, v2
@@ -65,26 +65,26 @@ SUBROUTINE symba_caseresolve (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_l
           SELECT CASE (regime)
 
           CASE (COLLRESOLVE_REGIME_DISRUPTION)
-               CALL symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vs, & 
+               CALL symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, vs, & 
                symba_plA, nplplenc, plplenc_list, plmaxname, tpmaxname, mres, rres, m1, m2, rad1, rad2, x1, x2, v1, v2)
 
           CASE (COLLRESOLVE_REGIME_SUPERCATASTROPHIC)
                CALL symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
-               eoffset, vs, symba_plA, nplplenc, &
+               vs, symba_plA, nplplenc, &
                plplenc_list, plmaxname, tpmaxname, mres, rres, m1, m2, rad1, &
                rad2, x1, x2, v1, v2)
 
           CASE (COLLRESOLVE_REGIME_GRAZE_AND_MERGE)
-               CALL symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, & 
+               CALL symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, & 
                symba_plA, nplplenc, plplenc_list, array_index1_child, array_index2_child, m1, m2, rad1, rad2, x1, &
                x2, v1, v2)
 
           CASE (COLLRESOLVE_REGIME_HIT_AND_RUN)
-               CALL symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vs, & 
+               CALL symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list,vs, & 
                symba_plA, nplplenc, plplenc_list, plmaxname, tpmaxname, mres, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny)
 
           CASE (COLLRESOLVE_REGIME_MERGE)
-               CALL symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, & 
+               CALL symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, & 
                symba_plA, nplplenc, plplenc_list, array_index1_child, array_index2_child, m1, m2, rad1, rad2, x1, &
                x2, v1, v2)
 

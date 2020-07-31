@@ -32,7 +32,7 @@
 !  Notes       : Adapted from Hal Levison's Swift routine discard_mass_merge.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
+SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, vbs, & 
    symba_plA, nplplenc, plplenc_list, plmaxname, tpmaxname, mres, m1, m2, rad1, rad2, xh_1, xh_2, vb_1, vb_2, mtiny)
 
 ! Modules
@@ -48,7 +48,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    INTEGER(I4B), INTENT(IN)                         :: nplplenc
    INTEGER(I4B), INTENT(INOUT)                      :: plmaxname, tpmaxname, nmergeadd, nmergesub
    REAL(DP), INTENT(IN)                             :: t, dt, mtiny
-   REAL(DP), INTENT(INOUT)                          :: eoffset, m1, m2, rad1, rad2
+   REAL(DP), INTENT(INOUT)                          :: m1, m2, rad1, rad2
    REAL(DP), DIMENSION(:), INTENT(INOUT)            :: mres
    REAL(DP), DIMENSION(:), INTENT(IN)               :: vbs
    REAL(DP), DIMENSION(:), INTENT(INOUT)            :: xh_1, xh_2, vb_1, vb_2
@@ -62,15 +62,16 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    INTEGER(I4B)                                     :: name1, name2, index_keep, index_rm, name_keep, name_rm, nstart
    REAL(DP)                                         :: mtot, msun, d_rm, m_rm, r_rm
    REAL(DP)                                         :: rhill_keep, r_circle, theta, radius1, radius2, e, q, semimajor_encounter
-   REAL(DP)                                         :: m_rem, mass1, mass2, enew, eold, semimajor_inward
+   REAL(DP)                                         :: m_rem, mass1, mass2, semimajor_inward
    REAL(DP)                                         :: mass_keep, mass_rm, rhill_rm
    REAL(DP)                                         :: rad_keep, rad_rm
    REAL(DP)                                         :: r_smallestcircle
    REAL(DP), DIMENSION(:, :), ALLOCATABLE           :: x_frag, v_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE              :: m_frag
-   REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xh_keep, xh_rm, vh_keep, vh_rm, xbs
+   REAL(DP), DIMENSION(NDIM)                        :: mv, xh_keep, xh_rm, vh_keep, vh_rm, xbs
    REAL(DP), DIMENSION(NDIM)                        :: vb_keep, vb_rm
    INTEGER(I4B), DIMENSION(NCHILDMAX)               :: array_index1_child, array_index2_child
+
 
 ! Executable code
 
@@ -130,9 +131,6 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    END IF
 
    ! Find energy pre-frag
-   eold = 0.5_DP*(mass_keep*DOT_PRODUCT(vb_keep, vb_keep) + mass_rm*DOT_PRODUCT(vb_rm, vb_rm))
-   xr(:) = xh_1(:) - xh_2(:) !heliocentric
-   eold = eold - (m1*m2/(SQRT(DOT_PRODUCT(xr(:), xr(:))))) 
 
    ! Go through the encounter list and look for particles actively encoutering in this timestep
    ! Prevent them from having further encounters in this timestep by setting status in plplenc_list to MERGED
@@ -274,7 +272,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    END IF
 
    ! Add both particles involved in the collision to mergesub_list
-   call symba_merger_size_check(mergesub_list, nmergesub + 2)  
+   call symba_merger_size_check(mergesub_list, nmergesub + 2) 
    nmergesub = nmergesub + 1
    mergesub_list%name(nmergesub) = name1
    mergesub_list%status(nmergesub) = HIT_AND_RUN 
@@ -287,6 +285,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    ELSE 
       mergesub_list%nadded(nmergesub) = frags_added
    END IF
+   mergesub_list%index_ps(nmergesub) = index1
 
    nmergesub = nmergesub + 1
    mergesub_list%name(nmergesub) = name2
@@ -300,6 +299,8 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    ELSE 
       mergesub_list%nadded(nmergesub) = frags_added
    END IF
+   mergesub_list%index_ps(nmergesub) = index2
+
    WRITE(*, *) "Hit and run between particles ", name1, " and ", name2, " at time t = ",t
    IF (frags_added == 0) THEN
       WRITE(*,*) "0 fragments produced; pure hit and run."
@@ -307,11 +308,6 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       WRITE(*, *) "Particle ", name_keep, " survives; Particle ", name_rm, " is fragmented."
       WRITE(*, *) "Number of fragments added: ", (frags_added)
    END IF
-
-   ! Calculate energy after frag                                                                           
-   vnew(:) = mv(:) / mtot    ! COM of new fragments                               
-   enew = 0.5_DP * mtot * DOT_PRODUCT(vnew(:), vnew(:))
-   eoffset = eoffset + eold - enew
 
    ! Update plmaxname to account for new fragments made in imperfect hit & runs
    plmaxname = max(plmaxname, tpmaxname) + frags_added

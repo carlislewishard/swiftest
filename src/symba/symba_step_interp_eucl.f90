@@ -75,7 +75,7 @@ SUBROUTINE symba_step_interp_eucl(t, npl, nplm, ntp, symba_plA, symba_tpA,&
      TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
      TYPE(symba_pltpenc), INTENT(INOUT)               :: pltpenc_list
      TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
-     type(user_input_parameters), intent(in)          :: param
+     type(user_input_parameters), intent(inout)       :: param
      INTEGER(I8B), INTENT(IN)                         :: num_plpl_comparisons, num_pltp_comparisons
      INTEGER(I4B), DIMENSION(:,:),INTENT(IN) :: k_plpl 
      INTEGER(I4B), DIMENSION(:,:),INTENT(IN) :: k_pltp

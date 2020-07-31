@@ -32,7 +32,7 @@
 !  Notes       : Adapted from Hal Levison's Swift routine discard_mass_merge.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
+SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, vbs, & 
    symba_plA, nplplenc, plplenc_list, plmaxname, tpmaxname, mres, rres, m1, m2, rad1, rad2, xh_1, xh_2, vb_1, vb_2)
 
 ! Modules
@@ -50,7 +50,7 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    INTEGER(I4B), INTENT(IN)                         :: nplplenc
    INTEGER(I4B), INTENT(INOUT)                      :: plmaxname, tpmaxname, nmergeadd, nmergesub
    REAL(DP), INTENT(IN)                             :: t, dt
-   REAL(DP), INTENT(INOUT)                          :: eoffset, m1, m2, rad1, rad2
+   REAL(DP), INTENT(INOUT)                          :: m1, m2, rad1, rad2
    REAL(DP), DIMENSION(:), INTENT(INOUT)            :: mres, rres
    REAL(DP), DIMENSION(:), INTENT(IN)               :: vbs
    REAL(DP), DIMENSION(:), INTENT(INOUT)            :: xh_1, xh_2, vb_1, vb_2
@@ -64,10 +64,10 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    INTEGER(I4B)                                     :: name1, name2, nstart
    REAL(DP)                                         :: mtot, msun, avg_d, d_p1, d_p2, semimajor_encounter, e, q, semimajor_inward
    REAL(DP)                                         :: rhill_p1, rhill_p2, r_circle, theta, radius1, radius2, r_smallestcircle
-   REAL(DP)                                         :: m_rem, mass1, mass2, enew, eold
+   REAL(DP)                                         :: m_rem, mass1, mass2
    REAL(DP), DIMENSION(:, :), ALLOCATABLE           :: x_frag, v_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE              :: m_frag
-   REAL(DP), DIMENSION(NDIM)                        :: vnew, xr, mv, xbs, vh_1, vh_2
+   REAL(DP), DIMENSION(NDIM)                        :: mv, xbs, vh_1, vh_2
    INTEGER(I4B), DIMENSION(NCHILDMAX)               :: array_index1_child, array_index2_child
 
 ! Executable code
@@ -92,11 +92,6 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    vh_1(:) = vb_1(:) - vbs(:)
    vh_2(:) = vb_2(:) - vbs(:)!
 
-   ! Find energy pre-frag
-   eold = 0.5_DP * (m1 * DOT_PRODUCT(vb_1(:), vb_1(:)) + m2 * DOT_PRODUCT(vb_2(:), vb_2(:)))
-   xr(:) = xh_2(:) - xh_1(:)
-   eold = eold - m1 * m2 / NORM2(xr(:))
-   
    WRITE(*, *) "Disruption between particles ", name1, " and ", name2, " at time t = ",t
 
    ! Set the status of the particles in symba_plA to DISRUPTION
@@ -234,6 +229,7 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    mergesub_list%mass(nmergesub) = mass1
    mergesub_list%radius(nmergesub) = radius1
    mergesub_list%nadded(nmergesub) = frags_added
+   mergesub_list%index_ps(nmergesub) = index1
    nmergesub = nmergesub + 1
    mergesub_list%name(nmergesub) = name2
    mergesub_list%status(nmergesub) = DISRUPTION
@@ -242,12 +238,9 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    mergesub_list%mass(nmergesub) = mass2
    mergesub_list%radius(nmergesub) = radius2
    mergesub_list%nadded(nmergesub) = frags_added
+   mergesub_list%index_ps(nmergesub) = index2
 
    WRITE(*, *) "Number of fragments added: ", frags_added
-   ! Calculate energy after frag                                                                           
-   vnew(:) = mv(:) / mtot    ! COM of new fragments                               
-   enew = 0.5_DP*mtot*DOT_PRODUCT(vnew(:), vnew(:))
-   eoffset = eoffset + eold - enew
 
    plmaxname = max(plmaxname, tpmaxname) + frags_added
    RETURN 

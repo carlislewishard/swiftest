@@ -1,11 +1,11 @@
 subroutine symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, & 
-   encounter_file, npl, symba_plA, nplplenc, plplenc_list, plmaxname, tpmaxname, mtiny, lfragmentation)
+   npl, symba_plA, nplplenc, plplenc_list, mtiny, param)
    !! author: Jennifer L.L. Pouplin, Carlisle A. wishard, and David A. Minton
    !!
    !! Check for merger between planets in SyMBA. If the user has turned on the FRAGMENTATION feature, it will call the 
    !! symba_regime subroutine to determine what kind of collision will occur.
    !! 
-   !! Adapted from David E. Kaufmann's symba_merge_pl.f90
+   !! Adapted from David E. Kaufmann's Swifter routine symba_merge_pl.f90
    !!
    !! Adapted from Hal Levison's Swift routine symba5_merge.f
    use swiftest
@@ -14,16 +14,15 @@ subroutine symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_lis
    use module_interfaces, except_this_one => symba_collision
    implicit none
 
-   integer(I4B), intent(in)                :: index_enc
-   integer(I4B), intent(in)                :: npl, nplplenc
-   integer(I4B), intent(inout)             :: plmaxname, tpmaxname, nmergeadd, nmergesub
-   real(DP), intent(in)                    :: t, dt
-   real(DP), intent(inout)                 :: eoffset, mtiny
-   character(*), intent(in)                :: encounter_file
-   type(symba_plplenc), intent(inout)      :: plplenc_list
-   type(symba_merger), intent(inout)       :: mergeadd_list, mergesub_list
-   type(symba_pl), intent(inout)           :: symba_plA
-   logical, intent(in)                     :: lfragmentation
+   integer(I4B), intent(in)                   :: index_enc
+   integer(I4B), intent(in)                   :: npl, nplplenc
+   integer(I4B), intent(inout)                :: nmergeadd, nmergesub
+   real(DP), intent(in)                       :: t, dt
+   real(DP), intent(inout)                    :: eoffset, mtiny
+   type(symba_plplenc), intent(inout)         :: plplenc_list
+   type(symba_merger), intent(inout)          :: mergeadd_list, mergesub_list
+   type(symba_pl), intent(inout)              :: symba_plA
+   type(user_input_parameters), intent(inout) :: param
 
    integer(I4B), parameter                 :: NRES = 3   !! Number of collisional product results
    integer(I4B)                            :: model, i, j, jtarg, jproj
@@ -31,7 +30,7 @@ subroutine symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_lis
    real(DP), dimension(NDIM)               :: vbs
    real(DP), dimension(NDIM, NRES)         :: pres, vres
    integer(I4B)                            :: regime, idx_child
-   integer(I4B), dimension(2)              :: idx, idx_parent, name, status, nchild !!
+   integer(I4B), dimension(2)              :: idx, idx_parent, name, status, nchild 
    real(DP), dimension(2)                  :: radius, mass, density, volume          
    real(DP), dimension(2)                  :: radius_si, mass_si, density_si
    real(DP), dimension(NDIM, 2)            :: x, v, x_si, v_si
@@ -43,6 +42,10 @@ subroutine symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_lis
    logical                                 :: lfrag_add, lmerge
    integer(I4B), dimension(:), allocatable :: array_index1_child, array_index2_child
    real(DP)                                :: mlr, mslr
+   integer(I4B)                            :: addi, addf, subi, subf
+
+   ! Save initial indices of the mergeadd/sub lists
+
 
    ! recalculates vbs 
    call coord_vb2vh(npl, symba_plA%helio%swiftest)
@@ -78,7 +81,7 @@ subroutine symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_lis
          end if
          ! if no collision is going to happen, write as close encounter, not merger
          if (.not. lfrag_add) then
-            if (encounter_file /= "") then
+            if (param%encounter_file /= "") then
                name(:)   = symba_plA%helio%swiftest%name(idx(:))
                mass(:)   = symba_plA%helio%swiftest%mass(idx(:))
                radius(:) = symba_plA%helio%swiftest%radius(idx(:))
@@ -88,7 +91,7 @@ subroutine symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_lis
                end do
 
                call io_write_encounter(t, name(1), name(2), mass(1), mass(2), radius(1), radius(2), x(:, 1), x(:, 2), &
-                  v(:, 1), v(:, 2), encounter_file)
+                  v(:, 1), v(:, 2), param%encounter_file)
             end if
          end if
       end if
@@ -149,7 +152,7 @@ subroutine symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_lis
       v(:, j) = v(:, j) / mass(j)
    end do
    
-   if (lfragmentation) then !! If user has enabled this feature, determine the collisional regime and resolve the collision
+   if (param%lfragmentation) then !! If user has enabled this feature, determine the collisional regime and resolve the collision
       ! Convert all quantities to SI units and determine which of the pair is the projectile vs. target before sending them 
       ! to symba_regime
       mass_si(:)    = (mass(:) / GU) * MU2KG 
@@ -195,9 +198,19 @@ subroutine symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_lis
       regime = COLLRESOLVE_REGIME_MERGE
    end if
 
-   call symba_caseresolve(t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-                          symba_plA, nplplenc, plplenc_list, regime, plmaxname, tpmaxname, mass_res, radius_res, array_index1_child, &
+   ! Save the first index of the newest bodies to be added to the mergeadd/sub lists
+   subi = nmergesub + 1 
+   addi = nmergeadd + 1
+
+   call symba_caseresolve(t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, vbs, & 
+                          symba_plA, nplplenc, plplenc_list, regime, param%plmaxname, param%tpmaxname, mass_res, radius_res, array_index1_child, &
                           array_index2_child, mass(1), mass(2), radius(1), radius(2), x(:, 1), x(:, 2), v(:, 1), v(:, 2), mtiny)
+
+
+   ! Get the energy offset from the mergeadd/sub lists
+   subf = nmergesub 
+   addf = nmergeadd
+   eoffset = eoffset + symba_mergeadd_eoffset(npl, symba_plA, mergeadd_list, mergesub_list, addi, addf, subi, subf, param)
 
    deallocate(array_index1_child, array_index2_child)
    return

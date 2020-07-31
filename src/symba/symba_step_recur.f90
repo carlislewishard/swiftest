@@ -70,7 +70,7 @@ RECURSIVE SUBROUTINE symba_step_recur(t, ireci, npl, nplm, ntp, symba_plA, symba
      TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
      TYPE(symba_pltpenc), INTENT(INOUT)               :: pltpenc_list
      TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
-     type(user_input_parameters), intent(in)          :: param
+     type(user_input_parameters), intent(inout)       :: param
 
 ! Internals
      LOGICAL(LGT)              :: lencounter
@@ -172,8 +172,7 @@ RECURSIVE SUBROUTINE symba_step_recur(t, ireci, npl, nplm, ntp, symba_plA, symba
                         ! CALL symba_frag_pl(...)
                         ! Determines if close encountenr leads to merger if lfrag=.FALSE.   
                         CALL symba_collision (t, dtl, i, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
-                                                  eoffset, param%encounter_file, npl, symba_plA, nplplenc, plplenc_list, param%plmaxname, &
-                                                  param%tpmaxname, mtiny, param%lfragmentation)
+                                                  eoffset, npl, symba_plA, nplplenc, plplenc_list, mtiny, param)
                      END IF
                END DO
                DO i = 1, npltpenc
@@ -270,8 +269,7 @@ RECURSIVE SUBROUTINE symba_step_recur(t, ireci, npl, nplm, ntp, symba_plA, symba
                              (symba_plA%levelg(index_i) >= ireci) .AND. &
                              (symba_plA%levelg(index_j) >= ireci))  THEN    
                              CALL symba_collision(t, dtl, i, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
-                                                       eoffset, param%encounter_file, npl, symba_plA, nplplenc, plplenc_list, &
-                                                       param%plmaxname, param%tpmaxname, mtiny, param%lfragmentation)
+                                                  eoffset, npl, symba_plA, nplplenc, plplenc_list, mtiny, param)
                          END IF
                     END DO
                     DO i = 1, npltpenc

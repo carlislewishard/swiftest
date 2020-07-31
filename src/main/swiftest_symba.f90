@@ -254,7 +254,7 @@ program swiftest_symba
                Mtot_now = msys
                Lerror = (Ltot_now - Ltot_orig) / Ltot_orig
                te_error = (te - te_orig) / te_orig
-               te_off_error = ((te + eoffset) - te_orig) / te_orig
+               te_off_error = ((te - eoffset) - te_orig) / te_orig
                Merror = (Mtot_now - Mtot_orig) / Mtot_orig
                tfrac = (t - t0)/(tstop - t0)
             end if
@@ -265,7 +265,7 @@ program swiftest_symba
             finish = clock_count / (count_rate * 1.0_DP)
             write(*,*) "      Wall time (s): ", finish - start
 
-205         format("       DL/L0 = ", ES12.5, "; DE/E0 = ", ES12.5, "; (DE+eoffset)/E0 = ", ES12.5, "; DM/M0 = ", ES12.5)
+205         format("       DL/L0 = ", ES12.5, "; DE/E0 = ", ES12.5, "; (DE-eoffset)/E0 = ", ES12.5, "; DM/M0 = ", ES12.5)
             if (param%lenergy) write(*, 205) Lerror, te_error, te_off_error, Merror
 
             call param%dump_to_file(t)
@@ -330,7 +330,7 @@ program swiftest_symba
       Lerror = (Ltot_now - Ltot_orig) / Ltot_orig
       Merror = (Mtot_now - Mtot_orig) / Mtot_orig
       te_error = (te - te_orig) / te_orig
-      te_off_error = (te + eoffset - te_orig) / te_orig
+      te_off_error = ((te - eoffset) - te_orig) / te_orig
       write(*,*) 'Final angular momentum and energy errors'
       write(*, 205) Lerror, te_error, te_off_error, Merror
       write(egyiu,300) t, ke, pe, te, htot, eoffset, msys
