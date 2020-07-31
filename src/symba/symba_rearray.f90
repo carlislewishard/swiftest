@@ -64,7 +64,7 @@ SUBROUTINE symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
         discard_l_pl(1:npl) = (symba_plA%helio%swiftest%status(1:npl) /= ACTIVE) 
         nsppl = COUNT(discard_l_pl)
         nkpl = npl - nsppl
-        frag_l_add = (mergeadd_list%status(1:nmergeadd) == ACTIVE) 
+        frag_l_add = [(.FALSE.,i=1,nmergeadd)]
         IF (param%lfragmentation) THEN
             DO i = 1, nmergeadd
                 IF (mergeadd_list%status(i) == DISRUPTION) THEN
@@ -73,6 +73,8 @@ SUBROUTINE symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
                     frag_l_add(i) = .TRUE.
                 ELSE IF (mergeadd_list%status(i) == SUPERCATASTROPHIC) THEN
                     frag_l_add(i) = .TRUE.
+                ELSE
+                    frag_l_add(i) = .FALSE.
                 END IF
             END DO
         END IF
