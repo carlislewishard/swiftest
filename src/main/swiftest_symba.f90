@@ -175,7 +175,7 @@ program swiftest_symba
    start = clock_count / (count_rate * 1.0_DP)
    do while ((t < tstop) .and. ((ntp0 == 0) .or. (ntp > 0)))
       if(num_plpl_comparisons > param%eucl_threshold) then
-         call symba_step_eucl(t, dt, param,npl,ntp,symba_pla, symba_tpa,nplplenc, npltpenc,&
+         call symba_step_eucl(t, dt, param,npl,ntp,symba_plA, symba_tpa,nplplenc, npltpenc,&
                plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
                eoffset, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
       else
@@ -259,7 +259,7 @@ program swiftest_symba
                tfrac = (t - t0)/(tstop - t0)
             end if
             write(*, 200) t, tfrac, npl, ntp
-200         format(" Time = ", es12.5, "; fraction done = ", f5.3, "; number of active pl, tp = ", i5, ", ", i5)
+200         format(" Time = ", es12.5, "; fraction done = ", f5.3, "; number of active pl, tp = ", i7, ", ", i7)
 
             call system_clock(clock_count)
             finish = clock_count / (count_rate * 1.0_DP)
