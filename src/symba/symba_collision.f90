@@ -1,304 +1,198 @@
-!**********************************************************************************************************************************
-!
-!  Unit Name   : symba_collision
-!  Unit Type   : subroutine
-!  Project     : Swiftest
-!  Package     : symba
-!  Language    : Fortran 90/95
-!
-!  Description : Merge planets
-!
-!  Input
-!    Arguments : t            : time
-!                npl          : number of planets
-!                nsppl        : number of spilled planets
-!                symba_pl1P   : pointer to head of SyMBA planet structure linked-list
-!                symba_pld1P  : pointer to head of discard SyMBA planet structure linked-list
-!                nplplenc     : number of planet-planet encounters
-!                plplenc_list : array of planet-planet encounter structures
-!    Terminal  : none
-!    File      : none
-!
-!  Output
-!    Arguments : npl          : number of planets
-!                nsppl        : number of spilled planets
-!                symba_pl1P   : pointer to head of SyMBA planet structure linked-list
-!                symba_pld1P  : pointer to head of discard SyMBA planet structure linked-list
-!    Terminal  : none
-!    File      : none
-!
-!  Invocation  : CALL symba_collision(t, npl, nsppl, symba_pl1P, symba_pld1P, nplplenc, plplenc_list)
-!
-!  Notes       : Adapted from Hal Levison's Swift routine discard_mass_merge.f
-!
-!**********************************************************************************************************************************
-SUBROUTINE symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, & 
-     encounter_file, npl, symba_plA, nplplenc, plplenc_list, plmaxname, tpmaxname, mtiny, lfragmentation)
+subroutine symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, & 
+   encounter_file, npl, symba_plA, nplplenc, plplenc_list, plmaxname, tpmaxname, mtiny, lfragmentation)
+   !! author: Jennifer L.L. Pouplin, Carlisle A. wishard, and David A. Minton
+   !!
+   use swiftest
+   use module_helio
+   use module_symba
+   use module_interfaces, except_this_one => symba_collision
+   implicit none
 
-! Modules
-     USE swiftest
-     USE module_helio
-     USE module_symba
-     USE module_interfaces, EXCEPT_THIS_ONE => symba_collision
-     IMPLICIT NONE
+   integer(I4B), intent(in)                :: index_enc
+   integer(I4B), intent(in)                :: npl, nplplenc
+   integer(I4B), intent(inout)             :: plmaxname, tpmaxname, nmergeadd, nmergesub
+   real(DP), intent(in)                    :: t, dt
+   real(DP), intent(inout)                 :: eoffset, mtiny
+   character(*), intent(in)                :: encounter_file
+   type(symba_plplenc), intent(inout)      :: plplenc_list
+   type(symba_merger), intent(inout)       :: mergeadd_list, mergesub_list
+   type(symba_pl), intent(inout)           :: symba_plA
+   logical, intent(in)                     :: lfragmentation
 
-! Arguments
-     INTEGER(I4B), INTENT(IN)                         :: index_enc
-     INTEGER(I4B), INTENT(IN)                         :: npl, nplplenc
-     INTEGER(I4B), INTENT(INOUT)                      :: plmaxname, tpmaxname, nmergeadd, nmergesub
-     REAL(DP), INTENT(IN)                             :: t, dt
-     REAL(DP), INTENT(INOUT)                          :: eoffset, mtiny
-     CHARACTER(*), INTENT(IN)                         :: encounter_file
-     TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
-     TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
-     TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
-     LOGICAL(LGT), INTENT(IN)                         :: lfragmentation
+   integer(I4B), parameter                 :: NRES = 3   !! Number of collisional product results
+   integer(I4B)                            :: model, i, j, jtarg, jproj
+   real(DP), dimension(NRES)               :: mass_res, radius_res, density_res
+   real(DP), dimension(NDIM)               :: vbs
+   real(DP), dimension(NDIM, NRES)         :: pres, vres
+   integer(I4B)                            :: regime, idx_child
+   integer(I4B), dimension(2)              :: idx, idx_parent, name, status, nchild !!
+   real(DP), dimension(2)                  :: radius, mass, density, volume          
+   real(DP), dimension(2)                  :: radius_si, mass_si, density_si
+   real(DP), dimension(NDIM, 2)            :: x, v, x_si, v_si
+   real(DP)                                :: r2, rlim, rlim2, vdotr, tcr2, dt2, a, e, q
+   real(DP)                                :: vchild, dentot, Mcb_si
+   real(DP)                                :: mmax, mtmp, mtot
+   real(DP), dimension(NDIM)               :: xr, vr
+   real(DP)                                :: mtiny_si
+   logical                                 :: lfrag_add, lmerge
+   integer(I4B), dimension(:), allocatable :: array_index1_child, array_index2_child
+   real(DP)                                :: mlr, mslr
 
-! Internals
- 
-     INTEGER(I4B)                   :: model, nres, i, itarg, iproj
-     REAL(DP), DIMENSION(NDIM)      :: mres, rres, vbs
-     REAL(DP), DIMENSION(NDIM, 3)   :: pres, vres
-     INTEGER(I4B)                   :: regime 
-     INTEGER(I4B)                   :: index1, index2, index1_child, index2_child, index1_parent, index2_parent
-     INTEGER(I4B)                   :: name1, name2, index_big1, index_big2, stat1, stat2, nchild1, nchild2
-     REAL(DP)                       :: r2, rlim, rlim2, vdotr, tcr2, dt2, a, e, q
-     REAL(DP)                       :: rad1, rad2, m1, m2, den1, den2, vol1, vol2, vchild, dentarg, denproj, dentot, Mcenter
-     REAL(DP)                       :: mass1, mass2, mmax, mtmp, mtot, m1_si, m2_si
-     REAL(DP), DIMENSION(NDIM)      :: xr, vr, x1, v1, x2, v2, x1_si, x2_si, v1_si, v2_si, xproj, xtarg, vproj, vtarg
-     REAL(DP)                       :: den1_si, den2_si, rad1_si, rad2_si, rproj, rtarg, mtiny_si
-     LOGICAL(LGT)                   :: lfrag_add, lmerge
-     INTEGER(I4B), DIMENSION(:), allocatable   :: array_index1_child, array_index2_child
-     REAL(DP)                       :: Mlr, Mslr, mtarg, mproj
-     REAL(DP), DIMENSION(NDIM)      ::  denvec
-     
+   ! recalculates vbs 
+   call coord_vb2vh(npl, symba_plA%helio%swiftest)
+   vbs = symba_plA%helio%swiftest%vb(:, 1)
 
-! Executable code
+   lmerge = .false.
+   lfrag_add = .false.
+   ! model 2 is the model for collresolve_resolve (ls12)
+   model = 2
 
-     ! Recalculates vbs 
-     CALL coord_vb2vh(npl, symba_plA%helio%swiftest)
-     vbs = symba_plA%helio%swiftest%vb(:, 1)
+   idx(1) = plplenc_list%index1(index_enc)
+   idx(2) = plplenc_list%index2(index_enc)
 
-     lmerge = .FALSE.
-     lfrag_add = .FALSE.
-     ! Model 2 is the model for collresolve_resolve (LS12)
-     model = 2
-     index1 = plplenc_list%index1(index_enc)
-     index2 = plplenc_list%index2(index_enc)
-
-     rlim = symba_plA%helio%swiftest%radius(index1) + symba_plA%helio%swiftest%radius(index2)
-     xr(:) = symba_plA%helio%swiftest%xh(:,index2) - symba_plA%helio%swiftest%xh(:,index1)
-     r2 = DOT_PRODUCT(xr(:), xr(:))
-     rlim2 = rlim**2
-     ! checks if bodies are actively colliding in this time step
-     IF (rlim2 >= r2) THEN 
-          lfrag_add = .TRUE.
-     ! if they are not actively colliding in  this time step, 
-     !checks if they are going to collide next time step based on velocities and q
-     ELSE 
-          vr(:) = symba_plA%helio%swiftest%vb(:,index2) - symba_plA%helio%swiftest%vb(:,index1)
-          vdotr = DOT_PRODUCT(xr(:), vr(:))
-          IF (plplenc_list%lvdotr(index_enc) .AND. (vdotr > 0.0_DP)) THEN 
-               tcr2 = r2 / DOT_PRODUCT(vr(:), vr(:))
-               dt2 = dt**2
-               IF (tcr2 <= dt2) THEN
-                    mtot = symba_plA%helio%swiftest%mass(index1) + symba_plA%helio%swiftest%mass(index2)
-                    CALL orbel_xv2aeq(xr(:), vr(:), mtot, a, e, q)
-                    IF (q < rlim) lfrag_add = .TRUE.
-               END IF
-               ! if no collision is going to happen, write as close encounter, not  merger
-               IF (.NOT. lfrag_add) THEN
-                    IF (encounter_file /= "") THEN
-                         name1 = symba_plA%helio%swiftest%name(index1)
-                         m1 = symba_plA%helio%swiftest%mass(index1)
-                         rad1 = symba_plA%helio%swiftest%radius(index1)
-                         x1(:) = symba_plA%helio%swiftest%xh(:,index1) 
-                         v1(:) = symba_plA%helio%swiftest%vb(:,index1) - vbs(:)
-                         name2 = symba_plA%helio%swiftest%name(index2)
-                         m2 = symba_plA%helio%swiftest%mass(index2)
-                         rad2 = symba_plA%helio%swiftest%radius(index2)
-                         x2(:) = symba_plA%helio%swiftest%xh(:,index2) 
-                         v2(:) = symba_plA%helio%swiftest%vb(:,index2) - vbs(:)
-
-                         CALL io_write_encounter(t, name1, name2, m1, m2, rad1, rad2, x1(:), x2(:), &
-                              v1(:), v2(:), encounter_file)
-                    END IF
-               END IF
-          END IF
-     END IF
-
-     nres = 2
-     IF (lfrag_add) THEN 
-          symba_plA%lmerged(index1) = .TRUE.
-          symba_plA%lmerged(index2) = .TRUE.
-          index1_parent = symba_plA%index_parent(index1)
-          m1 = symba_plA%helio%swiftest%mass(index1_parent)
-          mass1 = m1 
-          x1(:) = m1 * symba_plA%helio%swiftest%xh(:,index1_parent)
-          v1(:) = m1 * symba_plA%helio%swiftest%vb(:,index1_parent)
-          nchild1 = symba_plA%nchild(index1_parent)  
-
-          mmax = m1
-          name1 = symba_plA%helio%swiftest%name(index1_parent)
-          index_big1 = index1_parent
-          stat1 = symba_plA%helio%swiftest%status(index1_parent)
-          vol1 =  (4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(index1_parent)**3
-          if (nchild1 > 0) then
-            allocate(array_index1_child(nchild1))
-            array_index1_child(:) = symba_plA%index_child(1:nchild1, index1_parent)
-            DO i = 1, nchild1 ! initialize an array of children
-               index1_child = array_index1_child(i)
-               mtmp = symba_plA%helio%swiftest%mass(index1_child)
-               vchild = (4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(index1_child)**3
-               vol1 = vol1 + vchild
-               IF (mtmp > mmax) THEN
-                    mmax = mtmp
-                    name1 = symba_plA%helio%swiftest%name(index1_child)
-                    index_big1 = index1_child
-                    stat1 = symba_plA%helio%swiftest%status(index1_child)
-               END IF
-               m1 = m1 + mtmp
-               x1(:) = x1(:) + mtmp * symba_plA%helio%swiftest%xh(:, index1_child)
-               v1(:) = v1(:) + mtmp * symba_plA%helio%swiftest%vb(:, index1_child)
-            END DO
-          else
-            allocate(array_index1_child(1))
-          end if
-          den1 =  m1 / vol1
-          rad1 = ((3 * m1) / (den1 * 4 * PI))**(1.0_DP / 3.0_DP)
-          x1(:) = x1(:) / m1
-          v1(:) = v1(:) / m1
-
-          index2_parent = symba_plA%index_parent(index2)
-          m2 = symba_plA%helio%swiftest%mass(index2_parent)
-          mass2 = m2
-          rad2 = symba_plA%helio%swiftest%radius(index2_parent)
-          x2(:) = m2 * symba_plA%helio%swiftest%xh(:,index2_parent)
-          v2(:) = m2 * symba_plA%helio%swiftest%vb(:,index2_parent)
-          mmax = m2
-          name2 = symba_plA%helio%swiftest%name(index2_parent)
-          index_big2 = index2_parent
-          stat2 = symba_plA%helio%swiftest%status(index2_parent)
-          nchild2 = symba_plA%nchild(index2_parent)  
-
-          vol2 = (4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(index2_parent)**3
-
-          if (nchild2 > 0) then
-            allocate(array_index2_child(nchild2))
-            array_index2_child(:) = symba_plA%index_child(1:nchild2, index2_parent)
-            DO i = 1, nchild2
-               index2_child = array_index2_child(i)
-               mtmp = symba_plA%helio%swiftest%mass(index2_child)
-               vchild =  (4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(index2_child)**3
-               vol2 = vol2 + vchild
-               IF (mtmp > mmax) THEN
-                    mmax = mtmp
-                    name2 = symba_plA%helio%swiftest%name(index2_child)
-                    index_big2 = index2_child
-                    stat2 = symba_plA%helio%swiftest%status(index2_child)
-               END IF
-               m2 = m2 + mtmp
-               x2(:) = x2(:) + mtmp * symba_plA%helio%swiftest%xh(:, index2_child)
-               v2(:) = v2(:) + mtmp * symba_plA%helio%swiftest%vb(:, index2_child)
-            END DO
-          else
-            allocate(array_index2_child(1))
-          end if 
-
-          den2 =  m2 / vol2
-          rad2 = ((3 * m2) / (den2 * 4 * PI))**(1.0_DP / 3.0_DP)
-          x2(:) = x2(:) / m2
-          v2(:) = v2(:) / m2
-   
-          if (lfragmentation) then ! Determine the collisional regime and resolve the collision
-            m1_si = (m1 / GU) * MU2KG 
-            m2_si = (m2 / GU) * MU2KG
-            rad1_si = rad1 * DU2M
-            rad2_si = rad2 * DU2M
-            x1_si(:) = x1(:) * DU2M
-            x2_si(:) = x2(:) * DU2M
-            v1_si(:) = v1(:) * DU2M / TU2S
-            v2_si(:) = v2(:) * DU2M / TU2S
-            den1_si = (den1 / GU) * MU2KG / DU2M**3
-            den2_si = (den2 / GU) * MU2KG / DU2M**3
-   
-            mres(:) = 0.0_DP
-            rres(:) = 0.0_DP
-            pres(:,:) = 0.0_DP
-            vres(:,:) = 0.0_DP
-   
-            IF (m1_si > m2_si) THEN 
-                  itarg = index1
-                  iproj = index2
-                  dentarg = den1_si
-                  denproj = den2_si
-                  mtarg = m1_si
-                  mproj = m2_si
-                  rtarg = rad1_si
-                  rproj = rad2_si
-                  xtarg(:) = x1_si(:)
-                  xproj(:) = x2_si(:)
-                  vtarg(:) = v1_si(:)
-                  vproj(:) = v2_si(:)
-            ELSE
-                  itarg = index2
-                  iproj = index1
-                  dentarg = den2_si
-                  denproj = den1_si
-                  mtarg = m2_si
-                  mproj = m1_si
-                  rtarg = rad2_si
-                  rproj = rad1_si
-                  xtarg(:) = x2_si(:)
-                  xproj(:) = x1_si(:)
-                  vtarg(:) = v2_si(:)
-                  vproj(:) = v1_si(:)
-            END IF
-            mtot = m1_si + m2_si
-            dentot = (m1_si * den1_si + m2_si * den2_si)/ mtot
-            Mcenter = symba_plA%helio%swiftest%mass(1) * MU2KG / GU
-            mtiny_si = (mtiny / GU) * MU2KG
-            !regime = collresolve_resolve(model,mtarg,mproj,rtarg,rproj,xtarg,xproj, vtarg,vproj, nres, mres, rres, pres, vres)
-            CALL symba_regime(Mcenter, mtarg, mproj, rtarg, rproj, xtarg, xproj, vtarg, vproj, dentarg, denproj, &
-                  regime, Mlr, Mslr, mtiny_si)
-
-            mres(1) = min(max(Mlr, 0.0_DP), mtot)
-            mres(2) = min(max(Mslr, 0.0_DP), mtot)
-            mres(3) = min(max(mtot - Mlr - Mslr, 0.0_DP), mtot)
-            denvec(1) = dentarg
-            denvec(2) = denproj
-            denvec(3) = dentot
-
-            rres(:) = (3 * mres(:)  / (4 * PI * denvec(:)))**(1.0_DP / 3.0_DP)
-   
-            mres(:) = (mres(:) / MU2KG) * GU
-            rres(:) = rres(:) / DU2M
-         else ! Only do a pure merger
-            regime = COLLRESOLVE_REGIME_MERGE
+   rlim = symba_plA%helio%swiftest%radius(idx(1)) + symba_plA%helio%swiftest%radius(idx(2))
+   xr(:) = symba_plA%helio%swiftest%xh(:, idx(2)) - symba_plA%helio%swiftest%xh(:, idx(1))
+   r2 = dot_product(xr(:), xr(:))
+   rlim2 = rlim**2
+   ! checks if bodies are actively colliding in this time step
+   if (r2 <= rlim2) then 
+      lfrag_add = .true.
+   ! if they are not actively colliding in  this time step, 
+   !checks if they are going to collide next time step based on velocities and q
+   else 
+      vr(:) = symba_plA%helio%swiftest%vb(:, idx(2)) - symba_plA%helio%swiftest%vb(:, idx(1))
+      vdotr = dot_product(xr(:), vr(:))
+      if (plplenc_list%lvdotr(index_enc) .and. (vdotr > 0.0_DP)) then 
+         tcr2 = r2 / dot_product(vr(:), vr(:))
+         dt2 = dt**2
+         if (tcr2 <= dt2) then
+            mtot = symba_plA%helio%swiftest%mass(idx(1)) + symba_plA%helio%swiftest%mass(idx(2))
+            call orbel_xv2aeq(xr(:), vr(:), mtot, a, e, q)
+            if (q < rlim) lfrag_add = .true.
          end if
+         ! if no collision is going to happen, write as close encounter, not merger
+         if (.not. lfrag_add) then
+            if (encounter_file /= "") then
+               name(:)   = symba_plA%helio%swiftest%name(idx(:))
+               mass(:)   = symba_plA%helio%swiftest%mass(idx(:))
+               radius(:) = symba_plA%helio%swiftest%radius(idx(:))
+               do j = 1, 2
+                  x(:, j)   = symba_plA%helio%swiftest%xh(:,idx(j)) 
+                  v(:, j)   = symba_plA%helio%swiftest%vb(:,idx(j)) - vbs(:)
+               end do
 
-         CALL symba_caseresolve(t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
-                                symba_plA, nplplenc, plplenc_list, regime, plmaxname, tpmaxname, mres, rres, array_index1_child, &
-                                array_index2_child, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny)
-     END IF 
-     RETURN
+               call io_write_encounter(t, name(1), name(2), mass(1), mass(2), radius(1), radius(2), x(:, 1), x(:, 2), &
+                  v(:, 1), v(:, 2), encounter_file)
+            end if
+         end if
+      end if
+   end if
+   if (.not. lfrag_add) return ! No collisions, go home.
+   
+   symba_plA%lmerged(idx(:)) = .true.
+   idx_parent(:) = symba_plA%index_parent(idx(:))
+   mass(:) = symba_plA%helio%swiftest%mass(idx_parent(:))
+   name(:) = symba_plA%helio%swiftest%name(idx_parent(:))
+   status(:) = symba_plA%helio%swiftest%status(idx_parent(:))
+   radius(:) = symba_plA%helio%swiftest%radius(idx_parent(:))
+   volume(:) =  (4.0_DP / 3.0_DP) * pi * radius(:)**3
 
-END SUBROUTINE symba_collision
-!**********************************************************************************************************************************
-!
-!  Author(s)   : David E. Kaufmann
-!
-!  Revision Control System (RCS) Information
-!
-!  Source File : $RCSfile$
-!  Full Path   : $Source$
-!  Revision    : $Revision$
-!  Date        : $Date$
-!  Programmer  : $Author$
-!  Locked By   : $Locker$
-!  State       : $State$
-!
-!  Modification History:
-!
-!  $Log$
-!**********************************************************************************************************************************
+   nchild(:) = symba_plA%nchild(idx_parent(:)) 
+   if (nchild(1) > 0) then
+      allocate(array_index1_child, source = symba_plA%index_child(1:nchild(1), idx_parent(1)))
+   else 
+      allocate(array_index1_child(1))
+      array_index1_child(1) = idx_parent(1) 
+   end if
+
+   if (nchild(2) > 0) then
+      allocate(array_index2_child, source = symba_plA%index_child(1:nchild(2), idx_parent(2)))
+   else 
+      allocate(array_index2_child(1))
+      array_index2_child(1) = idx_parent(2)
+   end if
+
+   do j = 1, 2
+      x(:, j) = mass(j) * symba_plA%helio%swiftest%xh(:, idx_parent(j))
+      v(:, j) = mass(j) * symba_plA%helio%swiftest%vb(:, idx_parent(j))
+
+      mmax = mass(j)
+      if (nchild(j) > 0) then
+         do i = 1, nchild(j) ! initialize an array of children
+            if (j == 1) then
+               idx_child = array_index1_child(i)
+            else
+               idx_child = array_index2_child(i)
+            end if
+            mtmp = symba_plA%helio%swiftest%mass(idx_child)
+            vchild = (4.0_DP / 3.0_DP) * pi * symba_plA%helio%swiftest%radius(idx_child)**3
+            volume(j) = volume(j) + vchild
+            if (mtmp > mmax) then
+               mmax = mtmp
+               name(j) = symba_plA%helio%swiftest%name(idx_child)
+               status(j) = symba_plA%helio%swiftest%status(idx_child)
+            end if
+            mass(j) = mass(j) + mtmp
+            x(:, j) = x(:, j) + mtmp * symba_plA%helio%swiftest%xh(:, idx_child)
+            v(:, j) = v(:, j) + mtmp * symba_plA%helio%swiftest%vb(:, idx_child)
+         end do
+      end if
+      density(j) =  mass(j) / volume(j)
+      radius(j) = ((3 * mass(j)) / (density(j) * 4 * pi))**(1.0_DP / 3.0_DP)
+      x(:, j) = x(:, j) / mass(j)
+      v(:, j) = v(:, j) / mass(j)
+   end do
+   
+   if (lfragmentation) then !! If user has enabled this feature, determine the collisional regime and resolve the collision
+      !! Convert all quantities to SI units before sending them to the collision regime determination subroutine 
+      mass_si(:)    = (mass(:) / GU) * MU2KG 
+      radius_si(:)  = radius(:) * DU2M
+      x_si(:, :)    = x(:, :) * DU2M
+      v_si(:, :)    = v(:, :) * DU2M / TU2S
+      density_si(:) = (density(:) / GU) * MU2KG / DU2M**3
+      Mcb_si        = symba_plA%helio%swiftest%mass(1) * MU2KG / GU
+      mtiny_si      = (mtiny / GU) * MU2KG
+   
+      mass_res(:) = 0.0_DP
+      radius_res(:) = 0.0_DP
+      pres(:,:) = 0.0_DP
+      vres(:,:) = 0.0_DP
+
+      ! Determine which body is the projectile and which is the target
+      if (mass(1) > mass(2)) then
+         jtarg = 1
+         jproj = 2
+      else
+         jtarg = 2
+         jproj = 1
+      end if
+      mtot = sum(mass_si(:)) 
+      dentot = sum(mass_si(:) * density_si(:)) / mtot 
+
+      !regime = collresolve_resolve(model,mtarg,mproj,rtarg,rproj,xtarg,xproj, vtarg,vproj, nres, mass_res, radius_res, pres, vres)
+      call symba_regime(Mcb_si, mass_si(jtarg), mass_si(jproj), radius_si(jtarg), radius_si(jproj), x_si(:, jtarg), x_si(:, jproj),& 
+                        v_si(:, jtarg), v_si(:, jproj), density_si(jtarg), density_si(jproj), regime, mlr, mslr, mtiny_si)
+
+      mass_res(1) = min(max(mlr, 0.0_DP), mtot)
+      mass_res(2) = min(max(mslr, 0.0_DP), mtot)
+      mass_res(3) = min(max(mtot - mlr - mslr, 0.0_DP), mtot)
+      density_res(1) = density_si(jtarg)
+      density_res(2) = density_si(jproj)
+      density_res(3) = dentot
+
+      radius_res(:) = (3 * mass_res(:)  / (4 * pi * density_res(:)))**(1.0_DP / 3.0_DP)
+   
+      mass_res(:) = (mass_res(:) / MU2KG) * GU
+      radius_res(:) = radius_res(:) / DU2M
+   else !! When user has not enabled FRAGMENTATION, do every collision as a pure merger.
+      regime = COLLRESOLVE_REGIME_MERGE
+   end if
+
+   call symba_caseresolve(t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
+                          symba_plA, nplplenc, plplenc_list, regime, plmaxname, tpmaxname, mass_res, radius_res, array_index1_child, &
+                          array_index2_child, mass(1), mass(2), radius(1), radius(2), x(:, 1), x(:, 2), v(:, 1), v(:, 2), mtiny)
+
+   deallocate(array_index1_child, array_index2_child)
+   return
+
+end subroutine symba_collision
