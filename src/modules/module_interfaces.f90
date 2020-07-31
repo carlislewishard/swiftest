@@ -921,7 +921,7 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE symba_fragmentation(t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, &
+          SUBROUTINE symba_collision(t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, &
                mergesub_list, eoffset, encounter_file, npl, symba_plA, nplplenc, &
                plplenc_list, plmaxname, tpmaxname, mtiny, lfragmentation)
                USE swiftest_globals
@@ -939,7 +939,7 @@ MODULE module_interfaces
                TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
                TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
                LOGICAL(LGT), INTENT(IN)                         :: lfragmentation
-          END SUBROUTINE symba_fragmentation
+          END SUBROUTINE symba_collision
      END INTERFACE
 
      INTERFACE
@@ -1587,7 +1587,7 @@ END INTERFACE
       END INTERFACE
 
      INTERFACE
-         SUBROUTINE util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2, regime, Mlr, Mslr, mtiny)
+         SUBROUTINE symba_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2, regime, Mlr, Mslr, mtiny)
           USE swiftest_globals
           USE module_symba
           USE swiftest_data_structures
@@ -1598,11 +1598,11 @@ END INTERFACE
           INTEGER(I4B), INTENT(OUT)              :: regime
           REAL(DP), INTENT(INOUT)                :: Mcenter, Mlr, Mslr, m1, m2, rad1, rad2, den1, den2, mtiny
           REAL(DP), DIMENSION(:), INTENT(IN)     :: xh1, xh2, vb1, vb2
-         END SUBROUTINE util_regime
+         END SUBROUTINE symba_regime
      END INTERFACE
 
      INTERFACE
-         SUBROUTINE util_mom(m1, xh1, vb1, m2, xh2, vb2, frags_added, m_frag, r_circle, theta, p_frag, vel_frag)
+         SUBROUTINE symba_mom(m1, xh1, vb1, m2, xh2, vb2, frags_added, m_frag, r_circle, theta, p_frag, vel_frag)
          USE swiftest_globals
          USE swiftest_data_structures
          IMPLICIT NONE
@@ -1611,7 +1611,7 @@ END INTERFACE
          REAL(DP), DIMENSION(:), INTENT(IN)                     :: xh1, vb1, xh2, vb2
          REAL(DP), DIMENSION(:), INTENT(IN)                     :: m_frag
          REAL(DP), DIMENSION(:,:), INTENT(OUT)                  :: p_frag, vel_frag
-         END SUBROUTINE util_mom
+         END SUBROUTINE symba_mom
      END INTERFACE
 
 END MODULE module_interfaces

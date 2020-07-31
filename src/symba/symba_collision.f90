@@ -1,6 +1,6 @@
 !**********************************************************************************************************************************
 !
-!  Unit Name   : symba_fragmentation
+!  Unit Name   : symba_collision
 !  Unit Type   : subroutine
 !  Project     : Swiftest
 !  Package     : symba
@@ -27,19 +27,19 @@
 !    Terminal  : none
 !    File      : none
 !
-!  Invocation  : CALL symba_fragmentation(t, npl, nsppl, symba_pl1P, symba_pld1P, nplplenc, plplenc_list)
+!  Invocation  : CALL symba_collision(t, npl, nsppl, symba_pl1P, symba_pld1P, nplplenc, plplenc_list)
 !
 !  Notes       : Adapted from Hal Levison's Swift routine discard_mass_merge.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, & 
+SUBROUTINE symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, & 
      encounter_file, npl, symba_plA, nplplenc, plplenc_list, plmaxname, tpmaxname, mtiny, lfragmentation)
 
 ! Modules
      USE swiftest
      USE module_helio
      USE module_symba
-     USE module_interfaces, EXCEPT_THIS_ONE => symba_fragmentation
+     USE module_interfaces, EXCEPT_THIS_ONE => symba_collision
      IMPLICIT NONE
 
 ! Arguments
@@ -259,7 +259,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
             Mcenter = symba_plA%helio%swiftest%mass(1) * MU2KG / GU
             mtiny_si = (mtiny / GU) * MU2KG
             !regime = collresolve_resolve(model,mtarg,mproj,rtarg,rproj,xtarg,xproj, vtarg,vproj, nres, mres, rres, pres, vres)
-            CALL util_regime(Mcenter, mtarg, mproj, rtarg, rproj, xtarg, xproj, vtarg, vproj, dentarg, denproj, &
+            CALL symba_regime(Mcenter, mtarg, mproj, rtarg, rproj, xtarg, xproj, vtarg, vproj, dentarg, denproj, &
                   regime, Mlr, Mslr, mtiny_si)
 
             mres(1) = min(max(Mlr, 0.0_DP), mtot)
@@ -283,7 +283,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
      END IF 
      RETURN
 
-END SUBROUTINE symba_fragmentation
+END SUBROUTINE symba_collision
 !**********************************************************************************************************************************
 !
 !  Author(s)   : David E. Kaufmann

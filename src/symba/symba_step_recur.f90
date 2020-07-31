@@ -171,7 +171,7 @@ RECURSIVE SUBROUTINE symba_step_recur(t, ireci, npl, nplm, ntp, symba_plA, symba
                         ! Determines collisional regime if lfrag=.TRUE. for close encounter planets
                         ! CALL symba_frag_pl(...)
                         ! Determines if close encountenr leads to merger if lfrag=.FALSE.   
-                        CALL symba_fragmentation (t, dtl, i, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
+                        CALL symba_collision (t, dtl, i, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
                                                   eoffset, param%encounter_file, npl, symba_plA, nplplenc, plplenc_list, param%plmaxname, &
                                                   param%tpmaxname, mtiny, param%lfragmentation)
                      END IF
@@ -269,7 +269,7 @@ RECURSIVE SUBROUTINE symba_step_recur(t, ireci, npl, nplm, ntp, symba_plA, symba
                          IF ((plplenc_list%status(i) == ACTIVE) .AND.   &
                              (symba_plA%levelg(index_i) >= ireci) .AND. &
                              (symba_plA%levelg(index_j) >= ireci))  THEN    
-                             CALL symba_fragmentation(t, dtl, i, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
+                             CALL symba_collision(t, dtl, i, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
                                                        eoffset, param%encounter_file, npl, symba_plA, nplplenc, plplenc_list, &
                                                        param%plmaxname, param%tpmaxname, mtiny, param%lfragmentation)
                          END IF

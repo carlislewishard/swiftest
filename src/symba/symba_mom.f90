@@ -1,6 +1,6 @@
 !**********************************************************************************************************************************
 !
-!  Unit Name   : util_mom
+!  Unit Name   : symba_mom
 !  Unit Type   : subroutine
 !  Project     : Swiftest
 !  Package     : util
@@ -24,14 +24,14 @@
 !  Notes       : Adapted from Hal Levison's Swift routine util_hills.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE util_mom(m1, xh1, vb1, m2, xh2, vb2, frags_added, m_frag, r_circle, theta, p_frag, vel_frag)
+SUBROUTINE symba_mom(m1, xh1, vb1, m2, xh2, vb2, frags_added, m_frag, r_circle, theta, p_frag, vel_frag)
 
 !x_frag, y_frag, z_frag, vx_frag, vy_frag, vz_frag)
 
 ! Modules
    USE swiftest_globals
    USE swiftest_data_structures
-   USE module_interfaces, EXCEPT_THIS_ONE => util_mom
+   USE module_interfaces, EXCEPT_THIS_ONE => symba_mom
    IMPLICIT NONE
 
 ! Arguments
@@ -145,7 +145,7 @@ SUBROUTINE util_mom(m1, xh1, vb1, m2, xh2, vb2, frags_added, m_frag, r_circle, t
    RETURN
 
 
-END SUBROUTINE util_mom
+END SUBROUTINE symba_mom
 
 
 !**********************************************************************************************************************************

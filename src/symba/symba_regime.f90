@@ -1,6 +1,6 @@
 !**********************************************************************************************************************************
 !
-!  Unit Name   : util_regime
+!  Unit Name   : symba_regime
 !  Unit Type   : subroutine
 !  Project     : Swiftest
 !  Package     : util
@@ -18,7 +18,7 @@
 !    Terminal  : error message
 !    File      : none
 !
-!  Invocation  : CALL util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2, regime, Mlr, Mslr, mtiny)
+!  Invocation  : CALL symba_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2, regime, Mlr, Mslr, mtiny)
 !
 !  Notes       : Current version requires all values to be converted to SI units prior to calling the function
 !                 Reference:
@@ -27,7 +27,7 @@
 !
 !
 !**********************************************************************************************************************************
-SUBROUTINE util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2, regime, Mlr, Mslr, mtiny)
+SUBROUTINE symba_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2, regime, Mlr, Mslr, mtiny)
 
 ! Modules
      USE swiftest
@@ -35,7 +35,7 @@ SUBROUTINE util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, de
      USE module_helio
      USE module_nrutil
      USE module_swiftestalloc
-     USE module_interfaces, EXCEPT_THIS_ONE => util_regime
+     USE module_interfaces, EXCEPT_THIS_ONE => symba_regime
      IMPLICIT NONE
 
 ! Arguments
@@ -157,7 +157,7 @@ SUBROUTINE util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, de
           Mslr = mtot * (3.0_DP - beta) * (1.0_DP - N1 * Mlr / mtot) / (N2 * beta)  ! (Eq 37)
           regime = COLLRESOLVE_REGIME_SUPERCATASTROPHIC ! supercatastrophic
         ELSE 
-          WRITE(*,*) "Error no regime found in util_regime"
+          WRITE(*,*) "Error no regime found in symba_regime"
         END IF 
       END IF 
 
@@ -266,7 +266,7 @@ end function calc_b
 !    return
 ! end function calc_b
 
-END SUBROUTINE util_regime
+END SUBROUTINE symba_regime
 !**********************************************************************************************************************************
 !
 !  Author(s)   : C.Wishard and J.Pouplin
