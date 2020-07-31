@@ -57,7 +57,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 ! Internals
  
      INTEGER(I4B)                   :: model, nres, i, itarg, iproj
-     REAL(DP), DIMENSION(NDIM)      :: mres, rres, xbs, vbs
+     REAL(DP), DIMENSION(NDIM)      :: mres, rres, vbs
      REAL(DP), DIMENSION(NDIM, 3)   :: pres, vres
      INTEGER(I4B)                   :: regime 
      INTEGER(I4B)                   :: index1, index2, index1_child, index2_child, index1_parent, index2_parent
@@ -75,9 +75,8 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
 ! Executable code
 
-     ! Recalculates xbs and vbs 
+     ! Recalculates vbs 
      CALL coord_vb2vh(npl, symba_plA%helio%swiftest)
-     xbs = symba_plA%helio%swiftest%xb(:, 1)
      vbs = symba_plA%helio%swiftest%vb(:, 1)
 
      lmerge = .FALSE.
@@ -88,7 +87,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
      index2 = plplenc_list%index2(index_enc)
 
      rlim = symba_plA%helio%swiftest%radius(index1) + symba_plA%helio%swiftest%radius(index2)
-     xr(:) = symba_plA%helio%swiftest%xb(:,index2) - symba_plA%helio%swiftest%xb(:,index1)
+     xr(:) = symba_plA%helio%swiftest%xh(:,index2) - symba_plA%helio%swiftest%xh(:,index1)
      r2 = DOT_PRODUCT(xr(:), xr(:))
      rlim2 = rlim**2
      ! checks if bodies are actively colliding in this time step
@@ -113,12 +112,12 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
                          name1 = symba_plA%helio%swiftest%name(index1)
                          m1 = symba_plA%helio%swiftest%mass(index1)
                          rad1 = symba_plA%helio%swiftest%radius(index1)
-                         x1(:) = symba_plA%helio%swiftest%xb(:,index1) - xbs(:)
+                         x1(:) = symba_plA%helio%swiftest%xh(:,index1) 
                          v1(:) = symba_plA%helio%swiftest%vb(:,index1) - vbs(:)
                          name2 = symba_plA%helio%swiftest%name(index2)
                          m2 = symba_plA%helio%swiftest%mass(index2)
                          rad2 = symba_plA%helio%swiftest%radius(index2)
-                         x2(:) = symba_plA%helio%swiftest%xb(:,index2) - xbs(:)
+                         x2(:) = symba_plA%helio%swiftest%xh(:,index2) 
                          v2(:) = symba_plA%helio%swiftest%vb(:,index2) - vbs(:)
 
                          CALL io_write_encounter(t, name1, name2, m1, m2, rad1, rad2, x1(:), x2(:), &
@@ -135,7 +134,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           index1_parent = symba_plA%index_parent(index1)
           m1 = symba_plA%helio%swiftest%mass(index1_parent)
           mass1 = m1 
-          x1(:) = m1 * symba_plA%helio%swiftest%xb(:,index1_parent)
+          x1(:) = m1 * symba_plA%helio%swiftest%xh(:,index1_parent)
           v1(:) = m1 * symba_plA%helio%swiftest%vb(:,index1_parent)
           nchild1 = symba_plA%nchild(index1_parent)  
 
@@ -159,7 +158,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
                     stat1 = symba_plA%helio%swiftest%status(index1_child)
                END IF
                m1 = m1 + mtmp
-               x1(:) = x1(:) + mtmp * symba_plA%helio%swiftest%xb(:, index1_child)
+               x1(:) = x1(:) + mtmp * symba_plA%helio%swiftest%xh(:, index1_child)
                v1(:) = v1(:) + mtmp * symba_plA%helio%swiftest%vb(:, index1_child)
             END DO
           else
@@ -174,7 +173,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
           m2 = symba_plA%helio%swiftest%mass(index2_parent)
           mass2 = m2
           rad2 = symba_plA%helio%swiftest%radius(index2_parent)
-          x2(:) = m2 * symba_plA%helio%swiftest%xb(:,index2_parent)
+          x2(:) = m2 * symba_plA%helio%swiftest%xh(:,index2_parent)
           v2(:) = m2 * symba_plA%helio%swiftest%vb(:,index2_parent)
           mmax = m2
           name2 = symba_plA%helio%swiftest%name(index2_parent)
@@ -199,7 +198,7 @@ SUBROUTINE symba_fragmentation (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
                     stat2 = symba_plA%helio%swiftest%status(index2_child)
                END IF
                m2 = m2 + mtmp
-               x2(:) = x2(:) + mtmp * symba_plA%helio%swiftest%xb(:, index2_child)
+               x2(:) = x2(:) + mtmp * symba_plA%helio%swiftest%xh(:, index2_child)
                v2(:) = v2(:) + mtmp * symba_plA%helio%swiftest%vb(:, index2_child)
             END DO
           else

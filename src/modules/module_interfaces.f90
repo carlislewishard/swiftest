@@ -747,7 +747,7 @@ MODULE module_interfaces
 
      INTERFACE
           SUBROUTINE symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset,&
-          symba_plA, nplplenc, plplenc_list, array_index1_child, array_index2_child, m1, m2, rad1, rad2, xb1, xb2, vb1, vb2)
+          symba_plA, nplplenc, plplenc_list, array_index1_child, array_index2_child, m1, m2, rad1, rad2, x1, x2, v1, v2)
           USE swiftest_globals
           USE swiftest_data_structures
           USE module_helio
@@ -757,7 +757,7 @@ MODULE module_interfaces
           INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub
           REAL(DP), INTENT(IN)                             :: t
           REAL(DP), INTENT(INOUT)                          :: eoffset, m1, m2, rad1, rad2
-          REAL(DP), DIMENSION(:), INTENT(IN)               :: xb1, xb2, vb1, vb2 
+          REAL(DP), DIMENSION(:), INTENT(IN)               :: x1, x2, v1, v2 
           TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
           TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
           TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
@@ -769,7 +769,7 @@ MODULE module_interfaces
      INTERFACE
           SUBROUTINE symba_caseresolve (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, vbs, & 
           symba_plA, nplplenc, plplenc_list, regime, plmaxname, tpmaxname, mres, rres, array_index1_child, &
-          array_index2_child, m1, m2, rad1, rad2, xb1, xb2, vb1, vb2, mtiny)
+          array_index2_child, m1, m2, rad1, rad2, x1, x2, v1, v2, mtiny)
           USE swiftest_globals
           USE swiftest_data_structures
           USE module_helio
@@ -782,7 +782,7 @@ MODULE module_interfaces
           REAL(DP), INTENT(INOUT)                      :: eoffset, m1, m2, rad1, rad2
           REAL(DP), DIMENSION(:), INTENT(INOUT)        :: mres, rres
           REAL(DP), DIMENSION(:), INTENT(IN)           :: vbs
-          REAL(DP), DIMENSION(:), INTENT(INOUT)        :: xb1, xb2, vb1, vb2
+          REAL(DP), DIMENSION(:), INTENT(INOUT)        :: x1, x2, v1, v2
           TYPE(symba_plplenc), INTENT(INOUT)           :: plplenc_list
           TYPE(symba_merger), INTENT(INOUT)            :: mergeadd_list, mergesub_list
           TYPE(symba_pl), INTENT(INOUT)                :: symba_plA
@@ -1587,7 +1587,7 @@ END INTERFACE
       END INTERFACE
 
      INTERFACE
-         SUBROUTINE util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vh1, vh2, den1, den2, regime, Mlr, Mslr, mtiny)
+         SUBROUTINE util_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2, regime, Mlr, Mslr, mtiny)
           USE swiftest_globals
           USE module_symba
           USE swiftest_data_structures
@@ -1595,9 +1595,9 @@ END INTERFACE
           USE module_nrutil
           USE module_swiftestalloc
          IMPLICIT NONE
-          INTEGER(I4B), INTENT(OUT)                 :: regime
-          REAL(DP), INTENT(INOUT)                   :: Mcenter, Mlr, Mslr, m1, m2, rad1, rad2, den1, den2, mtiny
-          REAL(DP), DIMENSION(:), INTENT(IN)     :: xh1, xh2, vh1, vh2
+          INTEGER(I4B), INTENT(OUT)              :: regime
+          REAL(DP), INTENT(INOUT)                :: Mcenter, Mlr, Mslr, m1, m2, rad1, rad2, den1, den2, mtiny
+          REAL(DP), DIMENSION(:), INTENT(IN)     :: xh1, xh2, vb1, vb2
          END SUBROUTINE util_regime
      END INTERFACE
 
