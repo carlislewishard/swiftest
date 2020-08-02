@@ -439,6 +439,7 @@ def swiftest2xr(config):
                 tpda = xr.concat([tpda, tpxr], dim='time')
             subcount += 1
             if subcount == submax:
+                print('Creating DataArray block')
                 pl.append(plda)
                 tp.append(tpda)
                 subcount = 0
@@ -459,7 +460,7 @@ def swiftest2xr(config):
 
 if __name__ == '__main__':
 
-    workingdir = '/Users/daminton/work/Projects/Swiftest/Pouplin-Mars-Disk/high_high_1500_1/'
+    workingdir = '/Users/daminton/work/Projects/Swiftest/Elliott_Performance/high_high_1500_1/'
 
     config_file_name = workingdir + 'param.in'
     config = read_swiftest_config(config_file_name)
