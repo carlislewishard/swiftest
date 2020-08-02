@@ -410,13 +410,18 @@ def swiftest2xr(config):
     dims  = ['time','id', 'vec']
     pl = []
     tp = []
+    subpl = []
+    subtp = []
     nplarr = []
     ntparr = []
+    first = True
+    subcount = 0
+    submax = 100
     print(f'Reading frames from file {config["BIN_OUT"]}')
     with FortranFile(config['BIN_OUT'], 'r') as f:
         for t, npl, plid, pvec, plab, \
                ntp, tpid, tvec, tlab in swiftest_stream(f, config):
-
+            print(f'Time = {t[0]}')
             #Prepare frames by adding an extra axis for the time coordinate
             plframe = np.expand_dims(pvec, axis=0)
             tpframe = np.expand_dims(tvec, axis=0)
@@ -426,9 +431,21 @@ def swiftest2xr(config):
             tpxr = xr.DataArray(tpframe, dims = dims, coords = {'time' : t, 'id' : tpid, 'vec' : tlab})
             nplarr.append(npl[0])
             ntparr.append(ntp[0])
-            pl.append(plxr)
-            tp.append(tpxr)
+            if subcount == 0:
+                plda = plxr.copy()
+                tpda = tpxr.copy()
+            else:
+                plda = xr.concat([plda, plxr], dim='time')
+                tpda = xr.concat([tpda, tpxr], dim='time')
+            subcount += 1
+            if subcount == submax:
+                pl.append(plda)
+                tp.append(tpda)
+                subcount = 0
 
+    if subcount < submax:
+        pl.append(plda)
+        tp.append(tpda)
     print('Concatenating DataArrays')
     plda = xr.concat(pl,dim='time')
     tpda = xr.concat(tp,dim='time')
