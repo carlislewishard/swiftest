@@ -444,8 +444,8 @@ def swiftest2xr(config):
                 print('Concatenating DataArrays')
                 plda = xr.concat(pl, dim='time')
                 tpda = xr.concat(tp, dim='time')
-                pl = []
-                tp = []
+                pl = [plda]
+                tp = [tpda]
                 subcount = 0
 
     if subcount < submax:
