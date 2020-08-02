@@ -439,9 +439,13 @@ def swiftest2xr(config):
                 tpda = xr.concat([tpda, tpxr], dim='time')
             subcount += 1
             if subcount == submax:
-                print('Creating DataArray block')
                 pl.append(plda)
                 tp.append(tpda)
+                print('Concatenating DataArrays')
+                plda = xr.concat(pl, dim='time')
+                tpda = xr.concat(tp, dim='time')
+                pl = []
+                tp = []
                 subcount = 0
 
     if subcount < submax:
