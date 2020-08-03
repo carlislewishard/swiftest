@@ -411,37 +411,28 @@ def swiftest2xr(config):
     """Reads in the """
 
     dims  = ['time','id', 'vec']
-    pl = []
-    tp = []
-    subpl = []
-    subtp = []
-    nplarr = []
-    ntparr = []
-    dsframes =[]
+    dsframes = []
 
-    print(f'Reading frames from file {config["BIN_OUT"]}')
     with FortranFile(config['BIN_OUT'], 'r') as f:
         for t, npl, plid, pvec, plab, \
-               ntp, tpid, tvec, tlab in swiftest_stream(f, config):
-            print(f'Time = {t[0]}')
-            #Prepare frames by adding an extra axis for the time coordinate
+            ntp, tpid, tvec, tlab in swiftest_stream(f, config):
+            # print(f'Time = {t[0]}')
             plframe = np.expand_dims(pvec, axis=0)
             tpframe = np.expand_dims(tvec, axis=0)
+            bd = []
 
-            #Create xarray DataArrays out of each body type
-            plxr = xr.DataArray(plframe, dims = dims, coords = {'time' : t, 'id' : plid, 'vec' : plab})
-            tpxr = xr.DataArray(tpframe, dims = dims, coords = {'time' : t, 'id' : tpid, 'vec' : tlab})
-            #print('Concatenating DataArrays')
-
-            #print('Converting DataArray to Dataset')
-            plds = plxr.to_dataset(dim='vec')
-            tpds = tpxr.to_dataset(dim='vec')
-            dsi = xr.combine_by_coords([plds, tpds])
-            dsi = dsi.assign_coords({"npl": npl[0], "ntp": ntp[0]})
+            # Create xarray DataArrays out of each body type
+            if npl[0] > 0:
+                plxr = xr.DataArray(plframe, dims=dims, coords={'time': t, 'id': plid, 'vec': plab})
+                bd.append(plxr)
+            if ntp[0] > 0:
+                tpxr = xr.DataArray(tpframe, dims=dims, coords={'time': t, 'id': tpid, 'vec': tlab})
+                bd.append(tpxr)
+            bdxr = xr.concat(bd, dim='time')
+            dsi = bdxr.to_dataset(dim='vec')
+            dsi = dsi.assign(npl=npl[0])
+            dsi = dsi.assign(ntp=ntp[0])
             dsframes.append(dsi)
-
-            #pl.append(plxr)
-            #tp.append(tpxr)
     ds = xr.combine_nested(dsframes, concat_dim=["time"])
 
     return ds
