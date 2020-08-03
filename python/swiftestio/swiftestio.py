@@ -2,6 +2,11 @@ import numpy as np
 import pandas as pd
 from scipy.io import FortranFile
 import xarray as xr
+import dask
+import os
+import tempfile
+
+
 
 #I/O Routines for reading in Swifter and Swiftest parameter and binary data files
 
@@ -407,11 +412,21 @@ def swifter2xr(param):
 
     return ds
 
-def swiftest2xr(config):
+def swiftest2xr(config, subsize):
     """Reads in the """
 
     dims  = ['time','id', 'vec']
     dsframes = []
+    numsubs = 0
+
+    subdat = 0
+    filehead = 'bin'
+
+    tmpdir = tempfile.mkdtemp()
+
+    # Ensure the file is read/write by the creator only
+
+    #tmppath = os.path.join(tmpdir, predictable_filename)
 
     with FortranFile(config['BIN_OUT'], 'r') as f:
         for t, npl, plid, pvec, plab, \
@@ -429,14 +444,38 @@ def swiftest2xr(config):
                 tpxr = xr.DataArray(tpframe, dims=dims, coords={'time': t, 'id': tpid, 'vec': tlab})
                 bd.append(tpxr)
             bdxr = xr.concat(bd, dim='time')
-            bdxr = bdxr.assign_coords({'npl': npl[0], 'ntp': ntp[0]})
+            bdxr = bdxr.to_dataset(dim='vec')
+            bdxr = bdxr.assign(npl=npl[0])
+            bdxr = bdxr.assign(ntp=ntp[0])
+            bdxr = bdxr.chunk()
             dsframes.append(bdxr)
+            subdat += 1
+            if subdat == subsize:
+                numsubs += 1
+                filename = f'{filehead}{numsubs:03d}.tmp.nc'
+                path = os.path.join(tmpdir, filename)
+                print(f'Concatenating sub Dataset to file {path}')
+                xr.concat(dsframes, dim='time').to_netcdf(path)
+                dsframes = []
+                chunk = 0
+    if (chunk > 0):
+        numsubs += 1
+        filename = f'{filehead}{numsubs:03d}.tmp.nc'
+        path = os.path.join(tmpdir, filename)
+        print(f'Concatenating sub Dataset to file {path}')
+        xr.concat(dsframes, dim='time').to_netcdf(path)
 
-    print('Concatenating DataArrays')
-    ds = xr.concat(dsframes, dim='time')
-    print('Converting DataArray to Dataset')
-    ds = ds.to_dataset(dim = 'vec')
+    print('Combining sub Datasets into a single Dataset')
+    filename = f'{filehead}'
+    path = os.path.join(tmpdir, filename)
+    ds = xr.open_mfdataset(f'{path}*.tmp.nc',combine='by_coords',concat_dim='time',
+                           data_vars='minimal', coords='minimal', compat='override')
 
+    os.rmdir(tmpdir)
+    filename = f'{filehead}.nc'
+    path = os.path.join(config['WORKINGDIR'], filename)
+    print(f'Saving complete dataset to file {path}')
+    ds.to_netcdf(path=path)
 
     return ds
 
@@ -447,6 +486,7 @@ if __name__ == '__main__':
     config_file_name = workingdir + 'param.in'
     config = read_swiftest_config(config_file_name)
     config['BIN_OUT'] = workingdir + config['BIN_OUT']
+    config['WORKINGDIR'] = workingdir
 
-    swiftestdat = swiftest2xr(config)
+    swiftestdat = swiftest2xr(config, subsize=10)
 
