@@ -416,7 +416,7 @@ def swiftest2xr(config):
     with FortranFile(config['BIN_OUT'], 'r') as f:
         for t, npl, plid, pvec, plab, \
             ntp, tpid, tvec, tlab in swiftest_stream(f, config):
-            # print(f'Time = {t[0]}')
+            print(f'Time = {t[0]}')
             plframe = np.expand_dims(pvec, axis=0)
             tpframe = np.expand_dims(tvec, axis=0)
             bd = []
