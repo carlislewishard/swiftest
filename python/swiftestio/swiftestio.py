@@ -429,11 +429,14 @@ def swiftest2xr(config):
                 tpxr = xr.DataArray(tpframe, dims=dims, coords={'time': t, 'id': tpid, 'vec': tlab})
                 bd.append(tpxr)
             bdxr = xr.concat(bd, dim='time')
-            dsi = bdxr.to_dataset(dim='vec')
-            dsi = dsi.assign(npl=npl[0])
-            dsi = dsi.assign(ntp=ntp[0])
-            dsframes.append(dsi)
-    ds = xr.combine_nested(dsframes, concat_dim=["time"])
+            bdxr = bdxr.assign_coords({'npl': npl[0], 'ntp': ntp[0]})
+            dsframes.append(bdxr)
+
+    print('Concatenating DataArrays')
+    ds = xr.concat(dsframes, dim='time')
+    print('Converting DataArray to Dataset')
+    ds = ds.to_dataset(dim = 'vec')
+
 
     return ds
 
