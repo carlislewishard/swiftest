@@ -469,7 +469,11 @@ def swiftest2xr(config, subsize):
     path = os.path.join(tmpdir, filename)
     ds = xr.open_mfdataset(f'{path}',combine='by_coords',concat_dim='time',
                            data_vars='minimal', coords='minimal', compat='override')
-    os.remove(path)
+
+    for i in range(numsubs):
+        filename = f'{filehead}{i+1:03d}.tmp.nc'
+        path = os.path.join(tmpdir, filename)
+        os.remove(path)
     os.rmdir(tmpdir)
     filename = f'{filehead}.nc'
     path = os.path.join(config['WORKINGDIR'], filename)
