@@ -465,11 +465,11 @@ def swiftest2xr(config, subsize):
         xr.concat(dsframes, dim='time').to_netcdf(path)
 
     print('Combining sub Datasets into a single Dataset')
-    filename = f'{filehead}'
+    filename = f'{filehead}*.tmp.nc'
     path = os.path.join(tmpdir, filename)
-    ds = xr.open_mfdataset(f'{path}*.tmp.nc',combine='by_coords',concat_dim='time',
+    ds = xr.open_mfdataset(f'{path}',combine='by_coords',concat_dim='time',
                            data_vars='minimal', coords='minimal', compat='override')
-
+    os.remove(path)
     os.rmdir(tmpdir)
     filename = f'{filehead}.nc'
     path = os.path.join(config['WORKINGDIR'], filename)
