@@ -389,17 +389,20 @@ def swifter2xr(param):
             #Create xarray DataArrays out of each body type
             plxr = xr.DataArray(plframe, dims = dims, coords = {'time' : t, 'id' : plid, 'vec' : plab})
             tpxr = xr.DataArray(tpframe, dims = dims, coords = {'time' : t, 'id' : tpid, 'vec' : tlab})
-            nplarr.append(npl)
-            ntparr.append(ntp)
+            plda = xr.concat(pl, dim='time')
+            tpda = xr.concat(tp, dim='time')
+            plds = plda.to_dataset(dim='vec')
+            tpds = tpda.to_dataset(dim='vec')
+            dsi = xr.combine_by_coords([plds, tpds])
+            #nplarr.append(npl)
+            #ntparr.append(ntp)
 
             pl.append(plxr)
             tp.append(tpxr)
 
-        plda = xr.concat(pl, dim='time')
-        tpda = xr.concat(tp, dim='time')
 
-        plds = plda.to_dataset(dim='vec')
-        tpds = tpda.to_dataset(dim='vec')
+
+
         ds = xr.combine_by_coords([plds, tpds])
 
     return ds
@@ -414,9 +417,8 @@ def swiftest2xr(config):
     subtp = []
     nplarr = []
     ntparr = []
-    first = True
-    subcount = 0
-    submax = 100
+    dsframes =[]
+
     print(f'Reading frames from file {config["BIN_OUT"]}')
     with FortranFile(config['BIN_OUT'], 'r') as f:
         for t, npl, plid, pvec, plab, \
@@ -429,37 +431,19 @@ def swiftest2xr(config):
             #Create xarray DataArrays out of each body type
             plxr = xr.DataArray(plframe, dims = dims, coords = {'time' : t, 'id' : plid, 'vec' : plab})
             tpxr = xr.DataArray(tpframe, dims = dims, coords = {'time' : t, 'id' : tpid, 'vec' : tlab})
-            nplarr.append(npl[0])
-            ntparr.append(ntp[0])
-            if subcount == 0:
-                plda = plxr.copy()
-                tpda = tpxr.copy()
-            else:
-                plda = xr.concat([plda, plxr], dim='time')
-                tpda = xr.concat([tpda, tpxr], dim='time')
-            subcount += 1
-            if subcount == submax:
-                pl.append(plda)
-                tp.append(tpda)
-                print('Concatenating DataArrays')
-                plda = xr.concat(pl, dim='time')
-                tpda = xr.concat(tp, dim='time')
-                pl = [plda]
-                tp = [tpda]
-                subcount = 0
+            #print('Concatenating DataArrays')
 
-    if subcount < submax:
-        pl.append(plda)
-        tp.append(tpda)
-    print('Concatenating DataArrays')
-    plda = xr.concat(pl,dim='time')
-    tpda = xr.concat(tp,dim='time')
+            #print('Converting DataArray to Dataset')
+            plds = plxr.to_dataset(dim='vec')
+            tpds = tpxr.to_dataset(dim='vec')
+            dsi = xr.combine_by_coords([plds, tpds])
+            dsi = dsi.assign_coords({"npl": npl[0], "ntp": ntp[0]})
+            dsframes.append(dsi)
 
-    print('Converting DataArray to Dataset')
-    plds = plda.to_dataset(dim = 'vec')
-    tpds = tpda.to_dataset(dim = 'vec')
-    ds = xr.combine_by_coords([plds, tpds])
-    ds = ds.assign_coords({"npl" : nplarr, "ntp" : ntparr})
+            #pl.append(plxr)
+            #tp.append(tpxr)
+    ds = xr.combine_nested(dsframes, concat_dim=["time"])
+
     return ds
 
 if __name__ == '__main__':
@@ -471,3 +455,4 @@ if __name__ == '__main__':
     config['BIN_OUT'] = workingdir + config['BIN_OUT']
 
     swiftestdat = swiftest2xr(config)
+
