@@ -457,8 +457,8 @@ def swiftest2xr(config, subsize):
                 print(f'Concatenating sub Dataset to file {path}')
                 xr.concat(dsframes, dim='time').to_netcdf(path)
                 dsframes = []
-                chunk = 0
-    if (chunk > 0):
+                subdat = 0
+    if (subdat > 0):
         numsubs += 1
         filename = f'{filehead}{numsubs:03d}.tmp.nc'
         path = os.path.join(tmpdir, filename)
