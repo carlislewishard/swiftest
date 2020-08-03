@@ -447,7 +447,6 @@ def swiftest2xr(config, subsize):
             bdxr = bdxr.to_dataset(dim='vec')
             bdxr = bdxr.assign(npl=npl[0])
             bdxr = bdxr.assign(ntp=ntp[0])
-            bdxr = bdxr.chunk()
             dsframes.append(bdxr)
             subdat += 1
             if subdat == subsize:
