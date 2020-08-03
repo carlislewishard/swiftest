@@ -5,6 +5,7 @@ import xarray as xr
 import dask
 import os
 import tempfile
+import matplotlib.pyplot as plt
 
 
 
@@ -467,8 +468,7 @@ def swiftest2xr(config, subsize):
     print('Combining sub Datasets into a single Dataset')
     filename = f'{filehead}*.tmp.nc'
     path = os.path.join(tmpdir, filename)
-    ds = xr.open_mfdataset(f'{path}',combine='by_coords',concat_dim='time',
-                           data_vars='minimal', coords='minimal', compat='override')
+    ds = xr.open_mfdataset(f'{path}',concat_dim='time', combine='nested')
 
     for i in range(numsubs):
         filename = f'{filehead}{i+1:03d}.tmp.nc'
@@ -492,4 +492,6 @@ if __name__ == '__main__':
     config['WORKINGDIR'] = workingdir
 
     swiftestdat = swiftest2xr(config, subsize=10)
+    print (swiftestdat['npl'].plot.line())
+    plt.show()
 
