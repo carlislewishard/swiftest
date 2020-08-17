@@ -84,6 +84,7 @@ SUBROUTINE io_discard_write_symba(t, mtiny, npl, nsppl, nsptp, nmergesub, symba_
           WRITE(LUN, 200) SUB, mergesub_list%name(i + 1), mergesub_list%status(i + 1)
           WRITE(LUN, 300) mergesub_list%xh(:,i + 1)
           WRITE(LUN, 300) mergesub_list%vh(:,i + 1)
+          WRITE(LUN, 500) mergesub_list%mass(i), mergesub_list%radius(i)
 
           DO index = 1, nadded
                WRITE(LUN, 200) ADD, mergeadd_list%name(index), mergeadd_list%status(index)
