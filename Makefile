@@ -61,11 +61,11 @@ include Makefile.Defines
 MODULES         = $(SWIFTEST_MODULES) $(USER_MODULES)
 
 
-.PHONY : all mod lib libdir collresolve drivers tools bin clean force 
+.PHONY : all mod lib libdir drivers tools bin clean force 
 
 % : %.f90 force
 	$(FORTRAN) $(FFLAGS) -I$(SWIFTEST_HOME)/include $< -o $@ \
-	  -L$(SWIFTEST_HOME)/lib -lswiftest -lcollresolve
+	  -L$(SWIFTEST_HOME)/lib -lswiftest 
 	$(INSTALL_PROGRAM) $@ $(SWIFTEST_HOME)/bin
 	rm -f $@
 
@@ -73,7 +73,6 @@ all:
 	cd $(SWIFTEST_HOME); \
 	  make mod; \
 	  make lib; \
-	  make collresolve; \
 	  make drivers; \
 	  make tools
 
@@ -157,14 +156,6 @@ libdir2:
 	$(INSTALL_DATA) *.smod $(SWIFTEST_HOME)/include; \
 	rm -f *.o *.smod
 
-collresolve:
-	cd $(COLLRESOLVE_HOME); \
-	  autoreconf --install;\
-	  ./configure --prefix=$(SWIFTEST_HOME);\
-	  make; \
-	  make install
-
-
 drivers:
 	cd $(SWIFTEST_HOME)/src/main; \
 	  rm -f Makefile.Defines Makefile; \
@@ -201,8 +192,6 @@ clean:
 	cd $(SWIFTEST_HOME)/bin;     rm -f swiftest_*
 	cd $(SWIFTEST_HOME)/bin;     rm -f tool_*
 	cd $(SWIFTEST_HOME)/lib;     rm -f lib*
-	cd $(SWIFTEST_HOME)/include; rm -f *.mod *.smod collresolve.h
-	cd $(COLLRESOLVE_HOME); rm -rf autom4te.cache aux Makefile stamp-h1 configure config.status config.h config.log aclocal.m4 lib* *.in *.o *.lo cambioni2019/*.o cambioni2019/*.lo
 
 
 force:
