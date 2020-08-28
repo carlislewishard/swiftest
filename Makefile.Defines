@@ -29,7 +29,6 @@
 # System utilities
 
 SHELL           = /bin/sh
-AR              = xiar
 RANLIB          = ranlib
 INSTALL         = install
 INSTALL_PROGRAM = $(INSTALL) -m 755
@@ -60,15 +59,17 @@ HEAPARR = -heap-arrays 1048576
 
 FORTRAN = ifort
 FFLAGS  = -qopt-report=5 -no-wrap-margin -O3 $(SIMDVEC) $(PAR) $(STRICTREAL) 
-#FFLAGS  = $(IDEBUG)
+AR     = xiar
+FFLAGS  = $(IDEBUG)
 
 #debug flags
 
 GDBFLAGS = -ggdb -g3 -O0 -fbacktrace -fbounds-check -fcheck=all -fno-pie  -fsanitize=undefined -fsanitize=address -fsanitize=leak  
 
 #FORTRAN = gfortran
-#FFLAGS = -O3
+#FFLAGS = -O3 -ffree-line-length-none
 #FFLAGS = $(GDBFLAGS)
+#AR     = ar
 
 #FFLAGS          = -Og -ggdb -g3 -fopenmp -ftree-parallelize-loops=4 -fbacktrace -fbounds-check -fcheck=all -fsanitize=undefined -fsanitize=address -fsanitize=leak  
 ##debug flags
