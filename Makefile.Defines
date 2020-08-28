@@ -60,7 +60,7 @@ HEAPARR = -heap-arrays 1048576
 FORTRAN = ifort
 FFLAGS  = -qopt-report=5 -no-wrap-margin -O3 $(SIMDVEC) $(PAR) $(STRICTREAL) 
 AR     = xiar
-FFLAGS  = $(IDEBUG)
+#FFLAGS  = $(IDEBUG)
 
 #debug flags
 
