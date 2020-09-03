@@ -52,7 +52,7 @@ SUBROUTINE symba_discard_merge_pl(npl, symba_plA, nplplenc, plplenc_list, ldisca
      INTEGER(I4B)                  :: i, j, nchild, indexchild, enc_big, index1, index2, indexk 
      REAL(DP)                      :: m, mmax, mtot, r, r3, mu, energy, ap, v2, msun
      REAL(DP), DIMENSION(NDIM)     :: x, v, vbs
-     INTEGER(I4B), DIMENSION(npl)  :: array_child
+     INTEGER(I4B), DIMENSION(NCHILDMAX)  :: array_child
 
 ! Executable code
      msun = symba_plA%helio%swiftest%mass(1)
@@ -77,10 +77,10 @@ SUBROUTINE symba_discard_merge_pl(npl, symba_plA, nplplenc, plplenc_list, ldisca
                     indexk = enc_big
 
                     nchild = symba_plA%nchild(enc_big)
-                    WRITE(*,*) "nchild = ", nchild 
+                    !WRITE(*,*) "nchild = ", nchild 
                     array_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,enc_big)
-                    WRITE(*,*) "array_child:", array_child(1:nchild)
-                    WRITE(*,*) "NCHILDMAX = ", NCHILDMAX
+                    !WRITE(*,*) "array_child:", array_child(1:nchild)
+                    !WRITE(*,*) "NCHILDMAX = ", NCHILDMAX
                     DO j = 1, nchild
                          indexchild = array_child(j)
                          m = symba_plA%helio%swiftest%mass(indexchild)
