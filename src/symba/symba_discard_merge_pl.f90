@@ -77,8 +77,10 @@ SUBROUTINE symba_discard_merge_pl(npl, symba_plA, nplplenc, plplenc_list, ldisca
                     indexk = enc_big
 
                     nchild = symba_plA%nchild(enc_big)
+                    WRITE(*,*) "nchild = ", nchild 
                     array_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,enc_big)
-
+                    WRITE(*,*) "array_child:", array_child(1:nchild)
+                    WRITE(*,*) "NCHILDMAX = ", NCHILDMAX
                     DO j = 1, nchild
                          indexchild = array_child(j)
                          m = symba_plA%helio%swiftest%mass(indexchild)
@@ -108,6 +110,7 @@ SUBROUTINE symba_discard_merge_pl(npl, symba_plA, nplplenc, plplenc_list, ldisca
                     ap = -1.0_DP*msun*mtot/(2.0_DP*energy)
                     symba_plA%helio%swiftest%rhill(indexk) = ap*(((mu/msun)/3.0_DP)**(1.0_DP/3.0_DP))
                     array_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,enc_big)
+                    WRITE(*,*) "array_child:", array_child(1:nchild)
                     indexchild = enc_big
                     ldiscard = .TRUE.
                     DO j = 0, nchild
