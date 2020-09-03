@@ -210,7 +210,8 @@ program swiftest_symba
          end if
          if (param%lenergy) then
             if(num_plpl_comparisons > param%eucl_threshold) then
-               call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, te, htot, msys)
+               call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, &
+                  ke, pe, te, htot, msys)
             else
                call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot, msys)
             end if
@@ -232,7 +233,8 @@ program swiftest_symba
             iout = istep_out
             if (param%lenergy) then
                if(num_plpl_comparisons > param%eucl_threshold) then
-                  call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, te, htot, msys)
+                  call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, &
+                     te, htot, msys)
                else
                   call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot, msys)
                end if
@@ -246,7 +248,8 @@ program swiftest_symba
          if (idump == 0) then
             if (param%lenergy) then
                if(num_plpl_comparisons > param%eucl_threshold) then
-                  call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, te, htot, msys)
+                  call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, &
+                     te, htot, msys)
                else
                   call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot, msys)
                end if

@@ -1395,7 +1395,8 @@ MODULE module_interfaces
      END INTERFACE
 
      interface
-         function symba_mergeadd_eoffset(npl, symba_plA, mergeadd_list, mergesub_list, addi, addf, subi, subf, param) result(eoffset)
+         function symba_mergeadd_eoffset(npl, symba_plA, mergeadd_list, mergesub_list, addi, &
+            addf, subi, subf, param) result(eoffset)
             USE swiftest_globals
             USE swiftest_data_structures
             USE module_symba
