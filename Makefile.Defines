@@ -69,6 +69,7 @@ GDBFLAGS = -ggdb -g3 -O0 -fbacktrace -fbounds-check -fcheck=all -fno-pie  -fsani
 FORTRAN = gfortran
 FFLAGS = -O3 -ffree-line-length-none
 #FFLAGS = $(GDBFLAGS)
+#AR     = ar
 
 #FFLAGS          = -Og -ggdb -g3 -fopenmp -ftree-parallelize-loops=4 -fbacktrace -fbounds-check -fcheck=all -fsanitize=undefined -fsanitize=address -fsanitize=leak  
 ##debug flags
