@@ -60,6 +60,7 @@ HEAPARR = -heap-arrays 1048576
 
 #FORTRAN = ifort
 #FFLAGS  = -qopt-report=5 -no-wrap-margin -O3 $(SIMDVEC) $(PAR) $(STRICTREAL) 
+#AR     = xiar
 #FFLAGS  = $(IDEBUG)
 
 #debug flags
@@ -69,8 +70,7 @@ GDBFLAGS = -ggdb -g3 -O0 -fbacktrace -fbounds-check -fcheck=all -fno-pie  -fsani
 FORTRAN = gfortran
 FFLAGS = -O3 -ffree-line-length-none
 #FFLAGS = $(GDBFLAGS)
-#AR     = ar
-
+AR     = ar
 #FFLAGS          = -Og -ggdb -g3 -fopenmp -ftree-parallelize-loops=4 -fbacktrace -fbounds-check -fcheck=all -fsanitize=undefined -fsanitize=address -fsanitize=leak  
 ##debug flags
 #FFLAGS		= -O3 -ggdb -g3 -ftree-parallelize-loops=4 -fbacktrace -ffpe-trap=zero,invalid,overflow,underflow,denormal -fcheck=all -fbounds-check -fbacktrace -fsanitize=undefined -fsanitize=address -fsanitize=leak 
