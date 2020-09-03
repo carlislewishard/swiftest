@@ -4,7 +4,6 @@ from scipy.io import FortranFile
 import xarray as xr
 import dask
 import os
-import tempfile
 import matplotlib.pyplot as plt
 
 
@@ -406,28 +405,15 @@ def swifter2xr(param):
             pl.append(plxr)
             tp.append(tpxr)
 
-
-
-
         ds = xr.combine_by_coords([plds, tpds])
 
     return ds
 
-def swiftest2xr(config, subsize):
+def swiftest2xr(config):
     """Reads in the """
 
     dims  = ['time','id', 'vec']
     dsframes = []
-    numsubs = 0
-
-    subdat = 0
-    filehead = 'bin'
-
-    tmpdir = tempfile.mkdtemp()
-
-    # Ensure the file is read/write by the creator only
-
-    #tmppath = os.path.join(tmpdir, predictable_filename)
 
     with FortranFile(config['BIN_OUT'], 'r') as f:
         for t, npl, plid, pvec, plab, \
@@ -449,38 +435,10 @@ def swiftest2xr(config, subsize):
             bdxr = bdxr.assign(npl=npl[0])
             bdxr = bdxr.assign(ntp=ntp[0])
             dsframes.append(bdxr)
-            subdat += 1
-            if subdat == subsize:
-                numsubs += 1
-                filename = f'{filehead}{numsubs:03d}.tmp.nc'
-                path = os.path.join(tmpdir, filename)
-                print(f'Concatenating sub Dataset to file {path}')
-                xr.concat(dsframes, dim='time').to_netcdf(path)
-                dsframes = []
-                subdat = 0
-    if (subdat > 0):
-        numsubs += 1
-        filename = f'{filehead}{numsubs:03d}.tmp.nc'
-        path = os.path.join(tmpdir, filename)
-        print(f'Concatenating sub Dataset to file {path}')
-        xr.concat(dsframes, dim='time').to_netcdf(path)
-
-    print('Combining sub Datasets into a single Dataset')
-    filename = f'{filehead}*.tmp.nc'
-    path = os.path.join(tmpdir, filename)
-    ds = xr.open_mfdataset(f'{path}',concat_dim='time', combine='nested')
-
-    for i in range(numsubs):
-        filename = f'{filehead}{i+1:03d}.tmp.nc'
-        path = os.path.join(tmpdir, filename)
-        os.remove(path)
-    os.rmdir(tmpdir)
-    filename = f'{filehead}.nc'
-    path = os.path.join(config['WORKINGDIR'], filename)
-    print(f'Saving complete dataset to file {path}')
-    ds.to_netcdf(path=path)
+        ds = xr.concat(dsframes, dim='time')
 
     return ds
+
 
 if __name__ == '__main__':
 
