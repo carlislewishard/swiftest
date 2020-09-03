@@ -186,7 +186,7 @@ program swiftest_symba
       ldiscard = .false. 
       ldiscard_tp = .false.
       lfrag_add = .false.
-      call symba_discard_merge_pl(npl, symba_plA, nplplenc, plplenc_list, ldiscard)                                  
+      call symba_discard_merge_pl(npl, symba_plA, nplplenc, plplenc_list, ldiscard)                              
       call symba_discard_pl(t, npl, symba_plA, rmin, rmax, rmaxu, qmin, qmin_coord, qmin_alo, qmin_ahi, ldiscard)
       call symba_discard_tp(t, npl, ntp, symba_plA, symba_tpA, dt, rmin, rmax, rmaxu, qmin, qmin_coord, &    
             qmin_alo, qmin_ahi, param%lrhill_present, ldiscard_tp)
@@ -218,7 +218,6 @@ program swiftest_symba
             write(egyiu,300) t, ke, pe, te, htot, eoffset, msys
          end if
       end if
-
       iloop = iloop + 1
       if (iloop == loopmax) then
           tbase = tbase + iloop*dt
