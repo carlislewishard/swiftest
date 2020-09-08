@@ -31,7 +31,6 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE drift_kepu_p3solve(dt, r0, mu, alpha, u, s, iflag)
-    !$omp declare simd(drift_kepu_p3solve)
 
 ! Modules
      USE swiftest

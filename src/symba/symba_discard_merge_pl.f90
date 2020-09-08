@@ -27,12 +27,12 @@
 !    Terminal  : none
 !    File      : none
 !
-!  Invocation  : CALL symba_discard_merge_pl(t, npl, nsppl, symba_pl1P, symba_pld1P, nplplenc, plplenc_list)
+!  Invocation  : CALL symba_discard_merge_pl(symba_pl1P, nplplenc, plplenc_list, ldiscard)
 !
 !  Notes       : Adapted from Hal Levison's Swift routine discard_mass_merge.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE symba_discard_merge_pl(npl, symba_plA, nplplenc, plplenc_list, ldiscard)
+SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard)
 
 ! Modules
      USE swiftest
@@ -43,7 +43,6 @@ SUBROUTINE symba_discard_merge_pl(npl, symba_plA, nplplenc, plplenc_list, ldisca
 
 ! Arguments
      INTEGER(I4B), INTENT(IN)        :: nplplenc
-     INTEGER(I4B), INTENT(INOUT)     :: npl
      TYPE(symba_pl)                  :: symba_plA
      TYPE(symba_plplenc), INTENT(IN) :: plplenc_list
      LOGICAL(LGT), INTENT(INOUT)     :: ldiscard
@@ -110,7 +109,6 @@ SUBROUTINE symba_discard_merge_pl(npl, symba_plA, nplplenc, plplenc_list, ldisca
                     ap = -1.0_DP*msun*mtot/(2.0_DP*energy)
                     symba_plA%helio%swiftest%rhill(indexk) = ap*(((mu/msun)/3.0_DP)**(1.0_DP/3.0_DP))
                     array_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,enc_big)
-                    WRITE(*,*) "array_child:", array_child(1:nchild)
                     indexchild = enc_big
                     ldiscard = .TRUE.
                     DO j = 0, nchild

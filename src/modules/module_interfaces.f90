@@ -160,19 +160,17 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE drift_dan(mu, px, py, pz, vx, vy, vz, dt0, iflag)
-            !$omp declare simd(drift_dan)
+          SUBROUTINE drift_dan(mu, x0, v0, dt0, iflag)
                USE swiftest_globals
                IMPLICIT NONE
                INTEGER(I4B), INTENT(OUT)                :: iflag
                REAL(DP), INTENT(IN)                     :: mu, dt0
-               REAL(DP), INTENT(INOUT) :: px, py, pz, vx, vy, vz
+               REAL(DP), DIMENSION(:), INTENT(INOUT)    :: x0, v0
           END SUBROUTINE drift_dan
      END INTERFACE
 
      INTERFACE
           SUBROUTINE drift_kepmd(dm, es, ec, x, s, c)
-            !$omp declare simd(drift_kepmd)
                USE swiftest_globals
                IMPLICIT NONE
                REAL(DP), INTENT(IN)  :: dm, es, ec
@@ -182,7 +180,6 @@ MODULE module_interfaces
 
      INTERFACE
           SUBROUTINE drift_kepu(dt,r0,mu,alpha,u,fp,c1,c2,c3,iflag)
-            !$omp declare simd(drift_kepu)
                USE swiftest_globals
                IMPLICIT NONE
                INTEGER(I4B), INTENT(OUT) :: iflag
@@ -193,7 +190,6 @@ MODULE module_interfaces
 
      INTERFACE
           SUBROUTINE drift_kepu_fchk(dt, r0, mu, alpha, u, s, f)
-            !$omp declare simd(drift_kepu_fchk)
                USE swiftest_globals
                IMPLICIT NONE
                REAL(DP), INTENT(IN)  :: dt, r0, mu, alpha, u, s
@@ -203,7 +199,6 @@ MODULE module_interfaces
 
      INTERFACE
           SUBROUTINE drift_kepu_guess(dt, r0, mu, alpha, u, s)
-            !$omp declare simd(drift_kepu_guess)
                USE swiftest_globals
                IMPLICIT NONE
                REAL(DP), INTENT(IN)  :: dt, r0, mu, alpha, u
@@ -213,7 +208,6 @@ MODULE module_interfaces
 
      INTERFACE
           SUBROUTINE drift_kepu_lag(s, dt, r0, mu, alpha, u, fp, c1, c2, c3, iflag)
-            !$omp declare simd(drift_kepu_lag)
                USE swiftest_globals
                IMPLICIT NONE
                INTEGER(I4B), INTENT(OUT) :: iflag
@@ -225,7 +219,6 @@ MODULE module_interfaces
 
      INTERFACE
           SUBROUTINE drift_kepu_new(s, dt, r0, mu, alpha, u, fp, c1, c2, c3, iflag)
-            !$omp declare simd(drift_kepu_new)
                USE swiftest_globals
                IMPLICIT NONE
                INTEGER(I4B), INTENT(OUT) :: iflag
@@ -237,7 +230,6 @@ MODULE module_interfaces
 
      INTERFACE
           SUBROUTINE drift_kepu_p3solve(dt, r0, mu, alpha, u, s, iflag)
-            !$omp declare simd(drift_kepu_p3solve)
                USE swiftest_globals
                IMPLICIT NONE
                INTEGER(I4B), INTENT(OUT) :: iflag
@@ -248,7 +240,6 @@ MODULE module_interfaces
 
      INTERFACE
           SUBROUTINE drift_kepu_stumpff(x, c0, c1, c2, c3)
-            !$omp declare simd(drift_kepu_stumpff)
                USE swiftest_globals
                IMPLICIT NONE
                REAL(DP), INTENT(INOUT) :: x
@@ -257,13 +248,12 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE drift_one(mu, x, v, dt, iflag, n)
+          SUBROUTINE drift_one(mu, x, v, dt, iflag)
                USE swiftest_globals
                IMPLICIT NONE
-               INTEGER(I4B), dimension(:), INTENT(OUT)                :: iflag
-               REAL(DP), INTENT(IN)                     :: mu, dt
-               REAL(DP), DIMENSION(:,:), INTENT(INOUT) :: x, v
-               integer(I4B), intent(in)                :: n
+               INTEGER(I4B), INTENT(OUT)  :: iflag
+               REAL(DP), INTENT(IN)                  :: mu, dt
+               REAL(DP), DIMENSION(:), INTENT(INOUT) :: x, v
           END SUBROUTINE drift_one
      END INTERFACE
 
@@ -831,14 +821,13 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE symba_discard_merge_pl(npl, symba_plA, nplplenc, plplenc_list, ldiscard)
+          SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard)
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_helio
                USE module_symba
                IMPLICIT NONE
                INTEGER(I4B), INTENT(IN)         :: nplplenc
-               INTEGER(I4B), INTENT(INOUT)      :: npl
                TYPE(symba_pl)                   :: symba_plA
                TYPE(symba_plplenc), INTENT(IN)  :: plplenc_list
                LOGICAL(LGT), INTENT(INOUT)      :: ldiscard
