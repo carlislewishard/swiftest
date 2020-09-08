@@ -38,18 +38,14 @@ SUBROUTINE helio_drift(npl, swiftest_plA, dt)
      TYPE(swiftest_pl),INTENT(INOUT) :: swiftest_plA
 
 ! Internals
-     INTEGER(I4B)                   :: i
-     integer(I4B),dimension(:), allocatable    :: iflag 
+     INTEGER(I4B)                   :: i, iflag
      REAL(DP)                       :: mu
 
 ! Executable code
-     if (npl == 0) return
-     allocate(iflag(npl))
      mu = swiftest_plA%mass(1)
-     CALL drift_one(mu, swiftest_plA%xh(:,2:npl), swiftest_plA%vb(:,2:npl), dt, iflag(2:npl), npl-1)
-
      DO i = 2, npl
-          IF (iflag(i) /= 0) THEN
+          CALL drift_one(mu, swiftest_plA%xh(:,i), swiftest_plA%vb(:,i), dt, iflag)
+          IF (iflag /= 0) THEN
                WRITE(*, *) " Planet ", swiftest_plA%name(i), " is lost!!!!!!!!!!"
                WRITE(*, *) mu, dt
                WRITE(*, *) swiftest_plA%xh(:,i)

@@ -37,20 +37,17 @@ SUBROUTINE helio_drift_tp(ntp, swiftest_tpA, mu, dt)
      TYPE(swiftest_tp), INTENT(INOUT) :: swiftest_tpA
 
 ! Internals
-     INTEGER(I4B)                     :: i
-     integer(I4B), dimension(:), allocatable :: iflag
+     INTEGER(I4B)                     :: i, iflag
 
-      if (ntp == 0) return
-      allocate(iflag(ntp))
-      CALL drift_one(mu, swiftest_tpA%xh(:,:), swiftest_tpA%vb(:,:), dt, iflag(:), ntp)
 ! Executable code
      DO i = 1, ntp
-          !IF (swiftest_tpA%status(i) == ACTIVE) THEN
-               IF (iflag(i) /= 0) THEN
+          IF (swiftest_tpA%status(i) == ACTIVE) THEN
+               CALL drift_one(mu, swiftest_tpA%xh(:,i), swiftest_tpA%vb(:,i), dt, iflag)
+               IF (iflag /= 0) THEN
                     swiftest_tpA%status(i) = DISCARDED_DRIFTERR
                     WRITE(*, *) "Particle ", swiftest_tpA%name(i), " lost due to error in Danby drift"
                END IF
-          !END IF
+          END IF
      END DO
 
      RETURN

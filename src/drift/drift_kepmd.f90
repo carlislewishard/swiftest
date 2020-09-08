@@ -31,7 +31,6 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE drift_kepmd(dm, es, ec, x, s, c)
-     !$omp declare simd(drift_kepmd)
 
 ! Modules
      USE swiftest

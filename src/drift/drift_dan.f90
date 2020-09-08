@@ -28,8 +28,7 @@
 !  Notes       : Adapted from Hal Levison and Martin Duncan's Swift routine drift_dan.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE drift_dan(mu, px, py, pz, vx, vy, vz, dt0, iflag)
-   !$omp declare simd(drift_dan)
+SUBROUTINE drift_dan(mu, x0, v0, dt0, iflag)
 
 ! Modules
      USE swiftest
@@ -39,19 +38,17 @@ SUBROUTINE drift_dan(mu, px, py, pz, vx, vy, vz, dt0, iflag)
 ! Arguments
      INTEGER(I4B), INTENT(OUT)                :: iflag
      REAL(DP), INTENT(IN)                     :: mu, dt0
-     REAL(DP), INTENT(INOUT) :: px, py, pz, vx, vy, vz
+     REAL(DP), DIMENSION(:), INTENT(INOUT)    :: x0, v0
 
 ! Internals
      REAL(DP)                  :: dt, f, g, fdot, gdot, c1, c2, c3, u, alpha, fp, r0
      REAL(DP)                  :: v0s, a, asq, en, dm, ec, es, esq, xkep, fchk, s, c
-     REAL(DP), DIMENSION(NDIM) :: x0, v0, x, v
+     REAL(DP), DIMENSION(NDIM) :: x, v
 
 ! Executable code
-     x0 = (/px, py, pz/)
-     v0 = (/vx, vy, vz/)
      iflag = 0
      dt = dt0
-     r0 = NORM2(x0(:))
+     r0 = SQRT(DOT_PRODUCT(x0(:), x0(:)))
      v0s = DOT_PRODUCT(v0(:), v0(:))
      u = DOT_PRODUCT(x0(:), v0(:))
      alpha = 2.0_DP*mu/r0 - v0s
@@ -83,12 +80,6 @@ SUBROUTINE drift_dan(mu, px, py, pz, vx, vy, vz, dt0, iflag)
                v(:) = x0(:)*fdot + v0(:)*gdot
                x0(:) = x(:)
                v0(:) = v(:)
-               px = x0(1)
-               py = x0(2)
-               pz = x0(3)
-               vx = v0(1)
-               vy = v0(2)
-               vz = v0(3)
                iflag = 0
                RETURN
           END IF
@@ -103,15 +94,7 @@ SUBROUTINE drift_dan(mu, px, py, pz, vx, vy, vz, dt0, iflag)
           v(:) = x0(:)*fdot + v0(:)*gdot
           x0(:) = x(:)
           v0(:) = v(:)
-          px = x0(1)
-          py = x0(2)
-          pz = x0(3)
-          vx = v0(1)
-          vy = v0(2)
-          vz = v0(3)
      END IF
-
-
 
      RETURN
 
