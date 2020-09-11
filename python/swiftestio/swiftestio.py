@@ -159,6 +159,7 @@ def read_swiftest_config(config_file_name):
     'YARKOVSKY'      : 'NO',
     'YORP'           : 'NO',
     'EUCL_THRESHOLD' : 1000000,
+    'SKIP'           : 0,
     }
 
     # Read config.in file
@@ -411,44 +412,46 @@ def swifter2xr(param):
 
 def swiftest2xr(config):
     """Reads in the """
-
+    config['SKIP'] = np.floor(1 / config['DT'])
+    counter = config['SKIP']
     dims  = ['time','id', 'vec']
     dsframes = []
-
     with FortranFile(config['BIN_OUT'], 'r') as f:
         for t, npl, plid, pvec, plab, \
             ntp, tpid, tvec, tlab in swiftest_stream(f, config):
-            print(f'Time = {t[0]}')
-            plframe = np.expand_dims(pvec, axis=0)
-            tpframe = np.expand_dims(tvec, axis=0)
-            bd = []
+            if counter == config['SKIP']:
+                print(f'Time = {t[0]}')
+                plframe = np.expand_dims(pvec, axis=0)
+                tpframe = np.expand_dims(tvec, axis=0)
+                bd = []
 
-            # Create xarray DataArrays out of each body type
-            if npl[0] > 0:
-                plxr = xr.DataArray(plframe, dims=dims, coords={'time': t, 'id': plid, 'vec': plab})
-                bd.append(plxr)
-            if ntp[0] > 0:
-                tpxr = xr.DataArray(tpframe, dims=dims, coords={'time': t, 'id': tpid, 'vec': tlab})
-                bd.append(tpxr)
-            bdxr = xr.concat(bd, dim='time')
-            bdxr = bdxr.to_dataset(dim='vec')
-            bdxr = bdxr.assign(npl=npl[0])
-            bdxr = bdxr.assign(ntp=ntp[0])
-            dsframes.append(bdxr)
+                # Create xarray DataArrays out of each body type
+                if npl[0] > 0 :
+                    plxr = xr.DataArray(plframe, dims=dims, coords={'time': t, 'id': plid, 'vec': plab})
+                    bd.append(plxr)
+                if ntp[0] > 0 :
+                    tpxr = xr.DataArray(tpframe, dims=dims, coords={'time': t, 'id': tpid, 'vec': tlab})
+                    bd.append(tpxr)
+                bdxr = xr.concat(bd, dim='time')
+                bdxr = bdxr.to_dataset(dim='vec')
+                bdxr = bdxr.assign(npl=npl[0])
+                bdxr = bdxr.assign(ntp=ntp[0])
+                dsframes.append(bdxr)
+            if counter == config['SKIP']:
+                counter = 1
+            else: 
+                counter += 1
         ds = xr.concat(dsframes, dim='time')
 
     return ds
 
-
 if __name__ == '__main__':
 
-    workingdir = '/Users/daminton/work/Projects/Swiftest/Elliott_Performance/high_high_1500_1/'
-
+    workingdir = '/Users/carlislewishard/Research/Prospectus_Runs/3me_Frag_1/'
     config_file_name = workingdir + 'param.in'
     config = read_swiftest_config(config_file_name)
     config['BIN_OUT'] = workingdir + config['BIN_OUT']
     config['WORKINGDIR'] = workingdir
-
     swiftestdat = swiftest2xr(config, subsize=10)
     print (swiftestdat['npl'].plot.line())
     plt.show()
