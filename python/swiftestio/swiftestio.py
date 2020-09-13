@@ -412,7 +412,7 @@ def swifter2xr(param):
 
 def swiftest2xr(config):
     """Reads in the """
-    config['SKIP'] = np.floor(1 / config['DT'])
+    #config['SKIP'] = np.floor(1 / config['DT'])
     counter = config['SKIP']
     dims  = ['time','id', 'vec']
     dsframes = []
