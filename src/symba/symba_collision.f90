@@ -44,17 +44,13 @@ subroutine symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_lis
    real(DP)                                :: mlr, mslr
    integer(I4B)                            :: addi, addf, subi, subf
 
-   ! Save initial indices of the mergeadd/sub lists
-
-
    ! recalculates vbs 
    call coord_vb2vh(npl, symba_plA%helio%swiftest)
    vbs = symba_plA%helio%swiftest%vb(:, 1)
 
    lmerge = .false.
    lfrag_add = .false.
-   ! model 2 is the model for collresolve_resolve (ls12)
-   model = 2
+   model = 2 ! model 2 is the model for collresolve_resolve (ls12)
 
    idx(1) = plplenc_list%index1(index_enc)
    idx(2) = plplenc_list%index2(index_enc)

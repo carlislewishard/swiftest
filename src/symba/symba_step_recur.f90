@@ -91,6 +91,7 @@ RECURSIVE SUBROUTINE symba_step_recur(t, ireci, npl, nplm, ntp, symba_plA, symba
      END IF
      irecp = ireci + 1
 
+     !If we are at the topmost recursion level 
      IF (ireci == 0) THEN
           icflg = 0
           !$omp parallel do schedule (static) default(private) &
@@ -104,6 +105,7 @@ RECURSIVE SUBROUTINE symba_step_recur(t, ireci, npl, nplm, ntp, symba_plA, symba
                     CALL symba_chk(xr(:), vr(:), symba_plA%helio%swiftest%rhill(index_i),     &  
                          symba_plA%helio%swiftest%rhill(index_j), dtl, irecp, lencounter,                  &
                          plplenc_list%lvdotr(i))
+                    !If two bodies are encountering 
                     IF (lencounter) THEN 
                          rlim2 = (symba_plA%helio%swiftest%radius(index_i) + symba_plA%helio%swiftest%radius(index_j))**2
                          rji2 = DOT_PRODUCT(xr(:), xr(:))! Check to see if these are physically overlapping bodies first, which we should ignore
@@ -166,11 +168,7 @@ RECURSIVE SUBROUTINE symba_step_recur(t, ireci, npl, nplm, ntp, symba_plA, symba
                     index_j  = plplenc_list%index2(i)
                     IF (((plplenc_list%status(i) == ACTIVE) .AND.                                                                 &
                         (symba_plA%levelg(index_i) >= ireci) .AND.                                                              &
-                        (symba_plA%levelg(index_j) >= ireci))) THEN
-                        ! Create if statement to check for collisions (LS12) or merger depending on flag lfrag in param.in
-                        ! Determines collisional regime if lfrag=.TRUE. for close encounter planets
-                        ! CALL symba_frag_pl(...)
-                        ! Determines if close encountenr leads to merger if lfrag=.FALSE.   
+                        (symba_plA%levelg(index_j) >= ireci))) THEN 
                         CALL symba_collision (t, dtl, i, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
                                                   eoffset, npl, symba_plA, nplplenc, plplenc_list, mtiny, param)
                      END IF
