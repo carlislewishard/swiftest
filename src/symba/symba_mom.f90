@@ -63,87 +63,84 @@ SUBROUTINE symba_mom(m1, xh1, vb1, m2, xh2, vb2, frags_added, m_frag, r_circle, 
    thetashift = thetashift + 1
    if (thetashift >= shiftmax) thetashift = 0
 
-
    linmom_before = NORM2(m1*vb1(:) + m2*vb2(:))
    call util_crossproduct(xh1,vb1,xhvb1)
    call util_crossproduct(xh2,vb2,xhvb2)
-   angmom_before = (m1*xhvb1+m2*xhvb2)
+   angmom_before = (m1*xhvb1+m2*xhvb2) !why did we multiply this by mass??
 
-
-        ! Find COM
+   ! Find COM
    p_com(:) = ((xh1(:) * m1) + (xh2(:) * m2)) / (m1 + m2)
    v_com(:) = ((vb1(:) * m1) + (vb2(:) * m2)) / (m1 + m2)
 
    ! Find Collision velocity
-     v_col = NORM2(vb2(:) - vb1(:))
-     xr(:) = xh2(:) - xh1(:)
-     l(:) = (vb2(:) - vb1(:)) 
-     call util_crossproduct(l,xr,xvrel)
-     kk(:) = xvrel !angmom_before
-     !call util_crossproduct(l(:), xr(:), kk(:))
-     call util_crossproduct(kk(:), l(:), p(:))
-     kk(:) = kk(:) / NORM2(kk(:))
-     l(:) = l(:) / NORM2(l(:))
-     p(:) = p(:) / NORM2(p(:)) 
+   v_col = NORM2(vb2(:) - vb1(:))
+   xr(:) = xh2(:) - xh1(:)
+   l(:) = (vb2(:) - vb1(:)) 
+   call util_crossproduct(l,xr,xvrel)
+   kk(:) = xvrel !angmom_before
+   !call util_crossproduct(l(:), xr(:), kk(:))
+   call util_crossproduct(kk(:), l(:), p(:))
+   kk(:) = kk(:) / NORM2(kk(:))
+   l(:) = l(:) / NORM2(l(:))
+   p(:) = p(:) / NORM2(p(:)) 
 
-     veclinmom_after(:) = 0.0_DP
-     vecangmom_after(:) = 0.0_DP
+   veclinmom_after(:) = 0.0_DP
+   vecangmom_after(:) = 0.0_DP
 
-     mp_frag = 0.0_DP
-     mv_frag = 0.0_DP
-     p_frag_check = 0.0_DP
-     v_frag_check = 0.0_DP
-     angmom_frag(:) = 0.0_DP
-     v2esc = 2.0_DP * GC * (m1+m2) / (NORM2(xr))
-     v2el = v2esc - 2.0_DP*(m1+m2)*GC*(1.0_DP/(NORM2(xr)) - 1.0_DP/r_circle)
-     A = - (SQRT(v2el))
+   mp_frag = 0.0_DP
+   mv_frag = 0.0_DP
+   p_frag_check = 0.0_DP
+   v_frag_check = 0.0_DP
+   angmom_frag(:) = 0.0_DP
+   v2esc = 2.0_DP * GC * (m1+m2) / (NORM2(xr))
+   v2el = v2esc - 2.0_DP*(m1+m2)*GC*(1.0_DP/(NORM2(xr)) - 1.0_DP/r_circle)
+   A = - (SQRT(v2el))
 
 
-     B = r_circle
-     DO i=1, frags_added
-          p_frag(:,i) = (- B  * cos(phase_ang + theta * i))*l(:) + (- B  * sin(phase_ang + theta * i))*p(:) + p_com(:)
-          p_frag_check = - (B * cos(phase_ang + theta * i)) + p_frag_check
-          vel_frag(:,i) = (((A * cos(phase_ang + theta * i))*l(:)) + ((A * sin(phase_ang + theta * i))*p(:)))  + v_com(:)
+   B = r_circle
+   DO i=1, frags_added
+      p_frag(:,i) = (- B  * cos(phase_ang + theta * i))*l(:) + (- B  * sin(phase_ang + theta * i))*p(:) + p_com(:)
+      p_frag_check = - (B * cos(phase_ang + theta * i)) + p_frag_check
+      vel_frag(:,i) = (((A * cos(phase_ang + theta * i))*l(:)) + ((A * sin(phase_ang + theta * i))*p(:)))  + v_com(:)
 
-          v_frag_check = (A * cos(phase_ang + theta * i)) + v_frag_check
+      v_frag_check = (A * cos(phase_ang + theta * i)) + v_frag_check
 
-          mp_frag = (p_frag(:,i) * m_frag(i)) + mp_frag(:)
+      mp_frag = (p_frag(:,i) * m_frag(i)) + mp_frag(:)
 
-          mv_frag = (vel_frag(:,i) * m_frag(i)) + mv_frag(:)
+      mv_frag = (vel_frag(:,i) * m_frag(i)) + mv_frag(:)
 
-          call util_crossproduct(p_frag(:,i), vel_frag(:,i), angmom_fragi(:)) 
-          angmom_frag(:) = angmom_frag(:) + angmom_fragi(:)
-     END DO
+      call util_crossproduct(p_frag(:,i), vel_frag(:,i), angmom_fragi(:)) 
+      angmom_frag(:) = angmom_frag(:) + angmom_fragi(:)
+   END DO
 
-     m_frag_tot = SUM(m_frag(:))
-     p_com_frag(:) = mp_frag(:) / m_frag_tot
-     v_com_frag(:) = mv_frag(:) / m_frag_tot
-     x_f(:) =  p_com(:) - p_com_frag(:)
-     v_f(:) = v_com(:) - v_com_frag(:)
-     angmom_f(:) = angmom_before(:) - angmom_frag(:)
+   m_frag_tot = SUM(m_frag(:))
+   p_com_frag(:) = mp_frag(:) / m_frag_tot
+   v_com_frag(:) = mv_frag(:) / m_frag_tot
+   x_f(:) =  p_com(:) - p_com_frag(:)
+   v_f(:) = v_com(:) - v_com_frag(:)
+   angmom_f(:) = angmom_before(:) - angmom_frag(:)
 
-     mp_frag(:) = 0.0_DP
-     mv_frag(:) = 0.0_DP
-     angmom_frag(:) = 0.0_DP
+   mp_frag(:) = 0.0_DP
+   mv_frag(:) = 0.0_DP
+   angmom_frag(:) = 0.0_DP
 
-     DO i=1, frags_added
-          p_frag(:,i) = p_frag(:,i) + x_f(:)
-          vel_frag(:,i) = vel_frag(:,i) + v_f(:)
-          veclinmom_after(:) = (m_frag(i) * vel_frag(:,i)) + veclinmom_after(:)
-          mp_frag(:) = (p_frag(:,i) * m_frag(i)) + mp_frag(:)
-          mv_frag(:) = (vel_frag(:,i) * m_frag(i)) + mv_frag(:)
-          call util_crossproduct(p_frag(:,i)*m_frag(i), vel_frag(:,i), angmom_fragi(:)) 
-          angmom_frag(:) = angmom_frag(:) + angmom_fragi(:)
-     END DO 
+   DO i=1, frags_added
+      p_frag(:,i) = p_frag(:,i) + x_f(:)
+      vel_frag(:,i) = vel_frag(:,i) + v_f(:)
+      veclinmom_after(:) = (m_frag(i) * vel_frag(:,i)) + veclinmom_after(:)
+      mp_frag(:) = (p_frag(:,i) * m_frag(i)) + mp_frag(:)
+      mv_frag(:) = (vel_frag(:,i) * m_frag(i)) + mv_frag(:)
+      call util_crossproduct(p_frag(:,i)*m_frag(i), vel_frag(:,i), angmom_fragi(:)) 
+      angmom_frag(:) = angmom_frag(:) + angmom_fragi(:)
+   END DO 
 
-     p_com_frag(:) = mp_frag(:) / SUM(m_frag(:))
-     v_com_frag(:) = mv_frag(:) / SUM(m_frag(:))
-     angmom_after = angmom_frag(:)
-     linmom_after = norm2(veclinmom_after)
-     DL = NORM2(angmom_after(:) - angmom_before(:)) / NORM2(angmom_before(:))
+   p_com_frag(:) = mp_frag(:) / SUM(m_frag(:))
+   v_com_frag(:) = mv_frag(:) / SUM(m_frag(:))
+   angmom_after = angmom_frag(:)
+   linmom_after = norm2(veclinmom_after)
+   DL = NORM2(angmom_after(:) - angmom_before(:)) / NORM2(angmom_before(:))
 
    RETURN
-
 
 END SUBROUTINE symba_mom
 
