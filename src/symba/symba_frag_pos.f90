@@ -27,9 +27,13 @@
 SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, mergeadd_list, mergesub_list, symba_plA, npl)
 
 ! Modules
+   USE swiftest
    USE swiftest_globals
    USE swiftest_data_structures
-   USE module_interfaces, EXCEPT_THIS_ONE => symba_mom
+   USE module_helio
+   USE module_symba
+   USE module_swiftestalloc
+   USE module_interfaces, EXCEPT_THIS_ONE => symba_frag_pos
    IMPLICIT NONE
 
 ! Arguments
