@@ -129,6 +129,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
 
       DO j=1, frags_added
          p_frag(:,j) = p_frag(:,j) + p_f(:)
+         mergeadd_list%xh(:, nmergeadd_start + count_frag + j -1) = p_frag(:, j)
       END DO 
 
       count_frag = count_frag + frags_added

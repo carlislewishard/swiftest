@@ -124,7 +124,7 @@ SUBROUTINE symba_step_interp(t, npl, nplm, ntp, symba_plA, symba_tpA, dt,   &
      nmergeadd_after = nmergeadd
      nmergeadd_step = nmergeadd_after - nmergeadd_before
 
-     !CALL symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, mergeadd_list, mergesub_list, symba_plA, npl)
+     CALL symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, mergeadd_list, mergesub_list, symba_plA, npl)
 
      IF (ntp > 0) THEN
           DO i = 2, npl

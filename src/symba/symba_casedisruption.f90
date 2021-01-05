@@ -95,7 +95,7 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    msun = symba_plA%helio%swiftest%mass(1)
    xbs(:) = symba_plA%helio%swiftest%xb(:,1)
    vh_1(:) = vb_1(:) - vbs(:)
-   vh_2(:) = vb_2(:) - vbs(:)!
+   vh_2(:) = vb_2(:) - vbs(:)
 
    WRITE(*, *) "Disruption between particles ", name1, " and ", name2, " at time t = ",t
 
