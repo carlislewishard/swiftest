@@ -76,7 +76,7 @@ SUBROUTINE symba_step_interp(t, npl, nplm, ntp, symba_plA, symba_tpA, dt,   &
      TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
      TYPE(symba_pltpenc), INTENT(INOUT)               :: pltpenc_list
      TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
-     type(user_input_parameters), intent(inout)          :: param
+     type(user_input_parameters), intent(inout)       :: param
 
 ! Internals
      INTEGER(I4B)                                 :: i, irec
@@ -124,7 +124,7 @@ SUBROUTINE symba_step_interp(t, npl, nplm, ntp, symba_plA, symba_tpA, dt,   &
      nmergeadd_after = nmergeadd
      nmergeadd_step = nmergeadd_after - nmergeadd_before
 
-     !CALL symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, mergeadd_list, mergesub_list)
+     !CALL symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, mergeadd_list, mergesub_list, symba_plA, npl)
 
      IF (ntp > 0) THEN
           DO i = 2, npl
