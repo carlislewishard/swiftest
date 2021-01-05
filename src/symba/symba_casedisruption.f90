@@ -209,38 +209,6 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
       END DO
    END IF
 
-   !!!!!!!!!!!! THIS NEEDS TO BE DONE AT THE END OF THE STEP !!!!!!!!!!!!!!!!
-
-   ! Calculate the positions of the new fragments in a circle with a radius large enough to space
-   ! all fragments apart by a distance of rhill_p1 + rhill_p2
-   !r_circle = (rhill_p1 + rhill_p2) / (2 * sin(PI / frags_added)) !((2.0_DP * rhill_p1 + 2.0_DP * rhill_p2) / (2.0_DP * sin(PI / frags_added))) 
-   !theta = (2 * PI) / frags_added
-
-   !ALLOCATE(m_frag(frags_added))
-   !m_frag(1:frags_added) = mergeadd_list%mass(nstart + 1 :nstart + frags_added)
-
-   !mtot = sum(m_frag(1:frags_added))
-   !m_rem = (m1 + m2) - mtot
-
-   !ALLOCATE(x_frag(NDIM, frags_added))
-   !ALLOCATE(v_frag(NDIM, frags_added))
-
-   !CALL symba_mom(m1, xh_1, vb_1, m2, xh_2, vb_2, frags_added, m_frag, r_circle, theta, x_frag, v_frag)
-
-   !DO i = 1, frags_added
-
-   !   mergeadd_list%xh(:, nstart + i) = x_frag(:, i)! - xbs(1)!x_frag
-   !   mergeadd_list%vh(:, nstart + i) = v_frag(:, i) - vbs(:)!vx_frag
-
-         ! Tracking linear momentum. 
-   !   mv(:) = mv(:) + (mergeadd_list%mass(nstart + i) * mergeadd_list%vh(:,nstart + i))
-   !END DO
-   !deallocate(m_frag)
-   !deallocate(x_frag)
-   !deallocate(v_frag)
-
-   !!!!!!!!!!!! THIS NEEDS TO BE DONE AT THE END OF THE STEP !!!!!!!!!!!!!!!!
-
    !!!!!!!!!!!!                     DEV                      !!!!!!!!!!!!!!!! 
 
    ! Calculate the positions of the new fragments in a circle with a radius large enough to space
