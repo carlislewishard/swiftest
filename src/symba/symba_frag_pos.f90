@@ -54,7 +54,6 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
    integer(I4B), save                                     :: thetashift = 0
    integer(I4B), parameter                                :: SHIFTMAX = 9
 
-
 ! Executable code
 
    numenc = nmergesub_step / 2 !number of encounters this step
