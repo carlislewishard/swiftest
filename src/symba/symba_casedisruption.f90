@@ -66,7 +66,7 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    REAL(DP)                                         :: rhill_p1, rhill_p2, r_circle, theta, radius1, radius2, r_smallestcircle
    REAL(DP)                                         :: m_rem, mass1, mass2
    REAL(DP)                                         :: phase_ang, v_col_norm, v2esc, v2el, v2esc_circle
-   REAL(DP), DIMENSION(:, :), ALLOCATABLE           :: x_frag, v_frag
+   REAL(DP), DIMENSION(:, :), ALLOCATABLE           :: v_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE              :: m_frag
    REAL(DP), DIMENSION(NDIM)                        :: mv, xbs, vh_1, vh_2
    REAL(DP), DIMENSION(NDIM)                        :: v_com, xr, v_col_vec, v_col_unit_vec, mv_frag, v_com_frag, v_f
@@ -243,6 +243,11 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
 
    !!!!!!!!!!!!                     DEV                      !!!!!!!!!!!!!!!! 
 
+   ! Calculate the positions of the new fragments in a circle with a radius large enough to space
+   ! all fragments apart by a distance of rhill_p1 + rhill_p2
+   r_circle = (rhill_p1 + rhill_p2) / (2 * sin(PI / frags_added)) !((2.0_DP * rhill_p1 + 2.0_DP * rhill_p2) / (2.0_DP * sin(PI / frags_added))) 
+   theta = (2 * PI) / frags_added
+
    ALLOCATE(m_frag(frags_added))
    ALLOCATE(v_frag(NDIM, frags_added))
    m_frag(1:frags_added) = mergeadd_list%mass(nstart + 1 :nstart + frags_added)
@@ -317,5 +322,3 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    plmaxname = max(plmaxname, tpmaxname) + frags_added
    RETURN 
 END SUBROUTINE symba_casedisruption
-
-
