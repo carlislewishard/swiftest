@@ -932,13 +932,10 @@ MODULE module_interfaces
      INTERFACE
           SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, &
                mergeadd_list, mergesub_list, symba_plA, npl)
-               USE swiftest
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_helio
                USE module_symba
-               USE module_swiftestalloc
-               USE module_interfaces, EXCEPT_THIS_ONE => symba_frag_pos
                IMPLICIT NONE
                INTEGER(I4B), INTENT(IN)           :: nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, npl
                TYPE(symba_merger), INTENT(INOUT)  :: mergeadd_list, mergesub_list

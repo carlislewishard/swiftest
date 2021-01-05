@@ -44,8 +44,9 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
 ! Internals
 
    INTEGER(I4B)                                           :: count_enc, count_frag, numenc, nmergeadd_start, nmergesub_start, i, j
-   REAL(DP)                                               :: phase_ang, r_circle, rhill_p1, rhill_p2, m1, m2, r1, r2, v_com_norm
-   REAL(DP)                                               :: m_frag_tot
+   INTEGER(I4B)                                           :: frags_added
+   REAL(DP)                                               :: phase_ang, r_circle, rhill_p1, rhill_p2, m1, m2, r1, r2, v_col_norm
+   REAL(DP)                                               :: m_frag_tot, theta
    REAL(DP), DIMENSION(NDIM)                              :: p_com, v_col_vec, v_col_unit_vec, mp_frag, p_com_frag, p_f
    REAL(DP), DIMENSION(NDIM)                              :: xh_1, xh_2, vh_1, vh_2
    REAL(DP), DIMENSION(:, :), ALLOCATABLE                 :: p_frag
@@ -68,11 +69,11 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          ! If the name of the planet in symba_plA matches the name of the planet in mergesub_list
          ! then use the position of the planet in symba_plA aka at the end of the step
          IF (symba_plA%helio%swiftest%name(j) == mergesub_list%name(nmergesub_start + count_enc)) THEN
-            xh_1(:) = symba_plA%helio%swiftest%xh(j)
+            xh_1(:) = symba_plA%helio%swiftest%xh(j,:)
             rhill_p1 = symba_plA%helio%swiftest%rhill(j)
          END IF
       END DO
-      vh_1(:) = mergesub_list%vh(nmergesub_start + count_enc)
+      vh_1(:) = mergesub_list%vh(nmergesub_start + count_enc,:)
       m1 = mergesub_list%mass(nmergesub_start + count_enc)
       r1 = mergesub_list%radius(nmergesub_start + count_enc) 
 
@@ -81,11 +82,11 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          ! If the name of the planet in symba_plA matches the name of the planet in mergesub_list
          ! then use the position of the planet in symba_plA aka at the end of the step
          IF (symba_plA%helio%swiftest%name(j) == mergesub_list%name(nmergesub_start + count_enc + 1)) THEN
-            xh_2(:) = symba_plA%helio%swiftest%xh(j)
+            xh_2(:) = symba_plA%helio%swiftest%xh(j,:)
             rhill_p2 = symba_plA%helio%swiftest%rhill(j)
          END IF
       END DO
-      vh_2(:) = mergesub_list%vh(nmergesub_start + count_enc + 1)
+      vh_2(:) = mergesub_list%vh(nmergesub_start + count_enc + 1,:)
       m2 = mergesub_list%mass(nmergesub_start + count_enc + 1)
       r2 = mergesub_list%radius(nmergesub_start + count_enc + 1)
 
@@ -109,26 +110,26 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
       p_com(:) = ((xh_1(:) * m1) + (xh_2(:) * m2)) / (m1 + m2)
 
       ! Find Collision velocity
-      v_col_norm = NORM2(vb_2(:) - vb_1(:)) ! collision velocity magnitude
-      v_col_vec(:) = (vb_2(:) - vb_1(:)) ! collision velocity vector
+      v_col_norm = NORM2(vh_2(:) - vh_1(:)) ! collision velocity magnitude
+      v_col_vec(:) = (vh_2(:) - vh_1(:)) ! collision velocity vector
       v_col_unit_vec(:) = v_col_vec(:) / v_col_norm ! unit vector of collision velocity (direction only)
 
       mp_frag = 0.0_DP
 
       count_frag = 0 !counter for the number of fragments added in this timestep used to increment on mergeadd_list
 
-      DO i=1, frags_added
-         m_frag(i) = mergeadd_list%mass(nmergeadd_start + count_frag + i - 1)
-         p_frag(:,i) = (- r_circle  * cos(phase_ang + theta * i))*v_col_unit_vec(:) + p_com(:)
-         mp_frag = (p_frag(:,i) * m_frag(i)) + mp_frag(:)
+      DO j=1, frags_added
+         m_frag(j) = mergeadd_list%mass(nmergeadd_start + count_frag + j - 1)
+         p_frag(:,j) = (- r_circle  * cos(phase_ang + theta * j))*v_col_unit_vec(:) + p_com(:)
+         mp_frag = (p_frag(:,j) * m_frag(j)) + mp_frag(:)
       END DO
 
       m_frag_tot = SUM(m_frag(:))
       p_com_frag(:) = mp_frag(:) / m_frag_tot
       p_f(:) =  p_com(:) - p_com_frag(:)
 
-      DO i=1, frags_added
-         p_frag(:,i) = p_frag(:,i) + p_f(:)
+      DO j=1, frags_added
+         p_frag(:,j) = p_frag(:,j) + p_f(:)
       END DO 
 
       count_frag = count_frag + frags_added
