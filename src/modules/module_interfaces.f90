@@ -821,6 +821,26 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
+          SUBROUTINE symba_collision(t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, &
+               mergesub_list, eoffset, npl, symba_plA, nplplenc, plplenc_list, mtiny, param)
+               USE swiftest_globals
+               USE swiftest_data_structures
+               USE module_helio
+               USE module_symba
+               IMPLICIT NONE
+               INTEGER(I4B), INTENT(IN)                  :: index_enc
+               INTEGER(I4B), INTENT(IN)                  :: npl,  nplplenc
+               INTEGER(I4B), INTENT(INOUT)               :: nmergeadd, nmergesub
+               REAL(DP), INTENT(IN)                      :: t, dt
+               REAL(DP), INTENT(INOUT)                   :: eoffset, mtiny
+               TYPE(symba_plplenc), INTENT(INOUT)        :: plplenc_list
+               TYPE(symba_merger), INTENT(INOUT)         :: mergeadd_list, mergesub_list
+               TYPE(symba_pl), INTENT(INOUT)             :: symba_plA
+               TYPE(user_input_parameters),intent(inout) :: param
+          END SUBROUTINE symba_collision
+     END INTERFACE
+
+     INTERFACE
           SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard)
                USE swiftest_globals
                USE swiftest_data_structures
@@ -910,23 +930,20 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE symba_collision(t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, &
-               mergesub_list, eoffset, npl, symba_plA, nplplenc, plplenc_list, mtiny, param)
+          SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, &
+               mergeadd_list, mergesub_list, symba_plA, npl)
+               USE swiftest
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_helio
                USE module_symba
+               USE module_swiftestalloc
+               USE module_interfaces, EXCEPT_THIS_ONE => symba_frag_pos
                IMPLICIT NONE
-               INTEGER(I4B), INTENT(IN)                  :: index_enc
-               INTEGER(I4B), INTENT(IN)                  :: npl,  nplplenc
-               INTEGER(I4B), INTENT(INOUT)               :: nmergeadd, nmergesub
-               REAL(DP), INTENT(IN)                      :: t, dt
-               REAL(DP), INTENT(INOUT)                   :: eoffset, mtiny
-               TYPE(symba_plplenc), INTENT(INOUT)        :: plplenc_list
-               TYPE(symba_merger), INTENT(INOUT)         :: mergeadd_list, mergesub_list
-               TYPE(symba_pl), INTENT(INOUT)             :: symba_plA
-               TYPE(user_input_parameters),intent(inout) :: param
-          END SUBROUTINE symba_collision
+               INTEGER(I4B), INTENT(IN)           :: nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, npl
+               TYPE(symba_merger), INTENT(INOUT)  :: mergeadd_list, mergesub_list
+               TYPE(symba_pl), INTENT(INOUT)      :: symba_plA
+          END SUBROUTINE symba_frag_pos
      END INTERFACE
 
      INTERFACE
