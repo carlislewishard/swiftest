@@ -80,6 +80,8 @@ SUBROUTINE symba_step_interp(t, npl, nplm, ntp, symba_plA, symba_tpA, dt,   &
 
 ! Internals
      INTEGER(I4B)                                 :: i, irec
+     INTEGER(I4B)                                 :: nmergesub_before, nmergesub_after, nmergesub_step
+     INTEGER(I4B)                                 :: nmergeadd_before, nmergeadd_after, nmergeadd_step
      REAL(DP)                                     :: dth, msys
      REAL(DP), DIMENSION(NDIM)                    :: ptb, pte
      REAL(DP), DIMENSION(NDIM, npl)               :: xbeg, xend
@@ -108,8 +110,21 @@ SUBROUTINE symba_step_interp(t, npl, nplm, ntp, symba_plA, symba_tpA, dt,   &
      IF (ntp > 0) CALL symba_helio_drift_tp(irec, ntp, symba_tpA, symba_plA%helio%swiftest%mass(1), dt)
      irec = 0
 
+     ! Save the number of new bodies to be added to the mergeadd/sub lists
+     nmergesub_before = nmergesub
+     nmergeadd_before = nmergeadd
+
      CALL symba_step_recur(t, irec, npl, nplm, ntp, symba_plA, symba_tpA, dt, eoffset, nplplenc, npltpenc,              &
           plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, param)
+
+     ! Save the number of new bodies to be added to the mergeadd/sub lists
+     nmergesub_after = nmergesub
+     nmergesub_step = nmergesub_after - nmergesub_before
+
+     nmergeadd_after = nmergeadd
+     nmergeadd_step = nmergeadd_after - nmergeadd_before
+
+     !CALL symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, mergeadd_list, mergesub_list)
 
      IF (ntp > 0) THEN
           DO i = 2, npl
