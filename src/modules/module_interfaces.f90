@@ -1619,19 +1619,6 @@ END INTERFACE
          END SUBROUTINE symba_regime
      END INTERFACE
 
-     INTERFACE
-         SUBROUTINE symba_mom(m1, xh1, vb1, m2, xh2, vb2, frags_added, m_frag, r_circle, theta, p_frag, vel_frag)
-         USE swiftest_globals
-         USE swiftest_data_structures
-         IMPLICIT NONE
-         INTEGER(I4B), INTENT(IN)                               :: frags_added
-         REAL(DP), INTENT(IN)                                   :: m1, m2, r_circle, theta
-         REAL(DP), DIMENSION(:), INTENT(IN)                     :: xh1, vb1, xh2, vb2
-         REAL(DP), DIMENSION(:), INTENT(IN)                     :: m_frag
-         REAL(DP), DIMENSION(:,:), INTENT(OUT)                  :: p_frag, vel_frag
-         END SUBROUTINE symba_mom
-     END INTERFACE
-
 END MODULE module_interfaces
 !**********************************************************************************************************************************
 !
