@@ -66,12 +66,15 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    REAL(DP)                                         :: mass_keep, mass_rm, rhill_rm
    REAL(DP)                                         :: rad_keep, rad_rm
    REAL(DP)                                         :: r_smallestcircle
-   REAL(DP), DIMENSION(:, :), ALLOCATABLE           :: x_frag, v_frag
+   REAL(DP)                                         :: phase_ang, v_col_norm, v2esc, v2el, v2esc_circle
+   REAL(DP), DIMENSION(:, :), ALLOCATABLE           :: v_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE              :: m_frag
    REAL(DP), DIMENSION(NDIM)                        :: mv, xh_keep, xh_rm, vh_keep, vh_rm, xbs
    REAL(DP), DIMENSION(NDIM)                        :: vb_keep, vb_rm
+   REAL(DP), DIMENSION(NDIM)                        :: v_com, xr, v_col_vec, v_col_unit_vec, mv_frag, v_com_frag, v_f
    INTEGER(I4B), DIMENSION(NCHILDMAX)               :: array_index1_child, array_index2_child
-
+   INTEGER(I4B), SAVE                               :: thetashift = 0
+   INTEGER(I4B), PARAMETER                          :: SHIFTMAX = 9
 
 ! Executable code
 
@@ -248,27 +251,81 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    END IF
 
    IF (frags_added > 0) THEN
+
+         !!!!!!! THIS SHOULD ALL BE REMOVED !!!!!!!
+         !r_circle = (rhill_keep + rhill_rm) / (2.0_DP*sin(PI / frags_added))
+         !theta = (2 * PI) / (frags_added)
+         !ALLOCATE(m_frag(frags_added))
+         !m_frag(1:frags_added) = mergeadd_list%mass(nstart + 1 :nstart + frags_added)
+
+         !ALLOCATE(x_frag(NDIM, frags_added))
+         !ALLOCATE(v_frag(NDIM, frags_added))
+         !CALL symba_mom(0.0_DP, xh_keep, vb_keep, mass_rm, xh_rm, vb_rm, & 
+         !   frags_added, m_frag, r_circle, theta, x_frag, v_frag)
+
+         !DO i=1, frags_added
+
+         !   mergeadd_list%xh(:,nstart + i) = x_frag(:, i) !-xbs(1) !x_frag
+         !   mergeadd_list%vh(:,nstart + i) = v_frag(:, i) - vbs(:) !vx_frag
+
+         ! Tracking linear momentum. 
+            !mv(:) = mv(:) + (mergeadd_list%mass(nstart + i) * mergeadd_list%vh(:,nstart + i))
+         !END DO
+         !deallocate(m_frag)
+         !deallocate(x_frag)
+         !deallocate(v_frag)
+
+         !!!!!!! THIS SHOULD ALL BE REMOVED !!!!!!!
+
+         !!!!!!!!!!!!                     DEV                      !!!!!!!!!!!!!!!! 
          r_circle = (rhill_keep + rhill_rm) / (2.0_DP*sin(PI / frags_added))
          theta = (2 * PI) / (frags_added)
          ALLOCATE(m_frag(frags_added))
-         m_frag(1:frags_added) = mergeadd_list%mass(nstart + 1 :nstart + frags_added)
-
-         ALLOCATE(x_frag(NDIM, frags_added))
          ALLOCATE(v_frag(NDIM, frags_added))
-         CALL symba_mom(0.0_DP, xh_keep, vb_keep, mass_rm, xh_rm, vb_rm, & 
-            frags_added, m_frag, r_circle, theta, x_frag, v_frag)
+         m_frag(1:frags_added) = mergeadd_list%mass(nstart + 1 :nstart + frags_added)
+         
+         mtot = sum(m_frag(1:frags_added))
+         m_rem = (mass_keep + mass_rm) - mtot
+         mv_frag = 0.0_DP
+
+         ! Shifts the starting circle of fragments around so that multiple fragments generated 
+         ! in from a single body in a single time step don't pile up on top of each other
+         phase_ang = theta * thetashift / SHIFTMAX
+         thetashift = thetashift + 1
+         if (thetashift >= shiftmax) thetashift = 0
+
+         ! Find velocity of COM
+         v_com(:) = ((vb_keep(:) * mass_keep) + (vb_rm(:) * mass_rm)) / (mass_keep + mass_rm)
+
+         ! Find Collision velocity
+         xr(:) = xh_rm(:) - xh_keep(:) ! distance between particles at time of collision
+         v_col_norm = NORM2(vb_rm(:) - vb_keep(:)) ! collision velocity magnitude
+         v_col_vec(:) = (vb_rm(:) - vb_keep(:)) ! collision velocity vector
+         v_col_unit_vec(:) = v_col_vec(:) / v_col_norm ! unit vector of collision velocity (direction only)
+
+         v2esc = 2.0_DP * GC * (mass_keep+mass_rm) / (NORM2(xr(:))) ! escape velocity from COM squared
+         v2esc_circle = 2.0_DP * GC * (mass_keep+mass_rm) * (1.0_DP/(NORM2(xr)) - 1.0_DP/r_circle) ! escape velocity from circle squared
+         v2el = - SQRT(v2esc - v2esc_circle) ! adjusted escape velocity to account for distance from COM
+
+         ! Calculate the velocity magnitude and direction of each fragment 
+         DO i=1, frags_added
+            v_frag(:,i) = ((v2el * cos(phase_ang + theta * i))*v_col_unit_vec(:)) + v_com(:) ! fragment velocity (same mag for each just different direction)
+            mv_frag(:) = (v_frag(:,i) * m_frag(i)) + mv_frag(:) ! rolling linear momentum of the system
+         END DO
+
+         ! Calculate the error 
+         v_com_frag(:) = mv_frag(:) / mtot ! velocity of the COM of the fragments
+         v_f(:) = v_com(:) - v_com_frag(:) ! velocity error between COM of collison and COM of fragments
 
          DO i=1, frags_added
-
-            mergeadd_list%xh(:,nstart + i) = x_frag(:, i) !-xbs(1) !x_frag
-            mergeadd_list%vh(:,nstart + i) = v_frag(:, i) - vbs(:) !vx_frag
-
-         ! Tracking linear momentum. 
-            mv(:) = mv(:) + (mergeadd_list%mass(nstart + i) * mergeadd_list%vh(:,nstart + i))
+            v_frag(:,i) = v_frag(:,i) + v_f(:) ! velocity of the fragments including the error
+            mergeadd_list%vh(:, nstart + i) = v_frag(:, i) - vbs(:) ! add to mergeadd_list 
          END DO
+
          deallocate(m_frag)
-         deallocate(x_frag)
          deallocate(v_frag)
+
+         !!!!!!!!!!!!                     DEV                      !!!!!!!!!!!!!!!! 
    END IF
 
    ! Add both particles involved in the collision to mergesub_list
