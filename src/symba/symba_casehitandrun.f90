@@ -252,31 +252,6 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
    IF (frags_added > 0) THEN
 
-         !!!!!!! THIS SHOULD ALL BE REMOVED !!!!!!!
-         !r_circle = (rhill_keep + rhill_rm) / (2.0_DP*sin(PI / frags_added))
-         !theta = (2 * PI) / (frags_added)
-         !ALLOCATE(m_frag(frags_added))
-         !m_frag(1:frags_added) = mergeadd_list%mass(nstart + 1 :nstart + frags_added)
-
-         !ALLOCATE(x_frag(NDIM, frags_added))
-         !ALLOCATE(v_frag(NDIM, frags_added))
-         !CALL symba_mom(0.0_DP, xh_keep, vb_keep, mass_rm, xh_rm, vb_rm, & 
-         !   frags_added, m_frag, r_circle, theta, x_frag, v_frag)
-
-         !DO i=1, frags_added
-
-         !   mergeadd_list%xh(:,nstart + i) = x_frag(:, i) !-xbs(1) !x_frag
-         !   mergeadd_list%vh(:,nstart + i) = v_frag(:, i) - vbs(:) !vx_frag
-
-         ! Tracking linear momentum. 
-            !mv(:) = mv(:) + (mergeadd_list%mass(nstart + i) * mergeadd_list%vh(:,nstart + i))
-         !END DO
-         !deallocate(m_frag)
-         !deallocate(x_frag)
-         !deallocate(v_frag)
-
-         !!!!!!! THIS SHOULD ALL BE REMOVED !!!!!!!
-
          !!!!!!!!!!!!                     DEV                      !!!!!!!!!!!!!!!! 
          r_circle = (rhill_keep + rhill_rm) / (2.0_DP*sin(PI / frags_added))
          theta = (2 * PI) / (frags_added)

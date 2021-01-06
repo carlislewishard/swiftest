@@ -74,7 +74,6 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    INTEGER(I4B), SAVE                               :: thetashift = 0
    INTEGER(I4B), PARAMETER                          :: SHIFTMAX = 9
 
-
 ! Executable code
 
    ! Set the maximum number of fragments to be added in a Disruption collision (nfrag)
