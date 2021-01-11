@@ -124,7 +124,10 @@ SUBROUTINE symba_step_interp(t, npl, nplm, ntp, symba_plA, symba_tpA, dt,   &
      nmergeadd_after = nmergeadd
      nmergeadd_step = nmergeadd_after - nmergeadd_before
 
-     CALL symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, mergeadd_list, mergesub_list, symba_plA, npl)
+     ! If bodies were added during this step
+     IF (nmergeadd_step > 0) THEN
+         CALL symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, mergeadd_list, mergesub_list, symba_plA, npl)
+     END IF
 
      IF (ntp > 0) THEN
           DO i = 2, npl
