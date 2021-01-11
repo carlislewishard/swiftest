@@ -47,8 +47,9 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
    INTEGER(I4B)                                           :: frags_added
    REAL(DP)                                               :: phase_ang, r_circle, rhill_p1, rhill_p2, m1, m2, r1, r2, v_col_norm
    REAL(DP)                                               :: m_frag_tot, theta
-   REAL(DP), DIMENSION(NDIM)                              :: p_com, v_col_vec, v_col_unit_vec, mp_frag, p_com_frag, p_f
-   REAL(DP), DIMENSION(NDIM)                              :: xh_1, xh_2, vh_1, vh_2
+   REAL(DP), DIMENSION(NDIM)                              :: p_com, v_col_vec, v_col_unit_vec, mp_frag, p_com_frag, p_f, tri_pro
+   REAL(DP), DIMENSION(NDIM)                              :: xh_1, xh_2, vh_1, vh_2, vbs, vb_1, vb_2, delta_v, delta_p, v_cross_p
+   REAL(DP), DIMENSION(NDIM)                              :: tri_pro_unit_vec
    REAL(DP), DIMENSION(:, :), ALLOCATABLE                 :: p_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE                    :: m_frag
    integer(I4B), save                                     :: thetashift = 0
@@ -113,13 +114,27 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
       v_col_vec(:) = (vh_2(:) - vh_1(:)) ! collision velocity vector
       v_col_unit_vec(:) = v_col_vec(:) / v_col_norm ! unit vector of collision velocity (direction only)
 
+      ! Calculate the triple product
+      vbs(:) = symba_plA%helio%swiftest%vb(:, 1)
+
+      vb_1(:) = vh_1(:) + vbs(:)
+      vb_2(:) = vh_2(:) + vbs(:)
+
+      delta_v(:) = vb_2(:) - vb_1(:)
+      delta_p(:) = xh_2(:) - xh_1(:)
+
+      call util_crossproduct(delta_v,delta_p,v_cross_p)
+      call util_crossproduct(v_cross_p,delta_v,tri_pro)
+
+      tri_pro_unit_vec(:) = tri_pro(:) / NORM2(tri_pro(:))
+
       mp_frag = 0.0_DP
 
       count_frag = 0 !counter for the number of fragments added in this timestep used to increment on mergeadd_list
 
       DO j=1, frags_added
          m_frag(j) = mergeadd_list%mass(nmergeadd_start + count_frag + j - 1)
-         p_frag(:,j) = (- r_circle  * cos(phase_ang + theta * j))*v_col_unit_vec(:) + p_com(:)
+         p_frag(:,j) = ((- r_circle  * cos(phase_ang + theta * j)) * v_col_unit_vec(:)) + ((- r_circle * sin(phase_ang + theta * j)) * tri_pro_unit_vec) + p_com(:)
          mp_frag = (p_frag(:,j) * m_frag(j)) + mp_frag(:)
       END DO
 
@@ -138,6 +153,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
       DEALLOCATE(m_frag)
 
       count_enc = count_enc + 2
+
    END DO 
 
    RETURN
