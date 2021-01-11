@@ -70,7 +70,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    REAL(DP), DIMENSION(:, :), ALLOCATABLE           :: v_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE              :: m_frag
    REAL(DP), DIMENSION(NDIM)                        :: mv, xh_keep, xh_rm, vh_keep, vh_rm, xbs
-   REAL(DP), DIMENSION(NDIM)                        :: vb_keep, vb_rm
+   REAL(DP), DIMENSION(NDIM)                        :: vb_keep, vb_rm, tri_pro, delta_v, v_cross_p, tri_pro_unit_vec
    REAL(DP), DIMENSION(NDIM)                        :: v_com, xr, v_col_vec, v_col_unit_vec, mv_frag, v_com_frag, v_f
    INTEGER(I4B), DIMENSION(NCHILDMAX)               :: array_index1_child, array_index2_child
    INTEGER(I4B), SAVE                               :: thetashift = 0
@@ -282,9 +282,17 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
          v2esc_circle = 2.0_DP * GC * (mass_keep+mass_rm) * (1.0_DP/(NORM2(xr)) - 1.0_DP/r_circle) ! escape velocity from circle squared
          v2el = - SQRT(v2esc - v2esc_circle) ! adjusted escape velocity to account for distance from COM
 
+         ! Calculate the triple product
+         delta_v(:) = vb_rm(:) - vb_keep(:)
+
+         call util_crossproduct(delta_v,xr,v_cross_p)
+         call util_crossproduct(v_cross_p,delta_v,tri_pro)
+
+         tri_pro_unit_vec(:) = tri_pro(:) / NORM2(tri_pro(:))
+
          ! Calculate the velocity magnitude and direction of each fragment 
-         DO i=1, frags_added
-            v_frag(:,i) = ((v2el * cos(phase_ang + theta * i))*v_col_unit_vec(:)) + v_com(:) ! fragment velocity (same mag for each just different direction)
+         DO i=1, frags_added ! fragment velocity (same mag for each just different direction)
+            v_frag(:,i) = ((v2el * cos(phase_ang + theta * i))*v_col_unit_vec(:)) + ((v2el * sin(phase_ang + theta + i)) * tri_pro_unit_vec) + v_com(:)
             mv_frag(:) = (v_frag(:,i) * m_frag(i)) + mv_frag(:) ! rolling linear momentum of the system
          END DO
 
