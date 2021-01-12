@@ -49,7 +49,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
    REAL(DP)                                               :: m_frag_tot, theta
    REAL(DP), DIMENSION(NDIM)                              :: p_com, v_col_vec, v_col_unit_vec, mp_frag, p_com_frag, p_f, tri_pro
    REAL(DP), DIMENSION(NDIM)                              :: xh_1, xh_2, vh_1, vh_2, vbs, vb_1, vb_2, delta_v, delta_p, v_cross_p
-   REAL(DP), DIMENSION(NDIM)                              :: tri_pro_unit_vec
+   REAL(DP), DIMENSION(NDIM)                              :: tri_pro_unit_vec, vh_1_end, vh_2_end
    REAL(DP), DIMENSION(:, :), ALLOCATABLE                 :: p_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE                    :: m_frag
    integer(I4B), save                                     :: thetashift = 0
@@ -70,6 +70,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          ! then use the position of the planet in symba_plA aka at the end of the step
          IF (symba_plA%helio%swiftest%name(j) == mergesub_list%name(nmergesub_start + count_enc)) THEN
             xh_1(:) = symba_plA%helio%swiftest%xh(j,:)
+            vh_1_end(:) = symba_plA%helio%swiftest%vh(j,:)
             rhill_p1 = symba_plA%helio%swiftest%rhill(j)
          END IF
       END DO
@@ -83,6 +84,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          ! then use the position of the planet in symba_plA aka at the end of the step
          IF (symba_plA%helio%swiftest%name(j) == mergesub_list%name(nmergesub_start + count_enc + 1)) THEN
             xh_2(:) = symba_plA%helio%swiftest%xh(j,:)
+            vh_2_end(:) = symba_plA%helio%swiftest%vh(j,:)
             rhill_p2 = symba_plA%helio%swiftest%rhill(j)
          END IF
       END DO
@@ -92,65 +94,91 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
 
       frags_added = mergesub_list%nadded(nmergesub_start + count_enc)
 
-      ALLOCATE(m_frag(frags_added))
-      ALLOCATE(p_frag(NDIM, frags_added))
+      IF (frags_added > 1) THEN !if this is not a perfect merger
+
+         ALLOCATE(m_frag(frags_added))
+         ALLOCATE(p_frag(NDIM, frags_added))
    
-      ! Calculate the positions of the new fragments in a circle with a radius large enough to space
-      ! all fragments apart by a distance of rhill_p1 + rhill_p2
-      r_circle = (rhill_p1 + rhill_p2) / (2 * sin(PI / frags_added)) !((2.0_DP * rhill_p1 + 2.0_DP * rhill_p2) / (2.0_DP * sin(PI / frags_added))) 
-      theta = (2 * PI) / frags_added
+         ! Calculate the positions of the new fragments in a circle with a radius large enough to space
+         ! all fragments apart by a distance of rhill_p1 + rhill_p2
+         r_circle = (rhill_p1 + rhill_p2) / (2 * sin(PI / frags_added)) !((2.0_DP * rhill_p1 + 2.0_DP * rhill_p2) / (2.0_DP * sin(PI / frags_added))) 
+         theta = (2 * PI) / frags_added
 
-      ! Shifts the starting circle of fragments around so that multiple fragments generated in from a single body in a single time step 
-      ! don't pile up on top of each other
-      phase_ang = theta * thetashift / SHIFTMAX
-      thetashift = thetashift + 1
-      if (thetashift >= shiftmax) thetashift = 0
+         ! Shifts the starting circle of fragments around so that multiple fragments generated in from a single body in a single time step 
+         ! don't pile up on top of each other
+         phase_ang = theta * thetashift / SHIFTMAX
+         thetashift = thetashift + 1
+         if (thetashift >= shiftmax) thetashift = 0
 
-      ! Find COM
-      p_com(:) = ((xh_1(:) * m1) + (xh_2(:) * m2)) / (m1 + m2)
+         ! Find COM
+         p_com(:) = ((xh_1(:) * m1) + (xh_2(:) * m2)) / (m1 + m2)
 
-      ! Find Collision velocity
-      v_col_norm = NORM2(vh_2(:) - vh_1(:)) ! collision velocity magnitude
-      v_col_vec(:) = (vh_2(:) - vh_1(:)) ! collision velocity vector
-      v_col_unit_vec(:) = v_col_vec(:) / v_col_norm ! unit vector of collision velocity (direction only)
+         ! Find Collision velocity
+         v_col_norm = NORM2(vh_2(:) - vh_1(:)) ! collision velocity magnitude
+         v_col_vec(:) = (vh_2(:) - vh_1(:)) ! collision velocity vector
+         v_col_unit_vec(:) = v_col_vec(:) / v_col_norm ! unit vector of collision velocity (direction only)
 
-      ! Calculate the triple product
-      vbs(:) = symba_plA%helio%swiftest%vb(:, 1)
+         ! Calculate the triple product
+         vbs(:) = symba_plA%helio%swiftest%vb(:, 1)
 
-      vb_1(:) = vh_1(:) + vbs(:)
-      vb_2(:) = vh_2(:) + vbs(:)
+         vb_1(:) = vh_1(:) + vbs(:)
+         vb_2(:) = vh_2(:) + vbs(:)
 
-      delta_v(:) = vb_2(:) - vb_1(:)
-      delta_p(:) = xh_2(:) - xh_1(:)
+         delta_v(:) = vb_2(:) - vb_1(:)
+         delta_p(:) = xh_2(:) - xh_1(:)
 
-      call util_crossproduct(delta_v,delta_p,v_cross_p)
-      call util_crossproduct(v_cross_p,delta_v,tri_pro)
+         call util_crossproduct(delta_v,delta_p,v_cross_p)
+         call util_crossproduct(v_cross_p,delta_v,tri_pro)
 
-      tri_pro_unit_vec(:) = tri_pro(:) / NORM2(tri_pro(:))
+         tri_pro_unit_vec(:) = tri_pro(:) / NORM2(tri_pro(:))
 
-      mp_frag = 0.0_DP
+         mp_frag = 0.0_DP
 
-      count_frag = 0 !counter for the number of fragments added in this timestep used to increment on mergeadd_list
+         count_frag = 0 !counter for the number of fragments added in this timestep used to increment on mergeadd_list
 
-      DO j=1, frags_added
-         m_frag(j) = mergeadd_list%mass(nmergeadd_start + count_frag + j - 1)
-         p_frag(:,j) = ((- r_circle  * cos(phase_ang + theta * j)) * v_col_unit_vec(:)) + ((- r_circle * sin(phase_ang + theta * j)) * tri_pro_unit_vec) + p_com(:)
-         mp_frag = (p_frag(:,j) * m_frag(j)) + mp_frag(:)
-      END DO
+         IF ((mergeadd_list%status(nmergeadd_start) == HIT_AND_RUN) .and. (frags_added > 2)) THEN !this is an imperfect hit and run
+            DO j=2, frags_added
+               m_frag(j) = mergeadd_list%mass(nmergeadd_start + count_frag + j - 1)
+               p_frag(:,j) = ((- r_circle  * cos(phase_ang + theta * j)) * v_col_unit_vec(:)) + ((- r_circle * sin(phase_ang + theta * j)) * tri_pro_unit_vec) + p_com(:)
+               mp_frag = (p_frag(:,j) * m_frag(j)) + mp_frag(:)
+            END DO
+         ELSE
+            DO j=1, frags_added
+               m_frag(j) = mergeadd_list%mass(nmergeadd_start + count_frag + j - 1)
+               p_frag(:,j) = ((- r_circle  * cos(phase_ang + theta * j)) * v_col_unit_vec(:)) + ((- r_circle * sin(phase_ang + theta * j)) * tri_pro_unit_vec) + p_com(:)
+               mp_frag = (p_frag(:,j) * m_frag(j)) + mp_frag(:)
+            END DO
+         END IF 
 
-      m_frag_tot = SUM(m_frag(:))
-      p_com_frag(:) = mp_frag(:) / m_frag_tot
-      p_f(:) =  p_com(:) - p_com_frag(:)
+         m_frag_tot = SUM(m_frag(:))
+         p_com_frag(:) = mp_frag(:) / m_frag_tot
+         p_f(:) =  p_com(:) - p_com_frag(:)
 
-      DO j=1, frags_added
-         p_frag(:,j) = p_frag(:,j) + p_f(:)
-         mergeadd_list%xh(:, nmergeadd_start + count_frag + j -1) = p_frag(:, j)
-      END DO 
+         IF ((mergeadd_list%status(nmergeadd_start) == HIT_AND_RUN) .and. (frags_added > 2)) THEN !this is an imperfect hit and run
+            mergeadd_list%xh(:, nmergeadd_start + count_frag) = xh_1(:)
+            mergeadd_list%vh(:, nmergeadd_start + count_frag) = vh_1_end(:)
+            DO j=2, frags_added
+               p_frag(:,j) = p_frag(:,j) + p_f(:)
+               mergeadd_list%xh(:, nmergeadd_start + count_frag + j - 1) = p_frag(:, j)
+            END DO 
+         ELSE IF ((mergeadd_list%status(nmergeadd_start) == HIT_AND_RUN) .and. (frags_added == 2)) THEN !this is a perfect hit and run
+            mergeadd_list%xh(:, nmergeadd_start + count_frag) = xh_1(:)
+            mergeadd_list%xh(:, nmergeadd_start + count_frag + 1) = xh_2(:)
+            mergeadd_list%vh(:, nmergeadd_start + count_frag) = vh_1_end(:)
+            mergeadd_list%vh(:, nmergeadd_start + count_frag + 1) = vh_2_end(:)
+         ELSE
+            DO j=1, frags_added
+               p_frag(:,j) = p_frag(:,j) + p_f(:)
+               mergeadd_list%xh(:, nmergeadd_start + count_frag + j -1) = p_frag(:, j)
+            END DO 
+         END IF
 
-      count_frag = count_frag + frags_added
+         count_frag = count_frag + frags_added
 
-      DEALLOCATE(p_frag)
-      DEALLOCATE(m_frag)
+         DEALLOCATE(p_frag)
+         DEALLOCATE(m_frag)
+
+      END IF
 
       count_enc = count_enc + 2
 
