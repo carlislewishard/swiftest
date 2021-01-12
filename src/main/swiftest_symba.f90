@@ -260,8 +260,8 @@ program swiftest_symba
                te_error = (te - te_orig) / te_orig
                te_off_error = ((te - eoffset) - te_orig) / te_orig
                Merror = (Mtot_now - Mtot_orig) / Mtot_orig
-               tfrac = (t - t0)/(tstop - t0)
             end if
+            tfrac = (t - t0)/(tstop - t0)
             write(*, 200) t, tfrac, npl, ntp
 200         format(" Time = ", es12.5, "; fraction done = ", f5.3, "; number of active pl, tp = ", i7, ", ", i7)
 
