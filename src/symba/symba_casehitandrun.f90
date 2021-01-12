@@ -202,7 +202,6 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    mergeadd_list%name(nmergeadd) = symba_plA%helio%swiftest%name(index_keep)
    mergeadd_list%mass(nmergeadd) = mass_keep
    mergeadd_list%radius(nmergeadd) = rad_keep
-   mergeadd_list%xh(:,nmergeadd) = xh_keep(:)
    mergeadd_list%vh(:,nmergeadd) = vh_keep(:)
    mtot = mtot + mergeadd_list%mass(nmergeadd) 
 
@@ -218,7 +217,6 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       mergeadd_list%name(nmergeadd) = symba_plA%helio%swiftest%name(index_rm)
       mergeadd_list%mass(nmergeadd) = mass_rm
       mergeadd_list%radius(nmergeadd) = rad_rm
-      mergeadd_list%xh(:,nmergeadd) = xh_rm(:) + ((vb_rm(:) / NORM2(vb_rm(:))) * (rhill_keep + rhill_rm))
       mergeadd_list%vh(:,nmergeadd) = vh_rm(:)
       mtot = mtot + mergeadd_list%mass(nmergeadd)
 
@@ -323,7 +321,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    IF (frags_added == 0) THEN !AKA if it was a perfect merger
       mergesub_list%nadded(nmergesub) = 2
    ELSE 
-      mergesub_list%nadded(nmergesub) = frags_added
+      mergesub_list%nadded(nmergesub) = frags_added + 1 !the plus one is from the biggest body
    END IF
    mergesub_list%index_ps(nmergesub) = index_keep
 
@@ -337,7 +335,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    IF (frags_added == 0) THEN !AKA if it was a perfect merger
       mergesub_list%nadded(nmergesub) = 2
    ELSE 
-      mergesub_list%nadded(nmergesub) = frags_added
+      mergesub_list%nadded(nmergesub) = frags_added + 1 !the plus one is from the biggest body
    END IF
    mergesub_list%index_ps(nmergesub) = index_rm
 
