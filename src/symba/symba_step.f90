@@ -170,7 +170,6 @@ SUBROUTINE symba_step(t, dt, param, npl, ntp,symba_plA, symba_tpA,       &
                param%j2rp2, param%j4rp4, dt)
      END IF
 
-
      RETURN
 
 END SUBROUTINE symba_step

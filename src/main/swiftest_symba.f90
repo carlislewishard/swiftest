@@ -208,6 +208,7 @@ program swiftest_symba
                  call util_dist_index_pltp(nplm, ntp, num_pltp_comparisons, k_pltp)          
             end if 
          end if
+
          if (param%lenergy) then
             if(num_plpl_comparisons > param%eucl_threshold) then
                call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, &
@@ -218,6 +219,7 @@ program swiftest_symba
             write(egyiu,300) t, ke, pe, te, htot, eoffset, msys
          end if
       end if
+
       iloop = iloop + 1
       if (iloop == loopmax) then
           tbase = tbase + iloop*dt
@@ -276,6 +278,7 @@ program swiftest_symba
             idump = istep_dump
          end if
       end if
+
       if (allocated(plplenc_list%status)) then
          plplenc_list%status(:) = 0
          plplenc_list%lvdotr(:) = .false.
@@ -338,6 +341,7 @@ program swiftest_symba
       write(egyiu,300) t, ke, pe, te, htot, eoffset, msys
       close(egyiu)
    end if
+
    call param%dump_to_file(t)
    call io_dump_pl(npl, symba_plA%helio%swiftest, param%lclose, param%lrhill_present)
    call io_dump_tp(ntp, symba_tpA%helio%swiftest)

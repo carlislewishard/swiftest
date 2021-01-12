@@ -58,6 +58,7 @@ SUBROUTINE symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
      LOGICAL, DIMENSION(ntp)                        :: discard_l_tp
 
 ! Executable code
+
     IF (ldiscard) THEN 
         nsppl = 0
         nkpl = 0
@@ -98,6 +99,7 @@ SUBROUTINE symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
         discard_plA%vb(1,1:nsppl) = PACK(symba_plA%helio%swiftest%vb(1,1:npl), discard_l_pl)
         discard_plA%vb(2,1:nsppl) = PACK(symba_plA%helio%swiftest%vb(2,1:npl), discard_l_pl)
         discard_plA%vb(3,1:nsppl) = PACK(symba_plA%helio%swiftest%vb(3,1:npl), discard_l_pl)
+
         IF (param%lfragmentation .AND. (nkpl + nfrag >= npl)) THEN 
             symba_plA%helio%swiftest%name(1:nkpl) = PACK(symba_plA%helio%swiftest%name(1:npl), .NOT. discard_l_pl)
             symba_plA%helio%swiftest%status(1:nkpl) = PACK(symba_plA%helio%swiftest%status(1:npl), .NOT. discard_l_pl)
