@@ -69,12 +69,12 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          ! If the name of the planet in symba_plA matches the name of the planet in mergesub_list
          ! then use the position of the planet in symba_plA aka at the end of the step
          IF (symba_plA%helio%swiftest%name(j) == mergesub_list%name(nmergesub_start + count_enc)) THEN
-            xh_1(:) = symba_plA%helio%swiftest%xh(j,:)
-            vh_1_end(:) = symba_plA%helio%swiftest%vh(j,:)
+            xh_1(:) = symba_plA%helio%swiftest%xh(:,j)
+            vh_1_end(:) = symba_plA%helio%swiftest%vh(:,j)
             rhill_p1 = symba_plA%helio%swiftest%rhill(j)
          END IF
       END DO
-      vh_1(:) = mergesub_list%vh(nmergesub_start + count_enc,:)
+      vh_1(:) = mergesub_list%vh(:,nmergesub_start + count_enc)
       m1 = mergesub_list%mass(nmergesub_start + count_enc)
       r1 = mergesub_list%radius(nmergesub_start + count_enc) 
 
@@ -83,12 +83,12 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          ! If the name of the planet in symba_plA matches the name of the planet in mergesub_list
          ! then use the position of the planet in symba_plA aka at the end of the step
          IF (symba_plA%helio%swiftest%name(j) == mergesub_list%name(nmergesub_start + count_enc + 1)) THEN
-            xh_2(:) = symba_plA%helio%swiftest%xh(j,:)
-            vh_2_end(:) = symba_plA%helio%swiftest%vh(j,:)
+            xh_2(:) = symba_plA%helio%swiftest%xh(:,j)
+            vh_2_end(:) = symba_plA%helio%swiftest%vh(:,j)
             rhill_p2 = symba_plA%helio%swiftest%rhill(j)
          END IF
       END DO
-      vh_2(:) = mergesub_list%vh(nmergesub_start + count_enc + 1,:)
+      vh_2(:) = mergesub_list%vh(:,nmergesub_start + count_enc + 1)
       m2 = mergesub_list%mass(nmergesub_start + count_enc + 1)
       r2 = mergesub_list%radius(nmergesub_start + count_enc + 1)
 
@@ -98,11 +98,17 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
 
          ALLOCATE(m_frag(frags_added))
          ALLOCATE(p_frag(NDIM, frags_added))
-   
-         ! Calculate the positions of the new fragments in a circle with a radius large enough to space
+
+
+         !Calculate the positions of the new fragments in a circle with a radius large enough to space
          ! all fragments apart by a distance of rhill_p1 + rhill_p2
-         r_circle = (rhill_p1 + rhill_p2) / (2 * sin(PI / frags_added)) !((2.0_DP * rhill_p1 + 2.0_DP * rhill_p2) / (2.0_DP * sin(PI / frags_added))) 
-         theta = (2 * PI) / frags_added
+         IF ((mergeadd_list%status(nmergeadd_start) == HIT_AND_RUN) .and. (frags_added > 2)) THEN !this is an imperfect hit and run
+            r_circle = (rhill_p1 + rhill_p2) / (2 * sin(PI / (frags_added - 1))) 
+            theta = (2 * PI) / (frags_added - 1)
+         ELSE !this is everything else
+            r_circle = (rhill_p1 + rhill_p2) / (2 * sin(PI / frags_added)) 
+            theta = (2 * PI) / frags_added
+         END IF 
 
          ! Shifts the starting circle of fragments around so that multiple fragments generated in from a single body in a single time step 
          ! don't pile up on top of each other
