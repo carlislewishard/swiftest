@@ -248,13 +248,14 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
          END DO
    END IF
 
+   allocate(m_frag(frags_added))
+   allocate(v_frag(NDIM, frags_added))
+
    IF (frags_added > 0) THEN
 
          !!!!!!!!!!!!                     DEV                      !!!!!!!!!!!!!!!! 
          r_circle = (rhill_keep + rhill_rm) / (2.0_DP*sin(PI / frags_added))
          theta = (2 * PI) / (frags_added)
-         ALLOCATE(m_frag(frags_added))
-         ALLOCATE(v_frag(NDIM, frags_added))
          m_frag(1:frags_added) = mergeadd_list%mass(nstart + 1 :nstart + frags_added)
          
          mtot = sum(m_frag(1:frags_added))
@@ -290,7 +291,8 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
 
          ! Calculate the velocity magnitude and direction of each fragment 
          DO i=1, frags_added ! fragment velocity (same mag for each just different direction)
-            v_frag(:,i) = ((v2el * cos(phase_ang + theta * i))*v_col_unit_vec(:)) + ((v2el * sin(phase_ang + theta + i)) * tri_pro_unit_vec) + v_com(:)
+            v_frag(:,i) = ((v2el * cos(phase_ang + theta * i))*v_col_unit_vec(:)) + &
+            ((v2el * sin(phase_ang + theta + i)) * tri_pro_unit_vec) + v_com(:)
             mv_frag(:) = (v_frag(:,i) * m_frag(i)) + mv_frag(:) ! rolling linear momentum of the system
          END DO
 
@@ -303,11 +305,11 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
             mergeadd_list%vh(:, nstart + i) = v_frag(:, i) - vbs(:) ! add to mergeadd_list 
          END DO
 
-         deallocate(m_frag)
-         deallocate(v_frag)
-
          !!!!!!!!!!!!                     DEV                      !!!!!!!!!!!!!!!! 
    END IF
+
+   deallocate(m_frag)
+   deallocate(v_frag)
 
    ! Add both particles involved in the collision to mergesub_list
    call symba_merger_size_check(mergesub_list, nmergesub + 2) 
