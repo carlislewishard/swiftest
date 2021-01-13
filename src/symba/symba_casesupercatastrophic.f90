@@ -253,7 +253,8 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
 
    ! Calculate the velocity magnitude and direction of each fragment 
    DO i=1, frags_added ! fragment velocity (same mag for each just different direction)
-      v_frag(:,i) = ((v2el * cos(phase_ang + theta * i))*v_col_unit_vec(:)) + ((v2el * sin(phase_ang + theta + i)) * tri_pro_unit_vec) + v_com(:)
+      v_frag(:,i) = ((v2el * cos(phase_ang + theta * i))*v_col_unit_vec(:)) + &
+      ((v2el * sin(phase_ang + theta + i)) * tri_pro_unit_vec) + v_com(:)
       mv_frag(:) = (v_frag(:,i) * m_frag(i)) + mv_frag(:) ! rolling linear momentum of the system
    END DO
 

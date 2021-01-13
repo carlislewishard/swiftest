@@ -201,9 +201,9 @@ subroutine symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_lis
    end if
 
    call symba_caseresolve(t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, vbs, & 
-                          symba_plA, nplplenc, plplenc_list, regime, param%plmaxname, param%tpmaxname, mass_res, radius_res, array_index1_child, &
-                          array_index2_child, mass(1), mass(2), radius(1), radius(2), x(:, 1), x(:, 2), v(:, 1), v(:, 2), mtiny)
-
+                          symba_plA, nplplenc, plplenc_list, regime, param%plmaxname, param%tpmaxname, &
+                          mass_res, radius_res, array_index1_child, array_index2_child, mass(1), mass(2), &
+                          radius(1), radius(2), x(:, 1), x(:, 2), v(:, 1), v(:, 2), mtiny)
 
    if (param%lenergy) then
       ! Get the energy offset from the mergeadd/sub lists

@@ -99,7 +99,6 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          ALLOCATE(m_frag(frags_added))
          ALLOCATE(p_frag(NDIM, frags_added))
 
-
          !Calculate the positions of the new fragments in a circle with a radius large enough to space
          ! all fragments apart by a distance of rhill_p1 + rhill_p2
          IF ((mergeadd_list%status(nmergeadd_start) == HIT_AND_RUN) .and. (frags_added > 2)) THEN !this is an imperfect hit and run
@@ -145,13 +144,15 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          IF ((mergeadd_list%status(nmergeadd_start) == HIT_AND_RUN) .and. (frags_added > 2)) THEN !this is an imperfect hit and run
             DO j=2, frags_added
                m_frag(j) = mergeadd_list%mass(nmergeadd_start + count_frag + j - 1)
-               p_frag(:,j) = ((- r_circle  * cos(phase_ang + theta * j)) * v_col_unit_vec(:)) + ((- r_circle * sin(phase_ang + theta * j)) * tri_pro_unit_vec) + p_com(:)
+               p_frag(:,j) = ((- r_circle  * cos(phase_ang + theta * j)) * v_col_unit_vec(:)) + &
+               ((- r_circle * sin(phase_ang + theta * j)) * tri_pro_unit_vec) + p_com(:)
                mp_frag = (p_frag(:,j) * m_frag(j)) + mp_frag(:)
             END DO
          ELSE
             DO j=1, frags_added
                m_frag(j) = mergeadd_list%mass(nmergeadd_start + count_frag + j - 1)
-               p_frag(:,j) = ((- r_circle  * cos(phase_ang + theta * j)) * v_col_unit_vec(:)) + ((- r_circle * sin(phase_ang + theta * j)) * tri_pro_unit_vec) + p_com(:)
+               p_frag(:,j) = ((- r_circle  * cos(phase_ang + theta * j)) * v_col_unit_vec(:)) + &
+               ((- r_circle * sin(phase_ang + theta * j)) * tri_pro_unit_vec) + p_com(:)
                mp_frag = (p_frag(:,j) * m_frag(j)) + mp_frag(:)
             END DO
          END IF 
