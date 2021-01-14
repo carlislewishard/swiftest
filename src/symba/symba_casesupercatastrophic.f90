@@ -74,6 +74,7 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
    INTEGER(I4B), PARAMETER                          :: SHIFTMAX = 9
 
 
+
 ! Executable code
    
    ! Set the maximum number of fragments to be added in a Supercatastrophic Disruption collision (nfrag)
@@ -154,63 +155,63 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
       WRITE(*,*) "WARNING in symba_casesupercatastrophic: Timestep is too large to resolve fragments."
    END IF
    ! If not, continue through all possible fragments to be added
-      mtot = 0.0_DP ! running total mass of new fragments
-      mv(:) = 0.0_DP   ! running sum of m*v of new fragments to be used in COM calculation
-      frags_added = 0 ! running total number of new fragments
-      m1m2_10 = 0.1_DP * (m1 + m2) ! one tenth the total initial mass of the system used to check the size of the fragments
-      nstart = nmergeadd
+   mtot = 0.0_DP ! running total mass of new fragments
+   mv(:) = 0.0_DP   ! running sum of m*v of new fragments to be used in COM calculation
+   frags_added = 0 ! running total number of new fragments
+   m1m2_10 = 0.1_DP * (m1 + m2) ! one tenth the total initial mass of the system used to check the size of the fragments
+   nstart = nmergeadd
 
-      d_p1 = (3 * m1) / (4 * PI * rad1**3)
-      d_p2 = (3 * m2) / (4 * PI * rad2**3)
-      avg_d = ((m1 * d_p1) + (m2 * d_p2)) / (m1 + m2)
+   d_p1 = (3 * m1) / (4 * PI * rad1**3)
+   d_p2 = (3 * m2) / (4 * PI * rad2**3)
+   avg_d = ((m1 * d_p1) + (m2 * d_p2)) / (m1 + m2)
 
-         ! If we are adding the first and largest fragment (lr), check to see if its mass is SMALLER than one tenth the total
-         ! mass of the system aka if it is too small to resolve. If so, add a fragment with a mass of one tenth the total mass 
-         ! of the system and calculate its radius.
-      IF ((mres(1) < m1m2_10)) THEN
-         DO i = 1, nfrag
-            frags_added = frags_added + 1
-            nmergeadd = nmergeadd + 1
-            mergeadd_list%name(nmergeadd) = max(plmaxname, tpmaxname) + i
-            mergeadd_list%status(nmergeadd) = SUPERCATASTROPHIC
-            mergeadd_list%ncomp(nmergeadd) = 2
-            mergeadd_list%mass(nmergeadd) = m1m2_10                             
-            mtot = mtot + mergeadd_list%mass(nmergeadd) 
-            if (i == nfrag) then
-               ! If there is any residual mass left at the end, put it in the last body
-               m_rem = (m1 + m2) - mtot
-               mergeadd_list%mass(nmergeadd) = mergeadd_list%mass(nmergeadd) + m_rem
-            end if
-            mergeadd_list%radius(nmergeadd) = ((3 * mergeadd_list%mass(nmergeadd)) / (4 * PI * avg_d))  & 
-                              ** (1.0_DP / 3.0_DP)
-         END DO 
-      ELSE
+   ! If we are adding the first and largest fragment (lr), check to see if its mass is SMALLER than one tenth the total
+   ! mass of the system aka if it is too small to resolve. If so, add a fragment with a mass of one tenth the total mass 
+   ! of the system and calculate its radius.
+   IF ((mres(1) < m1m2_10)) THEN
+      DO i = 1, nfrag
          frags_added = frags_added + 1
          nmergeadd = nmergeadd + 1
-         mergeadd_list%name(nmergeadd) = max(plmaxname, tpmaxname) + 1
+         mergeadd_list%name(nmergeadd) = max(plmaxname, tpmaxname) + i
          mergeadd_list%status(nmergeadd) = SUPERCATASTROPHIC
          mergeadd_list%ncomp(nmergeadd) = 2
-         mergeadd_list%mass(nmergeadd) = mres(1)
-         mergeadd_list%radius(nmergeadd) = rres(1)
+         mergeadd_list%mass(nmergeadd) = m1m2_10                             
          mtot = mtot + mergeadd_list%mass(nmergeadd) 
-         ! Fragments creation 
-         DO i = 2, nfrag
-            frags_added = frags_added + 1
-            nmergeadd = nmergeadd + 1
-            mergeadd_list%name(nmergeadd) = max(plmaxname, tpmaxname) + i
-            mergeadd_list%status(nmergeadd) = SUPERCATASTROPHIC
-            mergeadd_list%ncomp(nmergeadd) = 2
-            mergeadd_list%mass(nmergeadd) = (m1 + m2 - mres(1)) / (nfrag - 1)
-            mtot = mtot + mergeadd_list%mass(nmergeadd)
-            if (i == nfrag) then
-               ! If there is any residual mass left at the end, put it in the last body
-               m_rem = (m1 + m2) - mtot
-               mergeadd_list%mass(nmergeadd) = mergeadd_list%mass(nmergeadd) + m_rem
-            end if
-            mergeadd_list%radius(nmergeadd) = ((3 * mergeadd_list%mass(nmergeadd)) / (4 * PI * avg_d))  & 
-            ** (1.0_DP / 3.0_DP)  
-         END DO
-      END IF 
+         IF (i == nfrag) THEN
+            ! If there is any residual mass left at the end, put it in the last body
+            m_rem = (m1 + m2) - mtot
+            mergeadd_list%mass(nmergeadd) = mergeadd_list%mass(nmergeadd) + m_rem
+         END IF
+         mergeadd_list%radius(nmergeadd) = ((3 * mergeadd_list%mass(nmergeadd)) / (4 * PI * avg_d))  & 
+                              ** (1.0_DP / 3.0_DP)
+      END DO 
+   ELSE
+      frags_added = frags_added + 1
+      nmergeadd = nmergeadd + 1
+      mergeadd_list%name(nmergeadd) = max(plmaxname, tpmaxname) + 1
+      mergeadd_list%status(nmergeadd) = SUPERCATASTROPHIC
+      mergeadd_list%ncomp(nmergeadd) = 2
+      mergeadd_list%mass(nmergeadd) = mres(1)
+      mergeadd_list%radius(nmergeadd) = rres(1)
+      mtot = mtot + mergeadd_list%mass(nmergeadd) 
+      ! Fragments creation 
+      DO i = 2, nfrag
+         frags_added = frags_added + 1
+         nmergeadd = nmergeadd + 1
+         mergeadd_list%name(nmergeadd) = max(plmaxname, tpmaxname) + i
+         mergeadd_list%status(nmergeadd) = SUPERCATASTROPHIC
+         mergeadd_list%ncomp(nmergeadd) = 2
+         mergeadd_list%mass(nmergeadd) = (m1 + m2 - mres(1)) / (nfrag - 1)
+         mtot = mtot + mergeadd_list%mass(nmergeadd)
+         IF (i == nfrag) THEN
+            ! If there is any residual mass left at the end, put it in the last body
+            m_rem = (m1 + m2) - mtot
+            mergeadd_list%mass(nmergeadd) = mergeadd_list%mass(nmergeadd) + m_rem
+         END IF
+         mergeadd_list%radius(nmergeadd) = ((3 * mergeadd_list%mass(nmergeadd)) / (4 * PI * avg_d))  & 
+         ** (1.0_DP / 3.0_DP)  
+      END DO
+   END IF 
 
    !!!!!!!!!!!!                     DEV                      !!!!!!!!!!!!!!!! 
    r_circle = (rhill_p1 + rhill_p2) / (2 * sin(PI / frags_added))
@@ -228,7 +229,7 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
    ! in from a single body in a single time step don't pile up on top of each other
    phase_ang = theta * thetashift / SHIFTMAX
    thetashift = thetashift + 1
-   if (thetashift >= shiftmax) thetashift = 0
+   IF (thetashift >= shiftmax) thetashift = 0
 
    ! Find velocity of COM
    v_com(:) = ((vb_1(:) * m1) + (vb_2(:) * m2)) / (m1 + m2)

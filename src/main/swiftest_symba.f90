@@ -271,7 +271,6 @@ program swiftest_symba
 
 205         format("       DL/L0 = ", ES12.5, "; DE/E0 = ", ES12.5, "; (DE-eoffset)/E0 = ", ES12.5, "; DM/M0 = ", ES12.5)
             if (param%lenergy) write(*, 205) Lerror, te_error, te_off_error, Merror
-
             call param%dump_to_file(t)
             call io_dump_pl(npl, symba_plA%helio%swiftest, param%lclose, param%lrhill_present)
             call io_dump_tp(ntp, symba_tpA%helio%swiftest)
