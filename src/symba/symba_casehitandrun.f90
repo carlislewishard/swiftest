@@ -180,7 +180,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    mtot = 0.0_DP ! running total mass of new fragments
    mv(:) = 0.0_DP   ! running sum of m*v of new fragments to be used in COM calculation
    frags_added = 0 ! running total number of new fragments
-   nstart = nmergeadd + 1 ! start of new fragments in mergeadd_list
+   nstart = nmergeadd ! start of new fragments in mergeadd_list
    ! Increment around the circle for positions of fragments
    ! Calculate the positions of the new fragments in a circle of radius rhill_keep
    rhill_keep = symba_plA%helio%swiftest%rhill(index_keep_parent)
