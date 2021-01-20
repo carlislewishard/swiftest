@@ -63,6 +63,15 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
 
    count_enc = 0 !counter for the number of encountering bodies in this timestep used to increment on mergesub_list
 
+   xh_1(:) = 0.0_DP
+   vh_1_end(:) = 0.0_DP
+   rhill_p1 = 0.0_DP
+
+   xh_2(:) = 0.0_DP
+   vh_2_end(:) = 0.0_DP
+   rhill_p2 = 0.0_DP
+
+
    DO i = 1, numenc
       ! First particle in encounter pair
       DO j = 1, npl !loop through all the planets in symba_plA
