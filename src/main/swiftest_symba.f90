@@ -191,6 +191,15 @@ program swiftest_symba
       call symba_discard_tp(t, npl, ntp, symba_plA, symba_tpA, dt, rmin, rmax, rmaxu, qmin, qmin_coord, &    
             qmin_alo, qmin_ahi, param%lrhill_present, ldiscard_tp)
       if (ldiscard .or. ldiscard_tp .or. lfrag_add) then
+         if (param%lenergy) then
+            if(num_plpl_comparisons > param%eucl_threshold) then
+               call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, &
+                  ke, pe, te, htot, msys)
+            else
+               call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot, msys)
+            end if
+            write(egyiu,300) t, ke, pe, te, htot, eoffset, msys
+         end if
          call symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
             discard_tpA, param, ldiscard, ldiscard_tp)
          if (ldiscard .or. ldiscard_tp) then
