@@ -108,6 +108,9 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          ALLOCATE(m_frag(frags_added))
          ALLOCATE(p_frag(NDIM, frags_added))
 
+         m_frag(:) = 0.0_DP
+         p_frag(:,:) = 0.0_DP
+
          !Calculate the positions of the new fragments in a circle with a radius large enough to space
          ! all fragments apart by a distance of rhill_p1 + rhill_p2
          IF ((mergeadd_list%status(nmergeadd_start) == HIT_AND_RUN) .and. (frags_added > 2)) THEN !this is an imperfect hit and run
