@@ -175,7 +175,6 @@ subroutine symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_lis
       mtot = sum(mass_si(:)) 
       dentot = sum(mass_si(:) * density_si(:)) / mtot 
 
-      !regime = collresolve_resolve(model,mtarg,mproj,rtarg,rproj,xtarg,xproj, vtarg,vproj, nres, mass_res, radius_res, pres, vres)
       call symba_regime(Mcb_si, mass_si(jtarg), mass_si(jproj), radius_si(jtarg), radius_si(jproj), x_si(:, jtarg), x_si(:, jproj),& 
                         v_si(:, jtarg), v_si(:, jproj), density_si(jtarg), density_si(jproj), regime, mlr, mslr, mtiny_si)
 

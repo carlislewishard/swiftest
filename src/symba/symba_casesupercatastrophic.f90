@@ -94,23 +94,13 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
    radius2 = symba_plA%helio%swiftest%radius(index2)
    msun = symba_plA%helio%swiftest%mass(1)
    xbs(:) = symba_plA%helio%swiftest%xb(:,1)
-   vh_1(:) = vb_1(:) - vbs(:) !symba_plA%helio%swiftest%vh(:,index1)
-   vh_2(:) = vb_2(:) - vbs(:) !symba_plA%helio%swiftest%vh(:,index2)
+   vh_1(:) = vb_1(:) - vbs(:)
+   vh_2(:) = vb_2(:) - vbs(:)
 
 
    WRITE(*, *) "Supercatastrophic disruption between particles ", name1, " and ", name2, " at time t = ",t
 
-   ! Go through the encounter list and look for particles actively encoutering in this timestep
-   ! Prevent them from having further encounters in this timestep by setting status in plplenc_list to MERGED
-   ! DO k = 1, nplplenc 
-   !    IF ((plplenc_list%status(k) == ACTIVE) .AND. &
-   !       ((index1 == plplenc_list%index1(k) .OR. index2 == plplenc_list%index2(k)) .OR. &
-   !       (index2 == plplenc_list%index1(k) .OR. index1 == plplenc_list%index2(k)))) THEN
-   !          plplenc_list%status(k) = MERGED
-   !    END IF
-   ! END DO
-
-   ! Set the status of the particles in symba_plA to DISRUPTION
+   ! Set the status of the particles in symba_plA to SUPERCATASTROPHIC
    symba_plA%helio%swiftest%status(index1) = SUPERCATASTROPHIC
    symba_plA%helio%swiftest%status(index2) = SUPERCATASTROPHIC
    symba_plA%helio%swiftest%status(index1_parent) = SUPERCATASTROPHIC
