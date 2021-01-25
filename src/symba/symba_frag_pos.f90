@@ -49,7 +49,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
    REAL(DP)                                               :: m_frag_tot, theta
    REAL(DP), DIMENSION(NDIM)                              :: p_com, v_col_vec, v_col_unit_vec, mp_frag, p_com_frag, p_f, tri_pro
    REAL(DP), DIMENSION(NDIM)                              :: xh_1, xh_2, vh_1, vh_2, vbs, vb_1, vb_2, delta_v, delta_p, v_cross_p
-   REAL(DP), DIMENSION(NDIM)                              :: tri_pro_unit_vec, vh_1_end, vh_2_end
+   REAL(DP), DIMENSION(NDIM)                              :: tri_pro_unit_vec, vh_1_end, vh_2_end, xh_rm
    REAL(DP), DIMENSION(:, :), ALLOCATABLE                 :: p_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE                    :: m_frag
    integer(I4B), save                                     :: thetashift = 0
@@ -156,9 +156,17 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          IF ((mergeadd_list%status(nmergeadd_start) == HIT_AND_RUN) .and. (frags_added > 2)) THEN !this is an imperfect hit and run
             DEALLOCATE(m_frag)
             ALLOCATE(m_frag(frags_added + 1))
+
+            IF (m2 > m1) THEN
+               xh_rm = xh_1 
+            ELSE
+               xh_rm = xh_2 
+            END IF
+
+            p_com(:) = xh_rm
+
             DO j=1, frags_added
                m_frag(j) = mergeadd_list%mass(nmergeadd_start + count_frag + j - 1)
-               write(*,*) "frag_pos m_frag", m_frag(j)
                p_frag(:,j) = ((- r_circle  * cos(phase_ang + theta * j)) * v_col_unit_vec(:)) + &
                ((- r_circle * sin(phase_ang + theta * j)) * tri_pro_unit_vec) + p_com(:)
                mp_frag = (p_frag(:,j) * m_frag(j)) + mp_frag(:)
@@ -194,9 +202,6 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
                mergeadd_list%xh(:, nmergeadd_start + count_frag + j - 1) = p_frag(:, j)
             END DO 
          END IF
-
-         write(*,*) "frag_pos xh", mergeadd_list%xh(:,:)
-         write(*,*) "frag_pos mass", mergeadd_list%mass(:)
 
          count_frag = count_frag + frags_added
 
