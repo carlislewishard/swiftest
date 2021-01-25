@@ -248,7 +248,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
          END DO
    END IF
 
-   allocate(m_frag(frags_added))
+   allocate(m_frag(frags_added + 1))
    allocate(v_frag(NDIM, frags_added))
 
    IF (frags_added > 0) THEN
@@ -256,10 +256,10 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
          !!!!!!!!!!!!                     DEV                      !!!!!!!!!!!!!!!! 
          r_circle = (rhill_keep + rhill_rm) / (2.0_DP*sin(PI / frags_added))
          theta = (2 * PI) / (frags_added)
-         m_frag(1:frags_added) = mergeadd_list%mass(nstart + 1 :nstart + frags_added)
+         m_frag(1:frags_added + 1) = mergeadd_list%mass(nstart + 1 :nstart + frags_added + 1)
+         write(*,*) "casehitandrun m_frag", m_frag
          
          mtot = sum(m_frag(1:frags_added))
-         m_rem = (mass_keep + mass_rm) - mtot
          mv_frag = 0.0_DP
 
          ! Shifts the starting circle of fragments around so that multiple fragments generated 
@@ -303,6 +303,7 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
          DO i=1, frags_added
             v_frag(:,i) = v_frag(:,i) + v_f(:) ! velocity of the fragments including the error
             mergeadd_list%vh(:, nstart + i) = v_frag(:, i) - vbs(:) ! add to mergeadd_list 
+            write(*,*) "casehitandrun fragnum, vh", i, mergeadd_list%vh(:, nstart + i)
          END DO
 
          !!!!!!!!!!!!                     DEV                      !!!!!!!!!!!!!!!! 

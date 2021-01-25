@@ -154,8 +154,11 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          count_frag = 0 !counter for the number of fragments added in this timestep used to increment on mergeadd_list
 
          IF ((mergeadd_list%status(nmergeadd_start) == HIT_AND_RUN) .and. (frags_added > 2)) THEN !this is an imperfect hit and run
-            DO j=2, frags_added
+            DEALLOCATE(m_frag)
+            ALLOCATE(m_frag(frags_added + 1))
+            DO j=1, frags_added
                m_frag(j) = mergeadd_list%mass(nmergeadd_start + count_frag + j - 1)
+               write(*,*) "frag_pos m_frag", m_frag(j)
                p_frag(:,j) = ((- r_circle  * cos(phase_ang + theta * j)) * v_col_unit_vec(:)) + &
                ((- r_circle * sin(phase_ang + theta * j)) * tri_pro_unit_vec) + p_com(:)
                mp_frag = (p_frag(:,j) * m_frag(j)) + mp_frag(:)
@@ -174,12 +177,12 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          p_f(:) =  p_com(:) - p_com_frag(:)
 
          IF ((mergeadd_list%status(nmergeadd_start) == HIT_AND_RUN) .and. (frags_added > 2)) THEN !this is an imperfect hit and run
-            mergeadd_list%xh(:, nmergeadd_start + count_frag) = xh_1(:)
-            mergeadd_list%vh(:, nmergeadd_start + count_frag) = vh_1_end(:)
             DO j=2, frags_added
                p_frag(:,j) = p_frag(:,j) + p_f(:)
                mergeadd_list%xh(:, nmergeadd_start + count_frag + j - 1) = p_frag(:, j)
             END DO 
+            mergeadd_list%xh(:, nmergeadd_start + count_frag) = xh_1(:)
+            mergeadd_list%vh(:, nmergeadd_start + count_frag) = vh_1_end(:)
          ELSE IF ((mergeadd_list%status(nmergeadd_start) == HIT_AND_RUN) .and. (frags_added == 2)) THEN !this is a perfect hit and run
             mergeadd_list%xh(:, nmergeadd_start + count_frag) = xh_1(:)
             mergeadd_list%xh(:, nmergeadd_start + count_frag + 1) = xh_2(:)
@@ -188,9 +191,12 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          ELSE
             DO j=1, frags_added
                p_frag(:,j) = p_frag(:,j) + p_f(:)
-               mergeadd_list%xh(:, nmergeadd_start + count_frag + j -1) = p_frag(:, j)
+               mergeadd_list%xh(:, nmergeadd_start + count_frag + j - 1) = p_frag(:, j)
             END DO 
          END IF
+
+         write(*,*) "frag_pos xh", mergeadd_list%xh(:,:)
+         write(*,*) "frag_pos mass", mergeadd_list%mass(:)
 
          count_frag = count_frag + frags_added
 
