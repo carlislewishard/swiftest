@@ -199,7 +199,6 @@ program swiftest_symba
                call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot, msys)
             end if
             write(egyiu,300) t, ke, pe, te, htot, eoffset, msys
-            write(*,*) t, ke, pe, te, htot, eoffset, msys
          end if
          call symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
             discard_tpA, param, ldiscard, ldiscard_tp)
@@ -227,7 +226,6 @@ program swiftest_symba
                call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot, msys)
             end if
             write(egyiu,300) t, ke, pe, te, htot, eoffset, msys
-            write(*,*) t, ke, pe, te, htot, eoffset, msys
          end if
       end if
 

@@ -233,15 +233,15 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       mergeadd_list%radius(nmergeadd) = ((3 * mergeadd_list%mass(nmergeadd)) / (4 * PI * d_rm))  & 
             ** (1.0_DP / 3.0_DP) 
       mtot = mtot + mergeadd_list%mass(nmergeadd)
-   ! Imperfect Hit & Run       
+   ! Imperfect Hit & Run
+      m_rem = m1 + m2 - mass_keep - mres(2)      
       DO i = 2, nfrag 
-            m_rem = m_rm - mres(2)
             frags_added = frags_added + 1
             nmergeadd = nmergeadd + 1
             mergeadd_list%status(nmergeadd) = HIT_AND_RUN
             mergeadd_list%ncomp(nmergeadd) = 2
             mergeadd_list%name(nmergeadd) = max(plmaxname, tpmaxname) + i
-            mergeadd_list%mass(nmergeadd) = m_rem / (nfrag) 
+            mergeadd_list%mass(nmergeadd) = m_rem / (nfrag - 1) 
             mergeadd_list%radius(nmergeadd) = ((3 * mergeadd_list%mass(nmergeadd)) / (4 * PI * d_rm))  & 
                ** (1.0_DP / 3.0_DP) 
             mtot = mtot + mergeadd_list%mass(nmergeadd)
