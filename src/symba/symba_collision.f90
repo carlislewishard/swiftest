@@ -1,5 +1,5 @@
 subroutine symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, & 
-   npl, symba_plA, nplplenc, plplenc_list, mtiny, param)
+   Loffset, npl, symba_plA, nplplenc, plplenc_list, mtiny, param)
    !! author: Jennifer L.L. Pouplin, Carlisle A. wishard, and David A. Minton
    !!
    !! Check for merger between planets in SyMBA. If the user has turned on the FRAGMENTATION feature, it will call the 
@@ -18,7 +18,7 @@ subroutine symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_lis
    integer(I4B), intent(in)                   :: npl, nplplenc
    integer(I4B), intent(inout)                :: nmergeadd, nmergesub
    real(DP), intent(in)                       :: t, dt
-   real(DP), intent(inout)                    :: eoffset, mtiny
+   real(DP), intent(inout)                    :: eoffset, Loffset, mtiny
    type(symba_plplenc), intent(inout)         :: plplenc_list
    type(symba_merger), intent(inout)          :: mergeadd_list, mergesub_list
    type(symba_pl), intent(inout)              :: symba_plA
@@ -202,13 +202,13 @@ subroutine symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_lis
    call symba_caseresolve(t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, vbs, & 
                           symba_plA, nplplenc, plplenc_list, regime, param%plmaxname, param%tpmaxname, &
                           mass_res, radius_res, array_index1_child, array_index2_child, mass(1), mass(2), &
-                          radius(1), radius(2), x(:, 1), x(:, 2), v(:, 1), v(:, 2), mtiny)
+                          radius(1), radius(2), x(:, 1), x(:, 2), v(:, 1), v(:, 2), mtiny, Loffset)
 
    if (param%lenergy) then
       ! Get the energy offset from the mergeadd/sub lists
       subf = nmergesub 
       addf = nmergeadd
-      eoffset = eoffset + symba_mergeadd_eoffset(npl, symba_plA, mergeadd_list, mergesub_list, addi, addf, subi, subf, param)
+      eoffset = eoffset - symba_mergeadd_eoffset(npl, symba_plA, mergeadd_list, mergesub_list, addi, addf, subi, subf, param)
    end if
 
    deallocate(array_index1_child, array_index2_child)

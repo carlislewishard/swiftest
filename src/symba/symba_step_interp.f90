@@ -57,7 +57,8 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE symba_step_interp(t, npl, nplm, ntp, symba_plA, symba_tpA, dt,   &
-     eoffset, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, param)
+     eoffset, Loffset, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, &
+     mergeadd_list, mergesub_list, param)
 
 ! Modules
      USE swiftest
@@ -70,7 +71,7 @@ SUBROUTINE symba_step_interp(t, npl, nplm, ntp, symba_plA, symba_tpA, dt,   &
      INTEGER(I4B), INTENT(IN)                         :: npl, nplm, ntp, nplplenc, npltpenc
      INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub
      REAL(DP), INTENT(IN)                             :: t, dt
-     REAL(DP), INTENT(INOUT)                          :: eoffset
+     REAL(DP), INTENT(INOUT)                          :: eoffset, Loffset
      TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
      TYPE(symba_tp), INTENT(INOUT)                    :: symba_tpA
      TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
@@ -114,7 +115,7 @@ SUBROUTINE symba_step_interp(t, npl, nplm, ntp, symba_plA, symba_tpA, dt,   &
      nmergesub_before = nmergesub
      nmergeadd_before = nmergeadd
 
-     CALL symba_step_recur(t, irec, npl, nplm, ntp, symba_plA, symba_tpA, dt, eoffset, nplplenc, npltpenc,              &
+     CALL symba_step_recur(t, irec, npl, nplm, ntp, symba_plA, symba_tpA, dt, eoffset, Loffset, nplplenc, npltpenc,  &
           plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, param)
 
      ! Save the number of new bodies to be added to the mergeadd/sub lists

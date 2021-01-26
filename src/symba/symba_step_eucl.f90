@@ -61,7 +61,7 @@
 !**********************************************************************************************************************************
 SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
    nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, &
-   mergeadd_list, mergesub_list, eoffset, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
+   mergeadd_list, mergesub_list, eoffset, Loffset, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
 
 ! Modules
      USE swiftest
@@ -78,7 +78,7 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      INTEGER(I4B), INTENT(IN)                         :: npl, ntp
      INTEGER(I4B), INTENT(INOUT)                      :: nplplenc, npltpenc, nmergeadd, nmergesub
      REAL(DP), INTENT(IN)                             :: t, dt
-     REAL(DP), INTENT(INOUT)                          :: eoffset
+     REAL(DP), INTENT(INOUT)                          :: eoffset, Loffset
      TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
      TYPE(symba_tp), INTENT(INOUT)                    :: symba_tpA
      TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
@@ -200,7 +200,7 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      lencounter = ((nplplenc > 0) .OR. (npltpenc > 0))
 
      IF (lencounter) THEN ! if there was an encounter, we need to enter symba_step_interp to see if we need recursion
-          CALL symba_step_interp_eucl(t, npl, nplm, ntp, symba_plA, symba_tpA, dt, eoffset, nplplenc, npltpenc, &
+          CALL symba_step_interp_eucl(t, npl, nplm, ntp, symba_plA, symba_tpA, dt, eoffset, Loffset, nplplenc, npltpenc, &
                   plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
                   param, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
           lfirst = .TRUE.

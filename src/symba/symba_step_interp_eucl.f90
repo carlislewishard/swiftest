@@ -53,7 +53,7 @@
 !
 !**********************************************************************************************************************************
 SUBROUTINE symba_step_interp_eucl(t, npl, nplm, ntp, symba_plA, symba_tpA,&
-   dt, eoffset, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list,&
+   dt, eoffset, Loffset, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list,&
     mergesub_list, param, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
 
 ! Modules
@@ -69,7 +69,7 @@ SUBROUTINE symba_step_interp_eucl(t, npl, nplm, ntp, symba_plA, symba_tpA,&
      INTEGER(I4B), INTENT(IN)                         :: npl, nplm, ntp, nplplenc, npltpenc
      INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub
      REAL(DP), INTENT(IN)                             :: t, dt
-     REAL(DP), INTENT(INOUT)                          :: eoffset
+     REAL(DP), INTENT(INOUT)                          :: eoffset, Loffset
      TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
      TYPE(symba_tp), INTENT(INOUT)                    :: symba_tpA
      TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
@@ -114,7 +114,7 @@ SUBROUTINE symba_step_interp_eucl(t, npl, nplm, ntp, symba_plA, symba_tpA,&
      IF (ntp > 0) CALL symba_helio_drift_tp(irec, ntp, symba_tpA, symba_plA%helio%swiftest%mass(1), dt)
      irec = 0
 
-     CALL symba_step_recur(t, irec, npl, nplm, ntp, symba_plA, symba_tpA, dt, eoffset, nplplenc, npltpenc,              &
+     CALL symba_step_recur(t, irec, npl, nplm, ntp, symba_plA, symba_tpA, dt, eoffset, Loffset, nplplenc, npltpenc,              &
           plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, param)
 
      IF (ntp > 0) THEN

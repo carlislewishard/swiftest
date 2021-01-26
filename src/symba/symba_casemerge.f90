@@ -1,5 +1,6 @@
 subroutine symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list,  & 
-   symba_plA, nplplenc, plplenc_list, array_index1_child, array_index2_child, m1, m2, rad1, rad2, x1, x2, v1, v2)
+   symba_plA, nplplenc, plplenc_list, array_index1_child, array_index2_child, m1, m2, rad1, rad2,&
+    x1, x2, v1, v2, Loffset)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
    !! Merge planets.
@@ -17,7 +18,7 @@ subroutine symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
    integer(I4B), intent(in)                :: index_enc, nplplenc
    integer(I4B), intent(inout)             :: nmergeadd, nmergesub
    real(DP), intent(in)                    :: t
-   real(DP), intent(inout)                 :: m1, m2, rad1, rad2
+   real(DP), intent(inout)                 :: Loffset, m1, m2, rad1, rad2
    real(DP), dimension(:), intent(inout)   :: x1, x2, v1, v2
    type(symba_plplenc), intent(inout)      :: plplenc_list
    type(symba_merger), intent(inout)       :: mergeadd_list, mergesub_list
@@ -30,6 +31,7 @@ subroutine symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
    real(DP)                                :: mtot, Mcb
    real(DP), dimension(NDIM)               :: xnew, vnew, vbs
    integer(I4B), dimension(:), allocatable :: array_keep_child, array_rm_child
+   real(DP), dimension(NDIM) :: Lspin, xc1, xc2, vc1, vc2
 
    index1 = plplenc_list%index1(index_enc)
    index2 = plplenc_list%index2(index_enc)
@@ -48,6 +50,24 @@ subroutine symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
    mtot = m1 + m2
    xnew(:) = (m1 * x1(:) + m2 * x2(:)) / mtot
    vnew(:) = (m1 * v1(:) + m2 * v2(:)) / mtot
+
+
+   ! Convert the orbital angular momentum of the pair into spin angular momentum of the merged body
+   xc1(:) = x1(:) - xnew(:)
+   xc2(:) = x2(:) - xnew(:)
+
+   vc1(:) = v1(:) - vnew(:)
+   vc2(:) = v2(:) - vnew(:)
+   
+   Lspin(1) = m1 * (xc1(2) * vc1(3) - xc1(3) * vc1(2))
+   Lspin(2) = m1 * (xc1(3) * vc1(1) - xc1(1) * vc1(3))
+   Lspin(3) = m1 * (xc1(1) * vc1(2) - xc1(2) * vc1(1))
+   Lspin(1) = Lspin(1) + m2 * (xc2(2) * vc2(3) - xc2(3) * vc2(2))
+   Lspin(2) = Lspin(2) + m2 * (xc2(3) * vc2(1) - xc2(1) * vc2(3))
+   Lspin(3) = Lspin(3) + m2 * (xc2(1) * vc2(2) - xc2(2) * vc2(1))
+
+   ! We can't do anything with the lost spin angular momentum except keep track of it
+   Loffset = Loffset + NORM2(Lspin)
    
    write(*, *) "Merging particles ", name1, " and ", name2, " at time t = ",t
 
