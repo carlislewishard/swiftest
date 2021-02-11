@@ -203,6 +203,30 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
             END DO 
          END IF
 
+         !############################## DEV ################################################################
+         allocate(l_spin_coef(NDIM))
+         allocate(l_spin_mag(NDIM))
+         allocate(l_orb_after(NDIM))
+         allocate(spin_hat(NDIM, frags_added))
+
+         spin_hat = 
+
+         l_orb_before(:) = (m1 * util_crossproduct(xh_1, vh_1)) + (m2 * util_crossproduct(xh_2, vh_2))
+         l_spin_before(:) = (IP_1 * m1 * r1**2 * spin_vec_1) + (IP_2 * m2 * r2**2 * spin_vec_2)
+
+         DO j = 1, frags_added
+            DO k = 1, NDIM
+               !l_spin_coef(k) = l_spin_coef(k) + (IP(j) * m_frag(j) * mergeadd_list%radius(:, nmergeadd_start + count_frag + j - 1**2 * spin_hat(k,j))) 
+               l_orb_after(k) = l_orb_after(k) + (m_frag(j) * util_crossproduct(p_frag(:,j), v_frag(:,j)))
+            END DO
+         END DO
+
+         l_spin_after = l_orb_before + l_spin_before - l_orb_after
+
+         spin_mag =  
+
+         !############################## DEV ################################################################
+
          count_frag = count_frag + frags_added
 
          DEALLOCATE(p_frag)
