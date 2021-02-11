@@ -41,6 +41,10 @@ contains
       self%radius(1) = 0.0_DP
       read(LUN, *, iostat = ierr) self%xh(:,1)
       read(LUN, *, iostat = ierr) self%vh(:,1)
+      if (lrotation) THEN
+         read(LUN, *) self%Ip(:,1)
+         read(LUN, *) self%rot(:,1)
+      end if
       if (ierr /= 0) then
          write(*,*) 'Error reading central body values in ',trim(adjustl(param%inplfile))
          return
@@ -69,6 +73,10 @@ contains
          else
             self%radius(i) = 0.0_DP
          end if
+         if (lrotation) THEN
+            read(LUN, *) self%Ip(:,i)
+            read(LUN, *) self%rot(:,i)
+         end if
          read(LUN, *, iostat = ierr) self%xh(:,i)
          read(LUN, *, iostat = ierr) self%vh(:,i)
          if (ierr /= 0 ) exit
@@ -87,6 +95,10 @@ contains
          read(LUN, iostat = ierr) self%radius(:)
       else
          self%radius(:) = 0.0_DP
+      end if
+      if (lrotation) THEN
+         read(LUN, iostat = ierr) self%Ip(:,i)
+         read(LUN, iostat = ierr) self%rot(:,i)
       end if
       read(LUN, iostat = ierr) self%xh(:,:)
       read(LUN, iostat = ierr) self%vh(:,:)

@@ -29,6 +29,8 @@ module swiftest_data_structures
       real(DP),     dimension(:),     allocatable :: mass   !! Mass
       real(DP),     dimension(:),     allocatable :: radius !! Radius
       real(DP),     dimension(:),     allocatable :: rhill  !! Hill's sphere radius
+      real(DP),     dimension(:,:),   allocatable :: Ip     !! Unitless principal moments of inertia (I1, I2, I3) / (MR**2). Principal axis rotation assumed. 
+      real(DP),     dimension(:,:),   allocatable :: rot    !! body rotation vector in inertial coordinate frame 
    contains
       procedure :: alloc => swiftest_pl_allocate
       procedure :: dealloc => swiftest_pl_deallocate
@@ -94,10 +96,15 @@ module swiftest_data_structures
          allocate(self%mass(n))
          allocate(self%radius(n))
          allocate(self%rhill(n))
+         allocate(self%rhill(n))
+         allocate(self%Ip(NDIM,n))
+         allocate(self%rot(NDIM,n))
 
          self%mass = 0.0_DP
          self%radius = 0.0_DP
          self%rhill = 0.0_DP
+         self%Ip = 0.0_DP
+         self%rot = 0.0_DP
          return
       end subroutine swiftest_pl_allocate
 
@@ -127,6 +134,8 @@ module swiftest_data_structures
          if (allocated(self%mass)) deallocate(self%mass)
          if (allocated(self%radius)) deallocate(self%radius)
          if (allocated(self%rhill)) deallocate(self%rhill)
+         if (allocated(self%Ip)) deallocate(self%Ip)
+         if (allocated(self%rot)) deallocate(self%rot)
       return
       end subroutine swiftest_pl_deallocate
 
