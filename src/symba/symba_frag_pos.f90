@@ -49,7 +49,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
    REAL(DP)                                               :: m_frag_tot, theta
    REAL(DP), DIMENSION(NDIM)                              :: p_com, v_col_vec, v_col_unit_vec, mp_frag, p_com_frag, p_f, tri_pro
    REAL(DP), DIMENSION(NDIM)                              :: xh_1, xh_2, vh_1, vh_2, vbs, vb_1, vb_2, delta_v, delta_p, v_cross_p
-   REAL(DP), DIMENSION(NDIM)                              :: tri_pro_unit_vec, vh_1_end, vh_2_end, xh_rm
+   REAL(DP), DIMENSION(NDIM)                              :: tri_pro_unit_vec, vh_1_end, vh_2_end, xh_rm, IP_1, IP_2, rot_1, rot_2
    REAL(DP), DIMENSION(:, :), ALLOCATABLE                 :: p_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE                    :: m_frag
    integer(I4B), save                                     :: thetashift = 0
@@ -80,12 +80,14 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          IF (symba_plA%helio%swiftest%name(j) == mergesub_list%name(nmergesub_start + count_enc)) THEN
             xh_1(:) = symba_plA%helio%swiftest%xh(:,j)
             vh_1_end(:) = symba_plA%helio%swiftest%vh(:,j)
-            rhill_p1 = symba_plA%helio%swiftest%rhill(j)
          END IF
       END DO
       vh_1(:) = mergesub_list%vh(:,nmergesub_start + count_enc)
       m1 = mergesub_list%mass(nmergesub_start + count_enc)
       r1 = mergesub_list%radius(nmergesub_start + count_enc) 
+      rhill_p1 = symba_plA%helio%swiftest%rhill(nmergesub_start + count_enc)
+      IP_1 = symba_plA%helio%swiftest%Ip(nmergesub_start + count_enc)
+      rot_1 = symba_plA%helio%swiftest%rot(nmergesub_start + count_enc)
 
       ! Second particle in encounter pair
       DO j = 1, npl !loop through all the planets in symba_plA
@@ -94,12 +96,14 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          IF (symba_plA%helio%swiftest%name(j) == mergesub_list%name(nmergesub_start + count_enc + 1)) THEN
             xh_2(:) = symba_plA%helio%swiftest%xh(:,j)
             vh_2_end(:) = symba_plA%helio%swiftest%vh(:,j)
-            rhill_p2 = symba_plA%helio%swiftest%rhill(j)
          END IF
       END DO
       vh_2(:) = mergesub_list%vh(:,nmergesub_start + count_enc + 1)
       m2 = mergesub_list%mass(nmergesub_start + count_enc + 1)
       r2 = mergesub_list%radius(nmergesub_start + count_enc + 1)
+      rhill_p2 = symba_plA%helio%swiftest%rhill(nmergesub_start + count_enc + 1)
+      IP_2 = symba_plA%helio%swiftest%Ip(nmergesub_start + count_enc + 1)
+      rot_2 = symba_plA%helio%swiftest%rot(nmergesub_start + count_enc + 1)
 
       frags_added = mergesub_list%nadded(nmergesub_start + count_enc)
 
@@ -203,29 +207,38 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
             END DO 
          END IF
 
-         !############################## DEV ################################################################
-         allocate(l_spin_coef(NDIM))
-         allocate(l_spin_mag(NDIM))
+         !########################################################## DEV ################################################################
+         allocate(l_orb_before(NDIM))
+         allocate(l_spin_before(NDIM))
          allocate(l_orb_after(NDIM))
-         allocate(spin_hat(NDIM, frags_added))
+         allocate(l_spin_after(NDIM))
 
-         spin_hat = 
+         spin_vec_1 = 
+         spin_vec_2 = 
 
          l_orb_before(:) = (m1 * util_crossproduct(xh_1, vh_1)) + (m2 * util_crossproduct(xh_2, vh_2))
          l_spin_before(:) = (IP_1 * m1 * r1**2 * spin_vec_1) + (IP_2 * m2 * r2**2 * spin_vec_2)
 
          DO j = 1, frags_added
             DO k = 1, NDIM
-               !l_spin_coef(k) = l_spin_coef(k) + (IP(j) * m_frag(j) * mergeadd_list%radius(:, nmergeadd_start + count_frag + j - 1**2 * spin_hat(k,j))) 
                l_orb_after(k) = l_orb_after(k) + (m_frag(j) * util_crossproduct(p_frag(:,j), v_frag(:,j)))
             END DO
          END DO
 
          l_spin_after = l_orb_before + l_spin_before - l_orb_after
 
-         spin_mag =  
+         spin_vec_mag_frag = 
+         IP_frag = 
+         spin_hat_frag = 
 
-         !############################## DEV ################################################################
+         DO k = 1, NDIM
+            DO j = 1, frags_added
+               spin_vec_mag_frag(k) = spin_vec_mag_frag(k) + (IP_frag(j) * m_frag(j) * mergeadd_list%radius(:, nmergeadd_start + count_frag + j - 1)**2 * spin_hat_frag(k,j))
+            END DO
+            spin_vec_mag_frag(k) = spin_vec_mag_frag(k) / l_spin_after(k)
+         END DO 
+
+         !########################################################## DEV ################################################################
 
          count_frag = count_frag + frags_added
 
