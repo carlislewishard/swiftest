@@ -20,7 +20,7 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, htot, msys)
 
 ! internals
    integer(I4B)              :: i, j
-   real(DP)                  :: mass, rmag, v2, oblpot, radius
+   real(DP)                  :: mass, rmag, v2, oblpot, radius, IP
    real(DP), dimension(NDIM) :: h, dx, x, v, rot
    real(DP), dimension(npl)  :: irh
 
@@ -46,11 +46,11 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, htot, msys)
 
       !Angular momentum from spin of bodies 
    do i = 1, npl 
-      I = swiftest_plA%IP(i)
+      IP = swiftest_plA%Ip(3,i)
       mass = swiftest_plA%mass(i)
       radius = swiftest_plA%radius(i)
-      rot = swiftest_plA%rot(i)
-      htot(:) = htot(:) + mass*I*rot*radius**2
+      rot = swiftest_plA%rot(:,i)
+      htot(:) = htot(:) + mass*IP*rot*radius**2
    end do
 
    pe = 0.0_DP
