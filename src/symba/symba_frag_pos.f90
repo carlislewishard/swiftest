@@ -52,7 +52,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
    REAL(DP), DIMENSION(NDIM)                              :: xh_1, xh_2, vh_1, vh_2, vbs, vb_1, vb_2, delta_v, delta_p, v_cross_p
    REAL(DP), DIMENSION(NDIM)                              :: tri_pro_unit_vec, vh_1_end, vh_2_end, xh_rm, IP_1, IP_2, rot_1, rot_2
    REAL(DP), DIMENSION(NDIM)                              :: l_orb_before, l_orb_after, l_spin_before, l_spin_after
-   REAL(DP), DIMENSION(:, :), ALLOCATABLE                 :: p_frag
+   REAL(DP), DIMENSION(:, :), ALLOCATABLE                 :: p_frag, v_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE                    :: m_frag
    integer(I4B), save                                     :: thetashift = 0
    integer(I4B), parameter                                :: SHIFTMAX = 9
@@ -109,7 +109,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
 
          ALLOCATE(m_frag(frags_added))
          ALLOCATE(p_frag(NDIM, frags_added))
-         ALLOCATE(v_frag(frags_added))
+         ALLOCATE(v_frag(NDIM, frags_added))
 
          m_frag(:) = 0.0_DP
          p_frag(:,:) = 0.0_DP
@@ -160,7 +160,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
             DEALLOCATE(m_frag)
             ALLOCATE(m_frag(frags_added + 1))
             DEALLOCATE(v_frag)
-            ALLOCATE(v_frag(frags_added + 1))
+            ALLOCATE(v_frag(NDIM, frags_added + 1))
 
             IF (m2 > m1) THEN
                xh_rm = xh_1 
@@ -172,7 +172,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
 
             DO j=1, frags_added
                m_frag(j) = mergeadd_list%mass(nmergeadd_start + count_frag + j - 1)
-               v_frag(j) = mergeadd_list%vh(nmergeadd_start + count_frag + j - 1)
+               v_frag(:,j) = mergeadd_list%vh(nmergeadd_start + count_frag + j - 1)
                p_frag(:,j) = ((- r_circle  * cos(phase_ang + theta * j)) * v_col_unit_vec(:)) + &
                ((- r_circle * sin(phase_ang + theta * j)) * tri_pro_unit_vec) + p_com(:)
                mp_frag = (p_frag(:,j) * m_frag(j)) + mp_frag(:)
@@ -180,7 +180,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          ELSE
             DO j=1, frags_added
                m_frag(j) = mergeadd_list%mass(nmergeadd_start + count_frag + j - 1)
-               v_frag(j) = mergeadd_list%vh(nmergeadd_start + count_frag + j - 1)
+               v_frag(:,j) = mergeadd_list%vh(nmergeadd_start + count_frag + j - 1)
                p_frag(:,j) = ((- r_circle  * cos(phase_ang + theta * j)) * v_col_unit_vec(:)) + &
                ((- r_circle * sin(phase_ang + theta * j)) * tri_pro_unit_vec) + p_com(:)
                mp_frag = (p_frag(:,j) * m_frag(j)) + mp_frag(:)
