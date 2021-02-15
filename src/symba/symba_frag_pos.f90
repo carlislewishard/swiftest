@@ -109,6 +109,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
 
          ALLOCATE(m_frag(frags_added))
          ALLOCATE(p_frag(NDIM, frags_added))
+         ALLOCATE(v_frag(frags_added))
 
          m_frag(:) = 0.0_DP
          p_frag(:,:) = 0.0_DP
@@ -158,6 +159,8 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          IF ((mergeadd_list%status(nmergeadd_start) == HIT_AND_RUN) .and. (frags_added > 2)) THEN !this is an imperfect hit and run
             DEALLOCATE(m_frag)
             ALLOCATE(m_frag(frags_added + 1))
+            DEALLOCATE(v_frag)
+            ALLOCATE(v_frag(frags_added + 1))
 
             IF (m2 > m1) THEN
                xh_rm = xh_1 
@@ -169,6 +172,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
 
             DO j=1, frags_added
                m_frag(j) = mergeadd_list%mass(nmergeadd_start + count_frag + j - 1)
+               v_frag(j) = mergeadd_list%vh(nmergeadd_start + count_frag + j - 1)
                p_frag(:,j) = ((- r_circle  * cos(phase_ang + theta * j)) * v_col_unit_vec(:)) + &
                ((- r_circle * sin(phase_ang + theta * j)) * tri_pro_unit_vec) + p_com(:)
                mp_frag = (p_frag(:,j) * m_frag(j)) + mp_frag(:)
@@ -176,6 +180,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          ELSE
             DO j=1, frags_added
                m_frag(j) = mergeadd_list%mass(nmergeadd_start + count_frag + j - 1)
+               v_frag(j) = mergeadd_list%vh(nmergeadd_start + count_frag + j - 1)
                p_frag(:,j) = ((- r_circle  * cos(phase_ang + theta * j)) * v_col_unit_vec(:)) + &
                ((- r_circle * sin(phase_ang + theta * j)) * tri_pro_unit_vec) + p_com(:)
                mp_frag = (p_frag(:,j) * m_frag(j)) + mp_frag(:)
@@ -206,10 +211,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          END IF
 
          !########################################################## DEV ################################################################
-         allocate(l_orb_before(NDIM))
-         allocate(l_spin_before(NDIM))
-         allocate(l_orb_after(NDIM))
-         allocate(l_spin_after(NDIM))
+
          call util_crossproduct(xh_1,vh_1,xvh_1)
          call util_crossproduct(xh_2, vh_2, xvh_2)
          l_orb_before(:) = (m1 * xvh_1) + (m2 * xvh_2))
