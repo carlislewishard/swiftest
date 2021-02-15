@@ -96,7 +96,6 @@ module swiftest_data_structures
          allocate(self%mass(n))
          allocate(self%radius(n))
          allocate(self%rhill(n))
-         allocate(self%rhill(n))
          allocate(self%Ip(NDIM,n))
          allocate(self%rot(NDIM,n))
 
