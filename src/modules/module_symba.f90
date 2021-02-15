@@ -84,8 +84,10 @@ MODULE module_symba
                                                                   !        number of fragments
           real(DP),     dimension(:,:),   allocatable :: xh       ! heliocentric position
           real(DP),     dimension(:,:),   allocatable :: vh       ! heliocentric velocity
-          real(DP),     dimension(:),     allocatable :: mass 
-          real(DP),     dimension(:),     allocatable :: radius 
+          real(DP),     dimension(:),     allocatable :: mass     ! mass
+          real(DP),     dimension(:),     allocatable :: radius   ! radius
+          real(DP),     dimension(:),     allocatable :: IP       ! moment of intertia
+          real(DP),     dimension(:),     allocatable :: rot      ! rotation
      end type symba_merger 
 END MODULE module_symba
 !**********************************************************************************************************************************
