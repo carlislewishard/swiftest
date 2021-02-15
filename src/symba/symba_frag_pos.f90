@@ -213,11 +213,8 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          allocate(l_orb_after(NDIM))
          allocate(l_spin_after(NDIM))
 
-         spin_vec_1 = 
-         spin_vec_2 = 
-
          l_orb_before(:) = (m1 * util_crossproduct(xh_1, vh_1)) + (m2 * util_crossproduct(xh_2, vh_2))
-         l_spin_before(:) = (IP_1 * m1 * r1**2 * spin_vec_1) + (IP_2 * m2 * r2**2 * spin_vec_2)
+         l_spin_before(:) = (IP_1 * m1 * r1**2 * rot_1) + (IP_2 * m2 * r2**2 * rot_2)
 
          DO j = 1, frags_added
             DO k = 1, NDIM
@@ -226,16 +223,17 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          END DO
 
          l_spin_after = l_orb_before + l_spin_before - l_orb_after
+         l_spin_frag = NORM2(l_spin_after) / frags_added
+         spin_vec_mag_frag = 0.0_DP
 
-         spin_vec_mag_frag = 
-         IP_frag = 
-         spin_hat_frag = 
-
-         DO k = 1, NDIM
-            DO j = 1, frags_added
-               spin_vec_mag_frag(k) = spin_vec_mag_frag(k) + (IP_frag(j) * m_frag(j) * mergeadd_list%radius(:, nmergeadd_start + count_frag + j - 1)**2 * spin_hat_frag(k,j))
+         DO j = 1, frags_added
+            IP_frag(j) = (2.0_DP / 5.0_DP) * m_frag(j) * mergeadd_list%radius(:, nmergeadd_start + count_frag + j - 1)**2
+            mergeadd_list%IP(:, nmergeadd_start + count_frag + j - 1) = IP_frag(j)
+            spin_hat_frag = ! randomize this
+            DO k = 1, NDIM
+               spin_vec_mag_frag(k) = l_spin_frag / (IP_frag(j) * m_frag(j) * mergeadd_list%radius(:, nmergeadd_start + count_frag + j - 1)**2 * spin_hat_frag(k,j))
             END DO
-            spin_vec_mag_frag(k) = spin_vec_mag_frag(k) / l_spin_after(k)
+            mergeadd_list%rot(:, nmergeadd_start + count_frag + j - 1) = spin_vec_mag_frag(k) * 
          END DO 
 
          !########################################################## DEV ################################################################
