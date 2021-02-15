@@ -50,6 +50,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
    REAL(DP), DIMENSION(NDIM)                              :: p_com, v_col_vec, v_col_unit_vec, mp_frag, p_com_frag, p_f, tri_pro
    REAL(DP), DIMENSION(NDIM)                              :: xh_1, xh_2, vh_1, vh_2, vbs, vb_1, vb_2, delta_v, delta_p, v_cross_p
    REAL(DP), DIMENSION(NDIM)                              :: tri_pro_unit_vec, vh_1_end, vh_2_end, xh_rm, IP_1, IP_2, rot_1, rot_2
+   REAL(DP), DIMENSION(NDIM)                              :: l_orb_before, l_orb_after, l_spin_before, l_spin_after
    REAL(DP), DIMENSION(:, :), ALLOCATABLE                 :: p_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE                    :: m_frag
    integer(I4B), save                                     :: thetashift = 0
@@ -228,10 +229,10 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
 
          DO j = 1, frags_added
             IP_frag(j) = (2.0_DP / 5.0_DP) * m_frag(j) * mergeadd_list%radius(:, nmergeadd_start + count_frag + j - 1)**2
-            mergeadd_list%IP(:, nmergeadd_start + count_frag + j - 1) = IP_frag(j)
-            spin_hat_frag = ! randomize this
+            mergeadd_list%IP(:, nmergeadd_start + count_frag + j - 1) = (2.0_DP / 5.0_DP)
+            spin_hat_frag = rot_1 + rot_2
             DO k = 1, NDIM
-               spin_vec_mag_frag(k) = l_spin_frag / (IP_frag(j) * m_frag(j) * mergeadd_list%radius(:, nmergeadd_start + count_frag + j - 1)**2 * spin_hat_frag(k,j))
+               spin_vec_mag_frag(k) = l_spin_frag / (IP_frag(j) * spin_hat_frag(k,j))
             END DO
             mergeadd_list%rot(:, nmergeadd_start + count_frag + j - 1) = spin_vec_mag_frag(:)
          END DO 
