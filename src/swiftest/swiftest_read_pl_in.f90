@@ -41,7 +41,7 @@ contains
       self%radius(1) = 0.0_DP
       read(LUN, *, iostat = ierr) self%xh(:,1)
       read(LUN, *, iostat = ierr) self%vh(:,1)
-      if (lrotation) THEN
+      if (param%lrotation) THEN
          read(LUN, *) self%Ip(:,1)
          read(LUN, *) self%rot(:,1)
       end if
@@ -73,7 +73,7 @@ contains
          else
             self%radius(i) = 0.0_DP
          end if
-         if (lrotation) THEN
+         if (param%lrotation) THEN
             read(LUN, *) self%Ip(:,i)
             read(LUN, *) self%rot(:,i)
          end if
@@ -96,7 +96,7 @@ contains
       else
          self%radius(:) = 0.0_DP
       end if
-      if (lrotation) THEN
+      if (param%lrotation) THEN
          read(LUN, iostat = ierr) self%Ip(:,i)
          read(LUN, iostat = ierr) self%rot(:,i)
       end if
