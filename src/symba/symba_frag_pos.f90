@@ -209,7 +209,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          ELSE
             DO j=1, frags_added
                p_frag(:,j) = p_frag(:,j) + p_f(:)
-               mergeadd_list%xh(:, nmergeadd_start + count_frag + j - 1) = p_frag(:, j)
+               mergeadd_list%xh(:, nmergeadd_start + count_frag + j ) = p_frag(:, j)
             END DO 
          END IF
 
@@ -217,16 +217,16 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          allocate(spin_vec_mag_frag(frags_added))
          allocate(spin_hat_frag(NDIM))
 
-         call util_crossproduct(xh_1,vh_1,xvh_1)
+         call util_crossproduct(xh_1, vh_1, xvh_1)
          call util_crossproduct(xh_2, vh_2, xvh_2)
-         l_orb_before(:) = (m1 * xvh_1) + (m2 * xvh_2)
-         l_spin_before(:) = (IP_1 * m1 * r1**2 * rot_1) + (IP_2 * m2 * r2**2 * rot_2)
+         l_orb_before = (m1 * xvh_1) + (m2 * xvh_2)
+         l_spin_before = (IP_1 * m1 * r1**2 * rot_1) + (IP_2 * m2 * r2**2 * rot_2)
 
          l_orb_after(:) = 0.0_DP
          DO j = 1, frags_added
+            call util_crossproduct(p_frag(:,j), v_frag(:,j), pv_frag)
             DO k = 1, NDIM
-               call util_crossproduct(p_frag(:,j), v_frag(:,j), pv_frag)
-               l_orb_after(k) = l_orb_after(k) + (m_frag(j) * NORM2(pv_frag))
+               l_orb_after(k) = l_orb_after(k) + (m_frag(j) * pv_frag(k))
             END DO
          END DO
 
