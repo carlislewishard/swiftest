@@ -86,8 +86,8 @@ MODULE module_symba
           real(DP),     dimension(:,:),   allocatable :: vh       ! heliocentric velocity
           real(DP),     dimension(:),     allocatable :: mass     ! mass
           real(DP),     dimension(:),     allocatable :: radius   ! radius
-          real(DP),     dimension(:),     allocatable :: IP       ! moment of intertia
-          real(DP),     dimension(:),     allocatable :: rot      ! rotation
+          real(DP),     dimension(:,:),   allocatable :: IP       ! moment of intertia
+          real(DP),     dimension(:,:),   allocatable :: rot      ! rotation
      end type symba_merger 
 END MODULE module_symba
 !**********************************************************************************************************************************
