@@ -173,6 +173,7 @@ program swiftest_symba
       write(egyiu,300) t, ke, pe, te, htot, eoffset, msys
    end if
    write(*, *) " *************** Main Loop *************** "
+
    call system_clock(clock_count, count_rate, count_max)
    start = clock_count / (count_rate * 1.0_DP)
    do while ((t < tstop) .and. ((ntp0 == 0) .or. (ntp > 0)))

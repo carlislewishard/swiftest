@@ -215,7 +215,6 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
             END DO 
          END IF
 
-         write(*,*) "test before dev" 
          !########################################################## DEV ################################################################
          allocate(spin_vec_mag_frag(frags_added))
          allocate(spin_hat_frag(NDIM))
@@ -232,16 +231,16 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
                l_orb_after(k) = l_orb_after(k) + (m_frag(j) * pv_frag(k))
             END DO
          END DO
-         write(*,*) "test lspinafter" 
+
          l_spin_after = l_orb_before + l_spin_before - l_orb_after
          l_spin_frag = NORM2(l_spin_after) / frags_added
          spin_vec_mag_frag = 0.0_DP
-         write(*,*) "test before do loops"
+
          DO j = 1, frags_added
             IP_frag(:,j) = (2.0_DP / 5.0_DP) 
             mergeadd_list%IP(:, nmergeadd_start + count_frag + j - 1) = IP_frag(:,j)
             spin_hat_frag = rot_1 + rot_2
-            write(*,*) "spin hat frag"  
+ 
             DO k = 1, NDIM
                spin_vec_mag_frag(j) = l_spin_frag / (IP_frag(3,j) * spin_hat_frag(k) * m_frag(j) * mergeadd_list%radius(nmergeadd_start + count_frag + j - 1)**2)
             END DO
@@ -249,7 +248,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          END DO 
 
          !########################################################## DEV ################################################################
-         write(*,*) "test after dev" 
+
          count_frag = count_frag + frags_added
 
          DEALLOCATE(p_frag)
