@@ -99,6 +99,7 @@ contains
    end if
    if (param%lenergy) write(*,*) "ENERGY         = ",param%lenergy
    if (param%lringmoons) write(*,*) "RINGMOONS      = ",param%lringmoons
+   if (param%lrotation) write(*,*) "ROTATION      = ", param%lrotation
 
    if (ierr < 0) then
       write(*, 100) "Input parameter(s) failed check"
