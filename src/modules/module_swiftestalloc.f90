@@ -127,6 +127,8 @@ module module_swiftestalloc
       allocate(merger_list%vh(NDIM, n))
       allocate(merger_list%mass(n))
       allocate(merger_list%radius(n))
+      allocate(merger_list%rot(NDIM,n))
+      allocate(merger_list%IP(NDIM,n))
 
       merger_list%name(:) = 0
       merger_list%index_ps(:) = 1
@@ -137,6 +139,8 @@ module module_swiftestalloc
       merger_list%vh(:, :) = 0.0_DP
       merger_list%mass(:) = 0.0_DP
       merger_list%radius(:) = 0.0_DP
+      merger_list%IP(:, :) = 0.0_DP
+      merger_list%rot(:, :) = 0.0_DP
 
       return
    end subroutine symba_merger_allocate
