@@ -127,6 +127,8 @@ module module_swiftestalloc
       allocate(merger_list%vh(NDIM, n))
       allocate(merger_list%mass(n))
       allocate(merger_list%radius(n))
+      allocate(merger_list%Ip(NDIM,n))
+      allocate(merger_list%rot(NDIM,n))
 
       merger_list%name(:) = 0
       merger_list%index_ps(:) = 1
@@ -137,6 +139,8 @@ module module_swiftestalloc
       merger_list%vh(:, :) = 0.0_DP
       merger_list%mass(:) = 0.0_DP
       merger_list%radius(:) = 0.0_DP
+      merger_list%Ip(:,:) = 0.0_DP
+      merger_list%rot(:,:) = 0.0_DP
 
       return
    end subroutine symba_merger_allocate
@@ -286,6 +290,8 @@ module module_swiftestalloc
       if (allocated(merger_list%vh)) deallocate(merger_list%vh)
       if (allocated(merger_list%mass)) deallocate(merger_list%mass)
       if (allocated(merger_list%radius)) deallocate(merger_list%radius)
+      if (allocated(merger_list%Ip)) deallocate(merger_list%Ip)
+      if (allocated(merger_list%rot)) deallocate(merger_list%rot)
       return
    end subroutine symba_merger_deallocate
 
@@ -381,6 +387,8 @@ module module_swiftestalloc
       merger_list_out%vh(:, 1:n) = merger_list_in%vh(:, 1:n)
       merger_list_out%mass(1:n) = merger_list_in%mass(1:n)
       merger_list_out%radius(1:n) = merger_list_in%radius(1:n)
+      merger_list_out%Ip(:, 1:n) = merger_list_in%Ip(:, 1:n)
+      merger_list_out%rot(:, 1:n) = merger_list_in%rot(:, 1:n)
       return
    end subroutine symba_merger_copy
 
