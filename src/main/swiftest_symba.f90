@@ -319,6 +319,8 @@ program swiftest_symba
          mergeadd_list%vh(:,:) = 0
          mergeadd_list%mass(:) = 0
          mergeadd_list%radius(:) = 0
+         mergeadd_list%IP(:,:) = 0
+         mergeadd_list%rot(:,:) = 0
       end if
 
       if (allocated(mergesub_list%name)) then
@@ -330,6 +332,8 @@ program swiftest_symba
          mergesub_list%vh(:,:) = 0
          mergesub_list%mass(:) = 0
          mergesub_list%radius(:) = 0
+         mergeadd_list%IP(:,:) = 0
+         mergeadd_list%rot(:,:) = 0
       end if
 
       if (allocated(discard_plA%name)) call swiftest_pl_deallocate(discard_plA)

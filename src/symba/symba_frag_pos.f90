@@ -73,6 +73,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
    vh_2_end(:) = 0.0_DP
    rhill_p2 = 0.0_DP
 
+   
 
    DO i = 1, numenc
       ! First particle in encounter pair
@@ -107,15 +108,16 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
       rot_2(:) = symba_plA%helio%swiftest%rot(:,nmergesub_start + count_enc + 1)
 
       frags_added = mergesub_list%nadded(nmergesub_start + count_enc)
-
+ 
       IF (frags_added > 1) THEN !if this is not a perfect merger
 
          ALLOCATE(m_frag(frags_added))
          ALLOCATE(p_frag(NDIM, frags_added))
          ALLOCATE(v_frag(NDIM, frags_added))
-
+         ALLOCATE(IP_frag(NDIM, frags_added))
          m_frag(:) = 0.0_DP
          p_frag(:,:) = 0.0_DP
+         IP_frag(:,:) = 0.0_DP
 
          !Calculate the positions of the new fragments in a circle with a radius large enough to space
          ! all fragments apart by a distance of rhill_p1 + rhill_p2
@@ -158,7 +160,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          mp_frag = 0.0_DP
 
          count_frag = 0 !counter for the number of fragments added in this timestep used to increment on mergeadd_list
-
+         
          IF ((mergeadd_list%status(nmergeadd_start) == HIT_AND_RUN) .and. (frags_added > 2)) THEN !this is an imperfect hit and run
             DEALLOCATE(m_frag)
             ALLOCATE(m_frag(frags_added + 1))
@@ -213,6 +215,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
             END DO 
          END IF
 
+         write(*,*) "test before dev" 
          !########################################################## DEV ################################################################
          allocate(spin_vec_mag_frag(frags_added))
          allocate(spin_hat_frag(NDIM))
@@ -221,7 +224,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          call util_crossproduct(xh_2, vh_2, xvh_2)
          l_orb_before = (m1 * xvh_1) + (m2 * xvh_2)
          l_spin_before = (IP_1 * m1 * r1**2 * rot_1) + (IP_2 * m2 * r2**2 * rot_2)
-
+         
          l_orb_after(:) = 0.0_DP
          DO j = 1, frags_added
             call util_crossproduct(p_frag(:,j), v_frag(:,j), pv_frag)
@@ -229,15 +232,16 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
                l_orb_after(k) = l_orb_after(k) + (m_frag(j) * pv_frag(k))
             END DO
          END DO
-
+         write(*,*) "test lspinafter" 
          l_spin_after = l_orb_before + l_spin_before - l_orb_after
          l_spin_frag = NORM2(l_spin_after) / frags_added
          spin_vec_mag_frag = 0.0_DP
-
+         write(*,*) "test before do loops"
          DO j = 1, frags_added
             IP_frag(:,j) = (2.0_DP / 5.0_DP) 
             mergeadd_list%IP(:, nmergeadd_start + count_frag + j - 1) = IP_frag(:,j)
             spin_hat_frag = rot_1 + rot_2
+            write(*,*) "spin hat frag"  
             DO k = 1, NDIM
                spin_vec_mag_frag(j) = l_spin_frag / (IP_frag(3,j) * spin_hat_frag(k) * m_frag(j) * mergeadd_list%radius(nmergeadd_start + count_frag + j - 1)**2)
             END DO
@@ -245,11 +249,13 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          END DO 
 
          !########################################################## DEV ################################################################
-
+         write(*,*) "test after dev" 
          count_frag = count_frag + frags_added
 
          DEALLOCATE(p_frag)
          DEALLOCATE(m_frag)
+         DEALLOCATE(v_frag)
+         DEALLOCATE(IP_frag)
 
       END IF
 
