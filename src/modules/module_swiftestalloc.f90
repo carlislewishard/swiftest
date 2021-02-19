@@ -290,6 +290,8 @@ module module_swiftestalloc
       if (allocated(merger_list%vh)) deallocate(merger_list%vh)
       if (allocated(merger_list%mass)) deallocate(merger_list%mass)
       if (allocated(merger_list%radius)) deallocate(merger_list%radius)
+      if (allocated(merger_list%rot)) deallocate(merger_list%rot)
+      if (allocated(merger_list%IP)) deallocate(merger_list%IP)
       return
    end subroutine symba_merger_deallocate
 
