@@ -235,11 +235,11 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          spin_vec_mag_frag = 0.0_DP
 
          DO j = 1, frags_added
-            IP_frag(:,j) = (2.0_DP / 5.0_DP) * m_frag(j) * mergeadd_list%radius(nmergeadd_start + count_frag + j - 1)**2
-            mergeadd_list%IP(:, nmergeadd_start + count_frag + j - 1) = (2.0_DP / 5.0_DP)
+            IP_frag(:,j) = (2.0_DP / 5.0_DP) 
+            mergeadd_list%IP(:, nmergeadd_start + count_frag + j - 1) = IP_frag(:,j)
             spin_hat_frag = rot_1 + rot_2
             DO k = 1, NDIM
-               spin_vec_mag_frag(j) = l_spin_frag / (IP_frag(3,j) * spin_hat_frag(k))
+               spin_vec_mag_frag(j) = l_spin_frag / (IP_frag(3,j) * spin_hat_frag(k) * m_frag(j) * mergeadd_list%radius(nmergeadd_start + count_frag + j - 1)**2)
             END DO
             mergeadd_list%rot(:, nmergeadd_start + count_frag + j - 1) = spin_vec_mag_frag(:)
          END DO 
