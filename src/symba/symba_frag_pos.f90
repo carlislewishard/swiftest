@@ -58,6 +58,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
    integer(I4B), parameter                                :: SHIFTMAX = 9
 
 ! Executable code
+   write(*,*) "enter symba_frag_pos"
 
    numenc = nmergesub_step / 2 !number of encounters this step
    nmergesub_start = nmergesub - nmergesub_step + 1 !where the particles subtracted in this step are located in mergesub_list
@@ -91,6 +92,8 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
       rhill_p1 = symba_plA%helio%swiftest%rhill(nmergesub_start + count_enc)
       IP_1(:) = symba_plA%helio%swiftest%Ip(:,nmergesub_start + count_enc)
       rot_1(:) = symba_plA%helio%swiftest%rot(:,nmergesub_start + count_enc)
+      write(*,*) "rot_1 = ", rot_1 
+      write(*,*) "IP_1 = ", IP_1 
       ! Second particle in encounter pair
       DO j = 1, npl !loop through all the planets in symba_plA
          ! If the name of the planet in symba_plA matches the name of the planet in mergesub_list
@@ -106,7 +109,8 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
       rhill_p2 = symba_plA%helio%swiftest%rhill(nmergesub_start + count_enc + 1)
       IP_2(:) = symba_plA%helio%swiftest%Ip(:,nmergesub_start + count_enc + 1)
       rot_2(:) = symba_plA%helio%swiftest%rot(:,nmergesub_start + count_enc + 1)
-
+      write(*,*) "rot_2 = ", rot_2 
+      write(*,*) "IP_2 = ", IP_2 
       frags_added = mergesub_list%nadded(nmergesub_start + count_enc)
  
       IF (frags_added > 1) THEN !if this is not a perfect merger
