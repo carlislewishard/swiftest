@@ -51,7 +51,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
    REAL(DP), DIMENSION(NDIM)                              :: xvh_1, xvh_2, pv_frag, spin_hat_frag
    REAL(DP), DIMENSION(NDIM)                              :: xh_1, xh_2, vh_1, vh_2, vbs, vb_1, vb_2, delta_v, delta_p, v_cross_p
    REAL(DP), DIMENSION(NDIM)                              :: tri_pro_unit_vec, vh_1_end, vh_2_end, xh_rm, IP_1, IP_2, rot_1, rot_2
-   REAL(DP), DIMENSION(NDIM)                              :: l_orb_before, l_orb_after, l_spin_before, l_spin_after, calc_spin, l_spin_frag
+   REAL(DP), DIMENSION(NDIM)                              :: l_orb_before, l_orb_after, l_spin_before, l_spin_after, l_spin_frag
    REAL(DP), DIMENSION(:, :), ALLOCATABLE                 :: p_frag, v_frag, IP_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE                    :: m_frag
    integer(I4B), save                                     :: thetashift = 0
@@ -237,24 +237,12 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          l_spin_frag = l_spin_after / frags_added
          spin_vec_mag_frag = 0.0_DP
          spin_hat_frag = l_spin_after / (NORM2(l_spin_after))
-         write(*,*) "l_spin_frag", l_spin_frag
-         write(*,*) "spin_hat_frag", spin_hat_frag
          DO j = 1, frags_added
             IP_frag(:,j) = (2.0_DP / 5.0_DP) 
             mergeadd_list%IP(:, nmergeadd_start + count_frag + j - 1) = IP_frag(:,j)
             spin_vec_mag_frag = norm2(l_spin_frag)  / (IP_frag(3,j)  * m_frag(j) * mergeadd_list%radius(nmergeadd_start + count_frag + j - 1)**2)
-            write(*,*) "spin_vec_mag_frag", spin_vec_mag_frag
-            write(*,*) "spin_vec_mag_frag*spin_hat_frag(:)", spin_vec_mag_frag*spin_hat_frag(:)
-            write(*,*) " mergeadd_list%rot(:, nmergeadd_start + count_frag + j - 1)", mergeadd_list%rot(:, nmergeadd_start + count_frag + j - 1)
             mergeadd_list%rot(:, nmergeadd_start + count_frag + j - 1) = spin_vec_mag_frag*spin_hat_frag(:)
          END DO 
-         write(*,*) " l_spin_after = ", l_orb_before + l_spin_before - l_orb_after
-         calc_spin(:) = 0.0
-         DO j = 1, frags_added
-            calc_spin = calc_spin + IP_frag(3,j)  * m_frag(j) * (mergeadd_list%radius(nmergeadd_start + count_frag + j - 1)**2)*spin_vec_mag_frag*spin_hat_frag(:)
-         END DO 
-
-         write(*,*) "calculated l_spin_after", calc_spin
          !########################################################## DEV ################################################################
 
          count_frag = count_frag + frags_added
