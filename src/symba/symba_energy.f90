@@ -50,7 +50,7 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, htot, msys)
       mass = swiftest_plA%mass(i)
       radius = swiftest_plA%radius(i)
       rot = swiftest_plA%rot(:,i)
-      htot(:) = htot(:) + mass*IP*rot*radius**2
+      htot(:) = htot(:) + mass*IP*rot(:)*radius**2
    end do
 
    pe = 0.0_DP
