@@ -56,10 +56,17 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
    REAL(DP), DIMENSION(:), ALLOCATABLE                    :: m_frag
    integer(I4B), save                                     :: thetashift = 0
    integer(I4B), parameter                                :: SHIFTMAX = 9
+   REAL(DP)                                               :: ke, pe, te, msys, Ltot_now, Ltot_after, te_orig, te_error, name_1, name_2, mass, radius, IP
+   REAL(DP), DIMENSION(NDIM)                              :: htot, x, v,  rot, h, dx, htot_now, htot_after, v_f, v_com_frag, v_com, mv_frag 
 
 ! Executable code
    write(*,*) "enter symba_frag_pos"
-
+   call symba_energy(npl, symba_plA%helio%swiftest, 0.0_DP, 0.0_DP, ke, pe, te_orig, htot, msys)
+   Ltot_now = norm2(htot)
+   htot_now = htot 
+   write(*,*) "htot_now", htot 
+   write(*,*) "Ltot_now", Ltot_now
+   write(*,*) "te_orig = ", te_orig 
    numenc = nmergesub_step / 2 !number of encounters this step
    nmergesub_start = nmergesub - nmergesub_step + 1 !where the particles subtracted in this step are located in mergesub_list
    nmergeadd_start = nmergeadd - nmergeadd_step + 1 !where the particles added in this step are located in mergeadd_list
@@ -84,6 +91,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          IF (symba_plA%helio%swiftest%name(j) == mergesub_list%name(nmergesub_start + count_enc)) THEN
             xh_1(:) = symba_plA%helio%swiftest%xh(:,j)
             vh_1_end(:) = symba_plA%helio%swiftest%vh(:,j)
+            name_1 = symba_plA%helio%swiftest%name(j)
          END IF
       END DO
       vh_1(:) = mergesub_list%vh(:,nmergesub_start + count_enc)
@@ -101,6 +109,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          IF (symba_plA%helio%swiftest%name(j) == mergesub_list%name(nmergesub_start + count_enc + 1)) THEN
             xh_2(:) = symba_plA%helio%swiftest%xh(:,j)
             vh_2_end(:) = symba_plA%helio%swiftest%vh(:,j)
+            name_2 = symba_plA%helio%swiftest%name(j)
          END IF
       END DO
       vh_2(:) = mergesub_list%vh(:,nmergesub_start + count_enc + 1)
@@ -122,6 +131,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
          m_frag(:) = 0.0_DP
          p_frag(:,:) = 0.0_DP
          IP_frag(:,:) = 0.0_DP
+         mv_frag(:) = 0.0_DP
 
          !Calculate the positions of the new fragments in a circle with a radius large enough to space
          ! all fragments apart by a distance of rhill_p1 + rhill_p2
@@ -193,13 +203,25 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
                p_frag(:,j) = ((- r_circle  * cos(phase_ang + theta * j)) * v_col_unit_vec(:)) + &
                ((- r_circle * sin(phase_ang + theta * j)) * tri_pro_unit_vec) + p_com(:)
                mp_frag = (p_frag(:,j) * m_frag(j)) + mp_frag(:)
+               mv_frag = mv_frag + (v_frag(:,j) +vbs )*m_frag(j)  !!!! UNSURE 
             END DO
          END IF 
 
          m_frag_tot = SUM(m_frag(:))
          p_com_frag(:) = mp_frag(:) / m_frag_tot
          p_f(:) =  p_com(:) - p_com_frag(:)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! UNSURE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         !! Calculate the error 
+         v_com(:) = ((vb_1(:) * m1) + (vb_2(:) * m2)) / (m1 + m2)
+         v_com_frag(:) = mv_frag(:) / m_frag_tot ! velocity of the COM of the fragments
+         v_f(:) = v_com(:) - v_com_frag(:) ! velocity error between COM of collison and COM of fragments
+         ! Calculate the final velocity of the fragments and add them to mergeadd_list
+         DO j=1, frags_added
+            v_frag(:,j) = v_frag(:,j) + v_f(:) ! velocity of the fragments including the error
+            mergeadd_list%vh(:, nmergeadd_start + count_frag + j - 1) = v_frag(:, j) ! add to mergeadd_list 
+         END DO 
 
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!UNSURE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
          IF ((mergeadd_list%status(nmergeadd_start) == HIT_AND_RUN) .and. (frags_added > 2)) THEN !this is an imperfect hit and run
             DO j=2, frags_added
                p_frag(:,j) = p_frag(:,j) + p_f(:)
@@ -244,7 +266,69 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
             mergeadd_list%rot(:, nmergeadd_start + count_frag + j - 1) = spin_vec_mag_frag*spin_hat_frag(:)
          END DO 
          !########################################################## DEV ################################################################
-
+         !##########################################################CALC ###############################################################
+         write(*,*) "start first loop"
+         DO k = 1, npl 
+            if ((symba_plA%helio%swiftest%name(k) /= name_2) .OR. (symba_plA%helio%swiftest%name(k) /= name_1)) then 
+               write(*,*) "k particle = ", k 
+               x(:) = symba_plA%helio%swiftest%xb(:, k)
+               v(:) = symba_plA%helio%swiftest%vb(:, k)
+               h(1) =  (x(2) * v(3) - x(3) * v(2))
+               h(2) =  (x(3) * v(1) - x(1) * v(3))
+               h(3) =  (x(1) * v(2) - x(2) * v(1))
+               IP = symba_plA%helio%swiftest%Ip(3,k)
+               rot = symba_plA%helio%swiftest%rot(:,k)
+               radius = symba_plA%helio%swiftest%radius(k)
+               htot(:) = symba_plA%helio%swiftest%mass(k) * h(:) + htot(:) + symba_plA%helio%swiftest%mass(k)*IP*rot*radius**2
+               ke = ke + 0.5_DP * symba_plA%helio%swiftest%mass(k) * dot_product(v, v)
+            end if 
+         END DO 
+         write(*,*) "first loop done"
+         DO j = 1, frags_added
+            x(:) = mergeadd_list%xh(:, nmergeadd_start + count_frag + j - 1)
+            v(:) = mergeadd_list%vh(:, nmergeadd_start + count_frag + j - 1)
+            h(1) =  (x(2) * v(3) - x(3) * v(2))
+            h(2) =  (x(3) * v(1) - x(1) * v(3))
+            h(3) =  (x(1) * v(2) - x(2) * v(1))
+            mass = mergeadd_list%mass(nmergeadd_start + count_frag + j - 1)
+            IP  = mergeadd_list%Ip(3, nmergeadd_start + count_frag + j - 1)
+            rot = mergeadd_list%rot(:, nmergeadd_start + count_frag + j - 1)
+            radius = mergeadd_list%radius( nmergeadd_start + count_frag + j - 1)
+            htot(:) = htot(:) + mass * h(:) + mass*IP*rot*radius**2
+         END DO 
+         write(*,*) "second loop done"
+         pe = 0.0_DP
+         do k = 1, npl - 1
+            if ((symba_plA%helio%swiftest%name(k) /= name_2) .OR. (symba_plA%helio%swiftest%name(k) /= name_1))then 
+               do j = k + 1, npl
+                  if ((symba_plA%helio%swiftest%name(j) /= name_2) .OR. (symba_plA%helio%swiftest%name(j) /= name_1)) then 
+                     dx(:) = symba_plA%helio%swiftest%xh(:, j) - symba_plA%helio%swiftest%xh(:, k)
+                     radius = norm2(dx(:)) 
+                     pe = pe - symba_plA%helio%swiftest%mass(k) * symba_plA%helio%swiftest%mass(j) / radius
+                  end if 
+               end do 
+               do j = 1, frags_added
+                  dx(:) = mergeadd_list%xh(:, nmergeadd_start + count_frag + j - 1) - symba_plA%helio%swiftest%xb(:, k) 
+                  pe = pe - symba_plA%helio%swiftest%mass(k) * mergeadd_list%mass( nmergeadd_start + count_frag + j - 1) / norm2(dx(:)) 
+               end do
+            end if 
+         end do
+         write(*,*) "third loop done"
+         do j = 1, frags_added-1
+            do k = j+1, frags_added
+               dx(:) = mergeadd_list%xh(:, nmergeadd_start + count_frag + k - 1) - mergeadd_list%xh(:, nmergeadd_start + count_frag + j - 1)
+               pe = pe - mergeadd_list%mass( nmergeadd_start + count_frag + k - 1) * mergeadd_list%mass( nmergeadd_start + count_frag + j - 1) / norm2(dx(:)) 
+            END DO 
+         END DO 
+         write(*,*) "final loop done"
+         te = ke + pe
+         Ltot_after = norm2(htot)
+         htot_after = htot 
+         write(*,*) "htot_after", htot 
+         write(*,*) "htot_after - htot_now", htot_after - htot_now
+         write(*,*) "Ltot_after", (Ltot_after - Ltot_now) / Ltot_now
+         write(*,*) "te = ", te 
+         !##########################################################CALC ###############################################################
          count_frag = count_frag + frags_added
 
          DEALLOCATE(p_frag)
