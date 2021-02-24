@@ -48,7 +48,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
    REAL(DP)                                               :: phase_ang, r_circle, rhill_p1, rhill_p2, m1, m2, r1, r2, v_col_norm
    REAL(DP)                                               :: m_frag_tot, theta,spin_vec_mag_frag
    REAL(DP), DIMENSION(NDIM)                              :: p_com, v_col_vec, v_col_unit_vec, mp_frag, p_com_frag, p_f, tri_pro
-   REAL(DP), DIMENSION(NDIM)                              :: xvh_1, xvh_2, pv_frag, spin_hat_frag
+   REAL(DP), DIMENSION(NDIM)                              :: xvh_1, xvh_2, pv_frag, spin_hat_frag, tmp
    REAL(DP), DIMENSION(NDIM)                              :: xh_1, xh_2, vh_1, vh_2, vbs, vb_1, vb_2, delta_v, delta_p, v_cross_p
    REAL(DP), DIMENSION(NDIM)                              :: tri_pro_unit_vec, vh_1_end, vh_2_end, xh_rm, IP_1, IP_2, rot_1, rot_2
    REAL(DP), DIMENSION(NDIM)                              :: l_orb_before, l_orb_after, l_spin_before, l_spin_after, l_spin_frag
@@ -58,7 +58,6 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
    integer(I4B), parameter                                :: SHIFTMAX = 9
 
 ! Executable code
-   write(*,*) "enter symba_frag_pos"
 
    numenc = nmergesub_step / 2 !number of encounters this step
    nmergesub_start = nmergesub - nmergesub_step + 1 !where the particles subtracted in this step are located in mergesub_list
@@ -73,8 +72,6 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
    xh_2(:) = 0.0_DP
    vh_2_end(:) = 0.0_DP
    rhill_p2 = 0.0_DP
-
-   
 
    DO i = 1, numenc
       ! First particle in encounter pair
@@ -92,8 +89,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
       rhill_p1 = symba_plA%helio%swiftest%rhill(nmergesub_start + count_enc)
       IP_1(:) = symba_plA%helio%swiftest%Ip(:,nmergesub_start + count_enc)
       rot_1(:) = symba_plA%helio%swiftest%rot(:,nmergesub_start + count_enc)
-      write(*,*) "rot_1 = ", rot_1 
-      write(*,*) "IP_1 = ", IP_1 
+
       ! Second particle in encounter pair
       DO j = 1, npl !loop through all the planets in symba_plA
          ! If the name of the planet in symba_plA matches the name of the planet in mergesub_list
@@ -109,8 +105,7 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
       rhill_p2 = symba_plA%helio%swiftest%rhill(nmergesub_start + count_enc + 1)
       IP_2(:) = symba_plA%helio%swiftest%Ip(:,nmergesub_start + count_enc + 1)
       rot_2(:) = symba_plA%helio%swiftest%rot(:,nmergesub_start + count_enc + 1)
-      write(*,*) "rot_2 = ", rot_2 
-      write(*,*) "IP_2 = ", IP_2 
+
       frags_added = mergesub_list%nadded(nmergesub_start + count_enc)
  
       IF (frags_added > 1) THEN !if this is not a perfect merger
@@ -232,8 +227,9 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
                l_orb_after(k) = l_orb_after(k) + (m_frag(j) * pv_frag(k))
             END DO
          END DO
-
+         tmp(:) = 0.0_DP
          l_spin_after = l_orb_before + l_spin_before - l_orb_after
+
          l_spin_frag = l_spin_after / frags_added
          spin_vec_mag_frag = 0.0_DP
          spin_hat_frag = l_spin_after / (NORM2(l_spin_after))
@@ -242,7 +238,10 @@ SUBROUTINE symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, 
             mergeadd_list%IP(:, nmergeadd_start + count_frag + j - 1) = IP_frag(:,j)
             spin_vec_mag_frag = norm2(l_spin_frag)  / (IP_frag(3,j)  * m_frag(j) * mergeadd_list%radius(nmergeadd_start + count_frag + j - 1)**2)
             mergeadd_list%rot(:, nmergeadd_start + count_frag + j - 1) = spin_vec_mag_frag*spin_hat_frag(:)
+            tmp(:) = tmp(:) + (spin_vec_mag_frag*spin_hat_frag(:)*IP_frag(3,j)*m_frag(j)*mergeadd_list%radius(nmergeadd_start + count_frag + j - 1)**2)
          END DO 
+
+         write(*,*) "symba_frag_pos spin ang mom after diff:", l_spin_after - tmp
          !########################################################## DEV ################################################################
 
          count_frag = count_frag + frags_added
