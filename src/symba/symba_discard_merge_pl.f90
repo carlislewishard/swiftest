@@ -60,7 +60,7 @@ SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard)
           IF (plplenc_list%status(i) == MERGED) THEN
                index1 = plplenc_list%index1(i)
                index2 = plplenc_list%index2(i)
-               ! This IF statement is for if lfragmentation = FALSE
+               ! This IF statement is for handling the merger case 
                IF ((symba_plA%helio%swiftest%status(index1) == ACTIVE) .AND.                                                    &
                    (symba_plA%helio%swiftest%status(index2) == ACTIVE)) THEN
 
@@ -94,8 +94,8 @@ SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard)
                               indexk = indexchild
                          END IF
                     END DO
-                    x(:) = x(:)/mtot
-                    v(:) = v(:)/mtot
+                    x(:) = x(:)/mtot  ! position com of system 
+                    v(:) = v(:)/mtot  ! velocity com of system 
                     r = r3**(1.0_DP/3.0_DP)
                     symba_plA%helio%swiftest%mass(indexk) = mtot
                     symba_plA%helio%swiftest%radius(indexk) = r
@@ -151,7 +151,7 @@ SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard)
                          symba_plA%helio%swiftest%status(array_child(j)) = INACTIVE
                     END DO
                     ldiscard = .TRUE.
-               ELSE IF ((symba_plA%helio%swiftest%status(index1) == GRAZE_AND_MERGE) .AND.  &                                                  
+               ELSE IF ((symba_plA%helio%swiftest%status(index1) == GRAZE_AND_MERGE) .AND.  &    ! not used in this version, graze and merge are considered pure mergers for now (2021)                                              
                    (symba_plA%helio%swiftest%status(index2) == GRAZE_AND_MERGE)) THEN 
 
                     enc_big = plplenc_list%index1(i)
@@ -162,6 +162,7 @@ SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard)
                     END DO
                     ldiscard = .TRUE.
                END IF
+               ! call symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plplenc_list, index_enc) !tentatively, need to include merger case
           END IF
      END DO
      RETURN
