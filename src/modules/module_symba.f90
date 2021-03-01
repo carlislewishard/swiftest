@@ -88,6 +88,9 @@ MODULE module_symba
           real(DP),     dimension(:),     allocatable :: radius   ! radius
           real(DP),     dimension(:,:),   allocatable :: IP       ! moment of intertia
           real(DP),     dimension(:,:),   allocatable :: rot      ! rotation
+          real(DP),     dimension(:),     allocatable :: name_p1  ! name of parent 1 in symba_plA
+          real(DP),     dimension(:),     allocatable :: name_p2  ! name of parent 2 in symba_plA
+
      end type symba_merger 
 END MODULE module_symba
 !**********************************************************************************************************************************
