@@ -28,11 +28,11 @@ subroutine symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
    integer(I4B)                            :: i, j, k, stat1, stat2, index1, index2, indexchild
    integer(I4B)                            :: index1_child, index2_child, index1_parent, index2_parent
    integer(I4B)                            :: name1, name2, nchild1, nchild2
-   real(DP)                                :: mtot, Mcb
-   real(DP), dimension(NDIM)               :: xnew, vnew, vbs
+   real(DP)                                :: mtot, Mcb,r1,r2, rmerge
+   real(DP), dimension(NDIM)               :: xnew, vnew, vbs,ip_1,ip_2, ip_merge, l_spin_after, l_spin_before
    integer(I4B), dimension(:), allocatable :: array_keep_child, array_rm_child
-   real(DP), dimension(NDIM) :: Lspin, xc1, xc2, vc1, vc2
-
+   real(DP), dimension(NDIM) :: Lspin, xc1, xc2, vc1, vc2, spin_hat, spin_vec_mag, l_orb_before, l_orb_after, rot_1, rot_2
+   real(DP), dimension(NDIM) :: xv_1, xv_2
    index1 = plplenc_list%index1(index_enc)
    index2 = plplenc_list%index2(index_enc)
    index1_parent = symba_plA%index_parent(index1)
@@ -52,22 +52,46 @@ subroutine symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
    vnew(:) = (m1 * v1(:) + m2 * v2(:)) / mtot
 
 
-   ! Convert the orbital angular momentum of the pair into spin angular momentum of the merged body
+   !! Convert the orbital angular momentum of the pair into spin angular momentum of the merged body
    xc1(:) = x1(:) - xnew(:)
    xc2(:) = x2(:) - xnew(:)
 
    vc1(:) = v1(:) - vnew(:)
    vc2(:) = v2(:) - vnew(:)
    
-   Lspin(1) = m1 * (xc1(2) * vc1(3) - xc1(3) * vc1(2))
-   Lspin(2) = m1 * (xc1(3) * vc1(1) - xc1(1) * vc1(3))
-   Lspin(3) = m1 * (xc1(1) * vc1(2) - xc1(2) * vc1(1))
-   Lspin(1) = Lspin(1) + m2 * (xc2(2) * vc2(3) - xc2(3) * vc2(2))
-   Lspin(2) = Lspin(2) + m2 * (xc2(3) * vc2(1) - xc2(1) * vc2(3))
-   Lspin(3) = Lspin(3) + m2 * (xc2(1) * vc2(2) - xc2(2) * vc2(1))
+   !Lspin(1) = m1 * (xc1(2) * vc1(3) - xc1(3) * vc1(2))
+   !Lspin(2) = m1 * (xc1(3) * vc1(1) - xc1(1) * vc1(3))
+   !Lspin(3) = m1 * (xc1(1) * vc1(2) - xc1(2) * vc1(1))
+   !Lspin(1) = Lspin(1) + m2 * (xc2(2) * vc2(3) - xc2(3) * vc2(2))
+   !Lspin(2) = Lspin(2) + m2 * (xc2(3) * vc2(1) - xc2(1) * vc2(3))
+   !Lspin(3) = Lspin(3) + m2 * (xc2(1) * vc2(2) - xc2(2) * vc2(1))
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Spin calculation !!!!!!!!!!!!!!!!!!!!!!!!!
+   call util_crossproduct(xc1, vc1, xv_1)
+   call util_crossproduct(xc2, vc2, xv_2)
+   ip_1 = symba_plA%helio%swiftest%Ip(:, index1_parent)
+   ip_2 = symba_plA%helio%swiftest%Ip(:, index2_parent)
+   rot_1 = symba_plA%helio%swiftest%rot(:, index1_parent)
+   rot_2 = symba_plA%helio%swiftest%rot(:, index2_parent)
+   r1 = symba_plA%helio%swiftest%radius(index1)
+   r2 = symba_plA%helio%swiftest%radius(index1)
+   ! Calculate the orbital angular momentum and the spin angular momentum of the two merging bodies before the collision
+   l_orb_before = (m1 * xv_1) + (m2 * xv_2)
+   l_spin_before = (ip_1 * m1 * r1**2 * rot_1) + (ip_2 * m2 * r2**2 * rot_2)
+   l_orb_after(:) = 0.0_DP
+   spin_vec_mag = 0.0_DP
+   l_spin_after = l_orb_before + l_spin_before - l_orb_after
+   spin_hat = l_spin_after / NORM2(l_spin_after)
+   ip_merge = 2.0_DP / 5.0_DP
+   rmerge = (r1**3 + r2**3)**(1.0_DP/3.0_DP)
+   spin_vec_mag = NORM2(l_spin_after) / (ip_merge*mtot*rmerge**2)
+
+
+
+   !!!!!!!!!!!!!!!!!!!!!!!!! end spin calculation !!!!!!!!!!!!!!!!!!
+
 
    ! We can't do anything with the lost spin angular momentum except keep track of it
-   Loffset = Loffset + NORM2(Lspin)
+   !Loffset = Loffset + NORM2(Lspin)
    
    write(*, *) "Merging particles ", name1, " and ", name2, " at time t = ",t
 
@@ -98,9 +122,13 @@ subroutine symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
 
    symba_plA%helio%swiftest%xh(:,index1_parent) = xnew(:)
    symba_plA%helio%swiftest%vb(:,index1_parent) = vnew(:)
+   symba_plA%helio%swiftest%Ip(:, index1_parent) = ip_merge
+   symba_plA%helio%swiftest%rot(:, index1_parent) = spin_vec_mag*spin_hat
 
    symba_plA%helio%swiftest%xh(:,index2_parent) = xnew(:)
-   symba_plA%helio%swiftest%vb(:,index2_parent) = vnew(:) 
+   symba_plA%helio%swiftest%vb(:,index2_parent) = vnew(:)
+   symba_plA%helio%swiftest%Ip(:, index2_parent) = ip_merge
+   symba_plA%helio%swiftest%rot(:, index2_parent) = spin_vec_mag*spin_hat 
 
    ! the children of parent one are the children we are keeping
    if (nchild1 > 0) then
@@ -111,6 +139,8 @@ subroutine symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
          indexchild = array_keep_child(i)
          symba_plA%helio%swiftest%xh(:, indexchild) = xnew(:) 
          symba_plA%helio%swiftest%vb(:, indexchild) = vnew(:)
+         symba_plA%helio%swiftest%Ip(:, indexchild) = ip_merge
+         symba_plA%helio%swiftest%rot(:, indexchild) = spin_vec_mag*spin_hat
       end do
    end if
 
@@ -130,6 +160,8 @@ subroutine symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
          indexchild = array_rm_child(i)
          symba_plA%helio%swiftest%xh(:,indexchild) = xnew(:)
          symba_plA%helio%swiftest%vb(:,indexchild) = vnew(:)
+         symba_plA%helio%swiftest%Ip(:, indexchild) = ip_merge
+         symba_plA%helio%swiftest%rot(:, indexchild) = spin_vec_mag*spin_hat
          ! go through the children of the removed parent and add those children to the list of children of the kept parent
          symba_plA%index_child(nchild1 + i + 1, index1_parent) = indexchild
       end do 
@@ -170,7 +202,8 @@ subroutine symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
    mergeadd_list%xh(:,nmergeadd) = xnew(:) 
    mergeadd_list%vh(:,nmergeadd) = vnew(:) - vbs(:)
    mergeadd_list%mass(nmergeadd) = mtot
-   mergeadd_list%radius(nmergeadd) = (rad1**3 + rad2**3)**(1.0_DP/3.0_DP)
-
+   mergeadd_list%radius(nmergeadd) = rmerge
+   mergeadd_list%Ip(:,nmergeadd) = ip_merge
+   mergeadd_list%rot(:,nmergeadd) = spin_vec_mag*spin_hat
    return 
 end subroutine symba_casemerge

@@ -56,8 +56,13 @@ SUBROUTINE symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
      LOGICAL, DIMENSION(npl)                        :: discard_l_pl 
      LOGICAL, DIMENSION(nmergeadd)                  :: frag_l_add
      LOGICAL, DIMENSION(ntp)                        :: discard_l_tp
+     REAL(DP)                                       :: ke, pe, te_orig, te, msys, Ltot_now, Ltot_after
+     REAL(DP), DIMENSION(NDIM)                      :: htot
 
 ! Executable code
+    call symba_energy(npl, symba_plA%helio%swiftest, 0.0_DP, 0.0_DP, ke, pe, te_orig, htot, msys)
+    Ltot_now = norm2(htot)
+    write(*,*) "Ltot_now", Ltot_now
 
     IF (ldiscard) THEN 
         nsppl = 0
@@ -259,6 +264,11 @@ SUBROUTINE symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
         symba_tpA%helio%swiftest%nbody = ntp
     END IF 
 
+    call symba_energy(npl, symba_plA%helio%swiftest, 0.0_DP, 0.0_DP, ke, pe, te, htot, msys)
+    Ltot_after = norm2(htot)
+    write(*,*) "Ltot_after", Ltot_after
+    write(*,*) "(Ltot_after - Ltot_now) / Ltot_now", (Ltot_after - Ltot_now) / Ltot_now
+    write(*,*) "(te-te_orig)/te_orig", (te-te_orig)/te_orig
 END SUBROUTINE symba_rearray
 
 
