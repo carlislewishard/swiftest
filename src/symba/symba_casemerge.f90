@@ -28,11 +28,11 @@ subroutine symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
    integer(I4B)                            :: i, j, k, stat1, stat2, index1, index2, indexchild
    integer(I4B)                            :: index1_child, index2_child, index1_parent, index2_parent
    integer(I4B)                            :: name1, name2, nchild1, nchild2
-   real(DP)                                :: mtot, Mcb
-   real(DP), dimension(NDIM)               :: xnew, vnew, vbs
+   real(DP)                                :: mtot, Mcb,r1,r2, rmerge
+   real(DP), dimension(NDIM)               :: xnew, vnew, vbs,ip_1,ip_2, ip_merge, l_spin_after, l_spin_before
    integer(I4B), dimension(:), allocatable :: array_keep_child, array_rm_child
-   real(DP), dimension(NDIM) :: Lspin, xc1, xc2, vc1, vc2
-
+   real(DP), dimension(NDIM) :: Lspin, xc1, xc2, vc1, vc2, spin_hat, spin_vec_mag, l_orb_before, l_orb_after, rot_1, rot_2
+   real(DP), dimension(NDIM) :: xv_1, xv_2
    index1 = plplenc_list%index1(index_enc)
    index2 = plplenc_list%index2(index_enc)
    index1_parent = symba_plA%index_parent(index1)
@@ -72,8 +72,8 @@ subroutine symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
    ip_2 = symba_plA%helio%swiftest%Ip(:, index2_parent)
    rot_1 = symba_plA%helio%swiftest%rot(:, index1_parent)
    rot_2 = symba_plA%helio%swiftest%rot(:, index2_parent)
-   r1 = symba_plA%helio%swiftest%r1(index1)
-   r2 = symba_plA%helio%swiftest%r2(index1)
+   r1 = symba_plA%helio%swiftest%radius(index1)
+   r2 = symba_plA%helio%swiftest%radius(index1)
    ! Calculate the orbital angular momentum and the spin angular momentum of the two merging bodies before the collision
    l_orb_before = (m1 * xv_1) + (m2 * xv_2)
    l_spin_before = (ip_1 * m1 * r1**2 * rot_1) + (ip_2 * m2 * r2**2 * rot_2)
@@ -203,7 +203,7 @@ subroutine symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
    mergeadd_list%vh(:,nmergeadd) = vnew(:) - vbs(:)
    mergeadd_list%mass(nmergeadd) = mtot
    mergeadd_list%radius(nmergeadd) = rmerge
-   mergeadd_list%Ip(nmergeadd) = ip_merge
-   mergeadd_list%rot(nmergeadd) = spin_vec_mag*spin_hat
+   mergeadd_list%Ip(:,nmergeadd) = ip_merge
+   mergeadd_list%rot(:,nmergeadd) = spin_vec_mag*spin_hat
    return 
 end subroutine symba_casemerge
