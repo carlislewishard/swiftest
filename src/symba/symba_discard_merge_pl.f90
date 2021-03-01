@@ -32,7 +32,7 @@
 !  Notes       : Adapted from Hal Levison's Swift routine discard_mass_merge.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard)
+SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard, mergeadd_list, nmergeadd)
 
 ! Modules
      USE swiftest
@@ -42,9 +42,10 @@ SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard)
      IMPLICIT NONE
 
 ! Arguments
-     INTEGER(I4B), INTENT(IN)        :: nplplenc
+     INTEGER(I4B), INTENT(INOUT)        :: nplplenc, nmergeadd
      TYPE(symba_pl)                  :: symba_plA
-     TYPE(symba_plplenc), INTENT(IN) :: plplenc_list
+     TYPE(symba_plplenc), INTENT(INOUT) :: plplenc_list
+     TYPE(symba_merger), INTENT(INOUT):: mergeadd_list
      LOGICAL(LGT), INTENT(INOUT)     :: ldiscard
 
 ! Internals
@@ -123,7 +124,7 @@ SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard)
 
                ELSE IF ((symba_plA%helio%swiftest%status(index1) == DISRUPTION) .AND.    &                                                
                    (symba_plA%helio%swiftest%status(index2) == DISRUPTION)) THEN 
-                    call symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plplenc_list, index_enc) !tentatively
+                    call symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plplenc_list, i) !tentatively
                     enc_big = plplenc_list%index1(i)
                     nchild = symba_plA%nchild(enc_big)
                     array_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,enc_big)
@@ -133,7 +134,7 @@ SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard)
                     ldiscard = .TRUE.
                ELSE IF ((symba_plA%helio%swiftest%status(index1) == SUPERCATASTROPHIC) .AND.   &                                                 
                    (symba_plA%helio%swiftest%status(index2) == SUPERCATASTROPHIC)) THEN 
-                    call symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plplenc_list, index_enc) !tentatively
+                    call symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plplenc_list, i) !tentatively
                     enc_big = plplenc_list%index1(i)
                     nchild = symba_plA%nchild(enc_big)
                     array_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,enc_big)
@@ -143,7 +144,7 @@ SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard)
                     ldiscard = .TRUE.
                ELSE IF ((symba_plA%helio%swiftest%status(index1) == HIT_AND_RUN) .AND.      &                                              
                    (symba_plA%helio%swiftest%status(index2) == HIT_AND_RUN)) THEN 
-                    call symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plplenc_list, index_enc) !tentatively
+                    call symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plplenc_list, i) !tentatively
                     enc_big = plplenc_list%index1(i)
                     nchild = symba_plA%nchild(enc_big)
                     array_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,enc_big)

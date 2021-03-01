@@ -860,15 +860,16 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard)
+          SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard, mergeadd_list, nmergeadd)
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_helio
                USE module_symba
                IMPLICIT NONE
-               INTEGER(I4B), INTENT(IN)         :: nplplenc
+               INTEGER(I4B), INTENT(INOUT)         :: nplplenc, nmergeadd
                TYPE(symba_pl)                   :: symba_plA
-               TYPE(symba_plplenc), INTENT(IN)  :: plplenc_list
+               TYPE(symba_plplenc), INTENT(INOUT)  :: plplenc_list
+               TYPE(symba_merger), INTENT(INOUT):: mergeadd_list
                LOGICAL(LGT), INTENT(INOUT)      :: ldiscard
           END SUBROUTINE symba_discard_merge_pl
      END INTERFACE
