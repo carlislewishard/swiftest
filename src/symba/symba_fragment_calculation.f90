@@ -53,13 +53,13 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
    REAL(DP), DIMENSION(NDIM)                              :: v_com, v_com_frag, v_com_rm, v_com_keep, v_com_1, v_com_2, v_f
    REAL(DP), DIMENSION(NDIM)                              :: v_col_vec, v_col_unit_vec, tri_pro, tri_pro_unit_vec
    REAL(DP), DIMENSION(NDIM)                              :: vbs, delta_v, delta_p, v_cross_p
-   REAL(DP), DIMENSION(NDIM)                              :: xv_1, xv_2, ip_1, ip_2, rot_1, rot_2, pv_frag, spin_hat_frag
+   REAL(DP), DIMENSION(NDIM)                              :: xv_1, xv_2, ip_1, ip_2, rot_1, rot_2, pv_frag, spin_hat_frag, tmp
    REAL(DP), DIMENSION(NDIM)                              :: l_orb_before, l_orb_after, l_spin_before, l_spin_after, l_spin_frag
-   REAL(DP), DIMENSION(10)                                :: nmergeadd_frag_index
    REAL(DP), DIMENSION(:, :), ALLOCATABLE                 :: p_frag, v_frag
    REAL(DP), DIMENSION(:), ALLOCATABLE                    :: m_frag, mv_frag, mp_frag
    integer(I4B), save                                     :: thetashift = 0
    integer(I4B), parameter                                :: SHIFTMAX = 9
+   INTEGER(I4B), DIMENSION(10)                            :: nmergeadd_frag_index
 
 ! Executable code
 
@@ -92,7 +92,7 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
    DO i = 1, nmergeadd
       ! If both of their parents' names match the two bodies we are considering in this collision
       ! then we know that this new body in mergeadd_list formed from this collision 
-      IF ((mergeadd_list%name_p1(i) == name1) && (mergeadd_list%name_p2(i) == name2)) THEN
+      IF ((mergeadd_list%name_p1(i) == name1) .AND. (mergeadd_list%name_p2(i) == name2)) THEN
          frags_added = frags_added + 1 ! Count up the fragments that formed from this collision
          nmergeadd_frag_index(frags_added) = i ! Index in mergeadd_list of the fragment from this collision
       END IF
@@ -177,7 +177,7 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
       DO i = 1, nmergeadd
          ! If both of their parents' names match the name of the kept body in this collision
          ! then we know that this new body in mergeadd_list is the kept body from the collision 
-         IF ((mergeadd_list%name_p1(i) == name_keep) && (mergeadd_list%name_p2(i) == name_keep)) THEN
+         IF ((mergeadd_list%name_p1(i) == name_keep) .AND. (mergeadd_list%name_p2(i) == name_keep)) THEN
             ! Assign this body the position and velocity it had at the end of the step as if there was no collision
             mergeadd_list%xh(:,i) = xh_keep(:)
             mergeadd_list%vh(:,i) = vh_keep(:)
@@ -190,7 +190,7 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
          ! Find COM
          p_com(:) = xh_rm
          p_com_rm(:) = xh_rm - p_com
-         p_com_kee(:) = xh_keep - p_com
+         p_com_keep(:) = xh_keep - p_com
          v_com(:) = vb_rm
          v_com_rm(:) = vb_rm - v_com
          v_com_keep(:) = vb_keep - v_com
@@ -212,7 +212,7 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
          DO i = 1, nmergeadd
             ! If both of their parents' names match the name of the removed body in this collision
             ! then we know that this new body in mergeadd_list is the removed body from the collision 
-            IF ((mergeadd_list%name_p1(i) == name_rm) && (mergeadd_list%name_p2(i) == name_rm)) THEN
+            IF ((mergeadd_list%name_p1(i) == name_rm) .AND. (mergeadd_list%name_p2(i) == name_rm)) THEN
                ! Assign this body the position and velocity it had at the end of the step as if there was no collision
                mergeadd_list%xh(:,i) = xh_rm(:)
                mergeadd_list%vh(:,i) = vh_rm(:)
@@ -256,8 +256,8 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
       DO i=1, frags_added
          v_frag(:,i) = v_frag(:,i) + v_f(:) ! velocity of the fragments including the error
          p_frag(:,i) = p_frag(:,i) + p_f(:) ! position of the fragments including the error
-         mergeadd_list%vh(:,nmergeadd_frag_index(1):nmergeadd_frag_index(frags_added)) = v_frag(:, i) - vbs(:) + v_com(:)
-         mergeadd_list%xh(:,nmergeadd_frag_index(1):nmergeadd_frag_index(frags_added)) = p_frag(:, i) + p_com(:)
+         mergeadd_list%vh(:,nmergeadd_frag_index(1)+i-1) = v_frag(:, i) - vbs(:) + v_com(:)
+         mergeadd_list%xh(:,nmergeadd_frag_index(1)+i-1) = p_frag(:, i) + p_com(:)
       END DO
 
    END IF 
@@ -293,13 +293,13 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
 
    ! Loop through all the fragments in this collision 
    DO i = 1, frags_added
-      r_frag = mergeadd_list%radius(nmergeadd_frag_index(1):nmergeadd_frag_index(frags_added))
+      r_frag = mergeadd_list%radius(nmergeadd_frag_index(1)+i-1)
       ip_frag = 2.0_DP / 5.0_DP ! Because each body is a perfect sphere, the principal moments of inertia for each fragment will be the same
-      mergeadd_list%ip(:,nmergeadd_frag_index(1):nmergeadd_frag_index(frags_added)) = ip_frag
+      mergeadd_list%ip(:,nmergeadd_frag_index(1)+i-1) = ip_frag
       ! Calculate the magnitude of the spin angular momentum of each fragment 
       spin_vec_mag_frag = norm2(l_spin_frag)  / (ip_frag  * m_frag(i) * r_frag**2)
       ! Calculate the final spin (rotation) that each fragment will have in all three dimensions
-      mergeadd_list%rot(:,nmergeadd_frag_index(1):nmergeadd_frag_index(frags_added)) = spin_vec_mag_frag*spin_hat_frag(:)
+      mergeadd_list%rot(:,nmergeadd_frag_index(1)+i-1) = spin_vec_mag_frag*spin_hat_frag(:)
       tmp(:) = tmp(:) + (spin_vec_mag_frag * spin_hat_frag(:) * ip_frag * m_frag(i) * r_frag**2)
    END DO 
 
