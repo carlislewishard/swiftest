@@ -104,6 +104,12 @@ SUBROUTINE symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
         discard_plA%vb(1,1:nsppl) = PACK(symba_plA%helio%swiftest%vb(1,1:npl), discard_l_pl)
         discard_plA%vb(2,1:nsppl) = PACK(symba_plA%helio%swiftest%vb(2,1:npl), discard_l_pl)
         discard_plA%vb(3,1:nsppl) = PACK(symba_plA%helio%swiftest%vb(3,1:npl), discard_l_pl)
+        discard_plA%ip(1,1:nsppl) = PACK(symba_plA%helio%swiftest%ip(1,1:npl), discard_l_pl)
+        discard_plA%ip(2,1:nsppl) = PACK(symba_plA%helio%swiftest%ip(2,1:npl), discard_l_pl)
+        discard_plA%ip(3,1:nsppl) = PACK(symba_plA%helio%swiftest%ip(3,1:npl), discard_l_pl)
+        discard_plA%rot(1,1:nsppl) = PACK(symba_plA%helio%swiftest%rot(1,1:npl), discard_l_pl)
+        discard_plA%rot(2,1:nsppl) = PACK(symba_plA%helio%swiftest%rot(2,1:npl), discard_l_pl)
+        discard_plA%rot(3,1:nsppl) = PACK(symba_plA%helio%swiftest%rot(3,1:npl), discard_l_pl)
 
         IF (param%lfragmentation .AND. (nkpl + nfrag >= npl)) THEN 
             symba_plA%helio%swiftest%name(1:nkpl) = PACK(symba_plA%helio%swiftest%name(1:npl), .NOT. discard_l_pl)
@@ -123,6 +129,12 @@ SUBROUTINE symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
             symba_plA%helio%swiftest%vb(1,1:nkpl) = PACK(symba_plA%helio%swiftest%vb(1,1:npl), .NOT. discard_l_pl)
             symba_plA%helio%swiftest%vb(2,1:nkpl) = PACK(symba_plA%helio%swiftest%vb(2,1:npl), .NOT. discard_l_pl)
             symba_plA%helio%swiftest%vb(3,1:nkpl) = PACK(symba_plA%helio%swiftest%vb(3,1:npl), .NOT. discard_l_pl)
+            symba_plA%helio%swiftest%ip(1,1:nkpl) = PACK(symba_plA%helio%swiftest%ip(1,1:npl), .NOT. discard_l_pl)
+            symba_plA%helio%swiftest%ip(2,1:nkpl) = PACK(symba_plA%helio%swiftest%ip(2,1:npl), .NOT. discard_l_pl)
+            symba_plA%helio%swiftest%ip(3,1:nkpl) = PACK(symba_plA%helio%swiftest%ip(3,1:npl), .NOT. discard_l_pl)
+            symba_plA%helio%swiftest%rot(1,1:nkpl) = PACK(symba_plA%helio%swiftest%rot(1,1:npl), .NOT. discard_l_pl)
+            symba_plA%helio%swiftest%rot(2,1:nkpl) = PACK(symba_plA%helio%swiftest%rot(2,1:npl), .NOT. discard_l_pl)
+            symba_plA%helio%swiftest%rot(3,1:nkpl) = PACK(symba_plA%helio%swiftest%rot(3,1:npl), .NOT. discard_l_pl)
             symba_plA%helio%ah(1,1:nkpl) = PACK(symba_plA%helio%ah(1,1:npl), .NOT. discard_l_pl)
             symba_plA%helio%ah(2,1:nkpl) = PACK(symba_plA%helio%ah(2,1:npl), .NOT. discard_l_pl)
             symba_plA%helio%ah(3,1:nkpl) =PACK(symba_plA%helio%ah(3,1:npl), .NOT. discard_l_pl)
@@ -141,6 +153,12 @@ SUBROUTINE symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
             symba_plA%helio%swiftest%vh(1,nkpl+1:npl) = PACK(mergeadd_list%vh(1,1:nmergeadd), frag_l_add)
             symba_plA%helio%swiftest%vh(2,nkpl+1:npl) = PACK(mergeadd_list%vh(2,1:nmergeadd), frag_l_add)
             symba_plA%helio%swiftest%vh(3,nkpl+1:npl) = PACK(mergeadd_list%vh(3,1:nmergeadd), frag_l_add)
+            symba_plA%helio%swiftest%ip(1,nkpl+1:npl) = PACK(mergeadd_list%ip(1,1:nmergeadd), frag_l_add)
+            symba_plA%helio%swiftest%ip(2,nkpl+1:npl) = PACK(mergeadd_list%ip(2,1:nmergeadd), frag_l_add)
+            symba_plA%helio%swiftest%ip(3,nkpl+1:npl) = PACK(mergeadd_list%ip(3,1:nmergeadd), frag_l_add)
+            symba_plA%helio%swiftest%rot(1,nkpl+1:npl) = PACK(mergeadd_list%rot(1,1:nmergeadd), frag_l_add)
+            symba_plA%helio%swiftest%rot(2,nkpl+1:npl) = PACK(mergeadd_list%rot(2,1:nmergeadd), frag_l_add)
+            symba_plA%helio%swiftest%rot(3,nkpl+1:npl) = PACK(mergeadd_list%rot(3,1:nmergeadd), frag_l_add)
 
             DO i = nkpl+1, npl
                 mu = symba_plA%helio%swiftest%mass(1) + symba_plA%helio%swiftest%mass(i)
@@ -169,6 +187,12 @@ SUBROUTINE symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
             symba_plA%helio%swiftest%vb(1,1:nkpl) = PACK(symba_plA%helio%swiftest%vb(1,1:npl), .NOT. discard_l_pl)
             symba_plA%helio%swiftest%vb(2,1:nkpl) = PACK(symba_plA%helio%swiftest%vb(2,1:npl), .NOT. discard_l_pl)
             symba_plA%helio%swiftest%vb(3,1:nkpl) = PACK(symba_plA%helio%swiftest%vb(3,1:npl), .NOT. discard_l_pl)
+            symba_plA%helio%swiftest%ip(1,1:nkpl) = PACK(symba_plA%helio%swiftest%ip(1,1:npl), .NOT. discard_l_pl)
+            symba_plA%helio%swiftest%ip(2,1:nkpl) = PACK(symba_plA%helio%swiftest%ip(2,1:npl), .NOT. discard_l_pl)
+            symba_plA%helio%swiftest%ip(3,1:nkpl) = PACK(symba_plA%helio%swiftest%ip(3,1:npl), .NOT. discard_l_pl)
+            symba_plA%helio%swiftest%rot(1,1:nkpl) = PACK(symba_plA%helio%swiftest%rot(1,1:npl), .NOT. discard_l_pl)
+            symba_plA%helio%swiftest%rot(2,1:nkpl) = PACK(symba_plA%helio%swiftest%rot(2,1:npl), .NOT. discard_l_pl)
+            symba_plA%helio%swiftest%rot(3,1:nkpl) = PACK(symba_plA%helio%swiftest%rot(3,1:npl), .NOT. discard_l_pl)
             symba_plA%helio%ah(1,1:nkpl) = PACK(symba_plA%helio%ah(1,1:npl), .NOT. discard_l_pl)
             symba_plA%helio%ah(2,1:nkpl) = PACK(symba_plA%helio%ah(2,1:npl), .NOT. discard_l_pl)
             symba_plA%helio%ah(3,1:nkpl) = PACK(symba_plA%helio%ah(3,1:npl), .NOT. discard_l_pl)
@@ -187,6 +211,12 @@ SUBROUTINE symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
             symba_plA%helio%swiftest%vh(1,nkpl+1:npl) = PACK(mergeadd_list%vh(1,1:nmergeadd), frag_l_add)
             symba_plA%helio%swiftest%vh(2,nkpl+1:npl) = PACK(mergeadd_list%vh(2,1:nmergeadd), frag_l_add)
             symba_plA%helio%swiftest%vh(3,nkpl+1:npl) = PACK(mergeadd_list%vh(3,1:nmergeadd), frag_l_add)
+            symba_plA%helio%swiftest%ip(1,nkpl+1:npl) = PACK(mergeadd_list%ip(1,1:nmergeadd), frag_l_add)
+            symba_plA%helio%swiftest%ip(2,nkpl+1:npl) = PACK(mergeadd_list%ip(2,1:nmergeadd), frag_l_add)
+            symba_plA%helio%swiftest%ip(3,nkpl+1:npl) = PACK(mergeadd_list%ip(3,1:nmergeadd), frag_l_add)
+            symba_plA%helio%swiftest%rot(1,nkpl+1:npl) = PACK(mergeadd_list%rot(1,1:nmergeadd), frag_l_add)
+            symba_plA%helio%swiftest%rot(2,nkpl+1:npl) = PACK(mergeadd_list%rot(2,1:nmergeadd), frag_l_add)
+            symba_plA%helio%swiftest%rot(3,nkpl+1:npl) = PACK(mergeadd_list%rot(3,1:nmergeadd), frag_l_add)
 
             symba_plA%helio%swiftest%xb(1,nkpl+1:npl) = [(0.0_DP,i=1,nfrag)]! initialize array
             symba_plA%helio%swiftest%xb(2,nkpl+1:npl) = [(0.0_DP,i=1,nfrag)]! initialize array
@@ -194,6 +224,12 @@ SUBROUTINE symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
             symba_plA%helio%swiftest%vb(1,nkpl+1:npl) = [(0.0_DP,i=1,nfrag)]! initialize array
             symba_plA%helio%swiftest%vb(2,nkpl+1:npl) = [(0.0_DP,i=1,nfrag)]! initialize array
             symba_plA%helio%swiftest%vb(3,nkpl+1:npl) = [(0.0_DP,i=1,nfrag)]! initialize array
+            symba_plA%helio%swiftest%ip(1,nkpl+1:npl) = [(0.0_DP,i=1,nfrag)]! initialize array
+            symba_plA%helio%swiftest%ip(2,nkpl+1:npl) = [(0.0_DP,i=1,nfrag)]! initialize array
+            symba_plA%helio%swiftest%ip(3,nkpl+1:npl) = [(0.0_DP,i=1,nfrag)]! initialize array
+            symba_plA%helio%swiftest%rot(1,nkpl+1:npl) = [(0.0_DP,i=1,nfrag)]! initialize array
+            symba_plA%helio%swiftest%rot(2,nkpl+1:npl) = [(0.0_DP,i=1,nfrag)]! initialize array
+            symba_plA%helio%swiftest%rot(3,nkpl+1:npl) = [(0.0_DP,i=1,nfrag)]! initialize array
             symba_plA%helio%ah(1,nkpl+1:npl) = [(0.0_DP,i=1,nfrag)]! initialize array
             symba_plA%helio%ah(2,nkpl+1:npl) = [(0.0_DP,i=1,nfrag)]! initialize array
             symba_plA%helio%ah(3,nkpl+1:npl) = [(0.0_DP,i=1,nfrag)]! initialize array
