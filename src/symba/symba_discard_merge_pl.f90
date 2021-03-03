@@ -49,10 +49,13 @@ SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard, m
      LOGICAL(LGT), INTENT(INOUT)     :: ldiscard
 
 ! Internals
-     INTEGER(I4B)                  :: i, j, nchild, indexchild, enc_big, index1, index2, indexk 
-     REAL(DP)                      :: m, mmax, mtot, r, r3, mu, energy, ap, v2, msun
-     REAL(DP), DIMENSION(NDIM)     :: x, v, vbs
-     INTEGER(I4B), DIMENSION(NCHILDMAX)  :: array_child
+   INTEGER(I4B)                            :: i, j, nchild, indexchild, enc_big, index1, index2, indexk 
+   REAL(DP)                                :: m, mmax, mtot, r, r3, mu, energy, ap, v2, msun, ip_merge
+   real(DP)                                :: Mcb, r_child, m_child, r_big, m_big, rmerge, spin_vec_mag 
+   REAL(DP), DIMENSION(NDIM)               :: x, v, vbs, xv_child, xv_big, xnew, vnew
+   INTEGER(I4B), DIMENSION(NCHILDMAX)      :: array_child
+   real(DP), dimension(NDIM)               :: Lspin, xc_child, xc_big, vc_child, vc_big, spin_hat, l_orb_before, l_orb_after
+   real(DP), dimension(NDIM)               :: ip_child, ip_big, l_spin_after, l_spin_before, rot_child, rot_big
 
 ! Executable code
      msun = symba_plA%helio%swiftest%mass(1)
@@ -63,64 +66,105 @@ SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard, m
                index2 = plplenc_list%index2(i)
                ! This IF statement is for handling the merger case 
                IF ((symba_plA%helio%swiftest%status(index1) == ACTIVE) .AND.                                                    &
-                   (symba_plA%helio%swiftest%status(index2) == ACTIVE)) THEN
+                  (symba_plA%helio%swiftest%status(index2) == ACTIVE)) THEN
 
-                    enc_big = plplenc_list%index1(i)
+                  enc_big = plplenc_list%index1(i)
 
-                    m = symba_plA%helio%swiftest%mass(enc_big)
-                    r = symba_plA%helio%swiftest%radius(enc_big)
-                    r3 = r**3
-                    mmax = m
-                    mtot = m
-                    x(:) = m * symba_plA%helio%swiftest%xh(:,enc_big)
-                    v(:) = m * symba_plA%helio%swiftest%vb(:,enc_big)
-                    indexk = enc_big
+                  m = symba_plA%helio%swiftest%mass(enc_big)
+                  r = symba_plA%helio%swiftest%radius(enc_big)
+                  r3 = r**3
+                  mmax = m
+                  mtot = m
+                  x(:) = m * symba_plA%helio%swiftest%xh(:,enc_big)
+                  v(:) = m * symba_plA%helio%swiftest%vb(:,enc_big)
+                  indexk = enc_big
 
-                    nchild = symba_plA%nchild(enc_big)
-                    !WRITE(*,*) "nchild = ", nchild 
-                    array_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,enc_big)
-                    !WRITE(*,*) "array_child:", array_child(1:nchild)
-                    !WRITE(*,*) "NCHILDMAX = ", NCHILDMAX
-                    DO j = 1, nchild
-                         !WRITE(*,*) "ARRAY_CHILD(J)", array_child(j)
-                         indexchild = array_child(j)
-                         m = symba_plA%helio%swiftest%mass(indexchild)
-                         r = symba_plA%helio%swiftest%radius(indexchild)
-                         r3 = r3 + r**3
-                         mtot = mtot + m
-                         x(:) = x(:) + m * symba_plA%helio%swiftest%xh(:,indexchild)
-                         v(:) = v(:) + m * symba_plA%helio%swiftest%vb(:,indexchild)
-                         IF (m > mmax) THEN
-                              mmax = m
-                              indexk = indexchild
-                         END IF
-                    END DO
-                    x(:) = x(:)/mtot  ! position com of system 
-                    v(:) = v(:)/mtot  ! velocity com of system 
-                    r = r3**(1.0_DP/3.0_DP)
-                    symba_plA%helio%swiftest%mass(indexk) = mtot
-                    symba_plA%helio%swiftest%radius(indexk) = r
-                    symba_plA%helio%swiftest%xh(:,indexk) = x(:)
-                    symba_plA%helio%swiftest%vb(:,indexk) = v(:)
-                    symba_plA%helio%swiftest%vh(:,indexk) = v(:) - vbs(:)
-                    mu = msun*mtot/(msun + mtot)
-                    r = SQRT(DOT_PRODUCT(x(:), x(:)))
-                    v(:) = symba_plA%helio%swiftest%vh(:,indexk)
-                    v2 = DOT_PRODUCT(v(:), v(:))
-                    energy = -1.0_DP*msun*mtot/r + 0.5_DP*mu*v2
-                    ap = -1.0_DP*msun*mtot/(2.0_DP*energy)
-                    symba_plA%helio%swiftest%rhill(indexk) = ap*(((mu/msun)/3.0_DP)**(1.0_DP/3.0_DP))
-                    !WRITE(*,*) "SYMBA_PLA%INDEX_CHILD(1,ENC_BIG)", symba_plA%index_child(1,enc_big)
-                    array_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,enc_big)
-                    indexchild = enc_big
-                    !WRITE(*,*) "INDEXCHILD", indexchild
-                    ldiscard = .TRUE.
-                    DO j = 0, nchild
-                         IF (indexchild /= indexk) THEN
-                              symba_plA%helio%swiftest%status(indexchild) = MERGED
-                         END IF
-                         indexchild = array_child(j+1)
-                    END DO
+                  nchild = symba_plA%nchild(enc_big)
+                  array_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,enc_big)
+                  DO j = 1, nchild
+                     indexchild = array_child(j)
+                     m = symba_plA%helio%swiftest%mass(indexchild)
+                     r = symba_plA%helio%swiftest%radius(indexchild)
+                     r3 = r3 + r**3
+                     mtot = mtot + m
+                     x(:) = x(:) + m * symba_plA%helio%swiftest%xh(:,indexchild)
+                     v(:) = v(:) + m * symba_plA%helio%swiftest%vb(:,indexchild)
+
+                     IF (m > mmax) THEN
+                        mmax = m
+                        indexk = indexchild
+                     END IF
+                  END DO
+
+                  x(:) = x(:)/mtot  ! position com of system 
+                  v(:) = v(:)/mtot  ! velocity com of system 
+                  rmerge = r3**(1.0_DP/3.0_DP)
+                  ip_merge = 2.0_DP / 5.0_DP
+                  ip_big = 2.0_DP / 5.0_DP
+                  spin_vec_mag = 0.0_DP
+                  l_orb_before(:) = 0.0_DP
+                  l_spin_before(:) = 0.0_DP
+                  l_orb_after(:) = 0.0_DP
+                  l_spin_after(:) = 0.0_DP
+                  
+                  xc_big(:) = symba_plA%helio%swiftest%xh(:,enc_big) - x(:)
+                  vc_big(:) = symba_plA%helio%swiftest%vb(:,enc_big) - v(:)
+
+                  call util_crossproduct(xc_big, vc_big, xv_big)
+                  ip_big = symba_plA%helio%swiftest%Ip(:, enc_big)
+                  rot_big = symba_plA%helio%swiftest%rot(:, enc_big)
+
+                  m_big = symba_plA%helio%swiftest%mass(enc_big)
+                  r_big = symba_plA%helio%swiftest%radius(enc_big)
+                        
+                  l_orb_before = l_orb_before + (m_big * xv_big)
+                  l_spin_before = l_spin_before + (ip_big * m_big * r_big**2 * rot_big)
+
+                  DO j = 1, nchild
+                     indexchild = array_child(j)
+                     xc_child(:) = symba_plA%helio%swiftest%xh(:,indexchild) - x(:)
+                     vc_child(:) = symba_plA%helio%swiftest%vb(:,indexchild) - v(:)
+
+                     call util_crossproduct(xc_child, vc_child, xv_child)
+                     ip_child = symba_plA%helio%swiftest%Ip(:, indexchild)
+                     rot_child = symba_plA%helio%swiftest%rot(:, indexchild)
+
+                     m_child = symba_plA%helio%swiftest%mass(indexchild)
+                     r_child = symba_plA%helio%swiftest%radius(indexchild)
+                        
+                     l_orb_before = l_orb_before + (m_child * xv_child)
+                     l_spin_before = l_spin_before + (ip_child * m_child * r_child**2 * rot_child) 
+                  END DO
+
+                  l_spin_after = l_orb_before + l_spin_before - l_orb_after
+                  spin_hat = l_spin_after / NORM2(l_spin_after)
+                  spin_vec_mag = NORM2(l_spin_after) / (ip_merge * mtot * rmerge**2)
+
+                  r = rmerge
+                  symba_plA%helio%swiftest%mass(indexk) = mtot
+                  symba_plA%helio%swiftest%radius(indexk) = r
+                  symba_plA%helio%swiftest%xh(:,indexk) = x(:)
+                  symba_plA%helio%swiftest%vb(:,indexk) = v(:)
+                  symba_plA%helio%swiftest%vh(:,indexk) = v(:) - vbs(:)
+                  symba_plA%helio%swiftest%ip(:,indexk) = ip_child
+                  symba_plA%helio%swiftest%rot(:,indexk) = spin_vec_mag*spin_hat
+
+                  mu = msun*mtot/(msun + mtot)
+                  r = SQRT(DOT_PRODUCT(x(:), x(:)))
+                  v(:) = symba_plA%helio%swiftest%vh(:,indexk)
+                  v2 = DOT_PRODUCT(v(:), v(:))
+                  energy = -1.0_DP*msun*mtot/r + 0.5_DP*mu*v2
+                  ap = -1.0_DP*msun*mtot/(2.0_DP*energy)
+                  symba_plA%helio%swiftest%rhill(indexk) = ap*(((mu/msun)/3.0_DP)**(1.0_DP/3.0_DP))
+                  array_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,enc_big)
+                  indexchild = enc_big
+                  ldiscard = .TRUE.
+                  DO j = 0, nchild
+                     IF (indexchild /= indexk) THEN
+                        symba_plA%helio%swiftest%status(indexchild) = MERGED
+                     END IF
+                     indexchild = array_child(j+1)
+                  END DO
 
                ELSE IF ((symba_plA%helio%swiftest%status(index1) == DISRUPTION) .AND.    &                                                
                    (symba_plA%helio%swiftest%status(index2) == DISRUPTION)) THEN 
