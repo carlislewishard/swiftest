@@ -83,7 +83,7 @@ subroutine symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
    spin_hat = l_spin_after / NORM2(l_spin_after)
    ip_merge = 2.0_DP / 5.0_DP
    rmerge = (r1**3 + r2**3)**(1.0_DP/3.0_DP)
-   spin_vec_mag = NORM2(l_spin_after) / (ip_merge*mtot*rmerge**2)
+   spin_vec_mag = NORM2(l_spin_after / ip_merge) / (mtot*rmerge**2)
 
 
 
@@ -120,13 +120,15 @@ subroutine symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
       end if
    end do
 
-   symba_plA%helio%swiftest%xh(:,index1_parent) = xnew(:)
-   symba_plA%helio%swiftest%vb(:,index1_parent) = vnew(:)
+   ! This subroutine should not change the position and velocity of the merged bodies. It should
+   ! only occur between steps in symba_discard_merge_pl
+   !symba_plA%helio%swiftest%xh(:,index1_parent) = xnew(:)
+   !symba_plA%helio%swiftest%vb(:,index1_parent) = vnew(:)
    symba_plA%helio%swiftest%Ip(:, index1_parent) = ip_merge
    symba_plA%helio%swiftest%rot(:, index1_parent) = spin_vec_mag*spin_hat
 
-   symba_plA%helio%swiftest%xh(:,index2_parent) = xnew(:)
-   symba_plA%helio%swiftest%vb(:,index2_parent) = vnew(:)
+   !symba_plA%helio%swiftest%xh(:,index2_parent) = xnew(:)
+   !symba_plA%helio%swiftest%vb(:,index2_parent) = vnew(:)
    symba_plA%helio%swiftest%Ip(:, index2_parent) = ip_merge
    symba_plA%helio%swiftest%rot(:, index2_parent) = spin_vec_mag*spin_hat 
 
