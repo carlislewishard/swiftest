@@ -203,6 +203,8 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
    mergeadd_list%mass(nmergeadd) = mass_keep
    mergeadd_list%radius(nmergeadd) = rad_keep
    mergeadd_list%vh(:,nmergeadd) = vh_keep(:)
+   mergeadd_list%name_p1(nmergeadd) = name_keep
+   mergeadd_list%name_p2(nmergeadd) = name_rm
    mtot = mtot + mergeadd_list%mass(nmergeadd) 
 
    ! Pure Hit & Run
@@ -218,6 +220,8 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       mergeadd_list%mass(nmergeadd) = mass_rm
       mergeadd_list%radius(nmergeadd) = rad_rm
       mergeadd_list%vh(:,nmergeadd) = vh_rm(:)
+      mergeadd_list%name_p1(nmergeadd) = name_keep
+      mergeadd_list%name_p2(nmergeadd) = name_rm
       mtot = mtot + mergeadd_list%mass(nmergeadd)
 
    ELSE
@@ -231,7 +235,9 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
       mergeadd_list%name(nmergeadd) = max(plmaxname, tpmaxname) +  1
       mergeadd_list%mass(nmergeadd) = mres(2)
       mergeadd_list%radius(nmergeadd) = ((3 * mergeadd_list%mass(nmergeadd)) / (4 * PI * d_rm))  & 
-            ** (1.0_DP / 3.0_DP) 
+            ** (1.0_DP / 3.0_DP)
+      mergeadd_list%name_p1(nmergeadd) = name_keep
+      mergeadd_list%name_p2(nmergeadd) = name_rm 
       mtot = mtot + mergeadd_list%mass(nmergeadd)
    ! Imperfect Hit & Run
       m_rem = m1 + m2 - mass_keep - mres(2)      
@@ -244,6 +250,8 @@ SUBROUTINE symba_casehitandrun (t, dt, index_enc, nmergeadd, nmergesub, mergeadd
             mergeadd_list%mass(nmergeadd) = m_rem / (nfrag - 1) 
             mergeadd_list%radius(nmergeadd) = ((3 * mergeadd_list%mass(nmergeadd)) / (4 * PI * d_rm))  & 
                ** (1.0_DP / 3.0_DP) 
+            mergeadd_list%name_p1(nmergeadd) = name_keep
+            mergeadd_list%name_p2(nmergeadd) = name_rm 
             mtot = mtot + mergeadd_list%mass(nmergeadd)
          END DO
    END IF

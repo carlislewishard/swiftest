@@ -165,7 +165,9 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
          mergeadd_list%name(nmergeadd) = max(plmaxname, tpmaxname) + i
          mergeadd_list%status(nmergeadd) = SUPERCATASTROPHIC
          mergeadd_list%ncomp(nmergeadd) = 2
-         mergeadd_list%mass(nmergeadd) = m1m2_10                             
+         mergeadd_list%mass(nmergeadd) = m1m2_10   
+         mergeadd_list%name_p1(nmergeadd) = name1
+         mergeadd_list%name_p2(nmergeadd) = name2                          
          mtot = mtot + mergeadd_list%mass(nmergeadd) 
          IF (i == nfrag) THEN
             ! If there is any residual mass left at the end, put it in the last body
@@ -183,6 +185,8 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
       mergeadd_list%ncomp(nmergeadd) = 2
       mergeadd_list%mass(nmergeadd) = mres(1)
       mergeadd_list%radius(nmergeadd) = rres(1)
+      mergeadd_list%name_p1(nmergeadd) = name1
+      mergeadd_list%name_p2(nmergeadd) = name2
       mtot = mtot + mergeadd_list%mass(nmergeadd) 
       ! Fragments creation 
       DO i = 2, nfrag
@@ -192,6 +196,8 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
          mergeadd_list%status(nmergeadd) = SUPERCATASTROPHIC
          mergeadd_list%ncomp(nmergeadd) = 2
          mergeadd_list%mass(nmergeadd) = (m1 + m2 - mres(1)) / (nfrag - 1)
+         mergeadd_list%name_p1(nmergeadd) = name1
+         mergeadd_list%name_p2(nmergeadd) = name2
          mtot = mtot + mergeadd_list%mass(nmergeadd)
          IF (i == nfrag) THEN
             ! If there is any residual mass left at the end, put it in the last body

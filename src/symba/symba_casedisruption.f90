@@ -158,6 +158,8 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
    mergeadd_list%name(nmergeadd) = max(plmaxname, tpmaxname) + frags_added 
    mergeadd_list%mass(nmergeadd) = mres(1)
    mergeadd_list%radius(nmergeadd) = rres(1)
+   mergeadd_list%name_p1(nmergeadd) = name1
+   mergeadd_list%name_p2(nmergeadd) = name2
    mtot = mtot + mergeadd_list%mass(nmergeadd)
 
    IF ((mres(2) > (1.0_DP / 3.0_DP)*mres(1))) THEN !DM to JP and CW: What is the purpose of this line?
@@ -169,6 +171,8 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
       mergeadd_list%name(nmergeadd) = max(plmaxname, tpmaxname) + frags_added
       mergeadd_list%mass(nmergeadd) = mres(2)
       mergeadd_list%radius(nmergeadd) = rres(2)
+      mergeadd_list%name_p1(nmergeadd) = name1
+      mergeadd_list%name_p2(nmergeadd) = name2
       mtot = mtot + mergeadd_list%mass(nmergeadd)
       DO i = 3, nfrag
          frags_added = frags_added + 1
@@ -177,7 +181,9 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
          mergeadd_list%ncomp(nmergeadd) = 2
          mergeadd_list%name(nmergeadd) = max(plmaxname, tpmaxname) + frags_added
          m_rem = (m1 + m2) - (mres(1) + mres(2))
-         mergeadd_list%mass(nmergeadd) = m_rem / (nfrag - 2) 
+         mergeadd_list%mass(nmergeadd) = m_rem / (nfrag - 2)
+         mergeadd_list%name_p1(nmergeadd) = name1
+         mergeadd_list%name_p2(nmergeadd) = name2 
          mtot = mtot + mergeadd_list%mass(nmergeadd) 
          if (i == nfrag) then
             ! If there is any residual mass left at the end, put it in the last body
@@ -197,7 +203,9 @@ SUBROUTINE symba_casedisruption (t, dt, index_enc, nmergeadd, nmergesub, mergead
          mergeadd_list%name(nmergeadd) = max(plmaxname, tpmaxname) + frags_added
         
          m_rem = (m1 + m2) - mres(1)
-         mergeadd_list%mass(nmergeadd) = m_rem / (nfrag - 1) 
+         mergeadd_list%mass(nmergeadd) = m_rem / (nfrag - 1)
+         mergeadd_list%name_p1(nmergeadd) = name1
+         mergeadd_list%name_p2(nmergeadd) = name2 
          mtot = mtot + mergeadd_list%mass(nmergeadd)
          if (i == nfrag) then
          ! If there is any residual mass left at the end, put it in the last body
