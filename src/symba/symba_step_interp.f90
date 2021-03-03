@@ -144,7 +144,7 @@ SUBROUTINE symba_step_interp(t, npl, nplm, ntp, symba_plA, symba_tpA, dt,   &
           CALL helio_lindrift_tp(ntp, symba_tpA%helio%swiftest, dth, pte)
      END IF
 
-     CALL symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, mergeadd_list, mergesub_list, symba_plA, npl)
+     !CALL symba_frag_pos(nmergeadd_step, nmergesub_step, nmergeadd, nmergesub, mergeadd_list, mergesub_list, symba_plA, npl)
 
      RETURN
 

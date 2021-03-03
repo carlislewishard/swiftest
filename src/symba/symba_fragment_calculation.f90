@@ -1,6 +1,6 @@
 !**********************************************************************************************************************************
 !
-!  Unit Name   : symba_frag_pos
+!  Unit Name   : symba_fragment_calculation
 !  Unit Type   : subroutine
 !  Project     : Swiftest
 !  Package     : util
@@ -149,7 +149,6 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
 
    ! Calculate the COM of the fragments and the collision velocity if they are formed in a hit and run collision
    ELSE IF (mergeadd_list%status(nmergeadd_frag_index(1)) == HIT_AND_RUN) THEN
-
       ! Determine with mass is kept (the larger) and which is fragmented (the smaller)
       IF (m2 > m1) THEN
          mass_rm = m1
@@ -172,7 +171,6 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
          name_keep = name1
          name_rm = name2
       END IF
-
       ! Loop through the planets in mergeadd_list and check their parents' names
       DO i = 1, nmergeadd
          ! If both of their parents' names match the name of the kept body in this collision
@@ -183,10 +181,8 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
             mergeadd_list%vh(:,i) = vh_keep(:)
          END IF
       END DO
-
       ! If there are fragments formed in this hit and run collision AKA if it is an imperfect hit and run
       IF (frags_added > 0) THEN
-
          ! Find COM
          p_com(:) = xh_rm
          p_com_rm(:) = xh_rm - p_com
@@ -205,7 +201,6 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
          v2esc = 2.0_DP * GC * mass_rm / (NORM2(delta_p(:))) ! escape velocity from COM squared
          v2esc_circle = 2.0_DP * GC * mass_rm * (1.0_DP/(NORM2(delta_p)) - 1.0_DP/r_circle) ! escape velocity from circle squared
          v2el = - SQRT(v2esc - v2esc_circle) ! adjusted escape velocity to account for distance from COM
-
       ! If we did not form fragments in this collision AKA if it is a pure hit and run
       ELSE IF (frags_added == 0) THEN
          ! Loop through the planets in mergeadd_list and check their parents' names
@@ -222,12 +217,10 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
          ! If there is some situation in which the code gets into this loop with <0 fragments
          write(*,*) "ERROR!!! In symba_fragment_calculation, hit and run with <0 fragments!!!"
       END IF
-
    ELSE
       ! If there is some situation in which the code gets into this loop with no case
       write(*,*) "ERROR!!! In symba_fragment_calculation, no case selected!!!"
    END IF
-
    ! If we formed fragments in this collision AKA if it is NOT a pure hit and run
    IF (frags_added > 0) THEN
       ! Calculate the triple product
@@ -235,7 +228,6 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
       call util_crossproduct(v_cross_p,delta_v,tri_pro)
 
       tri_pro_unit_vec(:) = tri_pro(:) / NORM2(tri_pro(:))
-
       ! Calculate the position and velocity of each fragment 
       DO i=1, frags_added ! fragment velocity (same mag for each just different direction)
          v_frag(:,i) = ((v2el * cos(phase_ang + theta * i))*v_col_unit_vec(:)) + &
@@ -245,13 +237,11 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
          mv_frag(:) = (v_frag(:,i) * m_frag(i)) + mv_frag(:)
          mp_frag(:) = (p_frag(:,i) * m_frag(i)) + mp_frag(:)
       END DO
-
       ! Calculate the error in position and velocity  
       v_com_frag(:) = mv_frag(:) / mtot ! velocity of the COM of the fragments
       v_f(:) = v_com(:) - v_com_frag(:) ! velocity error between COM of collison and COM of fragments
       p_com_frag(:) = mp_frag(:) / mtot ! position of the COM of the fragments
       p_f(:) = p_com(:) - p_com_frag(:) ! position error between COM of collison and COM of fragments
-
       ! Loop through all the fragments in this collision and add their positions and velocities to mergeadd_list
       DO i=1, frags_added
          v_frag(:,i) = v_frag(:,i) + v_f(:) ! velocity of the fragments including the error
@@ -259,7 +249,6 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
          mergeadd_list%vh(:,nmergeadd_frag_index(1)+i-1) = v_frag(:, i) - vbs(:) + v_com(:)
          mergeadd_list%xh(:,nmergeadd_frag_index(1)+i-1) = p_frag(:, i) + p_com(:)
       END DO
-
    END IF 
 
    ! Now that all the fragment positions and velocities have been calculated, we can calculate the spins
@@ -273,16 +262,13 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
    l_orb_after(:) = 0.0_DP
    tmp(:) = 0.0_DP
    spin_vec_mag_frag = 0.0_DP
-   
+    
    ! Loop through all the fragments in this collision       
    DO i = 1, frags_added
       ! Calculate the orbital angular momentum of each fragment
       call util_crossproduct(p_frag(:,i), v_frag(:,i), pv_frag)
       ! Loop through each dimension of the orbital angular momentum 
-      DO j = 1, NDIM
-         ! Add up the orbital angular momentum of each fragment to get the orbital angular momentum of the system after collision
-         l_orb_after(j) = l_orb_after(j) + (m_frag(i) * pv_frag(j))
-      END DO
+      l_orb_after(:) = l_orb_after(:) + (m_frag(i) * pv_frag(:))
    END DO
 
    ! Calculate the spin angular momentum of the collisional system after collision through conservation of angular momentum
@@ -303,7 +289,7 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
       tmp(:) = tmp(:) + (spin_vec_mag_frag * spin_hat_frag(:) * ip_frag * m_frag(i) * r_frag**2)
    END DO 
 
-   write(*,*) "symba_frag_pos spin ang mom after diff:", l_spin_after - tmp
+   write(*,*) "symba_fragment_calculation spin ang mom after diff:", l_spin_after - tmp
 
    DEALLOCATE(p_frag)
    DEALLOCATE(m_frag)
