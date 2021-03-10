@@ -252,8 +252,8 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
    END IF 
 
    ! Now that all the fragment positions and velocities have been calculated, we can calculate the spins
-   call util_crossproduct(xh_1, vb_1, xv_1)
-   call util_crossproduct(xh_2, vb_2, xv_2)
+   call util_crossproduct(p_com_1, v_com_1, xv_1)
+   call util_crossproduct(p_com_2, v_com_2, xv_2)
 
    ! Calculate the orbital angular momentum and the spin angular momentum of the two colliding bodies before the collision
    l_orb_before = (m1 * xv_1) + (m2 * xv_2)
