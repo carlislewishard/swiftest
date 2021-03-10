@@ -101,8 +101,8 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
    ALLOCATE(m_frag(frags_added))
    ALLOCATE(p_frag(NDIM, frags_added))
    ALLOCATE(v_frag(NDIM, frags_added))
-   ALLOCATE(mp_frag(frags_added))
-   ALLOCATE(mv_frag(frags_added))
+   ALLOCATE(mp_frag(NDIM))
+   ALLOCATE(mv_frag(NDIM))
 
    m_frag(:) = 0.0_DP
    p_frag(:,:) = 0.0_DP
@@ -234,8 +234,8 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
             ((v2el * sin(phase_ang + theta + i)) * tri_pro_unit_vec)
          p_frag(:,i) = ((- r_circle  * cos(phase_ang + theta * i)) * v_col_unit_vec(:)) + &
             ((- r_circle * sin(phase_ang + theta * i)) * tri_pro_unit_vec)
-         mv_frag(:) = (v_frag(:,i) * m_frag(i)) + mv_frag(:)
-         mp_frag(:) = (p_frag(:,i) * m_frag(i)) + mp_frag(:)
+         mv_frag(:) = mv_frag(:) + (v_frag(:,i) * m_frag(i))
+         mp_frag(:) = mp_frag(:) + (p_frag(:,i) * m_frag(i))
       END DO
       ! Calculate the error in position and velocity  
       v_com_frag(:) = mv_frag(:) / mtot ! velocity of the COM of the fragments
