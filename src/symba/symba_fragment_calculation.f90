@@ -147,6 +147,9 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
       v2esc_circle = 2.0_DP * GC * (m1+m2) * (1.0_DP/(NORM2(delta_p)) - 1.0_DP/r_circle) ! escape velocity from circle squared
       v2el = - SQRT(v2esc - v2esc_circle) ! adjusted escape velocity to account for distance from COM
 
+      call util_crossproduct(p_com_1, v_com_1, xv_1)
+      call util_crossproduct(p_com_2, v_com_2, xv_2)
+
    ! Calculate the COM of the fragments and the collision velocity if they are formed in a hit and run collision
    ELSE IF (mergeadd_list%status(nmergeadd_frag_index(1)) == HIT_AND_RUN) THEN
       ! Determine with mass is kept (the larger) and which is fragmented (the smaller)
@@ -190,17 +193,19 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
          v_com(:) = vb_rm
          v_com_rm(:) = vb_rm - v_com
          v_com_keep(:) = vb_keep - v_com
-         delta_v(:) = v_com_keep(:) - v_com_rm(:)
-         delta_p(:) = p_com_keep(:) - p_com_rm(:)
-
+         delta_v(:) = vb_keep(:) - vb_rm(:)
+         delta_p(:) = xh_keep(:) - xh_rm(:)
+   
          ! Find Collision velocity
          v_col_norm = NORM2(v_com_keep(:) - v_com_rm(:)) ! collision velocity magnitude
-         v_col_vec(:) = (v_com_keep(:) - v_com_rm(:)) ! collision velocity vector
-         v_col_unit_vec(:) = v_col_vec(:) / v_col_norm ! unit vector of collision velocity (direction only)
-
+         v_col_unit_vec(:) =  delta_v(:) / v_col_norm !v_col_vec(:) / v_col_norm ! unit vector of collision velocity (direction only)
          v2esc = 2.0_DP * GC * mass_rm / (NORM2(delta_p(:))) ! escape velocity from COM squared
          v2esc_circle = 2.0_DP * GC * mass_rm * (1.0_DP/(NORM2(delta_p)) - 1.0_DP/r_circle) ! escape velocity from circle squared
          v2el = - SQRT(v2esc - v2esc_circle) ! adjusted escape velocity to account for distance from COM
+         
+         call util_crossproduct(p_com_rm, v_com_rm, xv_1)
+         call util_crossproduct(p_com_keep, v_com_keep, xv_2)
+
       ! If we did not form fragments in this collision AKA if it is a pure hit and run
       ELSE IF (frags_added == 0) THEN
          ! Loop through the planets in mergeadd_list and check their parents' names
@@ -245,9 +250,6 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
    END IF 
 
    ! Now that all the fragment positions and velocities have been calculated, we can calculate the spins
-   call util_crossproduct(p_com_1, v_com_1, xv_1)
-   call util_crossproduct(p_com_2, v_com_2, xv_2)
-
    ! Calculate the orbital angular momentum and the spin angular momentum of the two colliding bodies before the collision
    l_orb_before = (m1 * xv_1) + (m2 * xv_2)
    l_spin_before = (ip_1 * m1 * r1**2 * rot_1) + (ip_2 * m2 * r2**2 * rot_2)
@@ -263,7 +265,6 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
       ! Loop through each dimension of the orbital angular momentum 
       l_orb_after(:) = l_orb_after(:) + (m_frag(i) * pv_frag(:))
    END DO
-
    ! Calculate the spin angular momentum of the collisional system after collision through conservation of angular momentum
    ! AKA whatever angular momentum is lost by the orbit, is picked up by the spin
    l_spin_after = l_orb_before + l_spin_before - l_orb_after
