@@ -65,17 +65,14 @@ HEAPARR = -heap-arrays 1048576
 
 #debug flags
 
-#GDBFLAGS = -ggdb -g3 -O0 -fbacktrace -fbounds-check -fcheck=all -fno-pie  -fsanitize=undefined -fsanitize=address -fsanitize=leak  
-
+GDEBUG = -ggdb -g3 -Og -fbacktrace -fbounds-check -fcheck=all -ffpe-trap=zero,invalid,overflow,underflow,denormal
+GPRODUCTION = -O3
+GPAR = -fopenmp -ftree-parallelize-loops=4
+GMEM = -fsanitize=undefined -fsanitize=address -fsanitize=leak 
+GWARNINGS = -Wall -Warray-bounds  -Wimplicit-interface -Wextra -Warray-temporaries
 FORTRAN = gfortran
-FFLAGS = -O3 -ffree-line-length-none -ffpe-trap=zero,invalid,overflow,underflow,denormal
-#FFLAGS = $(GDBFLAGS)
+FFLAGS =  -ffree-line-length-none $(GDEBUG)
 AR     = ar
-#FFLAGS          = -Og -ggdb -g3 -fopenmp -ftree-parallelize-loops=4 -fbacktrace -fbounds-check -fcheck=all -fsanitize=undefined -fsanitize=address -fsanitize=leak  
-##debug flags
-#FFLAGS		= -O3 -ggdb -g3 -ftree-parallelize-loops=4 -fbacktrace -ffpe-trap=zero,invalid,overflow,underflow,denormal -fcheck=all -fbounds-check -fbacktrace -fsanitize=undefined -fsanitize=address -fsanitize=leak 
-#-Wall -Warray-bounds  -Wimplicit-interface -Wextra 
-#-Warray-temporaries
 
 
 # DO NOT include in CFLAGS the "-c" option to compile object only
