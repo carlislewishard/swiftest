@@ -210,62 +210,62 @@ SUBROUTINE symba_casesupercatastrophic (t, dt, index_enc, nmergeadd, nmergesub, 
    END IF 
 
    !!!!!!!!!!!!                     DEV                      !!!!!!!!!!!!!!!! 
-   r_circle = (rhill_p1 + rhill_p2) / (2 * sin(PI / frags_added))
-   theta = (2 * PI) / frags_added
+   !r_circle = (rhill_p1 + rhill_p2) / (2 * sin(PI / frags_added))
+   !theta = (2 * PI) / frags_added
 
-   ALLOCATE(m_frag(frags_added))
-   ALLOCATE(v_frag(NDIM, frags_added))
-   m_frag(1:frags_added) = mergeadd_list%mass(nstart + 1:nstart + frags_added)
+   !ALLOCATE(m_frag(frags_added))
+   !ALLOCATE(v_frag(NDIM, frags_added))
+   !m_frag(1:frags_added) = mergeadd_list%mass(nstart + 1:nstart + frags_added)
 
-   mtot = sum(m_frag(1:frags_added))
-   m_rem = (m1 + m2) - mtot
-   mv_frag = 0.0_DP
+   !mtot = sum(m_frag(1:frags_added))
+   !m_rem = (m1 + m2) - mtot
+   !mv_frag = 0.0_DP
 
    ! Shifts the starting circle of fragments around so that multiple fragments generated 
    ! in from a single body in a single time step don't pile up on top of each other
-   phase_ang = theta * thetashift / SHIFTMAX
-   thetashift = thetashift + 1
-   IF (thetashift >= shiftmax) thetashift = 0
+   !phase_ang = theta * thetashift / SHIFTMAX
+   !thetashift = thetashift + 1
+   !IF (thetashift >= shiftmax) thetashift = 0
 
    ! Find velocity of COM
-   v_com(:) = ((vb_1(:) * m1) + (vb_2(:) * m2)) / (m1 + m2)
+   !v_com(:) = ((vb_1(:) * m1) + (vb_2(:) * m2)) / (m1 + m2)
 
    ! Find Collision velocity
-   xr(:) = xh_2(:) - xh_1(:) ! distance between particles at time of collision
-   v_col_norm = NORM2(vb_2(:) - vb_1(:)) ! collision velocity magnitude
-   v_col_vec(:) = (vb_2(:) - vb_1(:)) ! collision velocity vector
-   v_col_unit_vec(:) = v_col_vec(:) / v_col_norm ! unit vector of collision velocity (direction only)
+   !xr(:) = xh_2(:) - xh_1(:) ! distance between particles at time of collision
+   !v_col_norm = NORM2(vb_2(:) - vb_1(:)) ! collision velocity magnitude
+   !v_col_vec(:) = (vb_2(:) - vb_1(:)) ! collision velocity vector
+   !v_col_unit_vec(:) = v_col_vec(:) / v_col_norm ! unit vector of collision velocity (direction only)
 
-   v2esc = 2.0_DP * GC * (m1+m2) / (NORM2(xr(:))) ! escape velocity from COM squared
-   v2esc_circle = 2.0_DP * GC * (m1+m2) * (1.0_DP/(NORM2(xr)) - 1.0_DP/r_circle) ! escape velocity from circle squared
-   v2el = - SQRT(v2esc - v2esc_circle) ! adjusted escape velocity to account for distance from COM
+   !v2esc = 2.0_DP * GC * (m1+m2) / (NORM2(xr(:))) ! escape velocity from COM squared
+   !v2esc_circle = 2.0_DP * GC * (m1+m2) * (1.0_DP/(NORM2(xr)) - 1.0_DP/r_circle) ! escape velocity from circle squared
+   !v2el = - SQRT(v2esc - v2esc_circle) ! adjusted escape velocity to account for distance from COM
 
    ! Calculate the triple product
-   delta_v(:) = vb_2(:) - vb_1(:)
+   !delta_v(:) = vb_2(:) - vb_1(:)
 
-   call util_crossproduct(delta_v,xr,v_cross_p)
-   call util_crossproduct(v_cross_p,delta_v,tri_pro)
+   !call util_crossproduct(delta_v,xr,v_cross_p)
+   !call util_crossproduct(v_cross_p,delta_v,tri_pro)
 
-   tri_pro_unit_vec(:) = tri_pro(:) / NORM2(tri_pro(:))
+   !tri_pro_unit_vec(:) = tri_pro(:) / NORM2(tri_pro(:))
 
    ! Calculate the velocity magnitude and direction of each fragment 
-   DO i=1, frags_added ! fragment velocity (same mag for each just different direction)
-      v_frag(:,i) = ((v2el * cos(phase_ang + theta * i))*v_col_unit_vec(:)) + &
-      ((v2el * sin(phase_ang + theta + i)) * tri_pro_unit_vec) + v_com(:)
-      mv_frag(:) = (v_frag(:,i) * m_frag(i)) + mv_frag(:) ! rolling linear momentum of the system
-   END DO
+   !DO i=1, frags_added ! fragment velocity (same mag for each just different direction)
+   !   v_frag(:,i) = ((v2el * cos(phase_ang + theta * i))*v_col_unit_vec(:)) + &
+   !   ((v2el * sin(phase_ang + theta + i)) * tri_pro_unit_vec) + v_com(:)
+   !   mv_frag(:) = (v_frag(:,i) * m_frag(i)) + mv_frag(:) ! rolling linear momentum of the system
+   !END DO
 
    ! Calculate the error 
-   v_com_frag(:) = mv_frag(:) / mtot ! velocity of the COM of the fragments
-   v_f(:) = v_com(:) - v_com_frag(:) ! velocity error between COM of collison and COM of fragments
+   !v_com_frag(:) = mv_frag(:) / mtot ! velocity of the COM of the fragments
+   !v_f(:) = v_com(:) - v_com_frag(:) ! velocity error between COM of collison and COM of fragments
 
-   DO i=1, frags_added
-      v_frag(:,i) = v_frag(:,i) + v_f(:) ! velocity of the fragments including the error
-      mergeadd_list%vh(:,nstart + i) = v_frag(:, i) - vbs(:)!vx_frag
-   END DO
+   !DO i=1, frags_added
+   !   v_frag(:,i) = v_frag(:,i) + v_f(:) ! velocity of the fragments including the error
+      !mergeadd_list%vh(:,nstart + i) = v_frag(:, i) - vbs(:)!vx_frag
+   !END DO
 
-   deallocate(m_frag)
-   deallocate(v_frag)
+   !deallocate(m_frag)
+   !deallocate(v_frag)
 
    !!!!!!!!!!!!                     DEV                      !!!!!!!!!!!!!!!! 
 
