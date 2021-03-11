@@ -170,10 +170,10 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
    tri_pro_unit_vec(:) = tri_pro(:) / NORM2(tri_pro(:))
    ! Calculate the position and velocity of each fragment 
    DO i=1, frags_added ! fragment velocity (same mag for each just different direction)
-      v_frag(:,i) = v_frag_norm * ((cos(phase_ang + theta * i)) * v_col_unit_vec(:)) + &
-                                  ((sin(phase_ang + theta * i)) * tri_pro_unit_vec(:))
-      p_frag(:,i) = r_circle    * ((cos(phase_ang + theta * i)) * v_col_unit_vec(:)) + &
-                                  ((sin(phase_ang + theta * i)) * tri_pro_unit_vec)
+      v_frag(:,i) = v_frag_norm * ((cos(phase_ang + theta * i)) * v_col_unit_vec(:) + &
+                                   (sin(phase_ang + theta * i)) * tri_pro_unit_vec(:))
+      p_frag(:,i) = r_circle    * ((cos(phase_ang + theta * i)) * v_col_unit_vec(:)  + &
+                                   (sin(phase_ang + theta * i)) * tri_pro_unit_vec(:))
       mv_frag(:) = mv_frag(:) + (v_frag(:,i) * m_frag(i))
       mp_frag(:) = mp_frag(:) + (p_frag(:,i) * m_frag(i))
    END DO
@@ -181,10 +181,17 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
    DO i=1, frags_added
       mergeadd_list%vh(:,nmergeadd_frag_index(1)+i-1) = v_frag(:, i) - vbs(:) + v_com(:)
       mergeadd_list%xh(:,nmergeadd_frag_index(1)+i-1) = p_frag(:, i) + p_com(:)
-      write(*,*) 'frag index: ',nmergeadd_frag_index(1)+i-1
    END DO
 
-   l_orb_after(:) = 0.0_DP
+   if (mergeadd_list%status(nmergeadd_frag_index(1)) == HIT_AND_RUN) then
+      ! A hit and run will keep body 1 (the larest) and replace body 2 with fragments
+      l_orb_after(:) = m1 * xv_1
+      l_spin_after(:) = Ip_1 * m1 * r1**2 * rot_1
+   else
+      ! Disruption replaces both bodies with fragments
+      l_orb_after(:) = 0.0_DP
+      l_spin_after(:) = 0.0_DP
+   end if
    tmp(:) = 0.0_DP
    spin_vec_mag_frag = 0.0_DP
     
@@ -197,7 +204,7 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
    END DO
    ! Calculate the spin angular momentum of the collisional system after collision through conservation of angular momentum
    ! AKA whatever angular momentum is lost by the orbit, is picked up by the spin
-   l_spin_after = l_orb_before + l_spin_before - l_orb_after
+   l_spin_after = l_orb_before + l_spin_before - l_orb_after - l_spin_after
    l_spin_frag = l_spin_after / frags_added ! The amount of spin angular momentum that each fragment will have
    spin_hat_frag = l_spin_after / (NORM2(l_spin_after)) ! The unit vector of the spin angular momentum that each fragment will have
 
