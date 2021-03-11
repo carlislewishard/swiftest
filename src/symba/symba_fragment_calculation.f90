@@ -45,7 +45,7 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
 ! Internals
 
    INTEGER(I4B)                                           :: frags_added, i, j, name1, name2, name_keep, name_rm
-   REAL(DP)                                               :: phase_ang, r_circle, theta, v2esc_circle, v2esc, v2el, v_col_norm 
+   REAL(DP)                                               :: phase_ang, r_circle, theta, v_frag_norm, v_col_norm, r_col_norm
    REAL(DP)                                               :: rhill_p1, rhill_p2, m1, m2, mass_rm, mass_keep, mtot, spin_vec_mag_frag
    REAL(DP)                                               :: r_frag, Ip_frag, r1, r2, r_keep, r_rm
    INTEGER(I4B), DIMENSION(2)                             :: idx
@@ -131,9 +131,8 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
 
    ! Find collision velocity
    v_col_norm = NORM2(delta_v) ! collision velocity magnitude
+   r_col_norm = NORM2(delta_p) ! collision velocity magnitude
    v_col_unit_vec(:) = delta_v(:) / v_col_norm ! unit vector of collision velocity (direction only)
-
-   v2esc = 2 * (m1+m2) / (NORM2(delta_p(:))) ! escape velocity from COM squared
 
    ! Determine the radius and angular spacing of fragments placed in a circle around the COM of the collision
    r_circle = (rhill_p1 + rhill_p2) / (2 * sin(PI / frags_added))
@@ -143,8 +142,8 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
    phase_ang = theta * thetashift / SHIFTMAX
    thetashift = thetashift + 1
    IF (thetashift >= shiftmax) thetashift = 0
-   v2esc_circle = 2 * (m1+m2) * (1.0_DP/NORM2(delta_p) - 1.0_DP/r_circle) ! escape velocity from circle squared
-   v2el = - SQRT(v2esc - v2esc_circle) ! adjusted escape velocity to account for distance from COM
+   ! Fragment velocity is the  collision velocity with an adjustment for new distance using vis viva
+   v_frag_norm = sqrt(v_col_norm**2 - 2 * (m1 + m2) * (1._DP / r_col_norm - 1._DP / r_circle))
 
    call util_crossproduct(p_com_1, v_com_1, xv_1)
    call util_crossproduct(p_com_2, v_com_2, xv_2)
@@ -160,7 +159,6 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
    mv_frag(:) = 0.0_DP
    mp_frag(:) = 0.0_DP
 
-
    ! Add the masses of all fragments to m_frag and calculate the total mass of the fragments
    m_frag(1:frags_added) = mergeadd_list%mass(nmergeadd_frag_index(1):nmergeadd_frag_index(frags_added))
    mtot = sum(m_frag(1:frags_added))
@@ -172,10 +170,10 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
    tri_pro_unit_vec(:) = tri_pro(:) / NORM2(tri_pro(:))
    ! Calculate the position and velocity of each fragment 
    DO i=1, frags_added ! fragment velocity (same mag for each just different direction)
-      v_frag(:,i) = ((v2el * cos(phase_ang + theta * i))*v_col_unit_vec(:)) + &
-         ((v2el * sin(phase_ang + theta + i)) * tri_pro_unit_vec)
-      p_frag(:,i) = ((- r_circle  * cos(phase_ang + theta * i)) * v_col_unit_vec(:)) + &
-         ((- r_circle * sin(phase_ang + theta * i)) * tri_pro_unit_vec)
+      v_frag(:,i) = v_frag_norm * ((cos(phase_ang + theta * i)) * v_col_unit_vec(:)) + &
+                                  ((sin(phase_ang + theta * i)) * tri_pro_unit_vec(:))
+      p_frag(:,i) = r_circle    * ((cos(phase_ang + theta * i)) * v_col_unit_vec(:)) + &
+                                  ((sin(phase_ang + theta * i)) * tri_pro_unit_vec)
       mv_frag(:) = mv_frag(:) + (v_frag(:,i) * m_frag(i))
       mp_frag(:) = mp_frag(:) + (p_frag(:,i) * m_frag(i))
    END DO
