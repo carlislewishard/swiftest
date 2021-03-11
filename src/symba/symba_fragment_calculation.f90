@@ -237,15 +237,8 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
          mv_frag(:) = mv_frag(:) + (v_frag(:,i) * m_frag(i))
          mp_frag(:) = mp_frag(:) + (p_frag(:,i) * m_frag(i))
       END DO
-      ! Calculate the error in position and velocity  
-      v_com_frag(:) = mv_frag(:) / mtot ! velocity of the COM of the fragments
-      v_f(:) = v_com(:) - v_com_frag(:) ! velocity error between COM of collison and COM of fragments
-      p_com_frag(:) = mp_frag(:) / mtot ! position of the COM of the fragments
-      p_f(:) = p_com(:) - p_com_frag(:) ! position error between COM of collison and COM of fragments
       ! Loop through all the fragments in this collision and add their positions and velocities to mergeadd_list
       DO i=1, frags_added
-         v_frag(:,i) = v_frag(:,i) + v_f(:) ! velocity of the fragments including the error
-         p_frag(:,i) = p_frag(:,i) + p_f(:) ! position of the fragments including the error
          mergeadd_list%vh(:,nmergeadd_frag_index(1)+i-1) = v_frag(:, i) - vbs(:) + v_com(:)
          mergeadd_list%xh(:,nmergeadd_frag_index(1)+i-1) = p_frag(:, i) + p_com(:)
       END DO
