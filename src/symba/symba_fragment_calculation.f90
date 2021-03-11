@@ -289,8 +289,6 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
       tmp(:) = tmp(:) + (spin_vec_mag_frag * spin_hat_frag(:) * ip_frag * m_frag(i) * r_frag**2)
    END DO 
 
-   write(*,*) "symba_fragment_calculation spin ang mom after diff:", l_spin_after - tmp
-
    DEALLOCATE(p_frag)
    DEALLOCATE(m_frag)
    DEALLOCATE(v_frag)

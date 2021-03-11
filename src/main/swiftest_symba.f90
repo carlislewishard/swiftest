@@ -203,8 +203,10 @@ program swiftest_symba
             end if
             write(egyiu,300) t, ke, pe, te, htot, eoffset, Loffset, msys
          end if
+
          call symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
             discard_tpA, param, ldiscard, ldiscard_tp)
+
          if (ldiscard .or. ldiscard_tp) then
             call io_discard_write_symba(t, mtiny, npl, nsppl, nsptp, nmergesub, symba_plA, &
                discard_plA, discard_tpA, mergeadd_list, mergesub_list, discard_file, param%lbig_discard) 
