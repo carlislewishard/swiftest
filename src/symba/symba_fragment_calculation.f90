@@ -44,15 +44,16 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
 
 ! Internals
 
-   INTEGER(I4B)                                           :: frags_added, i, j, name1, name2, name_keep, name_rm, r1, r2
+   INTEGER(I4B)                                           :: frags_added, i, j, name1, name2, name_keep, name_rm
    REAL(DP)                                               :: phase_ang, r_circle, theta, v2esc_circle, v2esc, v2el, v_col_norm 
-   REAL(DP)                                               :: rhill_p1, rhill_p2, m1, m2, mass_rm, mtot, spin_vec_mag_frag, r_frag, ip_frag
+   REAL(DP)                                               :: rhill_p1, rhill_p2, m1, m2, mass_rm, mass_keep, mtot, spin_vec_mag_frag
+   REAL(DP)                                               :: r_frag, ip_frag, r1, r2, r_keep, r_rm
    INTEGER(I4B), DIMENSION(2)                             :: idx
    REAL(DP), DIMENSION(NDIM)                              :: xh_1, xh_2, vb_1, vb_2, xh_keep, xh_rm, vb_keep, vb_rm, vh_keep, vh_rm
    REAL(DP), DIMENSION(NDIM)                              :: p_com, p_com_frag, p_com_rm, p_com_keep, p_com_1, p_com_2, p_f
    REAL(DP), DIMENSION(NDIM)                              :: v_com, v_com_frag, v_com_rm, v_com_keep, v_com_1, v_com_2, v_f
-   REAL(DP), DIMENSION(NDIM)                              :: v_col_vec, v_col_unit_vec, tri_pro, tri_pro_unit_vec
-   REAL(DP), DIMENSION(NDIM)                              :: vbs, delta_v, delta_p, v_cross_p
+   REAL(DP), DIMENSION(NDIM)                              :: v_col_vec, v_col_unit_vec, tri_pro, tri_pro_unit_vec, rot_rm, rot_keep
+   REAL(DP), DIMENSION(NDIM)                              :: vbs, delta_v, delta_p, v_cross_p, xv_rm, xv_keep, ip_rm, ip_keep
    REAL(DP), DIMENSION(NDIM)                              :: xv_1, xv_2, ip_1, ip_2, rot_1, rot_2, pv_frag, spin_hat_frag, tmp
    REAL(DP), DIMENSION(NDIM)                              :: l_orb_before, l_orb_after, l_spin_before, l_spin_after, l_spin_frag
    REAL(DP), DIMENSION(:, :), ALLOCATABLE                 :: p_frag, v_frag
@@ -150,11 +151,17 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
       call util_crossproduct(p_com_1, v_com_1, xv_1)
       call util_crossproduct(p_com_2, v_com_2, xv_2)
 
+      ! Now that all the fragment positions and velocities have been calculated, we can calculate the spins
+      ! Calculate the orbital angular momentum and the spin angular momentum of the two colliding bodies before the collision
+      l_orb_before = (m1 * xv_1) + (m2 * xv_2)
+      l_spin_before = (ip_1 * m1 * r1**2 * rot_1) + (ip_2 * m2 * r2**2 * rot_2)
+
    ! Calculate the COM of the fragments and the collision velocity if they are formed in a hit and run collision
    ELSE IF (mergeadd_list%status(nmergeadd_frag_index(1)) == HIT_AND_RUN) THEN
       ! Determine with mass is kept (the larger) and which is fragmented (the smaller)
       IF (m2 > m1) THEN
          mass_rm = m1
+         mass_keep = m2
          xh_keep = xh_2 
          xh_rm = xh_1 
          vb_keep = vb_2 
@@ -163,8 +170,15 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
          vh_rm = vb_keep - vbs
          name_keep = name2
          name_rm = name1
+         ip_keep = ip_2
+         ip_rm = ip_1
+         rot_keep = rot_2
+         rot_rm = rot_1
+         r_keep = r2
+         r_rm = r1
       ELSE
          mass_rm = m2
+         mass_keep = m1
          xh_keep = xh_1 
          xh_rm = xh_2 
          vb_keep = vb_1 
@@ -173,6 +187,12 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
          vh_rm = vb_rm - vbs
          name_keep = name1
          name_rm = name2
+         ip_keep = ip_1
+         ip_rm = ip_2
+         rot_keep = rot_1
+         rot_rm = rot_2
+         r_keep = r1
+         r_rm = r2
       END IF
       ! Loop through the planets in mergeadd_list and check their parents' names
       DO i = 1, nmergeadd
@@ -190,9 +210,14 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
          p_com(:) = xh_rm
          p_com_rm(:) = xh_rm - p_com
          p_com_keep(:) = xh_keep - p_com
+
          v_com(:) = vb_rm
          v_com_rm(:) = vb_rm - v_com
          v_com_keep(:) = vb_keep - v_com
+
+         call util_crossproduct(p_com_rm, v_com_rm, xv_rm)
+         call util_crossproduct(p_com_keep, v_com_keep, xv_keep)
+
          delta_v(:) = vb_keep(:) - vb_rm(:)
          delta_p(:) = xh_keep(:) - xh_rm(:)
    
@@ -202,9 +227,11 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
          v2esc = 2.0_DP * GC * mass_rm / (NORM2(delta_p(:))) ! escape velocity from COM squared
          v2esc_circle = 2.0_DP * GC * mass_rm * (1.0_DP/(NORM2(delta_p)) - 1.0_DP/r_circle) ! escape velocity from circle squared
          v2el = - SQRT(v2esc - v2esc_circle) ! adjusted escape velocity to account for distance from COM
-         
-         call util_crossproduct(p_com_rm, v_com_rm, xv_1)
-         call util_crossproduct(p_com_keep, v_com_keep, xv_2)
+
+         ! Now that all the fragment positions and velocities have been calculated, we can calculate the spins
+         ! Calculate the orbital angular momentum and the spin angular momentum of the two colliding bodies before the collision
+         l_orb_before = (mass_rm * xv_rm) + (mass_keep * xv_keep)
+         l_spin_before = (ip_rm * mass_rm * r_rm**2 * rot_rm) + (ip_keep * mass_keep * r_keep**2 * rot_keep)
 
       ! If we did not form fragments in this collision AKA if it is a pure hit and run
       ELSE IF (frags_added == 0) THEN
@@ -248,11 +275,6 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
          mergeadd_list%xh(:,nmergeadd_frag_index(1)+i-1) = p_frag(:, i) + p_com(:)
       END DO
    END IF 
-
-   ! Now that all the fragment positions and velocities have been calculated, we can calculate the spins
-   ! Calculate the orbital angular momentum and the spin angular momentum of the two colliding bodies before the collision
-   l_orb_before = (m1 * xv_1) + (m2 * xv_2)
-   l_spin_before = (ip_1 * m1 * r1**2 * rot_1) + (ip_2 * m2 * r2**2 * rot_2)
 
    l_orb_after(:) = 0.0_DP
    tmp(:) = 0.0_DP
