@@ -209,7 +209,7 @@ SUBROUTINE symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
                 v2 = DOT_PRODUCT(symba_plA%helio%swiftest%vh(:,i), symba_plA%helio%swiftest%vh(:,i))
                 energy = 0.5_DP*v2 - mu/r
                 ap = -0.5_DP*mu/energy
-               symba_plA%helio%swiftest%rhill(i) = ap*(((symba_plA%helio%swiftest%mass(i)/mu)/3.0_DP)**(1.0_DP/3.0_DP))
+               symba_plA%helio%swiftest%rhill(i) = ap * (symba_plA%helio%swiftest%mass(i) / 3.0_DP)**(1.0_DP/3.0_DP)
             END DO
 
 
