@@ -181,11 +181,11 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
       mergeadd_list%Ip(:,nmergeadd_frag_index(1)) = Ip_1 
    else
       istart = 1
-   ! Add the masses of all fragments to m_frag and calculate the total mass of the fragments
       l_orb_after(:) = 0.0_DP
       l_spin_after(:) = 0.0_DP
    end if
    spin_vec_mag_frag = 0.0_DP
+   ! Add the masses of all fragments to m_frag and calculate the total mass of the fragments
    m_frag(istart:frags_added) = mergeadd_list%mass(nmergeadd_frag_index(istart):nmergeadd_frag_index(frags_added))
    mtot = sum(m_frag(istart:frags_added))
 
