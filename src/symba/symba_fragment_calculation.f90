@@ -54,7 +54,7 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
    REAL(DP), DIMENSION(NDIM)                              :: v_com, v_com_frag, v_com_rm, v_com_keep, v_com_1, v_com_2, v_f
    REAL(DP), DIMENSION(NDIM)                              :: v_col_vec, v_col_unit_vec, tri_pro, tri_pro_unit_vec, rot_rm, rot_keep
    REAL(DP), DIMENSION(NDIM)                              :: vbs, delta_v, delta_p, v_cross_p, xv_rm, xv_keep, Ip_rm, Ip_keep
-   REAL(DP), DIMENSION(NDIM)                              :: xv_1, xv_2, Ip_1, Ip_2, rot_1, rot_2, pv_frag, spin_hat_frag, tmp
+   REAL(DP), DIMENSION(NDIM)                              :: xv_1, xv_2, Ip_1, Ip_2, rot_1, rot_2, pv_frag, spin_hat_frag
    REAL(DP), DIMENSION(NDIM)                              :: l_orb_before, l_orb_after, l_spin_before, l_spin_after, l_spin_frag
    REAL(DP), DIMENSION(NDIM)                              :: mv_frag, mp_frag
    REAL(DP), DIMENSION(:, :), ALLOCATABLE                 :: p_frag, v_frag
@@ -177,26 +177,25 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
       mv_frag(:) = mv_frag(:) + (v_frag(:,i) * m_frag(i))
       mp_frag(:) = mp_frag(:) + (p_frag(:,i) * m_frag(i))
    END DO
-   ! Loop through all the fragments in this collision and add their positions and velocities to mergeadd_list
-   DO i=1, frags_added
-      mergeadd_list%vh(:,nmergeadd_frag_index(1)+i-1) = v_frag(:, i) - vbs(:) + v_com(:)
-      mergeadd_list%xh(:,nmergeadd_frag_index(1)+i-1) = p_frag(:, i) + p_com(:)
-   END DO
+
 
    if (mergeadd_list%status(nmergeadd_frag_index(1)) == HIT_AND_RUN) then
       ! A hit and run will keep body 1 (the larest) and replace body 2 with fragments
       l_orb_after(:) = m1 * xv_1
       l_spin_after(:) = Ip_1 * m1 * r1**2 * rot_1
+      v_com(:) = vb_2(:)
+      p_com(:) = xh_2(:)
    else
       ! Disruption replaces both bodies with fragments
       l_orb_after(:) = 0.0_DP
       l_spin_after(:) = 0.0_DP
    end if
-   tmp(:) = 0.0_DP
    spin_vec_mag_frag = 0.0_DP
-    
-   ! Loop through all the fragments in this collision       
-   DO i = 1, frags_added
+
+   ! Loop through all the fragments in this collision and add their positions and velocities to mergeadd_list
+   DO i=1, frags_added
+      mergeadd_list%vh(:,nmergeadd_frag_index(1)+i-1) = v_frag(:, i) + v_com(:) - vbs(:)
+      mergeadd_list%xh(:,nmergeadd_frag_index(1)+i-1) = p_frag(:, i) + p_com(:)
       ! Calculate the orbital angular momentum of each fragment
       call util_crossproduct(p_frag(:,i), v_frag(:,i), pv_frag)
       ! Loop through each dimension of the orbital angular momentum 
@@ -217,7 +216,6 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
       spin_vec_mag_frag = norm2(l_spin_frag)  / (Ip_frag  * m_frag(i) * r_frag**2)
       ! Calculate the final spin (rotation) that each fragment will have in all three dimensions
       mergeadd_list%rot(:,nmergeadd_frag_index(1)+i-1) = spin_vec_mag_frag*spin_hat_frag(:)
-      tmp(:) = tmp(:) + (spin_vec_mag_frag * spin_hat_frag(:) * Ip_frag * m_frag(i) * r_frag**2)
    END DO 
 
    DEALLOCATE(p_frag)
