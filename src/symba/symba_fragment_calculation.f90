@@ -44,14 +44,14 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
 
 ! Internals
 
-   INTEGER(I4B)                                           :: frags_added, i, j, name1, name2, name_keep, name_rm, istart
+   INTEGER(I4B)                                           :: frags_added, i, j, name1, name2, name_keep, name_rm
    REAL(DP)                                               :: phase_ang, r_circle, theta, v_frag_norm, v_col_norm, r_col_norm
-   REAL(DP)                                               :: rhill_p1, rhill_p2, m1, m2, mass_rm, mass_keep, mtot, spin_vec_mag_frag
+   REAL(DP)                                               :: rhill_p1, rhill_p2, m1, m2, mass_rm, mass_keep, spin_vec_mag_frag
    REAL(DP)                                               :: r_frag, Ip_frag, r1, r2, r_keep, r_rm
    INTEGER(I4B), DIMENSION(2)                             :: idx
    REAL(DP), DIMENSION(NDIM)                              :: xh_1, xh_2, vb_1, vb_2, xh_keep, xh_rm, vb_keep, vb_rm, vh_keep, vh_rm
-   REAL(DP), DIMENSION(NDIM)                              :: p_com, p_com_frag, p_com_rm, p_com_keep, p_com_1, p_com_2, p_f
-   REAL(DP), DIMENSION(NDIM)                              :: v_com, v_com_frag, v_com_rm, v_com_keep, v_com_1, v_com_2, v_f
+   REAL(DP), DIMENSION(NDIM)                              :: p_com, p_com_1, p_com_2
+   REAL(DP), DIMENSION(NDIM)                              :: v_com, v_com_1, v_com_2
    REAL(DP), DIMENSION(NDIM)                              :: v_col_vec, v_col_unit_vec, tri_pro, tri_pro_unit_vec, rot_rm, rot_keep
    REAL(DP), DIMENSION(NDIM)                              :: vbs, delta_v, delta_p, v_cross_p, xv_rm, xv_keep, Ip_rm, Ip_keep
    REAL(DP), DIMENSION(NDIM)                              :: xv_1, xv_2, Ip_1, Ip_2, rot_1, rot_2, pv_frag, spin_hat_frag
@@ -156,8 +156,6 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
    p_frag(:,:) = 0.0_DP
    v_frag(:,:) = 0.0_DP
 
-
-
    ! Calculate the trIple product
    call util_crossproduct(delta_v,delta_p,v_cross_p)
    call util_crossproduct(v_cross_p,delta_v,tri_pro)
@@ -172,40 +170,43 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
    END DO
 
    if (mergeadd_list%status(nmergeadd_frag_index(1)) == HIT_AND_RUN) then
-      istart = 2
-      l_orb_after(:) = m1 * xv_1 
-      l_spin_after(:) = Ip_1 * m1 * r1**2 * rot_1 
-      mergeadd_list%vh(:,nmergeadd_frag_index(1)) = vb_1(:) - vbs(:)
-      mergeadd_list%xh(:,nmergeadd_frag_index(1)) = xh_1(:)
-      mergeadd_list%rot(:,nmergeadd_frag_index(1)) = rot_1
-      mergeadd_list%Ip(:,nmergeadd_frag_index(1)) = Ip_1 
+      ! For a hit-and-run, keep the larger body on its original trajecttory and replace
+      ! the smaller body with fragments
+      p_frag(:, 1) = xh_1(:)
+      v_frag(:, 1) = vb_1(:)
+      do i = 2, frags_added 
+         p_frag(:, i) = p_frag(:, i) + xh_2(:)
+         v_frag(:, i) = v_frag(:, i) + vb_2(:)
+      end do
    else
-      istart = 1
-      l_orb_after(:) = 0.0_DP
-      l_spin_after(:) = 0.0_DP
+      ! For disruption, replace all bodies wwitth fragments
+      do i = 1, frags_added 
+         p_frag(:, i) = p_frag(:, i) + p_com(:)
+         v_frag(:, i) = v_frag(:, i) + v_com(:)
+      end do
    end if
+   l_orb_after(:) = 0.0_DP
    spin_vec_mag_frag = 0.0_DP
    ! Add the masses of all fragments to m_frag and calculate the total mass of the fragments
-   m_frag(istart:frags_added) = mergeadd_list%mass(nmergeadd_frag_index(istart):nmergeadd_frag_index(frags_added))
-   mtot = sum(m_frag(istart:frags_added))
+   m_frag(1:frags_added) = mergeadd_list%mass(nmergeadd_frag_index(1):nmergeadd_frag_index(frags_added))
 
    ! Loop through all the fragments in this collision and add their positions and velocities to mergeadd_list
-   DO i=istart, frags_added
-      mergeadd_list%vh(:,nmergeadd_frag_index(1)+i-1) = v_frag(:, i) + v_com(:) - vbs(:)
-      mergeadd_list%xh(:,nmergeadd_frag_index(1)+i-1) = p_frag(:, i) + p_com(:)
+   DO i=1, frags_added
+      mergeadd_list%vh(:,nmergeadd_frag_index(1)+i-1) = v_frag(:, i) - vbs(:)
+      mergeadd_list%xh(:,nmergeadd_frag_index(1)+i-1) = p_frag(:, i) 
       ! Calculate the orbital angular momentum of each fragment
-      call util_crossproduct(p_frag(:,i), v_frag(:,i), pv_frag)
+      call util_crossproduct(p_frag(:,i) - p_com(:), v_frag(:,i) - v_com(:), pv_frag)
       ! Loop through each dimension of the orbital angular momentum 
-      l_orb_after(:) = l_orb_after(:) + (m_frag(i) * pv_frag(:))
+      l_orb_after(:) = l_orb_after(:) + m_frag(i) * pv_frag(:)
    END DO
    ! Calculate the spin angular momentum of the collisional system after collision through conservation of angular momentum
    ! AKA whatever angular momentum is lost by the orbit, is picked up by the spin
-   l_spin_after = l_orb_before + l_spin_before - l_orb_after - l_spin_after
+   l_spin_after = l_orb_before + l_spin_before - l_orb_after 
    l_spin_frag = l_spin_after / frags_added ! The amount of spin angular momentum that each fragment will have
-   spin_hat_frag = l_spin_after / (NORM2(l_spin_after)) ! The unit vector of the spin angular momentum that each fragment will have
+   spin_hat_frag = l_spin_after / NORM2(l_spin_after) ! The unit vector of the spin angular momentum that each fragment will have
 
    ! Loop through all the fragments in this collision 
-   DO i = istart, frags_added
+   DO i = 1, frags_added
       r_frag = mergeadd_list%radius(nmergeadd_frag_index(1)+i-1)
       Ip_frag = 2.0_DP / 5.0_DP ! Because each body is a perfect sphere, the princIpal moments of inertia for each fragment will be the same
       mergeadd_list%Ip(:,nmergeadd_frag_index(1)+i-1) = Ip_frag
