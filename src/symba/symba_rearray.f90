@@ -150,8 +150,3 @@ subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
    ltot_after = norm2(htot)
 
 end subroutine symba_rearray
-
-
-   
-
-
