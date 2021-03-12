@@ -170,8 +170,7 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
    END DO
 
    if (mergeadd_list%status(nmergeadd_frag_index(1)) == HIT_AND_RUN) then
-      ! For a hit-and-run, keep the larger body on its original trajecttory and replace
-      ! the smaller body with fragments
+      ! For a hit-and-run, keep the larger body on its original trajecttory and replace the smaller body with fragments
       p_frag(:, 1) = xh_1(:)
       v_frag(:, 1) = vb_1(:)
       do i = 2, frags_added 
