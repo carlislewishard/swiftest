@@ -43,17 +43,17 @@ subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
 
       call discard_plA%alloc(nsppl)
 
-      discard_plA%name(1:nsppl) = pack(symba_plA%helio%swiftest%name(1:npl), discard_l_pl)
+      discard_plA%name(1:nsppl)   = pack(symba_plA%helio%swiftest%name(1:npl), discard_l_pl)
       discard_plA%status(1:nsppl) = pack(symba_plA%helio%swiftest%status(1:npl), discard_l_pl)
-      discard_plA%mass(1:nsppl) = pack(symba_plA%helio%swiftest%mass(1:npl), discard_l_pl)
+      discard_plA%mass(1:nsppl)   = pack(symba_plA%helio%swiftest%mass(1:npl), discard_l_pl)
       discard_plA%radius(1:nsppl) = pack(symba_plA%helio%swiftest%radius(1:npl), discard_l_pl)
-      discard_plA%rhill(1:nsppl) = pack(symba_plA%helio%swiftest%rhill(1:npl), discard_l_pl)
+      discard_plA%rhill(1:nsppl)  = pack(symba_plA%helio%swiftest%rhill(1:npl), discard_l_pl)
       do i = 1, NDIM
-         discard_plA%xh(i,1:nsppl) = pack(symba_plA%helio%swiftest%xh(i,1:npl), discard_l_pl)
-         discard_plA%vh(i,1:nsppl) = pack(symba_plA%helio%swiftest%vh(i,1:npl), discard_l_pl)
-         discard_plA%xb(i,1:nsppl) = pack(symba_plA%helio%swiftest%xb(i,1:npl), discard_l_pl)
-         discard_plA%vb(i,1:nsppl) = pack(symba_plA%helio%swiftest%vb(i,1:npl), discard_l_pl)
-         discard_plA%ip(i,1:nsppl) = pack(symba_plA%helio%swiftest%ip(i,1:npl), discard_l_pl)
+         discard_plA%xh(i,1:nsppl)  = pack(symba_plA%helio%swiftest%xh(i,1:npl),  discard_l_pl)
+         discard_plA%vh(i,1:nsppl)  = pack(symba_plA%helio%swiftest%vh(i,1:npl),  discard_l_pl)
+         discard_plA%xb(i,1:nsppl)  = pack(symba_plA%helio%swiftest%xb(i,1:npl),  discard_l_pl)
+         discard_plA%vb(i,1:nsppl)  = pack(symba_plA%helio%swiftest%vb(i,1:npl),  discard_l_pl)
+         discard_plA%ip(i,1:nsppl)  = pack(symba_plA%helio%swiftest%ip(i,1:npl),  discard_l_pl)
          discard_plA%rot(i,1:nsppl) = pack(symba_plA%helio%swiftest%rot(i,1:npl), discard_l_pl)
       end do
       if (.not. param%lfragmentation) then
@@ -73,26 +73,26 @@ subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
          symba_plA%helio%swiftest%radius(1:nkpl) = pack(symba_plA%helio%swiftest%radius(1:npl), .not. discard_l_pl)
          symba_plA%helio%swiftest%rhill(1:nkpl)  = pack(symba_plA%helio%swiftest%rhill(1:npl),  .not. discard_l_pl)
          do i = 1, NDIM
-            symba_plA%helio%swiftest%xh(i,1:nkpl) = pack(symba_plA%helio%swiftest%xh(i,1:npl), .not. discard_l_pl)
-            symba_plA%helio%swiftest%vh(i,1:nkpl) = pack(symba_plA%helio%swiftest%vh(i,1:npl), .not. discard_l_pl)
-            symba_plA%helio%swiftest%xb(i,1:nkpl) = pack(symba_plA%helio%swiftest%xb(i,1:npl), .not. discard_l_pl)
-            symba_plA%helio%swiftest%vb(i,1:nkpl) = pack(symba_plA%helio%swiftest%vb(i,1:npl), .not. discard_l_pl)
-            symba_plA%helio%swiftest%ip(i,1:nkpl) = pack(symba_plA%helio%swiftest%ip(i,1:npl), .not. discard_l_pl)
+            symba_plA%helio%swiftest%xh(i,1:nkpl)  = pack(symba_plA%helio%swiftest%xh(i,1:npl),  .not. discard_l_pl)
+            symba_plA%helio%swiftest%vh(i,1:nkpl)  = pack(symba_plA%helio%swiftest%vh(i,1:npl),  .not. discard_l_pl)
+            symba_plA%helio%swiftest%xb(i,1:nkpl)  = pack(symba_plA%helio%swiftest%xb(i,1:npl),  .not. discard_l_pl)
+            symba_plA%helio%swiftest%vb(i,1:nkpl)  = pack(symba_plA%helio%swiftest%vb(i,1:npl),  .not. discard_l_pl)
+            symba_plA%helio%swiftest%ip(i,1:nkpl)  = pack(symba_plA%helio%swiftest%ip(i,1:npl),  .not. discard_l_pl)
             symba_plA%helio%swiftest%rot(i,1:nkpl) = pack(symba_plA%helio%swiftest%rot(i,1:npl), .not. discard_l_pl)
-            symba_plA%helio%ah(i,1:nkpl) = pack(symba_plA%helio%ah(i,1:npl), .not. discard_l_pl)
+            symba_plA%helio%ah(i,1:nkpl)           = pack(symba_plA%helio%ah(i,1:npl),           .not. discard_l_pl)
          end do
 
          if (nkpl + nfrag > npl) call util_resize_pl(symba_plA, nkpl+nfrag, npl)
          npl = nkpl  + nfrag
          !add fragments 
          symba_plA%helio%swiftest%status(nkpl+1:npl) = ACTIVE
-         symba_plA%helio%swiftest%name(nkpl+1:npl) = pack(mergeadd_list%name(1:nmergeadd), frag_l_add)
-         symba_plA%helio%swiftest%mass(nkpl+1:npl) = pack(mergeadd_list%mass(1:nmergeadd), frag_l_add)
+         symba_plA%helio%swiftest%name(nkpl+1:npl)   = pack(mergeadd_list%name(1:nmergeadd),   frag_l_add)
+         symba_plA%helio%swiftest%mass(nkpl+1:npl)   = pack(mergeadd_list%mass(1:nmergeadd),   frag_l_add)
          symba_plA%helio%swiftest%radius(nkpl+1:npl) = pack(mergeadd_list%radius(1:nmergeadd), frag_l_add)
          do i = 1, NDIM
-            symba_plA%helio%swiftest%xh(i,nkpl+1:npl) = pack(mergeadd_list%xh(i,1:nmergeadd), frag_l_add)
-            symba_plA%helio%swiftest%vh(i,nkpl+1:npl) = pack(mergeadd_list%vh(i,1:nmergeadd), frag_l_add)
-            symba_plA%helio%swiftest%ip(i,nkpl+1:npl) = pack(mergeadd_list%ip(i,1:nmergeadd), frag_l_add)
+            symba_plA%helio%swiftest%xh(i,nkpl+1:npl)  = pack(mergeadd_list%xh(i,1:nmergeadd),  frag_l_add)
+            symba_plA%helio%swiftest%vh(i,nkpl+1:npl)  = pack(mergeadd_list%vh(i,1:nmergeadd),  frag_l_add)
+            symba_plA%helio%swiftest%ip(i,nkpl+1:npl)  = pack(mergeadd_list%ip(i,1:nmergeadd),  frag_l_add)
             symba_plA%helio%swiftest%rot(i,nkpl+1:npl) = pack(mergeadd_list%rot(i,1:nmergeadd), frag_l_add)
          end do
 
@@ -118,44 +118,30 @@ subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
 
       call discard_tpA%alloc(nsptp) 
 
-      discard_tpA%name(1:nsptp) = pack(symba_tpA%helio%swiftest%name(1:ntp), discard_l_tp)
+      discard_tpA%name(1:nsptp)   = pack(symba_tpA%helio%swiftest%name(1:ntp),   discard_l_tp)
       discard_tpA%status(1:nsptp) = pack(symba_tpA%helio%swiftest%status(1:ntp), discard_l_tp)
-      discard_tpA%xh(1,1:nsptp) = pack(symba_tpA%helio%swiftest%xh(1,1:ntp), discard_l_tp)
-      discard_tpA%xh(2,1:nsptp) = pack(symba_tpA%helio%swiftest%xh(2,1:ntp), discard_l_tp)
-      discard_tpA%xh(3,1:nsptp) = pack(symba_tpA%helio%swiftest%xh(3,1:ntp), discard_l_tp)
-      discard_tpA%vh(1,1:nsptp) = pack(symba_tpA%helio%swiftest%vh(1,1:ntp), discard_l_tp)
-      discard_tpA%vh(2,1:nsptp) = pack(symba_tpA%helio%swiftest%vh(2,1:ntp), discard_l_tp)
-      discard_tpA%vh(3,1:nsptp) = pack(symba_tpA%helio%swiftest%vh(3,1:ntp), discard_l_tp)
       discard_tpA%isperi(1:nsptp) = pack(symba_tpA%helio%swiftest%isperi(1:ntp), discard_l_tp)
-      discard_tpA%peri(1:nsptp) = pack(symba_tpA%helio%swiftest%peri(1:ntp), discard_l_tp)
-      discard_tpA%atp(1:nsptp) = pack(symba_tpA%helio%swiftest%atp(1:ntp), discard_l_tp)
-      discard_tpA%xb(1,1:nsptp) = pack(symba_tpA%helio%swiftest%xb(1,1:ntp), discard_l_tp)
-      discard_tpA%xb(2,1:nsptp) = pack(symba_tpA%helio%swiftest%xb(2,1:ntp), discard_l_tp)
-      discard_tpA%xb(3,1:nsptp) = pack(symba_tpA%helio%swiftest%xb(3,1:ntp), discard_l_tp)
-      discard_tpA%vb(1,1:nsptp) = pack(symba_tpA%helio%swiftest%vb(1,1:ntp), discard_l_tp)
-      discard_tpA%vb(2,1:nsptp) = pack(symba_tpA%helio%swiftest%vb(2,1:ntp), discard_l_tp)
-      discard_tpA%vb(3,1:nsptp) = pack(symba_tpA%helio%swiftest%vb(3,1:ntp), discard_l_tp)
+      discard_tpA%peri(1:nsptp)   = pack(symba_tpA%helio%swiftest%peri(1:ntp),   discard_l_tp)
+      discard_tpA%atp(1:nsptp)    = pack(symba_tpA%helio%swiftest%atp(1:ntp),    discard_l_tp)
+      do i = 1, NDIM
+         discard_tpA%xh(i,1:nsptp)   = pack(symba_tpA%helio%swiftest%xh(i,1:ntp),   discard_l_tp)
+         discard_tpA%vh(i,1:nsptp)   = pack(symba_tpA%helio%swiftest%vh(i,1:ntp),   discard_l_tp)
+         discard_tpA%xb(i,1:nsptp)   = pack(symba_tpA%helio%swiftest%xb(i,1:ntp),   discard_l_tp)
+         discard_tpA%vb(i,1:nsptp)   = pack(symba_tpA%helio%swiftest%vb(i,1:ntp),   discard_l_tp)
+      end do
 
-      symba_tpA%helio%swiftest%name(1:nktp) = pack(symba_tpA%helio%swiftest%name(1:ntp), .not. discard_l_tp)
+      symba_tpA%helio%swiftest%name(1:nktp)   = pack(symba_tpA%helio%swiftest%name(1:ntp),   .not. discard_l_tp)
       symba_tpA%helio%swiftest%status(1:nktp) = pack(symba_tpA%helio%swiftest%status(1:ntp), .not. discard_l_tp)
-      symba_tpA%helio%swiftest%xh(1,1:nktp) = pack(symba_tpA%helio%swiftest%xh(1,1:ntp), .not. discard_l_tp)
-      symba_tpA%helio%swiftest%xh(2,1:nktp) = pack(symba_tpA%helio%swiftest%xh(2,1:ntp), .not. discard_l_tp)
-      symba_tpA%helio%swiftest%xh(3,1:nktp) = pack(symba_tpA%helio%swiftest%xh(3,1:ntp), .not. discard_l_tp)
-      symba_tpA%helio%swiftest%vh(1,1:nktp) = pack(symba_tpA%helio%swiftest%vh(1,1:ntp), .not. discard_l_tp)
-      symba_tpA%helio%swiftest%vh(2,1:nktp) = pack(symba_tpA%helio%swiftest%vh(2,1:ntp), .not. discard_l_tp)
-      symba_tpA%helio%swiftest%vh(3,1:nktp) = pack(symba_tpA%helio%swiftest%vh(3,1:ntp), .not. discard_l_tp)
-      symba_tpA%helio%swiftest%xb(1,1:nktp) = pack(symba_tpA%helio%swiftest%xb(1,1:ntp), .not. discard_l_tp)
-      symba_tpA%helio%swiftest%xb(2,1:nktp) = pack(symba_tpA%helio%swiftest%xb(2,1:ntp), .not. discard_l_tp)
-      symba_tpA%helio%swiftest%xb(3,1:nktp) = pack(symba_tpA%helio%swiftest%xb(3,1:ntp), .not. discard_l_tp)
-      symba_tpA%helio%swiftest%vb(1,1:nktp) = pack(symba_tpA%helio%swiftest%vb(1,1:ntp), .not. discard_l_tp)
-      symba_tpA%helio%swiftest%vb(2,1:nktp) = pack(symba_tpA%helio%swiftest%vb(2,1:ntp), .not. discard_l_tp)
-      symba_tpA%helio%swiftest%vb(3,1:nktp) = pack(symba_tpA%helio%swiftest%vb(3,1:ntp), .not. discard_l_tp)
       symba_tpA%helio%swiftest%isperi(1:nktp) = pack(symba_tpA%helio%swiftest%isperi(1:ntp), .not. discard_l_tp)
-      symba_tpA%helio%swiftest%peri(1:nktp) = pack(symba_tpA%helio%swiftest%peri(1:ntp), .not. discard_l_tp)
-      symba_tpA%helio%swiftest%atp(1:nktp) = pack(symba_tpA%helio%swiftest%atp(1:ntp), .not. discard_l_tp)
-      symba_tpA%helio%ah(1,1:nktp) = pack(symba_tpA%helio%ah(1,1:ntp), .not. discard_l_tp)
-      symba_tpA%helio%ah(2,1:nktp) = pack(symba_tpA%helio%ah(2,1:ntp), .not. discard_l_tp)
-      symba_tpA%helio%ah(3,1:nktp) = pack(symba_tpA%helio%ah(3,1:ntp), .not. discard_l_tp)
+      symba_tpA%helio%swiftest%peri(1:nktp)   = pack(symba_tpA%helio%swiftest%peri(1:ntp),   .not. discard_l_tp)
+      symba_tpA%helio%swiftest%atp(1:nktp)    = pack(symba_tpA%helio%swiftest%atp(1:ntp),    .not. discard_l_tp)
+      do i = 1, NDIM
+         symba_tpA%helio%swiftest%xh(i,1:nktp)   = pack(symba_tpA%helio%swiftest%xh(i,1:ntp), .not. discard_l_tp)
+         symba_tpA%helio%swiftest%vh(i,1:nktp)   = pack(symba_tpA%helio%swiftest%vh(i,1:ntp), .not. discard_l_tp)
+         symba_tpA%helio%swiftest%xb(i,1:nktp)   = pack(symba_tpA%helio%swiftest%xb(i,1:ntp), .not. discard_l_tp)
+         symba_tpA%helio%swiftest%vb(i,1:nktp)   = pack(symba_tpA%helio%swiftest%vb(i,1:ntp), .not. discard_l_tp)
+         symba_tpA%helio%ah(i,1:nktp)            = pack(symba_tpA%helio%ah(i,1:ntp),          .not. discard_l_tp)
+      end do
       ntp = nktp
       symba_tpA%helio%swiftest%nbody = ntp
    end if 
