@@ -112,8 +112,6 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
       END IF
    END DO
 
-   IF (frags_added == 0) RETURN
-
    ALLOCATE(m_frag(frags_added))
    ALLOCATE(p_frag(NDIM, frags_added))
    ALLOCATE(v_frag(NDIM, frags_added))
@@ -170,13 +168,25 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
    END DO
 
    if (mergeadd_list%status(nmergeadd_frag_index(1)) == HIT_AND_RUN) then
-      ! For a hit-and-run, keep the larger body on its original trajecttory and replace the smaller body with fragments
-      p_frag(:, 1) = xh_1(:)
-      v_frag(:, 1) = vb_1(:)
-      do i = 2, frags_added 
-         p_frag(:, i) = p_frag(:, i) + xh_2(:)
-         v_frag(:, i) = v_frag(:, i) + vb_2(:)
-      end do
+      if (frags_added == 2) then 
+         mergeadd_list%xh(:,nmergeadd_frag_index(1)) = xh_1(:)
+         mergeadd_list%xh(:,nmergeadd_frag_index(1) + 1) = xh_2(:)
+         mergeadd_list%vh(:,nmergeadd_frag_index(1)) = vb_1(:) - vbs(:)
+         mergeadd_list%vh(:,nmergeadd_frag_index(1) + 1) = vb_2(:) - vbs(:)
+         mergeadd_list%ip(:,nmergeadd_frag_index(1)) = ip_1(:)
+         mergeadd_list%ip(:,nmergeadd_frag_index(1) + 1) = ip_2(:)
+         mergeadd_list%rot(:,nmergeadd_frag_index(1)) = rot_1(:)
+         mergeadd_list%rot(:,nmergeadd_frag_index(1) + 1) = rot_2(:)
+         RETURN
+      else
+         ! For a hit-and-run, keep the larger body on its original trajecttory and replace the smaller body with fragments
+         p_frag(:, 1) = xh_1(:)
+         v_frag(:, 1) = vb_1(:)
+         do i = 2, frags_added 
+            p_frag(:, i) = p_frag(:, i) + xh_2(:)
+            v_frag(:, i) = v_frag(:, i) + vb_2(:)
+         end do
+      end if 
    else
       ! For disruption, replace all bodies wwitth fragments
       do i = 1, frags_added 
@@ -184,6 +194,7 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
          v_frag(:, i) = v_frag(:, i) + v_com(:)
       end do
    end if
+
    l_orb_after(:) = 0.0_DP
    spin_vec_mag_frag = 0.0_DP
    ! Add the masses of all fragments to m_frag and calculate the total mass of the fragments
@@ -203,7 +214,6 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
    l_spin_after = l_orb_before + l_spin_before - l_orb_after 
    l_spin_frag = l_spin_after / frags_added ! The amount of spin angular momentum that each fragment will have
    spin_hat_frag = l_spin_after / NORM2(l_spin_after) ! The unit vector of the spin angular momentum that each fragment will have
-
    ! Loop through all the fragments in this collision 
    DO i = 1, frags_added
       r_frag = mergeadd_list%radius(nmergeadd_frag_index(1)+i-1)
