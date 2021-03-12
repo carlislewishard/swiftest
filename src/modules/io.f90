@@ -20,15 +20,11 @@ module io
          type(swiftest_pl), intent(inout)  :: swiftest_plA  !! Swiftest data structure to store massive body initial conditions
       end subroutine io_read_pl_in
 
-      module subroutine io_write_frame(t, swiftest_plA, swiftest_tpA, outfile, out_type, out_form, out_stat)
+      module subroutine io_write_frame(t, swiftest_plA, swiftest_tpA, param)
          real(DP), intent(in)             :: t              !! Current time of simulation
          type(swiftest_pl), intent(inout) :: swiftest_plA   !! Swiftest massive body structure
          type(swiftest_tp), intent(inout) :: swiftest_tpA   !! Swiftest test particle structure
-         character(*), intent(in)         :: outfile        !! Name of output file
-         character(*), intent(in)         :: out_type       !! Output file format type (REAL4, REAL8 - see swiftest module for 
-                                                            !!    symbolic name definitions)
-         character(*), intent(in)         :: out_form       !! Output format type (EL, XV,- see swiftest module for symbolic name definitions)
-         character(*), intent(in)         :: out_stat       !! Output status code (NEW, APPEND)
+         type(user_input_parameters), intent(in) :: param   !! Input colleciton of user-defined parameters
       end subroutine io_write_frame
 
       module subroutine io_write_hdr(iu, t, npl, ntp, iout_form, out_type)

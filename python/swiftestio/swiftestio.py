@@ -201,6 +201,7 @@ def read_swiftest_config(config_file_name):
     config['BIG_DISCARD'] = config['BIG_DISCARD'].upper()
     config['CHK_CLOSE']   = config['CHK_CLOSE'].upper()
     config['FRAGMENTATION'] = config['FRAGMENTATION'].upper()
+    config['ROTATION'] = config['ROTATION'].upper()
 
     config['GU']         = GC / (config['DU2M']**3 / (config['MU2KG'] * config['TU2S']**2))
     return config
@@ -223,7 +224,7 @@ def swifter_stream(f, param):
     plid : int array
         IDs of massive bodies
     pvec : float array
-        (npl,N) - vector of N quantities or each particle (6 of XV/EL + Mass, Radius, etc)
+        (npl,N) - vector of N quantities or each particle (6 of XV/EL + mass, radius, etc)
     plab : string list
         Labels for the pvec data
     ntp  : int
@@ -281,8 +282,8 @@ def swifter_stream(f, param):
             tlab.append('omega')
             tlab.append('capm')
         plab = tlab.copy()
-        plab.append('Mass')
-        plab.append('Radius')
+        plab.append('mass')
+        plab.append('radius')
         pvec = np.vstack([pvec,Mpl,Rpl])
 
         yield t, npl, plid, pvec.T, plab, \
@@ -306,7 +307,7 @@ def swiftest_stream(f, config):
     plid : int array
         IDs of massive bodies
     pvec : float array
-        (npl,N) - vector of N quantities or each particle (6 of XV/EL + Mass, Radius, etc)
+        (npl,N) - vector of N quantities or each particle (6 of XV/EL + mass, radius, etc)
     plab : string list
         Labels for the pvec data
     ntp  : int
@@ -337,6 +338,13 @@ def swiftest_stream(f, config):
             p6 = f.read_reals(np.float64)
             Mpl = f.read_reals(np.float64)
             Rpl = f.read_reals(np.float64)
+            if config['ROTATION'] == 'YES':
+               rot_x = f.read_reals(np.float64)
+               rot_y = f.read_reals(np.float64)
+               rot_z = f.read_reals(np.float64)
+               Ip_1  = f.read_reals(np.float64)
+               Ip_2  = f.read_reals(np.float64)
+               Ip_3  = f.read_reals(np.float64)
         if ntp[0] > 0:
             tpid = f.read_ints()
             t1 = f.read_reals(np.float64)
@@ -362,11 +370,21 @@ def swiftest_stream(f, config):
             tlab.append('omega')
             tlab.append('capm')
         plab = tlab.copy()
-        plab.append('Mass')
-        plab.append('Radius')
+        plab.append('mass')
+        plab.append('radius')
+        if config['ROTATION'] == 'YES':
+            plab.append('rot_x')
+            plab.append('rot_y')
+            plab.append('rot_z')
+            plab.append('Ip_1')
+            plab.append('Ip_2')
+            plab.append('Ip_3')
 
         if npl > 0:
-            pvec = np.vstack([p1,p2,p3,p4,p5,p6,Mpl,Rpl])
+            if config['ROTATION'] == 'YES':
+               pvec = np.vstack([p1,p2,p3,p4,p5,p6,Mpl,Rpl,rot_x,rot_y,rot_z,Ip_1,Ip_2,Ip_3])
+            else:
+               pvec = np.vstack([p1,p2,p3,p4,p5,p6,Mpl,Rpl])
         else:
             pvec = np.empty((8,0))
             plid = np.empty(0)
@@ -412,35 +430,28 @@ def swifter2xr(param):
 
 def swiftest2xr(config):
     """Reads in the """
-    #config['SKIP'] = np.floor(1 / config['DT'])
-    counter = config['SKIP']
     dims  = ['time','id', 'vec']
     dsframes = []
     with FortranFile(config['BIN_OUT'], 'r') as f:
         for t, npl, plid, pvec, plab, \
             ntp, tpid, tvec, tlab in swiftest_stream(f, config):
-            if counter == config['SKIP']:
-                print(f'Time = {t[0]}')
-                plframe = np.expand_dims(pvec, axis=0)
-                tpframe = np.expand_dims(tvec, axis=0)
-                bd = []
+            print(f'Time = {t[0]}')
+            plframe = np.expand_dims(pvec, axis=0)
+            tpframe = np.expand_dims(tvec, axis=0)
+            bd = []
 
-                # Create xarray DataArrays out of each body type
-                if npl[0] > 0 :
-                    plxr = xr.DataArray(plframe, dims=dims, coords={'time': t, 'id': plid, 'vec': plab})
-                    bd.append(plxr)
-                if ntp[0] > 0 :
-                    tpxr = xr.DataArray(tpframe, dims=dims, coords={'time': t, 'id': tpid, 'vec': tlab})
-                    bd.append(tpxr)
-                bdxr = xr.concat(bd, dim='time')
-                bdxr = bdxr.to_dataset(dim='vec')
-                bdxr = bdxr.assign(npl=npl[0])
-                bdxr = bdxr.assign(ntp=ntp[0])
-                dsframes.append(bdxr)
-            if counter == config['SKIP']:
-                counter = 1
-            else: 
-                counter += 1
+            # Create xarray DataArrays out of each body type
+            if npl[0] > 0 :
+               plxr = xr.DataArray(plframe, dims=dims, coords={'time': t, 'id': plid, 'vec': plab})
+               bd.append(plxr)
+            if ntp[0] > 0 :
+               tpxr = xr.DataArray(tpframe, dims=dims, coords={'time': t, 'id': tpid, 'vec': tlab})
+               bd.append(tpxr)
+            bdxr = xr.concat(bd, dim='time')
+            bdxr = bdxr.to_dataset(dim='vec')
+            bdxr = bdxr.assign(npl=npl[0])
+            bdxr = bdxr.assign(ntp=ntp[0])
+            dsframes.append(bdxr)
         ds = xr.concat(dsframes, dim='time')
 
     return ds

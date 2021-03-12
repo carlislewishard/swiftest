@@ -20,115 +20,131 @@ contains
    real(DP), dimension(2:swiftest_plA%nbody)  :: a_pl, e_pl, inc_pl, capom_pl, omega_pl, capm_pl
    real(DP), dimension(1:swiftest_tpA%nbody)  :: a_tp, e_tp, inc_tp, capom_tp, omega_tp, capm_tp
 
-   if (lfirst) then
-      select case(out_stat)
-      case('APPEND')
-         open(unit = iu, file = outfile, status = 'OLD', position = 'APPEND', form = 'UNFORMATTED', iostat = ierr)
-      case('NEW')
-         open(unit = iu, file = outfile, status = 'NEW', form = 'UNFORMATTED', iostat = ierr)
-      case ('REPLACE')
-         open(unit = iu, file = outfile, status = 'REPLACE', form = 'UNFORMATTED', iostat = ierr)
-      case default
-         write(*,*) 'Invalid status code',trim(adjustl(out_stat))
-         call util_exit(FAILURE)
-      end select
-      if (ierr /= 0) then
-         write(*, *) "Swiftest error:"
-         write(*, *) "   binary output file already exists or cannot be accessed"
-         call util_exit(FAILURE)
+   associate(out_stat => param%out_stat, out_form => param%out_form, out_type => param%out_type, outfile => param%outfile)
+      if (lfirst) then
+         select case(out_stat)
+         case('APPEND')
+            open(unit = iu, file = outfile, status = 'OLD', position = 'APPEND', form = 'UNFORMATTED', iostat = ierr)
+         case('NEW')
+            open(unit = iu, file = outfile, status = 'NEW', form = 'UNFORMATTED', iostat = ierr)
+         case ('REPLACE')
+            open(unit = iu, file = outfile, status = 'REPLACE', form = 'UNFORMATTED', iostat = ierr)
+         case default
+            write(*,*) 'Invalid status code',trim(adjustl(out_stat))
+            call util_exit(FAILURE)
+         end select
+         if (ierr /= 0) then
+            write(*, *) "Swiftest error:"
+            write(*, *) "   binary output file already exists or cannot be accessed"
+            call util_exit(FAILURE)
+         end if
+
+         select case (out_form)
+         case ("EL")
+            iout_form = EL
+         case ("XV")
+            iout_form = XV
+         end select
+         lfirst = .false.
+      else
+         open(unit = iu, file = outfile, status = 'OLD', position =  'APPEND', form = 'UNFORMATTED', iostat = ierr)
+         if (ierr /= 0) then
+            write(*, *) "Swiftest error:"
+            write(*, *) "   unable to open binary output file for APPEND"
+            call util_exit(FAILURE)
+         end if
       end if
 
-      select case (out_form)
-      case ("EL")
-         iout_form = EL
-      case ("XV")
-         iout_form = XV
-      end select
-      lfirst = .false.
-   else
-      open(unit = iu, file = outfile, status = 'OLD', position =  'APPEND', form = 'UNFORMATTED', iostat = ierr)
-      if (ierr /= 0) then
-         write(*, *) "Swiftest error:"
-         write(*, *) "   unable to open binary output file for APPEND"
-         call util_exit(FAILURE)
-      end if
-   end if
-
-   call io_write_hdr(iu, t, swiftest_plA%nbody, swiftest_tpA%nbody, iout_form, out_type)
-   select case (iout_form)
-   case (EL)
-      do i = 2, swiftest_plA%nbody
-         mu = swiftest_plA%mass(1) + swiftest_plA%mass(i)
-         j = swiftest_plA%name(i)
-         call orbel_xv2el(swiftest_plA%xh(:,i), swiftest_plA%vh(:,i), mu, a, e, inc, capom, omega, capm)
-         a_pl(i) = a 
-         e_pl(i) = e
-         inc_pl(i) = inc
-         capom_pl(i) = capom
-         omega_pl(i) = omega
-         capm_pl(i) = capm 
-      end do
-      mu = swiftest_plA%mass(1)
-      do i = 1, swiftest_tpA%nbody
-         j = swiftest_tpA%name(i)
-         call orbel_xv2el(swiftest_tpA%xh(:,i), swiftest_tpA%vh(:,i), mu, a, e, inc, capom, omega, capm)
-         a_tp(i) = a 
-         e_tp(i) = e
-         inc_tp(i) = inc 
-         capom_tp(i) = capom
-         omega_tp(i) = omega
-         capm_tp(i) = capm
-      end do
-      write(LUN) swiftest_plA%name(2:swiftest_plA%nbody)
-      write(LUN) a_pl(2:swiftest_plA%nbody)
-      write(LUN) e_pl(2:swiftest_plA%nbody)
-      write(LUN) inc_pl(2:swiftest_plA%nbody)
-      write(LUN) capom_pl(2:swiftest_plA%nbody)
-      write(LUN) omega_pl(2:swiftest_plA%nbody)
-      write(LUN) capm_pl(2:swiftest_plA%nbody)
-      write(LUN) swiftest_plA%mass(2:swiftest_plA%nbody)
-      write(LUN) swiftest_plA%radius(2:swiftest_plA%nbody)
-      if (swiftest_tpA%nbody > 0) then
-         write(LUN) swiftest_tpA%name(1:swiftest_tpA%nbody)
-         write(LUN) a_tp(1:swiftest_tpA%nbody)
-         write(LUN) e_tp(1:swiftest_tpA%nbody)
-         write(LUN) inc_tp(1:swiftest_tpA%nbody)
-         write(LUN) capom_tp(1:swiftest_tpA%nbody)
-         write(LUN) omega_tp(1:swiftest_tpA%nbody)
-         write(LUN) capm_tp(1:swiftest_tpA%nbody)
-      end if
-
-   case (XV)
-         write(LUN) swiftest_pla%name(2:swiftest_plA%nbody)
-         write(LUN) swiftest_pla%xh(1,2:swiftest_plA%nbody)
-         write(LUN) swiftest_pla%xh(2,2:swiftest_plA%nbody)
-         write(LUN) swiftest_pla%xh(3,2:swiftest_plA%nbody)
-         write(LUN) swiftest_pla%vh(1,2:swiftest_plA%nbody)
-         write(LUN) swiftest_pla%vh(2,2:swiftest_plA%nbody)
-         write(LUN) swiftest_pla%vh(3,2:swiftest_plA%nbody)
-         write(LUN) swiftest_pla%mass(2:swiftest_plA%nbody)
-         write(LUN) swiftest_pla%radius(2:swiftest_plA%nbody) 
-
+      call io_write_hdr(iu, t, swiftest_plA%nbody, swiftest_tpA%nbody, iout_form, out_type)
+      select case (iout_form)
+      case (EL)
+         do i = 2, swiftest_plA%nbody
+            mu = swiftest_plA%mass(1) + swiftest_plA%mass(i)
+            j = swiftest_plA%name(i)
+            call orbel_xv2el(swiftest_plA%xh(:,i), swiftest_plA%vh(:,i), mu, a, e, inc, capom, omega, capm)
+            a_pl(i) = a 
+            e_pl(i) = e
+            inc_pl(i) = inc
+            capom_pl(i) = capom
+            omega_pl(i) = omega
+            capm_pl(i) = capm 
+         end do
+         mu = swiftest_plA%mass(1)
+         do i = 1, swiftest_tpA%nbody
+            j = swiftest_tpA%name(i)
+            call orbel_xv2el(swiftest_tpA%xh(:,i), swiftest_tpA%vh(:,i), mu, a, e, inc, capom, omega, capm)
+            a_tp(i) = a 
+            e_tp(i) = e
+            inc_tp(i) = inc 
+            capom_tp(i) = capom
+            omega_tp(i) = omega
+            capm_tp(i) = capm
+         end do
+         write(LUN) swiftest_plA%name(2:swiftest_plA%nbody)
+         write(LUN) a_pl(2:swiftest_plA%nbody)
+         write(LUN) e_pl(2:swiftest_plA%nbody)
+         write(LUN) inc_pl(2:swiftest_plA%nbody)
+         write(LUN) capom_pl(2:swiftest_plA%nbody)
+         write(LUN) omega_pl(2:swiftest_plA%nbody)
+         write(LUN) capm_pl(2:swiftest_plA%nbody)
+         write(LUN) swiftest_plA%mass(2:swiftest_plA%nbody)
+         write(LUN) swiftest_plA%radius(2:swiftest_plA%nbody)
+         if (param%lrotation) then
+            write(LUN) swiftest_plA%rot(1,2:swiftest_plA%nbody)
+            write(LUN) swiftest_plA%rot(2,2:swiftest_plA%nbody)
+            write(LUN) swiftest_plA%rot(3,2:swiftest_plA%nbody)
+            write(LUN) swiftest_plA%Ip(1,2:swiftest_plA%nbody)
+            write(LUN) swiftest_plA%Ip(2,2:swiftest_plA%nbody)
+            write(LUN) swiftest_plA%Ip(3,2:swiftest_plA%nbody)
+         end if
          if (swiftest_tpA%nbody > 0) then
-            write(LUN) swiftest_tpa%name(:)  
-            write(LUN) swiftest_tpa%xh(1,:)
-            write(LUN) swiftest_tpa%xh(2,:)
-            write(LUN) swiftest_tpa%xh(3,:)
-            write(LUN) swiftest_tpa%vh(1,:)
-            write(LUN) swiftest_tpa%vh(2,:)
-            write(LUN) swiftest_tpa%vh(3,:)
-         end if 
+            write(LUN) swiftest_tpA%name(1:swiftest_tpA%nbody)
+            write(LUN) a_tp(1:swiftest_tpA%nbody)
+            write(LUN) e_tp(1:swiftest_tpA%nbody)
+            write(LUN) inc_tp(1:swiftest_tpA%nbody)
+            write(LUN) capom_tp(1:swiftest_tpA%nbody)
+            write(LUN) omega_tp(1:swiftest_tpA%nbody)
+            write(LUN) capm_tp(1:swiftest_tpA%nbody)
+         end if
 
-   end select
+      case (XV)
+            write(LUN) swiftest_plA%name(2:swiftest_plA%nbody)
+            write(LUN) swiftest_plA%xh(1,2:swiftest_plA%nbody)
+            write(LUN) swiftest_plA%xh(2,2:swiftest_plA%nbody)
+            write(LUN) swiftest_plA%xh(3,2:swiftest_plA%nbody)
+            write(LUN) swiftest_plA%vh(1,2:swiftest_plA%nbody)
+            write(LUN) swiftest_plA%vh(2,2:swiftest_plA%nbody)
+            write(LUN) swiftest_plA%vh(3,2:swiftest_plA%nbody)
+            write(LUN) swiftest_plA%mass(2:swiftest_plA%nbody)
+            write(LUN) swiftest_plA%radius(2:swiftest_plA%nbody) 
+            if (param%lrotation) then
+               write(LUN) swiftest_plA%rot(1,2:swiftest_plA%nbody)
+               write(LUN) swiftest_plA%rot(2,2:swiftest_plA%nbody)
+               write(LUN) swiftest_plA%rot(3,2:swiftest_plA%nbody)
+               write(LUN) swiftest_plA%Ip(1,2:swiftest_plA%nbody)
+               write(LUN) swiftest_plA%Ip(2,2:swiftest_plA%nbody)
+               write(LUN) swiftest_plA%Ip(3,2:swiftest_plA%nbody)
+            end if
 
+            if (swiftest_tpA%nbody > 0) then
+               write(LUN) swiftest_tpA%name(:)  
+               write(LUN) swiftest_tpA%xh(1,:)
+               write(LUN) swiftest_tpA%xh(2,:)
+               write(LUN) swiftest_tpA%xh(3,:)
+               write(LUN) swiftest_tpA%vh(1,:)
+               write(LUN) swiftest_tpA%vh(2,:)
+               write(LUN) swiftest_tpA%vh(3,:)
+            end if 
 
-   close(unit = iu, iostat = ierr)
-   if (ierr /= 0) then
-      write(*, *) "Swiftest error:"
-      write(*, *) "   unable to close binary output file"
-      call util_exit(FAILURE)
-   end if
+      end select
 
+      close(unit = iu, iostat = ierr)
+      if (ierr /= 0) then
+         write(*, *) "Swiftest error:"
+         write(*, *) "   unable to close binary output file"
+         call util_exit(FAILURE)
+      end if
+   end associate
    return
 
    end procedure io_write_frame
