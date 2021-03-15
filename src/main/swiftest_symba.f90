@@ -45,7 +45,7 @@ program swiftest_symba
    integer(I4B)                  :: nplplenc, npltpenc, nmergeadd, nmergesub
    real(DP)                      :: t, tfrac, tbase, mtiny, ke, pe, te, eoffset, Loffset, msys
    real(DP), dimension(NDIM)     :: htot
-   real(DP)                      :: te_orig, te_error, te_off_error
+   real(DP)                      :: te_orig, te_error, te_off_error, te_after, te_before
    real(DP)                      :: Mtot_orig, Mtot_now, Merror
    real(DP)                      :: Ltot_orig, Ltot_now, Lerror, L_off_error
    character(STRMAX)             :: inparfile
@@ -189,21 +189,22 @@ program swiftest_symba
       ldiscard = .false. 
       ldiscard_tp = .false.
       lfrag_add = .false.
+
+      if (param%lenergy) then
+         if(num_plpl_comparisons > param%eucl_threshold) then
+            call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, &
+                  ke, pe, te, htot, msys)
+         else
+            call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot, msys)
+         end if
+         te_before = te
+      end if
+
       call symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard, mergeadd_list, nmergeadd)                                  
       call symba_discard_pl(t, npl, symba_plA, rmin, rmax, rmaxu, qmin, qmin_coord, qmin_alo, qmin_ahi, ldiscard)
       call symba_discard_tp(t, npl, ntp, symba_plA, symba_tpA, dt, rmin, rmax, rmaxu, qmin, qmin_coord, &    
             qmin_alo, qmin_ahi, param%lrhill_present, ldiscard_tp)
       if (ldiscard .or. ldiscard_tp .or. lfrag_add) then
-         if (param%lenergy) then
-            if(num_plpl_comparisons > param%eucl_threshold) then
-               call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, &
-                  ke, pe, te, htot, msys)
-            else
-               call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot, msys)
-            end if
-            write(egyiu,300) t, ke, pe, te, htot, eoffset, Loffset, msys
-         end if
-
          call symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
             discard_tpA, param, ldiscard, ldiscard_tp)
 
@@ -230,9 +231,29 @@ program swiftest_symba
             else
                call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot, msys)
             end if
+            te_after = te
+            te_error = (te_after - te_orig) / te_orig     ! Total energy error of system now compared to original system
+            eoffset = eoffset + (te_after - te_before)    ! Total running energy offset from collision in this step
+            te_off_error = te_error + (eoffset / te_orig) ! Total energy of the system plus any energy lost due to collisions
             write(egyiu,300) t, ke, pe, te, htot, eoffset, Loffset, msys
          end if
       end if
+
+
+      !if (param%lenergy) then
+      !   if(num_plpl_comparisons > param%eucl_threshold) then
+      !      call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, &
+      !            ke, pe, te, htot, msys)
+      !   else
+      !      call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, te, htot, msys)
+      !   end if
+      !   te_after = te
+      !   te_error = (te_after - te_orig) / te_orig     ! Total energy error of system now compared to original system
+      !   eoffset = eoffset + (te_after - te_before)    ! Total running energy offset from collision in this step
+      !   te_off_error = te_error + (eoffset / te_orig) ! Total energy of the system plus any energy lost due to collisions
+
+         !write(*, *) "  DE/E0 = ", te_error, "; eoffset = ", eoffset, "; (DE+eoffset)/E0 = ", te_off_error
+      !end if
 
       iloop = iloop + 1
       if (iloop == loopmax) then
