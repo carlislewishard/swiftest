@@ -159,6 +159,13 @@ program swiftest_symba
    CALL util_dist_index_plpl(npl, nplm, num_plpl_comparisons, k_plpl)
    CALL util_dist_index_pltp(nplm, ntp, num_pltp_comparisons, k_pltp)
 
+   ! Save initial mass and angular momentum of the central body
+   symba_plA%helio%swiftest%Mcb_initial = symba_plA%helio%swiftest%mass(1)
+   symba_plA%helio%swiftest%Lcb_initial(:) = symba_plA%helio%swiftest%Ip(3,1) * symba_plA%helio%swiftest%mass(1) * &
+                                             symba_plA%helio%swiftest%radius(1)**2 * symba_plA%helio%swiftest%rot(:,1)
+   symba_plA%helio%swiftest%dMcb = 0.0_DP
+   symba_plA%helio%swiftest%dLcb(:) = 0.0_DP
+
    if (param%lenergy) then
       eoffset = 0.0_DP
       Loffset = 0.0_DP

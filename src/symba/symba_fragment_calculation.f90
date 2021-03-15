@@ -96,7 +96,8 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
    DO i = 1, nmergeadd
       ! If both of their parents' names match the two bodies we are considering in this collision
       ! then we know that this new body in mergeadd_list formed from this collision 
-      IF ((mergeadd_list%name_p1(i) == name1) .AND. (mergeadd_list%name_p2(i) == name2)) THEN
+      IF (((mergeadd_list%name_p1(i) == name1) .AND. (mergeadd_list%name_p2(i) == name2)) .or. &
+          ((mergeadd_list%name_p1(i) == name2) .AND. (mergeadd_list%name_p2(i) == name1))) THEN
          frags_added = frags_added + 1 ! Count up the fragments that formed from this collision
          if (frags_added == 1) nmergeadd_frag_index = i ! Index in mergeadd_list of the fragment from this collision
          ! If both of their parents' names match the name of the removed body in this collision

@@ -38,7 +38,7 @@ contains
    if (is_ascii) then
       read(LUN, *, iostat = ierr) self%name(1), self%mass(1)
       self%rhill(1) = 0.0_DP
-      self%radius(1) = 0.0_DP
+      self%radius(1) = param%rmin
       read(LUN, *, iostat = ierr) self%xh(:,1)
       read(LUN, *, iostat = ierr) self%vh(:,1)
       if (param%lrotation) THEN

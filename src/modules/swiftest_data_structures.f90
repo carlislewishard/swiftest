@@ -31,6 +31,8 @@ module swiftest_data_structures
       real(DP),     dimension(:),     allocatable :: rhill  !! Hill's sphere radius
       real(DP),     dimension(:,:),   allocatable :: Ip     !! Unitless principal moments of inertia (I1, I2, I3) / (MR**2). Principal axis rotation assumed. 
       real(DP),     dimension(:,:),   allocatable :: rot    !! body rotation vector in inertial coordinate frame 
+      real(DP),     dimension(NDIM)               :: Lcb_initial, dLcb !! Initial angular momentum and change in angular momentum of the central body
+      real(DP)                                    :: Mcb_initial, dMcb !! Initial mass and change in mass of the central body
    contains
       procedure :: alloc => swiftest_pl_allocate
       procedure :: dealloc => swiftest_pl_deallocate

@@ -2,99 +2,125 @@
 !
 !  Unit Name   : symba_discard_sun_pl
 !  Unit Type   : subroutine
-!  Project     : Swiftest
-!  Package     : symba
+!  Project   : Swiftest
+!  Package   : symba
 !  Language    : Fortran 90/95
 !
 !  Description : Check to see if planets should be discarded based on their positions relative to the Sun
 !
 !  Input
-!    Arguments : t            : time
-!                npl          : number of planets
-!                msys         : total system mass
-!                swifter_pl1P : pointer to head of Swifter planet structure linked-list
-!                rmin         : minimum allowed heliocentric radius
-!                rmax         : maximum allowed heliocentric radius
-!                rmaxu        : maximum allowed heliocentric radius for unbound planets
-!                ldiscard    : logical flag indicating whether any planets are discarded
+!    Arguments : t        : time
+!          npl      : number of planets
+!          msys       : total system mass
+!          swifter_pl1P : pointer to head of Swifter planet structure linked-list
+!          rmin       : minimum allowed heliocentric radius
+!          rmax       : maximum allowed heliocentric radius
+!          rmaxu      : maximum allowed heliocentric radius for unbound planets
+!          ldiscard    : logical flag indicating whether any planets are discarded
 !    Terminal  : none
-!    File      : none
+!    File    : none
 !
 !  Output
 !    Arguments : swifter_pl1P : pointer to head of Swifter planet structure linked-list
-!                ldiscard    : logical flag indicating whether any planets are discarded
+!          ldiscard    : logical flag indicating whether any planets are discarded
 !    Terminal  : status message
-!    File      : none
+!    File    : none
 !
 !  Invocation  : CALL symba_discard_sun_pl(t, npl, msys, swifter_pl1P, rmin, rmax, rmaxu, ldiscard)
 !
-!  Notes       : Adapted from Hal Levison's Swift routine discard_massive5.f
+!  Notes     : Adapted from Hal Levison's Swift routine discard_massive5.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE symba_discard_sun_pl(t, npl, msys, swiftest_plA, rmin, rmax, rmaxu, ldiscard)
+subroutine symba_discard_sun_pl(t, npl, msys, swiftest_plA, rmin, rmax, rmaxu, ldiscard)
+   !! author: David A. Minton
+   !!
+   !! Check to see if planets should be discarded based on their positions relative to the Sun.
+   !! Updates the mass and angular momentum of the central body
+   !!  
+   !! Adapted from David E. Kaufmann Swifter routine symba_energy.f90
+   !!  
+   !! Adapted from Martin Duncan's Swift routine anal_energy.f
 
-! Modules
-     USE swiftest
-     USE module_interfaces, EXCEPT_THIS_ONE => symba_discard_sun_pl
-     IMPLICIT NONE
+! modules
+   use swiftest
+   use module_interfaces, EXCEPT_THIS_ONE => symba_discard_sun_pl
+   implicit none
 
-! Arguments
-     INTEGER(I4B), INTENT(IN)         :: npl
-     REAL(DP), INTENT(IN)             :: t, msys, rmin, rmax, rmaxu
-     TYPE(swiftest_pl), INTENT(INOUT) :: swiftest_plA
-     LOGICAL(LGT), INTENT(INOUT)      :: ldiscard
+! arguments
+   integer(I4B), intent(in)       :: npl
+   real(DP), intent(in)         :: t, msys, rmin, rmax, rmaxu
+   type(swiftest_pl), intent(inout) :: swiftest_plA
+   logical(LGT), intent(inout)    :: ldiscard
 
-! Internals
-     INTEGER(I4B)              :: i
-     REAL(DP)                  :: energy, vb2, rb2, rh2, rmin2, rmax2, rmaxu2
+! internals
+   integer(I4B)          :: i
+   real(DP)            :: energy, vb2, rb2, rh2, rmin2, rmax2, rmaxu2
+   real(DP)            :: mass, rad, Ipz
+   logical             :: lupdate_L, lupdate_mass
+   real(DP), dimension(NDIM) :: Lpl, rot, xb, vb
+
+! executable code
+   rmin2 = rmin*rmin
+   rmax2 = rmax*rmax
+   rmaxu2 = rmaxu*rmaxu
+   do i = 2, npl
+      if (swiftest_plA%status(i) == ACTIVE) then
+         lupdate_L = .false.
+         lupdate_mass = .false.
+         rh2 = dot_product(swiftest_plA%xh(:,i), swiftest_plA%xh(:,i))
+         if ((rmax >= 0.0_DP) .and. (rh2 > rmax2)) then
+            ldiscard = .true.
+            lupdate_L = .true.
+            lupdate_mass = .false.
+            swiftest_plA%status(i) = DISCARDED_RMAX
+            write(*, *) "Particle ",  swiftest_plA%name(i), " too far from the central body at t = ", t
+         else if ((rmin >= 0.0_DP) .and. (rh2 < rmin2)) then
+            ldiscard = .true.
+            lupdate_L = .true.
+            lupdate_mass = .true.
+            swiftest_plA%status(i) = DISCARDED_RMIN
+            write(*, *) "Particle ", swiftest_plA%name(i), " too close to the central body at t = ", t
+         else if (rmaxu >= 0.0_DP) then
+            rb2 = dot_product(swiftest_plA%xb(:,i), swiftest_plA%xb(:,i))
+            vb2 = dot_product(swiftest_plA%vb(:,i), swiftest_plA%vb(:,i))
+            energy = 0.5_DP*vb2 - msys/sqrt(rb2)
+            if ((energy > 0.0_DP) .and. (rb2 > rmaxu2)) then
+               ldiscard = .true.
+               lupdate_L = .true.
+               lupdate_mass = .false.
+               swiftest_plA%status(i) = DISCARDED_RMAXU
+               write(*, *) "Particle ", swiftest_plA%name(i), " is unbound and too far from barycenter at t = ", t
+            end if
+         end if
+         if (lupdate_mass) then
+            ! Add planet mass to central body accumulator
+            swiftest_plA%dMcb = swiftest_plA%dMcb + swiftest_plA%mass(i)
+
+            ! Update mass of central body to be consistent with its total mass
+            swiftest_plA%mass(1) = swiftest_plA%Mcb_initial + swiftest_plA%dMcb
+         end if
+         if (lupdate_L) then
+            xb(:) = swiftest_plA%xb(:,i)
+            vb(:) = swiftest_plA%vb(:,i)
+            rot(:) = swiftest_plA%rot(:,i)
+            Ipz = swiftest_plA%Ip(3,i)
+            rad = swiftest_plA%radius(i)
+            mass = swiftest_plA%mass(i) 
+            ! Orbital angular momentum
+            call util_crossproduct(xb,vb,Lpl)
+            Lpl(:) = mass * (Lpl(:) + Ipz * rad**2 * rot(:))
+            ! Add planet angular momentum to central body accumulator
+            swiftest_plA%dLcb(:) = swiftest_plA%dLcb(:) + Lpl(:)
+
+            ! Update rotation of central body to by consistent with its angular momentum 
+            swiftest_plA%rot(:,1) = (swiftest_plA%Lcb_initial(:) + swiftest_plA%dLcb(:)) / &
+               (swiftest_plA%Ip(3,1) * swiftest_plA%mass(1) * swiftest_plA%radius(1)**2)
+         end if
+      end if
+   end do
 
 
-! Executable code
-     rmin2 = rmin*rmin
-     rmax2 = rmax*rmax
-     rmaxu2 = rmaxu*rmaxu
-     DO i = 2, npl
-          IF (swiftest_plA%status(i) == ACTIVE) THEN
-               rh2 = DOT_PRODUCT(swiftest_plA%xh(:,i), swiftest_plA%xh(:,i))
-               IF ((rmax >= 0.0_DP) .AND. (rh2 > rmax2)) THEN
-                    ldiscard = .TRUE.
-                    swiftest_plA%status(i) = DISCARDED_RMAX
-                    WRITE(*, *) "Particle ",  swiftest_plA%name(i), " too far from Sun at t = ", t
-               ELSE IF ((rmin >= 0.0_DP) .AND. (rh2 < rmin2)) THEN
-                    ldiscard = .TRUE.
-                    swiftest_plA%status(i) = DISCARDED_RMIN
-                    WRITE(*, *) "Particle ", swiftest_plA%name(i), " too close to Sun at t = ", t
-               ELSE IF (rmaxu >= 0.0_DP) THEN
-                    rb2 = DOT_PRODUCT(swiftest_plA%xb(:,i), swiftest_plA%xb(:,i))
-                    vb2 = DOT_PRODUCT(swiftest_plA%vb(:,i), swiftest_plA%vb(:,i))
-                    energy = 0.5_DP*vb2 - msys/SQRT(rb2)
-                    IF ((energy > 0.0_DP) .AND. (rb2 > rmaxu2)) THEN
-                         ldiscard = .TRUE.
-                         swiftest_plA%status(i) = DISCARDED_RMAXU
-                         WRITE(*, *) "Particle ", swiftest_plA%name(i), " is unbound and too far from barycenter at t = ", t
-                    END IF
-               END IF
-          END IF
-     END DO
 
-     RETURN
+   return
 
-END SUBROUTINE symba_discard_sun_pl
-!**********************************************************************************************************************************
-!
-!  Author(s)   : David E. Kaufmann
-!
-!  Revision Control System (RCS) Information
-!
-!  Source File : $RCSfile$
-!  Full Path   : $Source$
-!  Revision    : $Revision$
-!  Date        : $Date$
-!  Programmer  : $Author$
-!  Locked By   : $Locker$
-!  State       : $State$
-!
-!  Modification History:
-!
-!  $Log$
-!**********************************************************************************************************************************
+end subroutine symba_discard_sun_pl
