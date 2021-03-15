@@ -204,12 +204,6 @@ subroutine symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_lis
                           mass_res, radius_res, array_index1_child, array_index2_child, mass(1), mass(2), &
                           radius(1), radius(2), x(:, 1), x(:, 2), v(:, 1), v(:, 2), mtiny, Loffset)
 
-   if (param%lenergy) then
-      ! Get the energy offset from the mergeadd/sub lists
-      subf = nmergesub 
-      addf = nmergeadd
-      eoffset = eoffset - symba_mergeadd_eoffset(npl, symba_plA, mergeadd_list, mergesub_list, addi, addf, subi, subf, param)
-   end if
 
    deallocate(array_index1_child, array_index2_child)
    return
