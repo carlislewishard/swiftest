@@ -31,7 +31,7 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, htot, msys)
    htot = 0.0_DP
    ke = 0.0_DP
 
-   !$omp simd private(x,v,v2,mass,h) reduction(+:ke,htot)
+   !$omp simd private(x,v,v2,mass,h,rot,Ip,rad,rot2) reduction(+:ke,htot)
    do i = 1, npl 
       x(:) = swiftest_plA%xb(:, i)
       v(:) = swiftest_plA%vb(:, i)

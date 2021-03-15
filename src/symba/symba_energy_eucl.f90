@@ -21,7 +21,7 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
 
 ! internals
    integer(I4B)              :: i, j
-   real(DP)                  :: mass, rmag, v2, oblpot, Mcb, radius, IP
+   real(DP)                  :: mass, rmag, v2, oblpot, Mcb, rad, Ip, rot2
    real(DP), dimension(NDIM) :: h, x, v, xbcb, rot
    real(DP), dimension(npl)  :: irh
    integer(I8B)              :: k
@@ -32,27 +32,25 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
    htot = 0.0_DP
    ke = 0.0_DP
 
-   ! Kinetic energy of all bodies, inclusing the central body
-   !$omp simd private(x,v,v2,mass,h) reduction(+:ke,htot)
+   !$omp simd private(x,v,v2,mass,h,rot,Ip,rad,rot2) reduction(+:ke,htot)
    do i = 1, npl 
       x(:) = swiftest_plA%xb(:, i)
       v(:) = swiftest_plA%vb(:, i)
+      rot(:) = swiftest_plA%rot(:, i)
+      Ip = swiftest_plA%Ip(3, i)
       mass = swiftest_plA%mass(i)
+      rad = swiftest_plA%radius(i)
+      v2 = dot_product(v(:), v(:))
+      rot2 = dot_product(rot(:), rot(:))
       h(1) = mass * (x(2) * v(3) - x(3) * v(2))
       h(2) = mass * (x(3) * v(1) - x(1) * v(3))
       h(3) = mass * (x(1) * v(2) - x(2) * v(1))
-      htot(:) = htot(:) + h(:)
-      v2 = dot_product(v(:), v(:))
-      ke = ke + 0.5_DP * mass * v2
-   end do
 
-      !Angular momentum from spin of bodies 
-   do i = 1, npl 
-      IP = swiftest_plA%Ip(3,i)
-      mass = swiftest_plA%mass(i)
-      radius = swiftest_plA%radius(i)
-      rot = swiftest_plA%rot(:,i)
-      htot(:) = htot(:) + mass*IP*rot*radius**2
+      ! Angular momentum from orbit and spin
+      htot(:) = htot(:) + h(:) + mass * Ip * rot(:) * rad**2
+
+      ! Kinetic energy from orbit and spin
+      ke = ke + (0.5_DP * mass * v2) + (0.5_DP * Ip * mass * rad**2 * rot2)
    end do
 
    ! Do the central body potential energy component first
