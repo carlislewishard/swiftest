@@ -19,7 +19,6 @@
 !                symba_pl1P     : pointer to head of SyMBA planet structure linked-list
 !                symba_tp1P     : pointer to head of active SyMBA test particle structure linked-list
 !                dt0            : time step (primary time step for overall integration)
-!                eoffset        : energy offset (net energy lost in mergers)
 !                nplplenc       : number of planet-planet encounters
 !                npltpenc       : number of planet-test particle encounters
 !                plplenc_list   : array of planet-planet encounter structures
@@ -34,7 +33,6 @@
 !  Output
 !    Arguments : symba_pl1P     : pointer to head of SyMBA planet structure linked-list
 !                symba_tp1P     : pointer to head of active SyMBA test particle structure linked-list
-!                eoffset        : energy offset (net energy lost in mergers)
 !                plplenc_list   : array of planet-planet encounter structures
 !                pltpenc_list   : array of planet-test particle encounter structures
 !                nmergeadd      : number of merged planets to add
@@ -44,13 +42,13 @@
 !    Terminal  : warning message
 !    File      : none
 !
-!  Invocation  : CALL symba_step_recur(t, ireci, npl, nplm, ntp, symba_pl1P, symba_tp1P, dt0, eoffset, nplplenc, npltpenc,
+!  Invocation  : CALL symba_step_recur(t, ireci, npl, nplm, ntp, symba_pl1P, symba_tp1P, dt0, nplplenc, npltpenc,
 !                                      plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list)
 !
 !  Notes       : Adapted from Hal Levison's Swift routine symba5_step_recur.F
 !
 !**********************************************************************************************************************************
-RECURSIVE SUBROUTINE symba_step_recur(t, ireci, npl, nplm, ntp, symba_plA, symba_tpA, dt0, eoffset, Loffset, &
+RECURSIVE SUBROUTINE symba_step_recur(t, ireci, npl, nplm, ntp, symba_plA, symba_tpA, dt0, &
    nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, param)
 
 ! Modules
@@ -64,7 +62,6 @@ RECURSIVE SUBROUTINE symba_step_recur(t, ireci, npl, nplm, ntp, symba_plA, symba
      INTEGER(I4B), INTENT(IN)                         :: ireci, npl, nplm, ntp, nplplenc, npltpenc
      INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub
      REAL(DP), INTENT(IN)                             :: t, dt0
-     REAL(DP), INTENT(INOUT)                          :: eoffset, Loffset
      TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
      TYPE(symba_tp), INTENT(INOUT)                    :: symba_tpA
      TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
@@ -158,8 +155,7 @@ RECURSIVE SUBROUTINE symba_step_recur(t, ireci, npl, nplm, ntp, symba_plA, symba
           CALL symba_helio_drift(ireci, npl, symba_plA, dtl)
           IF (ntp > 0) CALL symba_helio_drift_tp(ireci, ntp, symba_tpA, symba_plA%helio%swiftest%mass(1), dtl)
           IF (lencounter) CALL symba_step_recur(t, irecp, npl, nplm, ntp, symba_plA, symba_tpA, dt0, &
-                        eoffset, Loffset, nplplenc, &
-                        npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, param)
+                      nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, param)
           sgn = 1.0_DP
           CALL symba_kick(irecp, nplplenc, npltpenc, plplenc_list, pltpenc_list, dth, sgn,symba_plA, symba_tpA) 
           IF (param%lclose) THEN
@@ -171,7 +167,7 @@ RECURSIVE SUBROUTINE symba_step_recur(t, ireci, npl, nplm, ntp, symba_plA, symba
                         (symba_plA%levelg(index_i) >= ireci) .AND.                                                              &
                         (symba_plA%levelg(index_j) >= ireci))) THEN 
                         CALL symba_collision (t, dtl, i, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
-                                                  eoffset, Loffset, npl, symba_plA, nplplenc, plplenc_list, mtiny, param)
+                                                  npl, symba_plA, nplplenc, plplenc_list, mtiny, param)
                      END IF
                END DO
                DO i = 1, npltpenc
@@ -253,8 +249,8 @@ RECURSIVE SUBROUTINE symba_step_recur(t, ireci, npl, nplm, ntp, symba_plA, symba
                CALL symba_kick(irecp, nplplenc, npltpenc, plplenc_list, pltpenc_list, dth, sgn,symba_plA, symba_tpA)
                CALL symba_helio_drift(ireci, npl, symba_plA, dtl)
                IF (ntp > 0) CALL symba_helio_drift_tp(ireci, ntp, symba_tpA, symba_plA%helio%swiftest%mass(1), dtl)
-               IF (lencounter) CALL symba_step_recur(t, irecp, npl, nplm, ntp, symba_plA, symba_tpA, dt0, eoffset,      &
-                    Loffset, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, &
+               IF (lencounter) CALL symba_step_recur(t, irecp, npl, nplm, ntp, symba_plA, symba_tpA, dt0,  &
+                    nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, &
                     mergesub_list, param)
                sgn = 1.0_DP
                CALL symba_kick(irecp, nplplenc, npltpenc, plplenc_list, pltpenc_list, dth, sgn,symba_plA, symba_tpA) 
@@ -269,7 +265,7 @@ RECURSIVE SUBROUTINE symba_step_recur(t, ireci, npl, nplm, ntp, symba_plA, symba
                              (symba_plA%levelg(index_i) >= ireci) .AND. &
                              (symba_plA%levelg(index_j) >= ireci))  THEN    
                              CALL symba_collision(t, dtl, i, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
-                                                  eoffset, Loffset, npl, symba_plA, nplplenc, plplenc_list, mtiny, param)
+                                                  npl, symba_plA, nplplenc, plplenc_list, mtiny, param)
                          END IF
                     END DO
                     DO i = 1, npltpenc

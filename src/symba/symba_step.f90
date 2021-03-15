@@ -27,7 +27,6 @@
 !                nmergesub      : number of merged planets to subtract
 !                mergeadd_list  : array of structures of merged planets to add
 !                mergesub_list  : array of structures of merged planets to subtract
-!                eoffset        : energy offset (net energy lost in mergers)
 !    Terminal  : none
 !    File      : none
 !
@@ -43,20 +42,19 @@
 !                nmergesub      : number of merged planets to subtract
 !                mergeadd_list  : array of structures of merged planets to add
 !                mergesub_list  : array of structures of merged planets to subtract
-!                eoffset        : energy offset (net energy lost in mergers)
 !    Terminal  : error message
 !    File      : none
 !
 !  Invocation  : CALL symba_step(lfirst, param%lextra_force, param%lclose, t, npl, ntp, symba_pl1P, symba_tp1P, param%j2rp2, param%j4rp4,
 !                                dt, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list,
-!                                mergesub_list, eoffset)
+!                                mergesub_list)
 !
 !  Notes       : Adapted from Hal Levison's Swift routine symba5_step_pl.f
 !
 !**********************************************************************************************************************************
 SUBROUTINE symba_step(t, dt, param, npl, ntp,symba_plA, symba_tpA,       &
                nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub,&
-               mergeadd_list, mergesub_list, eoffset, Loffset)
+               mergeadd_list, mergesub_list)
 
 ! Modules
      USE swiftest
@@ -71,7 +69,6 @@ SUBROUTINE symba_step(t, dt, param, npl, ntp,symba_plA, symba_tpA,       &
      INTEGER(I4B), INTENT(IN)                         :: npl, ntp
      INTEGER(I4B), INTENT(INOUT)                      :: nplplenc, npltpenc, nmergeadd, nmergesub
      REAL(DP), INTENT(IN)                             :: t, dt
-     REAL(DP), INTENT(INOUT)                          :: eoffset, Loffset
      TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
      TYPE(symba_tp), INTENT(INOUT)                    :: symba_tpA
      TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
@@ -161,7 +158,7 @@ SUBROUTINE symba_step(t, dt, param, npl, ntp,symba_plA, symba_tpA,       &
      lencounter = ((nplplenc > 0) .OR. (npltpenc > 0))
      IF (lencounter) THEN
           CALL symba_step_interp(t, npl, nplm, ntp, symba_plA, symba_tpA, &
-               dt, eoffset, Loffset, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, &
+               dt, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, &
                nmergesub, mergeadd_list, mergesub_list,  param)
           lfirst = .TRUE.
      ELSE 

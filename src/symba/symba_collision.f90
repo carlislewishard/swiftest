@@ -1,5 +1,5 @@
-subroutine symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, eoffset, & 
-   Loffset, npl, symba_plA, nplplenc, plplenc_list, mtiny, param)
+subroutine symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list,  & 
+   npl, symba_plA, nplplenc, plplenc_list, mtiny, param)
    !! author: Jennifer L.L. Pouplin, Carlisle A. wishard, and David A. Minton
    !!
    !! Check for merger between planets in SyMBA. If the user has turned on the FRAGMENTATION feature, it will call the 
@@ -11,14 +11,14 @@ subroutine symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_lis
    use swiftest
    use module_helio
    use module_symba
-   use module_interfaces, except_this_one => symba_collision
+   use module_interfaces, EXCEPT_THIS_ONE => symba_collision
    implicit none
 
    integer(I4B), intent(in)                   :: index_enc
    integer(I4B), intent(in)                   :: npl, nplplenc
    integer(I4B), intent(inout)                :: nmergeadd, nmergesub
    real(DP), intent(in)                       :: t, dt
-   real(DP), intent(inout)                    :: eoffset, Loffset, mtiny
+   real(DP), intent(inout)                    :: mtiny
    type(symba_plplenc), intent(inout)         :: plplenc_list
    type(symba_merger), intent(inout)          :: mergeadd_list, mergesub_list
    type(symba_pl), intent(inout)              :: symba_plA
@@ -202,7 +202,7 @@ subroutine symba_collision (t, dt, index_enc, nmergeadd, nmergesub, mergeadd_lis
    call symba_caseresolve(t, dt, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list, vbs, & 
                           symba_plA, nplplenc, plplenc_list, regime, param%plmaxname, param%tpmaxname, &
                           mass_res, radius_res, array_index1_child, array_index2_child, mass(1), mass(2), &
-                          radius(1), radius(2), x(:, 1), x(:, 2), v(:, 1), v(:, 2), mtiny, Loffset)
+                          radius(1), radius(2), x(:, 1), x(:, 2), v(:, 1), v(:, 2), mtiny)
 
 
    deallocate(array_index1_child, array_index2_child)

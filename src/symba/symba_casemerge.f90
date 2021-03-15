@@ -1,6 +1,6 @@
 subroutine symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list,  & 
    symba_plA, nplplenc, plplenc_list, array_index1_child, array_index2_child, m1, m2, rad1, rad2,&
-    x1, x2, v1, v2, Loffset)
+    x1, x2, v1, v2)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
    !! Merge planets.
@@ -18,7 +18,7 @@ subroutine symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
    integer(I4B), intent(in)                :: index_enc, nplplenc
    integer(I4B), intent(inout)             :: nmergeadd, nmergesub
    real(DP), intent(in)                    :: t
-   real(DP), intent(inout)                 :: Loffset, m1, m2, rad1, rad2
+   real(DP), intent(inout)                 :: m1, m2, rad1, rad2
    real(DP), dimension(:), intent(inout)   :: x1, x2, v1, v2
    type(symba_plplenc), intent(inout)      :: plplenc_list
    type(symba_merger), intent(inout)       :: mergeadd_list, mergesub_list

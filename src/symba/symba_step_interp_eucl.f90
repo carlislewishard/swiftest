@@ -19,7 +19,6 @@
 !                symba_pl1P     : pointer to head of SyMBA planet structure linked-list
 !                symba_tp1P     : pointer to head of active SyMBA test particle structure linked-list
 !                dt             : time step
-!                eoffset        : energy offset (net energy lost in mergers)
 !                mtiny          : smallest self-gravitating mass
 !                nplplenc       : number of planet-planet encounters
 !                npltpenc       : number of planet-test particle encounters
@@ -35,7 +34,6 @@
 !  Output
 !    Arguments : symba_pl1P     : pointer to head of SyMBA planet structure linked-list
 !                symba_tp1P     : pointer to head of active SyMBA test particle structure linked-list
-!                eoffset        : energy offset (net energy lost in mergers)
 !                plplenc_list   : array of planet-planet encounter structures
 !                pltpenc_list   : array of planet-test particle encounter structures
 !                nmergeadd      : number of merged planets to add
@@ -46,14 +44,14 @@
 !    File      : none
 !
 !  Invocation  : CALL symba_step_interp(t, npl, nplm, ntp, symba_pl1P, symba_tp1P, 
-!                                       dt, eoffset, mtiny, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd,
+!                                       dt, mtiny, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd,
 !                                       nmergesub, mergeadd_list, mergesub_list )
 !
 !  Notes       : Adapted from Hal Levison's Swift routine symba5_step_interp.f
 !
 !**********************************************************************************************************************************
 SUBROUTINE symba_step_interp_eucl(t, npl, nplm, ntp, symba_plA, symba_tpA,&
-   dt, eoffset, Loffset, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list,&
+   dt, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list,&
     mergesub_list, param, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
 
 ! Modules
@@ -69,7 +67,6 @@ SUBROUTINE symba_step_interp_eucl(t, npl, nplm, ntp, symba_plA, symba_tpA,&
      INTEGER(I4B), INTENT(IN)                         :: npl, nplm, ntp, nplplenc, npltpenc
      INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub
      REAL(DP), INTENT(IN)                             :: t, dt
-     REAL(DP), INTENT(INOUT)                          :: eoffset, Loffset
      TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
      TYPE(symba_tp), INTENT(INOUT)                    :: symba_tpA
      TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
@@ -114,7 +111,7 @@ SUBROUTINE symba_step_interp_eucl(t, npl, nplm, ntp, symba_plA, symba_tpA,&
      IF (ntp > 0) CALL symba_helio_drift_tp(irec, ntp, symba_tpA, symba_plA%helio%swiftest%mass(1), dt)
      irec = 0
 
-     CALL symba_step_recur(t, irec, npl, nplm, ntp, symba_plA, symba_tpA, dt, eoffset, Loffset, nplplenc, npltpenc,              &
+     CALL symba_step_recur(t, irec, npl, nplm, ntp, symba_plA, symba_tpA, dt, nplplenc, npltpenc,              &
           plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, param)
 
      IF (ntp > 0) THEN

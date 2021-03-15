@@ -21,7 +21,6 @@
 !                param%j2rp2          : J2 * R**2 for the Sun
 !                param%j4rp4          : J4 * R**4 for the Sun
 !                dt             : time step
-!                eoffset        : energy offset (net energy lost in mergers)
 !                mtiny          : smallest self-gravitating mass
 !                nplplenc       : number of planet-planet encounters
 !                npltpenc       : number of planet-test particle encounters
@@ -39,7 +38,6 @@
 !  Output
 !    Arguments : symba_pl1P     : pointer to head of SyMBA planet structure linked-list
 !                symba_tp1P     : pointer to head of active SyMBA test particle structure linked-list
-!                eoffset        : energy offset (net energy lost in mergers)
 !                plplenc_list   : array of planet-planet encounter structures
 !                pltpenc_list   : array of planet-test particle encounter structures
 !                nmergeadd      : number of merged planets to add
@@ -50,14 +48,14 @@
 !    File      : none
 !
 !  Invocation  : CALL symba_step_interp(param%lextra_force, param%lclose, t, npl, nplm, plmaxname, ntp, tpmaxname, symba_pl1P, symba_tp1P, param%j2rp2,
-!                                       param%j4rp4, dt, eoffset, mtiny, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd,
+!                                       param%j4rp4, dt, mtiny, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd,
 !                                       nmergesub, mergeadd_list, mergesub_list, param%encounter_file, param%out_type)
 !
 !  Notes       : Adapted from Hal Levison's Swift routine symba5_step_interp.f
 !
 !**********************************************************************************************************************************
 SUBROUTINE symba_step_interp(t, npl, nplm, ntp, symba_plA, symba_tpA, dt,   &
-     eoffset, Loffset, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, &
+     nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, &
      mergeadd_list, mergesub_list, param)
 
 ! Modules
@@ -71,7 +69,6 @@ SUBROUTINE symba_step_interp(t, npl, nplm, ntp, symba_plA, symba_tpA, dt,   &
      INTEGER(I4B), INTENT(IN)                         :: npl, nplm, ntp, nplplenc, npltpenc
      INTEGER(I4B), INTENT(INOUT)                      :: nmergeadd, nmergesub
      REAL(DP), INTENT(IN)                             :: t, dt
-     REAL(DP), INTENT(INOUT)                          :: eoffset, Loffset
      TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
      TYPE(symba_tp), INTENT(INOUT)                    :: symba_tpA
      TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
@@ -115,7 +112,7 @@ SUBROUTINE symba_step_interp(t, npl, nplm, ntp, symba_plA, symba_tpA, dt,   &
      nmergesub_before = nmergesub
      nmergeadd_before = nmergeadd
 
-     CALL symba_step_recur(t, irec, npl, nplm, ntp, symba_plA, symba_tpA, dt, eoffset, Loffset, nplplenc, npltpenc,  &
+     CALL symba_step_recur(t, irec, npl, nplm, ntp, symba_plA, symba_tpA, dt, nplplenc, npltpenc,  &
           plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, param)
 
      ! Save the number of new bodies to be added to the mergeadd/sub lists
