@@ -147,7 +147,7 @@ program swiftest_symba
    nmergesub = 0
    nsppl = 0
    nsptp = 0
-   if ((istep_out > 0).and.(out_stat == "NEW")) then
+   if ((istep_out > 0).and.((out_stat == "NEW").or.(out_stat == "REPLACE"))) then
       call io_write_frame(t, symba_plA%helio%swiftest, symba_tpA%helio%swiftest, param) 
    end if
    if (out_stat == "OLD") then
