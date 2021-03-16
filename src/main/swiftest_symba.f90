@@ -238,14 +238,14 @@ program swiftest_symba
                call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, Eorbit, Ltot, msys)
             end if
             Eorbit_after = Eorbit
-            Eorbit_error = (Eorbit_after - Eorbit_orig) / Eorbit_orig     ! Total energy error of system now compared to original system
+            Eorbit_error = (Eorbit_after - Eorbit_orig) / abs(Eorbit_orig)     ! Total energy error of system now compared to original system
             Ecollisions = Ecollisions + (Eorbit_before - Eorbit_after)    ! Total running energy offset from collision in this step
             if ((Ecollisions /= Ecollisions) .or. (abs(Ecollisions) > huge(Ecollisions))) then 
                write(*,*) 'Error encountered in colisional energy calculation!'
                write(*,*) 'Eorbit_before: ', Eorbit_before
                write(*,*) 'Eorbit_after : ', Eorbit_after
             end if
-            Eorbit_off_error = Eorbit_error + (Ecollisions / Eorbit_orig) ! Total energy of the system plus any energy lost due to collisions
+            Eorbit_off_error = Eorbit_error + (Ecollisions / abs(Eorbit_orig)) ! Total energy of the system plus any energy lost due to collisions
             write(egyiu,egyfmt) t, Eorbit, Ecollisions, Ltot, msys
             flush(egyiu)
          end if
@@ -292,8 +292,8 @@ program swiftest_symba
                Ltot_now = norm2(Ltot)
                Lerror = (Ltot_now - Ltot_orig) / Ltot_orig
                L_off_error = (Ltot_now - Ltot_orig) / Ltot_orig
-               Eorbit_error = (Eorbit - Eorbit_orig) / (Eorbit_orig - Ecollisions)
-               Eorbit_off_error = (Eorbit + Ecollisions - Eorbit_orig) / Eorbit_orig
+               Eorbit_error = (Eorbit - Eorbit_orig) / abs(Eorbit_orig)
+               Eorbit_off_error = (Eorbit + Ecollisions - Eorbit_orig) / abs(Eorbit_orig)
             end if
             tfrac = (t - t0)/(tstop - t0)
             write(*, 200) t, tfrac, npl, ntp
@@ -304,7 +304,7 @@ program swiftest_symba
             write(*,*) "      Wall time (s): ", finish - start
 
 205         format("  DL/L0 = ", ES12.5  &
-                   "; DE/E0 = ", ES12.5, "; (DE+Ecollisions)/E0 = ", ES12.5, &
+                   "; DE/|E0| = ", ES12.5, "; (DE+Ecollisions)/|E0| = ", ES12.5, &
                    "; DM/M0 = ", ES12.5)
             if (param%lenergy) write(*, 205) Lerror, Eorbit_error, Eorbit_off_error, Merror
             call param%dump_to_file(t)
@@ -374,8 +374,8 @@ program swiftest_symba
       Ltot_now = norm2(Ltot)
       Lerror = (Ltot_now - Ltot_orig) / Ltot_orig
       L_off_error = (Ltot_now - Ltot_orig) / Ltot_orig
-      Eorbit_error = (Eorbit - Eorbit_orig) / Eorbit_orig
-      Eorbit_off_error = (Eorbit + Ecollisions - Eorbit_orig) / Eorbit_orig
+      Eorbit_error = (Eorbit - Eorbit_orig) / abs(Eorbit_orig)
+      Eorbit_off_error = (Eorbit + Ecollisions - Eorbit_orig) / abs(Eorbit_orig)
       write(*,*) 'Final angular momentum and energy errors'
       write(*, 205) Lerror, Eorbit_error, Eorbit_off_error, Merror
       write(egyiu,egyfmt) t, Eorbit, Ecollisions, Ltot, msys
