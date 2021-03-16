@@ -49,12 +49,14 @@ SUBROUTINE coord_vh2vb(npl, swiftest_plA, msys)
 ! EDIT FOR PARALLELIZATION
 
      DO i = 2, npl
+         if (swiftest_plA%status(i) /= ACTIVE) cycle
           msys = msys + swiftest_plA%mass(i)
           vtmp(:) = vtmp(:) + swiftest_plA%mass(i)*swiftest_plA%vh(:,i)
      END DO
      swiftest_plA%vb(:,1) = -vtmp(:)/msys
      vtmp(:) = swiftest_plA%vb(:,1)
      DO i = 2, npl
+         if (swiftest_plA%status(i) /= ACTIVE) cycle
           swiftest_plA%vb(:,i) = swiftest_plA%vh(:,i) + vtmp(:)
      END DO
 
