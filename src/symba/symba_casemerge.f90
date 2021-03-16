@@ -53,7 +53,7 @@ subroutine symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
    write(*, *) "Merging particles ", name1, " and ", name2, " at time t = ",t
 
    do k = 1, nplplenc
-      if (plplenc_list%status(k) == active) then
+      if (plplenc_list%status(k) == ACTIVE) then
          do i = 0, nchild1
             if (i == 0) then 
                index1_child = index1_parent
@@ -68,9 +68,9 @@ subroutine symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
                end if
 
                if ((index1_child == plplenc_list%index1(k)) .and. (index2_child == plplenc_list%index2(k))) then
-                  plplenc_list%status(k) = merged
+                  plplenc_list%status(k) = MERGED
                else if ((index1_child == plplenc_list%index2(k)) .and. (index2_child == plplenc_list%index1(k))) then
-                  plplenc_list%status(k) = merged
+                  plplenc_list%status(k) = MERGED
                end if
             end do
          end do
@@ -113,7 +113,7 @@ subroutine symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
    call symba_merger_size_check(mergesub_list, nmergesub + 2)  
    nmergesub = nmergesub + 1
    mergesub_list%name(nmergesub) = name1
-   mergesub_list%status(nmergesub) = merged
+   mergesub_list%status(nmergesub) = MERGED
    mergesub_list%xh(:,nmergesub) = symba_plA%helio%swiftest%xh(:, index1) 
    mergesub_list%vh(:,nmergesub) = symba_plA%helio%swiftest%vh(:, index1) 
    mergesub_list%mass(nmergesub) = m1
@@ -122,7 +122,7 @@ subroutine symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
    mergesub_list%index_ps(nmergesub) = index1
    nmergesub = nmergesub + 1
    mergesub_list%name(nmergesub) = name2
-   mergesub_list%status(nmergesub) = merged
+   mergesub_list%status(nmergesub) = MERGED
    mergesub_list%xh(:,nmergesub) = symba_plA%helio%swiftest%xh(:, index2) 
    mergesub_list%vh(:,nmergesub) = symba_plA%helio%swiftest%vh(:, index2)
    mergesub_list%mass(nmergesub) = m2
