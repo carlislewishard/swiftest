@@ -33,7 +33,7 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, htot, msys)
 
    !$omp simd private(x,v,v2,mass,h,rot,Ip,rad,rot2) reduction(+:ke,htot)
    do i = 1, npl
-      if (swiftest_plA%status(i) /= ACTIVE) cycle
+      if (swiftest_plA%status(i) == MERGED) cycle
       x(:) = swiftest_plA%xb(:, i)
       v(:) = swiftest_plA%vb(:, i)
       rot(:) = swiftest_plA%rot(:, i)
@@ -58,9 +58,9 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, htot, msys)
    !$omp shared (swiftest_plA, npl) &
    !$omp reduction (-:pe)
    do i = 1, npl - 1
-      if (swiftest_plA%status(i) /= ACTIVE) cycle
+      if (swiftest_plA%status(i) == MERGED) cycle
       do j = i + 1, npl
-         if (swiftest_plA%status(j) /= ACTIVE) cycle
+         if (swiftest_plA%status(j) == MERGED) cycle
          dx(:) = swiftest_plA%xb(:, j) - swiftest_plA%xb(:, i) 
          rmag = norm2(dx(:)) 
          if (rmag > tiny(rmag)) pe = pe - swiftest_plA%mass(i) * swiftest_plA%mass(j) / rmag 
@@ -71,7 +71,7 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, htot, msys)
    if (j2rp2 /= 0.0_DP) then
       !$omp simd private(rmag)
       do i = 2, npl
-         if (swiftest_plA%status(i) /= ACTIVE) cycle
+         if (swiftest_plA%status(i) == MERGED) cycle
          rmag = norm2(swiftest_plA%xh(:,i))
          irh(i) = 1.0_DP / rmag
       end do
