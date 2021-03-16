@@ -41,15 +41,15 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, htot, msys)
       rad = swiftest_plA%radius(i)
       v2 = dot_product(v(:), v(:))
       rot2 = dot_product(rot(:), rot(:))
-      h(1) = mass * (x(2) * v(3) - x(3) * v(2))
-      h(2) = mass * (x(3) * v(1) - x(1) * v(3))
-      h(3) = mass * (x(1) * v(2) - x(2) * v(1))
+      h(1) = x(2) * v(3) - x(3) * v(2)
+      h(2) = x(3) * v(1) - x(1) * v(3)
+      h(3) = x(1) * v(2) - x(2) * v(1)
 
       ! Angular momentum from orbit and spin
-      htot(:) = htot(:) + h(:) + mass * Ip * rot(:) * rad**2
+      htot(:) = htot(:) + mass * (h(:) + Ip * rot(:) * rad**2)
 
       ! Kinetic energy from orbit and spin
-      ke = ke + (0.5_DP * mass * v2) + (0.5_DP * Ip * mass * rad**2 * rot2)
+      ke = ke + 0.5_DP * mass * (v2 + Ip * rad**2 * rot2)
    end do
 
    pe = 0.0_DP

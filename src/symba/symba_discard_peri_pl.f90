@@ -71,7 +71,6 @@ subroutine symba_discard_peri_pl(t, npl, symba_plA, msys, qmin, qmin_alo, qmin_a
                   write(*, *) "Particle ", symba_plA%helio%swiftest%name(i), &
                    " perihelion distance too small at t = ", t
                   ! Conserve mass and angular momentum with central body
-
                    symba_plA%helio%swiftest%dMcb = symba_plA%helio%swiftest%dMcb + symba_plA%helio%swiftest%mass(i)
 
                    ! Update mass of central body to be consistent with its total mass
