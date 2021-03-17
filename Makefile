@@ -192,6 +192,7 @@ clean:
 	cd $(SWIFTEST_HOME)/bin;     rm -f swiftest_*
 	cd $(SWIFTEST_HOME)/bin;     rm -f tool_*
 	cd $(SWIFTEST_HOME)/lib;     rm -f lib*
+	cd $(SWIFTEST_HOME)/include;     rm -f *.*mod
 
 
 force:

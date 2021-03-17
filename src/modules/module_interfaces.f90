@@ -691,7 +691,6 @@ MODULE module_interfaces
 
      INTERFACE
           SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plplenc_list, index_enc)
-          USE swiftest
           USE swiftest_globals
           USE swiftest_data_structures
           USE module_helio
