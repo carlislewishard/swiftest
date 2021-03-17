@@ -27,13 +27,9 @@ subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
    logical, dimension(npl)                :: discard_l_pl 
    logical, dimension(nmergeadd)          :: frag_l_add
    logical, dimension(ntp)                :: discard_l_tp
-   real(DP)                               :: ke, pe, te_orig, te, msys, ltot_now, ltot_after
    real(DP), dimension(NDIM)              :: htot
 
 ! executable code
-   call symba_energy(npl, symba_plA%helio%swiftest, 0.0_DP, 0.0_DP, ke, pe, te_orig, htot, msys)
-   ltot_now = norm2(htot)
-
    if (ldiscard) then 
       nsppl = 0
       nkpl = 0
@@ -145,8 +141,5 @@ subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
       ntp = nktp
       symba_tpA%helio%swiftest%nbody = ntp
    end if 
-
-   call symba_energy(npl, symba_plA%helio%swiftest, 0.0_DP, 0.0_DP, ke, pe, te, htot, msys)
-   ltot_after = norm2(htot)
 
 end subroutine symba_rearray

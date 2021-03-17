@@ -56,7 +56,7 @@ subroutine symba_discard_sun_pl(t, npl, msys, swiftest_plA, rmin, rmax, rmaxu, l
    integer(I4B)          :: i
    real(DP)            :: energy, vb2, rb2, rh2, rmin2, rmax2, rmaxu2
    real(DP)            :: mass, rad, Ipz
-   logical             :: lupdate_L, lupdate_mass
+   logical             :: lupdate_cb, ldiscard_this
    real(DP), dimension(NDIM) :: Lpl, rot, xb, vb
 
 ! executable code
@@ -65,19 +65,18 @@ subroutine symba_discard_sun_pl(t, npl, msys, swiftest_plA, rmin, rmax, rmaxu, l
    rmaxu2 = rmaxu*rmaxu
    do i = 2, npl
       if (swiftest_plA%status(i) == ACTIVE) then
-         lupdate_L = .false.
-         lupdate_mass = .false.
+         ldiscard_this = .false.
          rh2 = dot_product(swiftest_plA%xh(:,i), swiftest_plA%xh(:,i))
          if ((rmax >= 0.0_DP) .and. (rh2 > rmax2)) then
             ldiscard = .true.
-            lupdate_L = .true.
-            lupdate_mass = .false.
+            ldiscard_this = .true.
+            lupdate_cb = .false.
             swiftest_plA%status(i) = DISCARDED_RMAX
             write(*, *) "Particle ",  swiftest_plA%name(i), " too far from the central body at t = ", t
          else if ((rmin >= 0.0_DP) .and. (rh2 < rmin2)) then
             ldiscard = .true.
-            lupdate_L = .true.
-            lupdate_mass = .true.
+            ldiscard_this = .true.
+            lupdate_cb = .true.
             swiftest_plA%status(i) = DISCARDED_RMIN
             write(*, *) "Particle ", swiftest_plA%name(i), " too close to the central body at t = ", t
          else if (rmaxu >= 0.0_DP) then
@@ -86,20 +85,14 @@ subroutine symba_discard_sun_pl(t, npl, msys, swiftest_plA, rmin, rmax, rmaxu, l
             energy = 0.5_DP*vb2 - msys/sqrt(rb2)
             if ((energy > 0.0_DP) .and. (rb2 > rmaxu2)) then
                ldiscard = .true.
-               lupdate_L = .true.
-               lupdate_mass = .false.
+               ldiscard_this = .true.
+               lupdate_cb = .true.
                swiftest_plA%status(i) = DISCARDED_RMAXU
                write(*, *) "Particle ", swiftest_plA%name(i), " is unbound and too far from barycenter at t = ", t
             end if
          end if
-         if (lupdate_mass) then
-            ! Add planet mass to central body accumulator
-            swiftest_plA%dMcb = swiftest_plA%dMcb + swiftest_plA%mass(i)
+         if (ldiscard_this) then
 
-            ! Update mass of central body to be consistent with its total mass
-            swiftest_plA%mass(1) = swiftest_plA%Mcb_initial + swiftest_plA%dMcb
-         end if
-         if (lupdate_L) then
             xb(:) = swiftest_plA%xb(:,i)
             vb(:) = swiftest_plA%vb(:,i)
             rot(:) = swiftest_plA%rot(:,i)
@@ -109,12 +102,23 @@ subroutine symba_discard_sun_pl(t, npl, msys, swiftest_plA, rmin, rmax, rmaxu, l
             ! Orbital angular momentum
             call util_crossproduct(xb,vb,Lpl)
             Lpl(:) = mass * (Lpl(:) + Ipz * rad**2 * rot(:))
-            ! Add planet angular momentum to central body accumulator
-            swiftest_plA%dLcb(:) = swiftest_plA%dLcb(:) + Lpl(:)
+            if (lupdate_cb) then
+               ! Add planet mass to central body accumulator
+               swiftest_plA%dMcb = swiftest_plA%dMcb + mass
 
-            ! Update rotation of central body to by consistent with its angular momentum 
-            swiftest_plA%rot(:,1) = (swiftest_plA%Lcb_initial(:) + swiftest_plA%dLcb(:)) / &
-               (swiftest_plA%Ip(3,1) * swiftest_plA%mass(1) * swiftest_plA%radius(1)**2)
+               ! Update mass of central body to be consistent with its total mass
+               swiftest_plA%mass(1) = swiftest_plA%Mcb_initial + swiftest_plA%dMcb
+
+               ! Add planet angular momentum to central body accumulator
+               swiftest_plA%dLcb(:) = swiftest_plA%dLcb(:) + Lpl(:)
+
+               ! Update rotation of central body to by consistent with its angular momentum 
+               swiftest_plA%rot(:,1) = (swiftest_plA%Lcb_initial(:) + swiftest_plA%dLcb(:)) / &
+                  (swiftest_plA%Ip(3,1) * swiftest_plA%mass(1) * swiftest_plA%radius(1)**2)
+            else ! This is an escaped body, so just keep track of the lost mass ang angular momentum
+               swiftest_plA%Mescape = swiftest_plA%Mescape + mass
+               swiftest_plA%Lescape(:) = swiftest_plA%Lescape(:) + Lpl(:)
+            end if
          end if
       end if
    end do

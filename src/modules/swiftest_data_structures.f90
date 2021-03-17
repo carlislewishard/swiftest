@@ -30,9 +30,14 @@ module swiftest_data_structures
       real(DP),     dimension(:),     allocatable :: radius !! Radius
       real(DP),     dimension(:),     allocatable :: rhill  !! Hill's sphere radius
       real(DP),     dimension(:,:),   allocatable :: Ip     !! Unitless principal moments of inertia (I1, I2, I3) / (MR**2). Principal axis rotation assumed. 
-      real(DP),     dimension(:,:),   allocatable :: rot    !! body rotation vector in inertial coordinate frame 
-      real(DP),     dimension(NDIM)               :: Lcb_initial, dLcb !! Initial angular momentum and change in angular momentum of the central body
-      real(DP)                                    :: Mcb_initial, dMcb !! Initial mass and change in mass of the central body
+      real(DP),     dimension(:,:),   allocatable :: rot    !! Body rotation vector in inertial coordinate frame 
+      real(DP),     dimension(NDIM)               :: Lcb_initial  !! Initial angular momentum of the central body
+      real(DP),     dimension(NDIM)               :: dLcb = (/0.0_DP, 0.0_DP, 0.0_DP/) !! Change in angular momentum of the central body
+      real(DP)                                    :: Mcb_initial !! Initial mass and change in mass of the central body
+      real(DP)                                    :: dMcb = 0.0_DP !! Change in mass of the central body
+      real(DP),     dimension(NDIM)               :: Lescape = (/0.0_DP, 0.0_DP, 0.0_DP/)!! Angular momentum of bodies that escaped the system (used for bookeeping)
+      real(DP)                                    :: Mescape = 0.0_DP !! Mass of bodies that escaped the system (used for bookeeping)
+      real(DP)                                    :: Ecollisions = 0.0_DP !! Energy lost from system due to collisions
    contains
       procedure :: alloc => swiftest_pl_allocate
       procedure :: dealloc => swiftest_pl_deallocate

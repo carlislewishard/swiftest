@@ -936,14 +936,14 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, htot, msys)
+          SUBROUTINE symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msys)
                USE swiftest_globals
                USE swiftest_data_structures
                IMPLICIT NONE
                INTEGER(I4B), INTENT(IN)            :: npl
                REAL(DP), INTENT(IN)                :: j2rp2, j4rp4
                REAL(DP), INTENT(OUT)               :: ke, pe, te, msys
-               REAL(DP), DIMENSION(:), INTENT(OUT) :: htot
+               REAL(DP), DIMENSION(:), INTENT(OUT) :: Ltot
                TYPE(swiftest_pl), INTENT(INOUT)    :: swiftest_plA
           END SUBROUTINE symba_energy
      END INTERFACE
@@ -1277,7 +1277,7 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-         SUBROUTINE symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, te, htot, msys)
+         SUBROUTINE symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, te, Ltot, msys)
                USE swiftest_globals
                USE swiftest_data_structures
                IMPLICIT NONE
@@ -1286,7 +1286,7 @@ MODULE module_interfaces
                integer(I4B), dimension(:,:), intent(in) :: k_plpl
                integer(I8B), intent(in)                 :: num_plpl_comparisons
                real(DP), intent(out)                    :: ke, pe, te, msys
-               real(DP), dimension(:), intent(out)      :: htot
+               real(DP), dimension(:), intent(out)      :: Ltot
                type(swiftest_pl), intent(inout)         :: swiftest_plA
          END SUBROUTINE symba_energy_eucl
      END INTERFACE

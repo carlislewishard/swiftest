@@ -1,4 +1,4 @@
-subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, te, htot, msys)
+subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, te, Ltot, msys)
    !! author: David A. Minton
    !!
    !! Compute total system angular momentum vector and kinetic, potential and total system energy
@@ -16,7 +16,7 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
    integer(I4B), dimension(:,:), intent(in) :: k_plpl
    integer(I8B), intent(in)                 :: num_plpl_comparisons
    real(DP), intent(out)                    :: ke, pe, te, msys
-   real(DP), dimension(:), intent(out)      :: htot
+   real(DP), dimension(:), intent(out)      :: Ltot
    type(swiftest_pl), intent(inout)         :: swiftest_plA
 
 ! internals
@@ -29,10 +29,10 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
 ! executable code
 
    call coord_h2b(npl, swiftest_plA, msys)
-   htot = 0.0_DP
+   Ltot = 0.0_DP
    ke = 0.0_DP
 
-   !$omp simd private(x,v,v2,mass,h,rot,Ip,rad,rot2) reduction(+:ke,htot)
+   !$omp simd private(x,v,v2,mass,h,rot,Ip,rad,rot2) reduction(+:ke,Ltot)
    do i = 1, npl 
       x(:) = swiftest_plA%xb(:, i)
       v(:) = swiftest_plA%vb(:, i)
@@ -47,7 +47,7 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
       h(3) = mass * (x(1) * v(2) - x(2) * v(1))
 
       ! Angular momentum from orbit and spin
-      htot(:) = htot(:) + h(:) + mass * Ip * rot(:) * rad**2
+      Ltot(:) = Ltot(:) + h(:) + mass * Ip * rot(:) * rad**2
 
       ! Kinetic energy from orbit and spin
       ke = ke + (0.5_DP * mass * v2) + (0.5_DP * Ip * mass * rad**2 * rot2)

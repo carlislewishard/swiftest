@@ -43,11 +43,9 @@ program swiftest_symba
    logical                       :: lfrag_add, ldiscard, ldiscard_tp
    integer(I4B)                  :: npl, nplm, ntp, ntp0, nsppl, nsptp, iout, idump, iloop
    integer(I4B)                  :: nplplenc, npltpenc, nmergeadd, nmergesub
-   real(DP)                      :: t, tfrac, tbase, mtiny, ke, pe, Eorbit, Ecollisions, msys
+   real(DP)                      :: t, tfrac, tbase, mtiny, msys
+   real(DP)                      :: Ecollision, Eorbit_before, Eorbit_after, ke, pe
    real(DP), dimension(NDIM)     :: Ltot
-   real(DP)                      :: Eorbit_orig, Eorbit_error, Eorbit_off_error, Eorbit_after, Eorbit_before
-   real(DP)                      :: Mtot_orig, Mtot_now, Merror
-   real(DP)                      :: Ltot_orig, Ltot_now, Lerror, L_off_error
    character(STRMAX)             :: inparfile
    type(symba_pl)                :: symba_plA
    type(symba_tp)                :: symba_tpA
@@ -56,14 +54,11 @@ program swiftest_symba
    type(symba_plplenc)           :: plplenc_list
    type(symba_pltpenc)           :: pltpenc_list
    type(symba_merger)            :: mergeadd_list, mergesub_list
-   integer(I4B), parameter       :: egyiu = 72
    real(DP)                      :: start, finish
    INTEGER(I8B)                  :: clock_count, count_rate, count_max
    INTEGER(I4B)                  :: ierr
    INTEGER(I4B), DIMENSION(:,:), ALLOCATABLE :: k_plpl, k_pltp
    INTEGER(I8B)                  :: num_plpl_comparisons, num_pltp_comparisons
-   character(len=*), parameter :: egyfmt = '(ES23.16,10(",",ES23.16,:))' ! Format code for all simulation output
-   character(len=*), parameter :: egyheader = '("t,Eorbit,Ecollisions,Lx,Ly,Lz,msys")'
 
 ! Executable code
 
@@ -150,12 +145,7 @@ program swiftest_symba
    if ((istep_out > 0).and.((out_stat == "NEW").or.(out_stat == "REPLACE"))) then
       call io_write_frame(t, symba_plA%helio%swiftest, symba_tpA%helio%swiftest, param) 
    end if
-   if (out_stat == "OLD") then
-      open(unit = egyiu, file = energy_file, form = "formatted", status = "old", action = "write", position = "append")
-   else 
-      open(unit = egyiu, file = energy_file, form = "formatted", status = "replace", action = "write")
-      write(egyiu,egyheader)
-   end if
+
    300 format(10(1x, e23.16, :))
    nplm = count(symba_plA%helio%swiftest%mass>mtiny)
    CALL util_dist_index_plpl(npl, nplm, num_plpl_comparisons, k_plpl)
@@ -165,22 +155,9 @@ program swiftest_symba
    symba_plA%helio%swiftest%Mcb_initial = symba_plA%helio%swiftest%mass(1)
    symba_plA%helio%swiftest%Lcb_initial(:) = symba_plA%helio%swiftest%Ip(3,1) * symba_plA%helio%swiftest%mass(1) * &
                                              symba_plA%helio%swiftest%radius(1)**2 * symba_plA%helio%swiftest%rot(:,1)
-   symba_plA%helio%swiftest%dMcb = 0.0_DP
-   symba_plA%helio%swiftest%dLcb(:) = 0.0_DP
 
-   if (param%lenergy) then
-      Ecollisions = 0.0_DP
-      if(num_plpl_comparisons > param%eucl_threshold) then
-         call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, Eorbit, Ltot, msys)
-      else
-         call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, Eorbit, Ltot, msys)
-      end if
-      Ltot_orig = NORM2(Ltot)
-      Eorbit_orig = Eorbit
-      Mtot_orig = msys
-      write(egyiu,egyfmt) t, Eorbit, Ecollisions, Ltot, msys
-      flush(egyiu)
-   end if
+   if (param%lenergy) call io_conservation_report(t, symba_plA%helio%swiftest, npl, j2rp2, j4rp4, k_plpl, &
+                                                  num_plpl_comparisons, param, lterminal=.false.) 
    write(*, *) " *************** Main Loop *************** "
 
    call system_clock(clock_count, count_rate, count_max)
@@ -197,11 +174,10 @@ program swiftest_symba
       if (param%lenergy) then
          if(num_plpl_comparisons > param%eucl_threshold) then
             call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, &
-                  ke, pe, Eorbit, Ltot, msys)
+                  ke, pe, Eorbit_before, Ltot, msys)
          else
-            call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, Eorbit, Ltot, msys)
+            call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, Eorbit_before, Ltot, msys)
          end if
-         Eorbit_before = Eorbit
       end if
       ldiscard = .false. 
       ldiscard_tp = .false.
@@ -233,21 +209,20 @@ program swiftest_symba
          if (param%lenergy) then
             if(num_plpl_comparisons > param%eucl_threshold) then
                call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, &
-                  ke, pe, Eorbit, Ltot, msys)
+                  ke, pe, Eorbit_after, Ltot, msys)
             else
-               call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, Eorbit, Ltot, msys)
+               call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, Eorbit_after, Ltot, msys)
             end if
-            Eorbit_after = Eorbit
-            Eorbit_error = (Eorbit_after - Eorbit_orig) / abs(Eorbit_orig)     ! Total energy error of system now compared to original system
-            Ecollisions = Ecollisions + (Eorbit_before - Eorbit_after)    ! Total running energy offset from collision in this step
-            if ((Ecollisions /= Ecollisions) .or. (abs(Ecollisions) > huge(Ecollisions))) then 
+            Ecollision = Eorbit_before - Eorbit_after    ! Energy change resulting in this collisional event Total running energy offset from collision in this step
+            if ((Ecollision /= Ecollision) .or. (abs(Ecollision) > huge(Ecollision))) then 
                write(*,*) 'Error encountered in colisional energy calculation!'
                write(*,*) 'Eorbit_before: ', Eorbit_before
                write(*,*) 'Eorbit_after : ', Eorbit_after
+               call util_exit(FAILURE)
             end if
-            Eorbit_off_error = Eorbit_error + (Ecollisions / abs(Eorbit_orig)) ! Total energy of the system plus any energy lost due to collisions
-            write(egyiu,egyfmt) t, Eorbit, Ecollisions, Ltot, msys
-            flush(egyiu)
+            symba_plA%helio%swiftest%Ecollisions = symba_plA%helio%swiftest%Ecollisions + Ecollision
+            call io_conservation_report(t, symba_plA%helio%swiftest, npl, j2rp2, j4rp4, k_plpl, &
+                                                  num_plpl_comparisons, param, lterminal=.true.) 
          end if
       end if
 
@@ -263,39 +238,15 @@ program swiftest_symba
          if (iout == 0) then
             call io_write_frame(t, symba_plA%helio%swiftest, symba_tpA%helio%swiftest, param)
             iout = istep_out
-            if (param%lenergy) then
-               if(num_plpl_comparisons > param%eucl_threshold) then
-                  call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, &
-                     Eorbit, Ltot, msys)
-               else
-                  call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, Eorbit, Ltot, msys)
-               end if
-
-               write(egyiu,egyfmt) t, Eorbit, Ecollisions, Ltot, msys
-               flush(egyiu)
-            end if
          end if
       end if
 
       if (istep_dump > 0) then
          idump = idump - 1
          if (idump == 0) then
-            if (param%lenergy) then
-               if(num_plpl_comparisons > param%eucl_threshold) then
-                  call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, &
-                     Eorbit, Ltot, msys)
-               else
-                  call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, Eorbit, Ltot, msys)
-               end if
-               Mtot_now = msys
-               Merror = (Mtot_now - Mtot_orig) / Mtot_orig
-               Ltot_now = norm2(Ltot)
-               Lerror = (Ltot_now - Ltot_orig) / Ltot_orig
-               L_off_error = (Ltot_now - Ltot_orig) / Ltot_orig
-               Eorbit_error = (Eorbit - Eorbit_orig) / abs(Eorbit_orig)
-               Eorbit_off_error = (Eorbit + Ecollisions - Eorbit_orig) / abs(Eorbit_orig)
-            end if
-            tfrac = (t - t0)/(tstop - t0)
+            if (param%lenergy) call io_conservation_report(t, symba_plA%helio%swiftest, npl, j2rp2, j4rp4, k_plpl, &
+                                                           num_plpl_comparisons, param, lterminal=.true.) 
+            tfrac = (t - t0) / (tstop - t0)
             write(*, 200) t, tfrac, npl, ntp
 200         format(" Time = ", es12.5, "; fraction done = ", f5.3, "; number of active pl, tp = ", i7, ", ", i7)
 
@@ -303,10 +254,6 @@ program swiftest_symba
             finish = clock_count / (count_rate * 1.0_DP)
             write(*,*) "      Wall time (s): ", finish - start
 
-205         format("  DL/L0 = ", ES12.5  &
-                   "; DE/|E0| = ", ES12.5, "; (DE+Ecollisions)/|E0| = ", ES12.5, &
-                   "; DM/M0 = ", ES12.5)
-            if (param%lenergy) write(*, 205) Lerror, Eorbit_error, Eorbit_off_error, Merror
             call param%dump_to_file(t)
             call io_dump_pl(npl, symba_plA%helio%swiftest, param%lclose, param%lrhill_present)
             call io_dump_tp(ntp, symba_tpA%helio%swiftest)
@@ -363,25 +310,8 @@ program swiftest_symba
 
    end do
 
-   if (param%lenergy) then
-      if(num_plpl_comparisons > param%eucl_threshold) then
-         call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, Eorbit, Ltot, msys)
-      else
-         call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, Eorbit, Ltot, msys)
-      end if
-      Mtot_now = msys
-      Merror = (Mtot_now - Mtot_orig) / Mtot_orig
-      Ltot_now = norm2(Ltot)
-      Lerror = (Ltot_now - Ltot_orig) / Ltot_orig
-      L_off_error = (Ltot_now - Ltot_orig) / Ltot_orig
-      Eorbit_error = (Eorbit - Eorbit_orig) / abs(Eorbit_orig)
-      Eorbit_off_error = (Eorbit + Ecollisions - Eorbit_orig) / abs(Eorbit_orig)
-      write(*,*) 'Final angular momentum and energy errors'
-      write(*, 205) Lerror, Eorbit_error, Eorbit_off_error, Merror
-      write(egyiu,egyfmt) t, Eorbit, Ecollisions, Ltot, msys
-      close(egyiu)
-   end if
-
+   if (param%lenergy) call io_conservation_report(t, symba_plA%helio%swiftest, npl, j2rp2, j4rp4, k_plpl, &
+                                                  num_plpl_comparisons, param, lterminal=.true.) 
    call param%dump_to_file(t)
    call io_dump_pl(npl, symba_plA%helio%swiftest, param%lclose, param%lrhill_present)
    call io_dump_tp(ntp, symba_tpA%helio%swiftest)
