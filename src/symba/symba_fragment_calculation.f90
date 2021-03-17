@@ -47,7 +47,7 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
    INTEGER(I4B)                                           :: frags_added, i, j, name1, name2
    REAL(DP)                                               :: phase_ang, r_circle, theta, v_frag_norm, v_col_norm, r_col_norm
    REAL(DP)                                               :: rhill_p1, rhill_p2, m1, m2, spin_vec_mag_frag
-   REAL(DP)                                               :: r_frag, Ip_frag, r1, r2, m_frag_tot
+   REAL(DP)                                               :: r_frag, Ip_frag, r1, r2, m_frag_tot, v_frag_max
    INTEGER(I4B), DIMENSION(2)                             :: idx
    REAL(DP), DIMENSION(NDIM)                              :: xh_1, xh_2, vb_1, vb_2
    REAL(DP), DIMENSION(NDIM)                              :: p_com, p_com_1, p_com_2, v_com, v_com_1, v_com_2, COM_offset_p, mp_frag
@@ -140,7 +140,7 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
    thetashift = thetashift + 1
    IF (thetashift >= shiftmax) thetashift = 0
    ! Fragment velocity is the  collision velocity with an adjustment for new distance using vis viva
-   v_frag_norm = sqrt(v_col_norm**2 - 2 * (m1 + m2) * (1._DP / r_col_norm - 1._DP / r_circle))
+   v_frag_norm = 0.01_DP * sqrt(v_col_norm**2 - 2 * (m1 + m2) * (1._DP / r_col_norm - 1._DP / r_circle))
 
    call util_crossproduct(p_com_1, v_com_1, xv_1)
    call util_crossproduct(p_com_2, v_com_2, xv_2)
@@ -163,9 +163,11 @@ SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plple
    ! Add the masses of all fragments to m_frag and calculate the total mass of the fragments
    m_frag(1:frags_added) = mergeadd_list%mass(nmergeadd_frag_index:nmergeadd_frag_index + frags_added - 1)
 
+   v_frag_max = (m1 + m2) / minval(m_frag(1:frags_added))
+
    ! Calculate the position and velocity of each fragment 
-   DO i=1, frags_added ! fragment velocity (same mag for each just different direction)
-      v_frag(:,i) = v_frag_norm * ((cos(phase_ang + theta * i)) * v_col_unit_vec(:) + &
+   DO i=1, frags_added ! fragment velocity (scale each by mass and send in each just different direction)
+      v_frag(:,i) = (m1 + m2) / m_frag(i) / v_frag_max * v_frag_norm * ((cos(phase_ang + theta * i)) * v_col_unit_vec(:) + &
                                    (sin(phase_ang + theta * i)) * tri_pro_unit_vec(:))
       p_frag(:,i) = r_circle    * ((cos(phase_ang + theta * i)) * v_col_unit_vec(:)  + &
                                    (sin(phase_ang + theta * i)) * tri_pro_unit_vec(:))
