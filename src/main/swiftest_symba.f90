@@ -223,7 +223,8 @@ program swiftest_symba
                write(*,*) 'Ltot after   : ', Ltot
                do i = 1, npl
                   write(88,*) 'Particle ',symba_plA%helio%swiftest%name(i)
-                  write(88,*) '     vb  ',symba_plA%helio%swiftest%vb(:, i)
+                  write(88,*) '    mass ',symba_plA%helio%swiftest%mass(i)
+                  write(88,*) '      vb ',symba_plA%helio%swiftest%vb(:, i)
                   write(88,*) '     rot ',symba_plA%helio%swiftest%rot(:, i)
                end do
                call util_exit(FAILURE)
