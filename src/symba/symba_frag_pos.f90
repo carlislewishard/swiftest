@@ -19,7 +19,7 @@ subroutine symba_frag_pos (mtot, rhill, x, v, m_frag, x_frag, v_frag)
    integer(I4B)                            :: i, nfrag
    real(DP), dimension(NDIM)               :: v_cross_x, delta_v, delta_x
    real(DP)                                :: phase_ang, r_circle, theta, v_frag_norm, v_col_norm, r_col_norm
-   real(DP), dimension(NDIM)               :: v_col_vec, v_col_unit_vec, tri_pro, tri_pro_unit_vec
+   real(DP), dimension(NDIM)               :: v_col_unit_vec, tri_pro, tri_pro_unit_vec
    integer(I4B), save                      :: thetashift = 0
    integer(I4B), parameter                 :: SHIFTMAX = 9
 

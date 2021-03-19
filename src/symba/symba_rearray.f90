@@ -22,12 +22,9 @@ subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
    logical, intent(in)                     :: ldiscard, ldiscard_tp 
 
 ! internals
-   integer(I4B)                           :: i, nkpl, nktp, nfrag
-   real(DP)                               :: mu, energy, ap, r, v2
+   integer(I4B)                           :: i, nkpl, nktp
    logical, dimension(npl)                :: discard_l_pl 
-   logical, dimension(nmergeadd)          :: frag_l_add
    logical, dimension(ntp)                :: discard_l_tp
-   real(DP), dimension(NDIM)              :: htot
 
 ! executable code
    if (ldiscard) then 

@@ -18,8 +18,8 @@ subroutine symba_casehitandrun (nmergeadd, mergeadd_list, name, x, v, mass, radi
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
    type(user_input_parameters),intent(inout) :: param
 
-   integer(I4B)                            :: i, j, nfrag, istart, jproj, jtarg
-   real(DP)                                :: mtot, avg_dens, m_rem
+   integer(I4B)                            :: i, nfrag, jproj, jtarg
+   real(DP)                                :: mtot, avg_dens
    real(DP), dimension(NDIM)               :: xcom, vcom
    real(DP), dimension(2)                  :: vol
    real(DP), dimension(NDIM)               :: Ip_new

@@ -690,23 +690,6 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plplenc_list, index_enc)
-          USE swiftest_globals
-          USE swiftest_data_structures
-          USE module_helio
-          USE module_symba
-          USE module_swiftestalloc
-          IMPLICIT NONE
-          ! Arguments
-          INTEGER(I4B), INTENT(IN)                               :: nmergeadd, index_enc
-          TYPE(symba_merger), INTENT(INOUT)                      :: mergeadd_list
-          TYPE(symba_pl), INTENT(INOUT)                          :: symba_plA
-          TYPE(symba_plplenc), INTENT(INOUT)                     :: plplenc_list
-
-          END SUBROUTINE symba_fragment_calculation
-     END INTERFACE
-
-     INTERFACE
          SUBROUTINE symba_casedisruption (nmergeadd, mergeadd_list, x, v, mass, radius, rhill, Lspin, Ip, vbs, &
                                                  mass_res, param)
          USE swiftest_globals
@@ -814,21 +797,6 @@ MODULE module_interfaces
                TYPE(symba_pl), INTENT(INOUT)             :: symba_plA
                TYPE(user_input_parameters),intent(inout) :: param
           END SUBROUTINE symba_merge_pl
-     END INTERFACE
-
-     INTERFACE
-          SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard, mergeadd_list, nmergeadd)
-               USE swiftest_globals
-               USE swiftest_data_structures
-               USE module_helio
-               USE module_symba
-               IMPLICIT NONE
-               INTEGER(I4B), INTENT(INOUT)         :: nplplenc, nmergeadd
-               TYPE(symba_pl)                   :: symba_plA
-               TYPE(symba_plplenc), INTENT(INOUT)  :: plplenc_list
-               TYPE(symba_merger), INTENT(INOUT):: mergeadd_list
-               LOGICAL(LGT), INTENT(INOUT)      :: ldiscard
-          END SUBROUTINE symba_discard_merge_pl
      END INTERFACE
 
      INTERFACE

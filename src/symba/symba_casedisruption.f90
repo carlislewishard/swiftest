@@ -17,16 +17,12 @@ subroutine symba_casedisruption (nmergeadd, mergeadd_list, x, v, mass, radius, r
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
    type(user_input_parameters),intent(inout) :: param
 
-   integer(I4B)                            :: i, j, nfrag, istart
-   real(DP)                                :: mtot, avg_dens, m_rem
-   real(DP), dimension(NDIM)               :: xcom, vcom, xc, vc, cross_res, delta_v, delta_x, Ip_new
+   integer(I4B)                            :: i,  istart, nfrag
+   real(DP)                                :: mtot, avg_dens
+   real(DP), dimension(NDIM)               :: xcom, vcom, Ip_new
    real(DP), dimension(2)                  :: vol
    real(DP), dimension(:, :), allocatable  :: v_frag, x_frag, rot_frag, Ip_frag
    real(DP), dimension(:), allocatable     :: m_frag, rad_frag
-   real(DP)                                :: phase_ang, r_circle, theta, v_frag_norm, v_col_norm, r_col_norm
-   real(DP), dimension(NDIM)               :: v_col_vec, v_col_unit_vec, tri_pro, tri_pro_unit_vec
-   integer(I4B), save                      :: thetashift = 0
-   integer(I4B), parameter                 :: SHIFTMAX = 9
 
   
    ! Collisional fragments will be uniformly distributed around the pre-impact barycenter

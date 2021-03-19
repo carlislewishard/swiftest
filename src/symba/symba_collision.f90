@@ -23,7 +23,7 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
    type(user_input_parameters),intent(inout) :: param
 
    integer(I4B), parameter                 :: NRES = 3   !! Number of collisional product results
-   integer(I4B)                            :: model, i, j, index_enc, jtarg, jproj
+   integer(I4B)                            :: i, j, index_enc, jtarg, jproj
    real(DP), dimension(NRES)               :: mass_res
    real(DP), dimension(NDIM)               :: vbs
    integer(I4B)                            :: regime, idx_child, status
@@ -35,10 +35,8 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
    real(DP)                                :: mmax, mchild, mtot
    real(DP), dimension(NDIM)               :: xc, vc, xcom, vcom, xchild, vchild, xcrossv
    real(DP)                                :: mtiny_si
-   logical                                 :: lfrag_add, lmerge
    integer(I4B), dimension(:), allocatable :: array_index1_child, array_index2_child, name1, name2
    real(DP)                                :: mlr, mslr
-   integer(I4B)                            :: addi, addf, subi, subf
 
    ! First determine the collisional regime for each colliding pair
    do index_enc = 1, nplplenc
@@ -52,7 +50,7 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
       mass(:) = symba_plA%helio%swiftest%mass(idx_parent(:))
       name(:) = symba_plA%helio%swiftest%name(idx_parent(:))
       radius(:) = symba_plA%helio%swiftest%radius(idx_parent(:))
-      volume(:) =  (4.0_DP / 3.0_DP) * pi * radius(:)**3
+      volume(:) =  (4.0_DP / 3.0_DP) * PI * radius(:)**3
       rhill(:) = symba_plA%helio%swiftest%rhill(idx_parent(:))
    
       nchild(:) = symba_plA%kin(idx_parent(:))%nchild 
