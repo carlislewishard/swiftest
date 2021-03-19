@@ -55,9 +55,9 @@ subroutine symba_discard_sun_pl(t, npl, msys, swiftest_plA, rmin, rmax, rmaxu, l
 ! internals
    integer(I4B)          :: i
    real(DP)            :: energy, vb2, rb2, rh2, rmin2, rmax2, rmaxu2
-   real(DP)            :: mass, rad, Ipz
    logical             :: lupdate_cb, ldiscard_this
-   real(DP), dimension(NDIM) :: Lpl, rot, xb, vb
+   real(QP)            :: mass, rad, Ipz
+   real(QP), dimension(NDIM) :: Lpl, rot, xb, vb
 
 ! executable code
    rmin2 = rmin*rmin
@@ -86,7 +86,7 @@ subroutine symba_discard_sun_pl(t, npl, msys, swiftest_plA, rmin, rmax, rmaxu, l
             if ((energy > 0.0_DP) .and. (rb2 > rmaxu2)) then
                ldiscard = .true.
                ldiscard_this = .true.
-               lupdate_cb = .true.
+               lupdate_cb = .false.
                swiftest_plA%status(i) = DISCARDED_RMAXU
                write(*, *) "Particle ", swiftest_plA%name(i), " is unbound and too far from barycenter at t = ", t
             end if
@@ -100,7 +100,9 @@ subroutine symba_discard_sun_pl(t, npl, msys, swiftest_plA, rmin, rmax, rmaxu, l
             rad = swiftest_plA%radius(i)
             mass = swiftest_plA%mass(i) 
             ! Orbital angular momentum
-            call util_crossproduct(xb,vb,Lpl)
+            Lpl(1) = xb(2) * vb(3) - xb(3) * vb(2)
+            Lpl(2) = xb(3) * vb(1) - xb(1) * vb(3)
+            Lpl(3) = xb(1) * vb(2) - xb(2) * vb(1)
             Lpl(:) = mass * (Lpl(:) + Ipz * rad**2 * rot(:))
             if (lupdate_cb) then
                ! Add planet mass to central body accumulator

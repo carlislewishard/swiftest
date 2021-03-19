@@ -868,8 +868,8 @@ MODULE module_interfaces
                IMPLICIT NONE
                INTEGER(I4B), INTENT(IN)            :: npl
                REAL(DP), INTENT(IN)                :: j2rp2, j4rp4
-               REAL(DP), INTENT(OUT)               :: ke, pe, te, msys
-               REAL(DP), DIMENSION(:), INTENT(OUT) :: Ltot
+               REAL(QP), INTENT(OUT)               :: ke, pe, te, msys
+               REAL(QP), DIMENSION(:), INTENT(OUT) :: Ltot
                TYPE(swiftest_pl), INTENT(INOUT)    :: swiftest_plA
           END SUBROUTINE symba_energy
      END INTERFACE
@@ -1220,8 +1220,8 @@ MODULE module_interfaces
                real(DP), intent(in)                     :: j2rp2, j4rp4
                integer(I4B), dimension(:,:), intent(in) :: k_plpl
                integer(I8B), intent(in)                 :: num_plpl_comparisons
-               real(DP), intent(out)                    :: ke, pe, te, msys
-               real(DP), dimension(:), intent(out)      :: Ltot
+               real(QP), intent(out)                    :: ke, pe, te, msys
+               real(QP), dimension(:), intent(out)      :: Ltot
                type(swiftest_pl), intent(inout)         :: swiftest_plA
          END SUBROUTINE symba_energy_eucl
      END INTERFACE

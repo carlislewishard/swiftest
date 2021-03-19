@@ -7,13 +7,13 @@ contains
    use module_interfaces
    implicit none
 
-      real(DP), dimension(NDIM), save :: Ltot_orig
-      real(DP), save                  :: Eorbit_orig, Mtot_orig, Lmag_orig
-      real(DP)                        :: ke, pe, Eorbit
-      real(DP), dimension(NDIM)       :: Ltot_now
-      real(DP)                        :: Eorbit_error, Eorbit_off_error
-      real(DP)                        :: Mtot_now, Merror
-      real(DP)                        :: Lmag_now, Lerror
+      real(QP), dimension(NDIM), save :: Ltot_orig
+      real(QP), save                  :: Eorbit_orig, Mtot_orig, Lmag_orig
+      real(QP)                        :: ke, pe, Eorbit
+      real(QP), dimension(NDIM)       :: Ltot_now
+      real(QP)                        :: Eorbit_error, Eorbit_off_error
+      real(QP)                        :: Mtot_now, Merror
+      real(QP)                        :: Lmag_now, Lerror
       logical, save                   :: lfirst = .true.
       character(len=*), parameter     :: egyfmt = '(ES23.16,10(",",ES23.16,:))' ! Format code for all simulation output
       character(len=*), parameter     :: egyheader = '("t,Eorbit,Ecollisions,Lx,Ly,Lz,Mtot")'

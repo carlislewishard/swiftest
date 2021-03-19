@@ -14,24 +14,26 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msys)
 ! arguments
    integer(I4B), intent(in)         :: npl
    real(DP), intent(in)             :: j2rp2, j4rp4
-   real(DP), intent(out)            :: ke, pe, te, msys
-   real(DP), dimension(:), intent(out) :: Ltot
+   real(QP), intent(out)            :: ke, pe, te, msys
+   real(QP), dimension(:), intent(out) :: Ltot
    type(swiftest_pl), intent(inout)     :: swiftest_plA
 
 ! internals
    integer(I4B)              :: i, j
-   real(DP)                  :: mass, rmag, v2, oblpot, Ip, rot2, rad
-   real(DP), dimension(NDIM) :: h, dx, x, v, rot
+   real(QP)                  :: mass, v2, Ip, rot2, rad
+   real(QP), dimension(NDIM) :: h, dx, x, v, rot
    real(DP), dimension(npl)  :: irh
+   real(DP)                  :: mtmp, rmag, oblpot
 
 
 ! executable code
 
-   call coord_h2b(npl, swiftest_plA, msys)
-   Ltot = 0.0_DP
-   ke = 0.0_DP
+   call coord_h2b(npl, swiftest_plA, mtmp)
+   ! Re-do this at quad precision
+   msys = swiftest_plA%dMcb + sum(swiftest_plA%mass(2:npl)) + swiftest_plA%Mcb_initial
+   Ltot = 0.0_QP
+   ke = 0.0_QP
 
-   !$omp simd private(x,v,v2,mass,h,rot,Ip,rad,rot2) reduction(+:ke,Ltot)
    do i = 1, npl
       x(:) = swiftest_plA%xb(:, i)
       v(:) = swiftest_plA%vb(:, i)
@@ -46,13 +48,17 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msys)
       h(3) = x(1) * v(2) - x(2) * v(1)
 
       ! Angular momentum from orbit and spin
-      Ltot(:) = Ltot(:) + mass * (h(:) + Ip * rot(:) * rad**2)
+      if (i ==1) then ! Use higher precision angular momentum tracker for the central body
+         Ltot(:) = swiftest_plA%Lcb_initial + swiftest_plA%dLcb + mass * h(:)
+      else
+         Ltot(:) = Ltot(:) + mass * (h(:) + Ip * rot(:) * rad**2)
+      end if
 
       ! Kinetic energy from orbit and spin
-      ke = ke + 0.5_DP * mass * (v2 + Ip * rad**2 * rot2)
+      ke = ke + 0.5_QP * mass * (v2 + Ip * rad**2 * rot2)
    end do
 
-   pe = 0.0_DP
+   pe = 0.0_QP
    !$omp parallel do default(private) &
    !$omp shared (swiftest_plA, npl) &
    !$omp reduction (-:pe)
@@ -69,7 +75,7 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msys)
       !$omp simd private(rmag)
       do i = 2, npl
          rmag = norm2(swiftest_plA%xh(:,i))
-         irh(i) = 1.0_DP / rmag
+         irh(i) = 1.0_QP / rmag
       end do
       call obl_pot(npl, swiftest_plA, j2rp2, j4rp4, swiftest_plA%xh(:,:), irh, oblpot)
       pe = pe + oblpot

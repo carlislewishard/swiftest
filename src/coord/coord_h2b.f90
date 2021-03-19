@@ -42,14 +42,13 @@ SUBROUTINE coord_h2b(npl, swiftest_plA, msys)
      REAL(DP), DIMENSION(NDIM) :: xtmp, vtmp
 
 ! Executable code
-     msys = swiftest_plA%mass(1)
      xtmp(:) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
      vtmp(:) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
      DO i = 2, npl
-         msys = msys + swiftest_plA%mass(i)
          xtmp(:) = xtmp(:) + swiftest_plA%mass(i)*swiftest_plA%xh(:,i)
          vtmp(:) = vtmp(:) + swiftest_plA%mass(i)*swiftest_plA%vh(:,i)
      END DO
+     msys = swiftest_plA%dMcb + sum(swiftest_plA%mass(2:npl)) + swiftest_plA%Mcb_initial
      swiftest_plA%xb(:,1) = -xtmp(:)/msys                                  
      swiftest_plA%vb(:,1) = -vtmp(:)/msys                                  
      xtmp(:) = swiftest_plA%xb(:,1)

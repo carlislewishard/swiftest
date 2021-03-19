@@ -43,9 +43,9 @@ program swiftest_symba
    logical                       :: lfrag_add, ldiscard, ldiscard_tp
    integer(I4B)                  :: npl, nplm, ntp, ntp0, nsppl, nsptp, iout, idump, iloop, i
    integer(I4B)                  :: nplplenc, npltpenc, nmergeadd, nmergesub
-   real(DP)                      :: t, tfrac, tbase, mtiny, msys
-   real(DP)                      :: Ecollision, Eorbit_before, Eorbit_after, ke, pe
-   real(DP), dimension(NDIM)     :: Ltot
+   real(DP)                      :: t, tfrac, tbase, mtiny
+   real(QP)                      :: Ecollision, Eorbit_before, Eorbit_after, ke, pe, msys
+   real(QP), dimension(NDIM)     :: Ltot
    character(STRMAX)             :: inparfile
    type(symba_pl)                :: symba_plA
    type(symba_tp)                :: symba_tpA
