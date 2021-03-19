@@ -82,12 +82,12 @@ SUBROUTINE symba_step(t, dt, param, npl, ntp,symba_plA, symba_tpA,       &
 
 ! Executable code
 
-   symba_plA%index_parent(1:npl) = (/ (i, i=1, npl) /)
+   symba_plA%kin(1:npl)%parent = (/ (i, i=1, npl) /)
+   symba_plA%kin(:)%nchild = 0
    symba_plA%nplenc(:) = 0
    symba_plA%ntpenc(:) = 0
    symba_plA%levelg(:) = -1
    symba_plA%levelm(:) = -1
-   symba_plA%index_child(:, :) = 0
    symba_tpA%nplenc(:) = 0 
    symba_tpA%levelg(:) = -1
    symba_tpA%levelm(:) = -1
@@ -117,18 +117,26 @@ SUBROUTINE symba_step(t, dt, param, npl, ntp,symba_plA, symba_tpA,       &
                   plplenc_list%status(nplplenc) = ACTIVE
                   plplenc_list%lvdotr(nplplenc) = lvdotr
                   plplenc_list%level(nplplenc) = irec
-                  plplenc_list%index1(nplplenc) = i
-                  plplenc_list%index2(nplplenc) = j
-                  symba_plA%lmerged(i) = .FALSE.
+                  ! Set the first body to be the biggest in the encounter list
+                  if (symba_plA%helio%swiftest%mass(i) >= symba_plA%helio%swiftest%mass(j)) then
+                     plplenc_list%index1(nplplenc) = i
+                     plplenc_list%index2(nplplenc) = j
+                  else
+                     plplenc_list%index1(nplplenc) = j
+                     plplenc_list%index2(nplplenc) = i
+                  end if
+                  symba_plA%lcollision(i) = .FALSE.
                   symba_plA%nplenc(i) = symba_plA%nplenc(i) + 1
                   symba_plA%levelg(i) = irec
                   symba_plA%levelm(i) = irec
-                  symba_plA%nchild(i) = 0 
-                  symba_plA%lmerged(j) = .FALSE.
+                  symba_plA%kin(i)%nchild = 0 
+                  symba_plA%kin(i)%parent = i 
+                  symba_plA%lcollision(j) = .FALSE.
                   symba_plA%nplenc(j) = symba_plA%nplenc(j) + 1
                   symba_plA%levelg(j) = irec
                   symba_plA%levelm(j) = irec
-                  symba_plA%nchild(j) = 0
+                  symba_plA%kin(j)%nchild = 0
+                  symba_plA%kin(j)%parent = j
                   !$omp end critical
                END IF
           END DO

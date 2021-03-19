@@ -33,21 +33,25 @@ MODULE module_symba
      INTEGER(I4B), PARAMETER :: NTENC = 3
      REAL(DP), PARAMETER     :: RHSCALE = 6.5_DP
      REAL(DP), PARAMETER     :: RSHELL = 0.48075_DP
-     INTEGER(I4B), PARAMETER :: NCHILDMAX = 500
+
+     type symba_kinship
+         integer(I4B) :: parent ! Index of parent particle
+         integer(I4B) :: nchild ! number of children in merger list
+         integer(I4B), dimension(:), allocatable :: child ! Index of children particles
+      end type symba_kinship
 
      type symba_pl
-          logical(LGT), dimension(:),     allocatable :: lmerged ! flag indicating whether body has merged with another this time step
+          logical(LGT), dimension(:),     allocatable :: lcollision ! flag indicating whether body has merged with another this time step
           integer(I4B), dimension(:),     allocatable :: nplenc  ! number of encounters with other planets this time step
           integer(I4B), dimension(:),     allocatable :: ntpenc  ! number of encounters with test particles this time step
           integer(I4B), dimension(:),     allocatable :: levelg  ! level at which this body should be moved
           integer(I4B), dimension(:),     allocatable :: levelm  ! deepest encounter level achieved this time step
-          integer(I4B), dimension(:),     allocatable :: nchild  ! number of children in merger list
           integer(I4B), dimension(:),     allocatable :: isperi  ! perihelion passage flag
           real(DP),     dimension(:),     allocatable :: peri    ! perihelion distance
           real(DP),     dimension(:),     allocatable :: atp     ! semimajor axis following perihelion passage
           type(helio_pl)                              :: helio   ! HELIO planet structure
-          integer(I4B), dimension(:),     allocatable :: index_parent   ! position of the parent of id
-          integer(I4B), dimension(:,:),   allocatable :: index_child   ! position of the children of id
+          type(symba_kinship), dimension(:), allocatable :: kin  ! Array of merger relationship structures that can account for multiple pairwise 
+                                                                 ! mergers in a single step
      end type symba_pl
 
      type symba_tp

@@ -36,8 +36,8 @@ module module_swiftestalloc
       implicit none
 
       integer(I4B), intent(in)            :: npl
-      type(symba_pl), intent(inout)        :: symba_plA
-      integer(I4B)                            :: n
+      type(symba_pl), intent(inout)       :: symba_plA
+      integer(I4B)                        :: n,i
 
       if (npl <= 0) then
          n = 1
@@ -45,29 +45,26 @@ module module_swiftestalloc
          n = npl
       end if
 
-      allocate(symba_plA%lmerged(n))
+      allocate(symba_plA%lcollision(n))
       allocate(symba_plA%nplenc(n))
       allocate(symba_plA%ntpenc(n))
       allocate(symba_plA%levelg(n))
       allocate(symba_plA%levelm(n))
-      allocate(symba_plA%nchild(n))
+      allocate(symba_plA%kin(n))
       allocate(symba_plA%isperi(n))
       allocate(symba_plA%peri(n))
       allocate(symba_plA%atp(n))
-      allocate(symba_plA%index_parent(n))
-      allocate(symba_plA%index_child(NCHILDMAX, n))
 
-      symba_plA%lmerged(:) = .false.
+      symba_plA%lcollision(:) = .false.
       symba_plA%nplenc(:) = 0
       symba_plA%ntpenc(:) = 0
       symba_plA%levelg(:) = 0
       symba_plA%levelm(:) = 0
-      symba_plA%nchild(:) = 0
       symba_plA%isperi(:) = 0
       symba_plA%peri(:) = 0.0_DP
       symba_plA%atp(:) = 0.0_DP
-      symba_plA%index_parent(:) = 1
-      symba_plA%index_child(:, :) = 1
+      symba_plA%kin(:)%nchild = 0 
+      symba_plA%kin(:)%parent = (/ (i, i=1, n) /) ! Initially each body is its own parent
       call helio_pl_allocate(symba_plA%helio,npl)
       return
    end subroutine symba_pl_allocate
@@ -248,17 +245,15 @@ module module_swiftestalloc
 
       type(symba_pl), intent(inout)        :: symba_plA
 
-      if (allocated(symba_plA%lmerged)) deallocate(symba_plA%lmerged)
+      if (allocated(symba_plA%lcollision)) deallocate(symba_plA%lcollision)
       if (allocated(symba_plA%nplenc)) deallocate(symba_plA%nplenc)
       if (allocated(symba_plA%ntpenc)) deallocate(symba_plA%ntpenc)
       if (allocated(symba_plA%levelg)) deallocate(symba_plA%levelg)
       if (allocated(symba_plA%levelm)) deallocate(symba_plA%levelm)
-      if (allocated(symba_plA%nchild)) deallocate(symba_plA%nchild)
+      if (allocated(symba_plA%kin)) deallocate(symba_plA%kin)
       if (allocated(symba_plA%isperi)) deallocate(symba_plA%isperi)
       if (allocated(symba_plA%peri)) deallocate(symba_plA%peri)
       if (allocated(symba_plA%atp)) deallocate(symba_plA%atp)
-      if (allocated(symba_plA%index_parent)) deallocate(symba_plA%index_parent)
-      if (allocated(symba_plA%index_child)) deallocate(symba_plA%index_child)
       call helio_pl_deallocate(symba_plA%helio)
       return
    end subroutine symba_pl_deallocate

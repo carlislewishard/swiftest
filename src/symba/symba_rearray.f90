@@ -39,6 +39,7 @@ subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
 
       call discard_plA%alloc(nsppl)
 
+      ! Spill discarded bodies into discard list
       discard_plA%name(1:nsppl)   = pack(symba_plA%helio%swiftest%name(1:npl), discard_l_pl)
       discard_plA%status(1:nsppl) = pack(symba_plA%helio%swiftest%status(1:npl), discard_l_pl)
       discard_plA%mass(1:nsppl)   = pack(symba_plA%helio%swiftest%mass(1:npl), discard_l_pl)
@@ -52,55 +53,40 @@ subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
          discard_plA%ip(i,1:nsppl)  = pack(symba_plA%helio%swiftest%ip(i,1:npl),  discard_l_pl)
          discard_plA%rot(i,1:nsppl) = pack(symba_plA%helio%swiftest%rot(i,1:npl), discard_l_pl)
       end do
-      if (.not. param%lfragmentation) then
-         npl = nkpl
-      else
-         where ((mergeadd_list%status(1:nmergeadd) == DISRUPTION) .or. &
-                (mergeadd_list%status(1:nmergeadd) == HIT_AND_RUN) .or. &
-                (mergeadd_list%status(1:nmergeadd) == SUPERCATASTROPHIC)) 
-            frag_l_add(:) = .true.
-         elsewhere 
-            frag_l_add(:) = .false.
-         end where
-         nfrag = count(frag_l_add)
-         symba_plA%helio%swiftest%name(1:nkpl)   = pack(symba_plA%helio%swiftest%name(1:npl),   .not. discard_l_pl)
-         symba_plA%helio%swiftest%status(1:nkpl) = pack(symba_plA%helio%swiftest%status(1:npl), .not. discard_l_pl)
-         symba_plA%helio%swiftest%mass(1:nkpl)   = pack(symba_plA%helio%swiftest%mass(1:npl),   .not. discard_l_pl)
-         symba_plA%helio%swiftest%radius(1:nkpl) = pack(symba_plA%helio%swiftest%radius(1:npl), .not. discard_l_pl)
-         symba_plA%helio%swiftest%rhill(1:nkpl)  = pack(symba_plA%helio%swiftest%rhill(1:npl),  .not. discard_l_pl)
-         do i = 1, NDIM
-            symba_plA%helio%swiftest%xh(i,1:nkpl)  = pack(symba_plA%helio%swiftest%xh(i,1:npl),  .not. discard_l_pl)
-            symba_plA%helio%swiftest%vh(i,1:nkpl)  = pack(symba_plA%helio%swiftest%vh(i,1:npl),  .not. discard_l_pl)
-            symba_plA%helio%swiftest%xb(i,1:nkpl)  = pack(symba_plA%helio%swiftest%xb(i,1:npl),  .not. discard_l_pl)
-            symba_plA%helio%swiftest%vb(i,1:nkpl)  = pack(symba_plA%helio%swiftest%vb(i,1:npl),  .not. discard_l_pl)
-            symba_plA%helio%swiftest%ip(i,1:nkpl)  = pack(symba_plA%helio%swiftest%ip(i,1:npl),  .not. discard_l_pl)
-            symba_plA%helio%swiftest%rot(i,1:nkpl) = pack(symba_plA%helio%swiftest%rot(i,1:npl), .not. discard_l_pl)
-            symba_plA%helio%ah(i,1:nkpl)           = pack(symba_plA%helio%ah(i,1:npl),           .not. discard_l_pl)
-         end do
 
-         if (nkpl + nfrag > npl) call util_resize_pl(symba_plA, nkpl+nfrag, npl)
-         npl = nkpl  + nfrag
-         !add fragments 
-         symba_plA%helio%swiftest%status(nkpl+1:npl) = ACTIVE
-         symba_plA%helio%swiftest%name(nkpl+1:npl)   = pack(mergeadd_list%name(1:nmergeadd),   frag_l_add)
-         symba_plA%helio%swiftest%mass(nkpl+1:npl)   = pack(mergeadd_list%mass(1:nmergeadd),   frag_l_add)
-         symba_plA%helio%swiftest%radius(nkpl+1:npl) = pack(mergeadd_list%radius(1:nmergeadd), frag_l_add)
-         do i = 1, NDIM
-            symba_plA%helio%swiftest%xh(i,nkpl+1:npl)  = pack(mergeadd_list%xh(i,1:nmergeadd),  frag_l_add)
-            symba_plA%helio%swiftest%vh(i,nkpl+1:npl)  = pack(mergeadd_list%vh(i,1:nmergeadd),  frag_l_add)
-            symba_plA%helio%swiftest%ip(i,nkpl+1:npl)  = pack(mergeadd_list%ip(i,1:nmergeadd),  frag_l_add)
-            symba_plA%helio%swiftest%rot(i,nkpl+1:npl) = pack(mergeadd_list%rot(i,1:nmergeadd), frag_l_add)
-         end do
+      ! Pack kept bodies down 
+      symba_plA%helio%swiftest%name(1:nkpl)   = pack(symba_plA%helio%swiftest%name(1:npl),   .not. discard_l_pl)
+      symba_plA%helio%swiftest%status(1:nkpl) = pack(symba_plA%helio%swiftest%status(1:npl), .not. discard_l_pl)
+      symba_plA%helio%swiftest%mass(1:nkpl)   = pack(symba_plA%helio%swiftest%mass(1:npl),   .not. discard_l_pl)
+      symba_plA%helio%swiftest%radius(1:nkpl) = pack(symba_plA%helio%swiftest%radius(1:npl), .not. discard_l_pl)
+      symba_plA%helio%swiftest%rhill(1:nkpl)  = pack(symba_plA%helio%swiftest%rhill(1:npl),  .not. discard_l_pl)
+      do i = 1, NDIM
+         symba_plA%helio%swiftest%xh(i,1:nkpl)  = pack(symba_plA%helio%swiftest%xh(i,1:npl),  .not. discard_l_pl)
+         symba_plA%helio%swiftest%vh(i,1:nkpl)  = pack(symba_plA%helio%swiftest%vh(i,1:npl),  .not. discard_l_pl)
+         symba_plA%helio%swiftest%xb(i,1:nkpl)  = pack(symba_plA%helio%swiftest%xb(i,1:npl),  .not. discard_l_pl)
+         symba_plA%helio%swiftest%vb(i,1:nkpl)  = pack(symba_plA%helio%swiftest%vb(i,1:npl),  .not. discard_l_pl)
+         symba_plA%helio%swiftest%ip(i,1:nkpl)  = pack(symba_plA%helio%swiftest%ip(i,1:npl),  .not. discard_l_pl)
+         symba_plA%helio%swiftest%rot(i,1:nkpl) = pack(symba_plA%helio%swiftest%rot(i,1:npl), .not. discard_l_pl)
+         symba_plA%helio%ah(i,1:nkpl)           = pack(symba_plA%helio%ah(i,1:npl),           .not. discard_l_pl)
+      end do
 
-         do i = 2, npl
-            mu = symba_plA%helio%swiftest%mass(1) + symba_plA%helio%swiftest%mass(i)
-            r = norm2(symba_plA%helio%swiftest%xh(:,i))
-            v2 = dot_product(symba_plA%helio%swiftest%vh(:,i), symba_plA%helio%swiftest%vh(:,i))
-            energy = 0.5_DP * v2 - mu / r
-            ap = -0.5_DP * mu / energy
-            symba_plA%helio%swiftest%rhill(i) = ap * (symba_plA%helio%swiftest%mass(i) / (3.0_DP * mu))**(1.0_DP/3.0_DP)
-         end do
-      end if
+      if (nkpl + nmergeadd > npl) call util_resize_pl(symba_plA, nkpl+nmergeadd, npl)
+      npl = nkpl  + nmergeadd
+
+      !add merge products to the end of the planet list
+      symba_plA%helio%swiftest%status(nkpl+1:npl) = ACTIVE
+      symba_plA%helio%swiftest%name(nkpl+1:npl)   = mergeadd_list%name(1:nmergeadd)
+      symba_plA%helio%swiftest%mass(nkpl+1:npl)   = mergeadd_list%mass(1:nmergeadd)
+      symba_plA%helio%swiftest%radius(nkpl+1:npl) = mergeadd_list%radius(1:nmergeadd)
+      do i = 1, NDIM
+         symba_plA%helio%swiftest%xh(i,nkpl+1:npl)  = mergeadd_list%xh(i,1:nmergeadd)
+         symba_plA%helio%swiftest%vh(i,nkpl+1:npl)  = mergeadd_list%vh(i,1:nmergeadd)
+         symba_plA%helio%swiftest%ip(i,nkpl+1:npl)  = mergeadd_list%ip(i,1:nmergeadd)
+         symba_plA%helio%swiftest%rot(i,nkpl+1:npl) = mergeadd_list%rot(i,1:nmergeadd)
+      end do
+
+      call util_hills(npl, symba_plA%helio%swiftest)
+
       symba_plA%helio%swiftest%nbody = npl
    end if 
 

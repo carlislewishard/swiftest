@@ -50,12 +50,12 @@ SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard, m
 
 ! Internals
    INTEGER(I4B)                            :: i, j, nchild, indexchild, enc_big, index1, index2, indexk 
-   REAL(DP)                                :: m, mmax, mtot, r, r3, mu, energy, ap, v2, msun, ip_merge
+   REAL(DP)                                :: m, mmax, mtot, r, r3, mu, energy, ap, v2, msun, Ip_merge
    real(DP)                                :: Mcb, r_child, m_child, r_big, m_big, rmerge, spin_vec_mag 
    REAL(DP), DIMENSION(NDIM)               :: x, v, vbs, xv_child, xv_big, xnew, vnew
-   INTEGER(I4B), DIMENSION(NCHILDMAX)      :: array_child
+   INTEGER(I4B), DIMENSION(1)      :: array_child
    real(DP), dimension(NDIM)               :: Lspin, xc_child, xc_big, vc_child, vc_big, spin_hat, l_orb_before, l_orb_after
-   real(DP), dimension(NDIM)               :: ip_child, ip_big, l_spin_after, l_spin_before, rot_child, rot_big
+   real(DP), dimension(NDIM)               :: Ip_child, Ip_big, l_spin_after, l_spin_before, rot_child, rot_big
 
 ! Executable code
      msun = symba_plA%helio%swiftest%mass(1)
@@ -79,8 +79,8 @@ SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard, m
                   v(:) = m * symba_plA%helio%swiftest%vb(:,enc_big)
                   indexk = enc_big
 
-                  nchild = symba_plA%nchild(enc_big)
-                  array_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,enc_big)
+                  nchild = symba_plA%kin(enc_big)%nchild
+                  !array_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,enc_big)
                   DO j = 1, nchild
                      indexchild = array_child(j)
                      m = symba_plA%helio%swiftest%mass(indexchild)
@@ -99,8 +99,8 @@ SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard, m
                   x(:) = x(:)/mtot  ! position com of system 
                   v(:) = v(:)/mtot  ! velocity com of system 
                   rmerge = r3**(1.0_DP/3.0_DP)
-                  ip_merge = 2.0_DP / 5.0_DP
-                  ip_big = 2.0_DP / 5.0_DP
+                  Ip_merge = 2.0_DP / 5.0_DP
+                  Ip_big = 2.0_DP / 5.0_DP
                   spin_vec_mag = 0.0_DP
                   l_orb_before(:) = 0.0_DP
                   l_spin_before(:) = 0.0_DP
@@ -111,14 +111,14 @@ SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard, m
                   vc_big(:) = symba_plA%helio%swiftest%vb(:,enc_big) - v(:)
 
                   call util_crossproduct(xc_big, vc_big, xv_big)
-                  ip_big = symba_plA%helio%swiftest%Ip(:, enc_big)
+                  Ip_big = symba_plA%helio%swiftest%Ip(:, enc_big)
                   rot_big = symba_plA%helio%swiftest%rot(:, enc_big)
 
                   m_big = symba_plA%helio%swiftest%mass(enc_big)
                   r_big = symba_plA%helio%swiftest%radius(enc_big)
                         
                   l_orb_before = l_orb_before + (m_big * xv_big)
-                  l_spin_before = l_spin_before + (ip_big * m_big * r_big**2 * rot_big)
+                  l_spin_before = l_spin_before + (Ip_big * m_big * r_big**2 * rot_big)
 
                   DO j = 1, nchild
                      indexchild = array_child(j)
@@ -126,19 +126,19 @@ SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard, m
                      vc_child(:) = symba_plA%helio%swiftest%vb(:,indexchild) - v(:)
 
                      call util_crossproduct(xc_child, vc_child, xv_child)
-                     ip_child = symba_plA%helio%swiftest%Ip(:, indexchild)
+                     Ip_child = symba_plA%helio%swiftest%Ip(:, indexchild)
                      rot_child = symba_plA%helio%swiftest%rot(:, indexchild)
 
                      m_child = symba_plA%helio%swiftest%mass(indexchild)
                      r_child = symba_plA%helio%swiftest%radius(indexchild)
                         
                      l_orb_before = l_orb_before + (m_child * xv_child)
-                     l_spin_before = l_spin_before + (ip_child * m_child * r_child**2 * rot_child) 
+                     l_spin_before = l_spin_before + (Ip_child * m_child * r_child**2 * rot_child) 
                   END DO
 
                   l_spin_after = l_orb_before + l_spin_before - l_orb_after
                   spin_hat = l_spin_after / NORM2(l_spin_after)
-                  spin_vec_mag = NORM2(l_spin_after) / (ip_merge * mtot * rmerge**2)
+                  spin_vec_mag = NORM2(l_spin_after) / (Ip_merge * mtot * rmerge**2)
 
                   r = rmerge
                   symba_plA%helio%swiftest%mass(indexk) = mtot
@@ -146,7 +146,7 @@ SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard, m
                   symba_plA%helio%swiftest%xh(:,indexk) = x(:)
                   symba_plA%helio%swiftest%vb(:,indexk) = v(:)
                   symba_plA%helio%swiftest%vh(:,indexk) = v(:) - vbs(:)
-                  symba_plA%helio%swiftest%ip(:,indexk) = ip_child
+                  symba_plA%helio%swiftest%ip(:,indexk) = Ip_child
                   symba_plA%helio%swiftest%rot(:,indexk) = spin_vec_mag*spin_hat
 
                   mu = msun*mtot/(msun + mtot)
@@ -156,7 +156,7 @@ SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard, m
                   energy = -1.0_DP*msun*mtot/r + 0.5_DP*mu*v2
                   ap = -1.0_DP*msun*mtot/(2.0_DP*energy)
                   symba_plA%helio%swiftest%rhill(indexk) = ap*(((mu/msun)/3.0_DP)**(1.0_DP/3.0_DP))
-                  array_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,enc_big)
+                  !array_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,enc_big)
                   indexchild = enc_big
                   ldiscard = .TRUE.
                   DO j = 0, nchild
@@ -170,8 +170,8 @@ SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard, m
                    (symba_plA%helio%swiftest%status(index2) == DISRUPTION)) THEN 
                     call symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plplenc_list, i) !tentatively
                     enc_big = plplenc_list%index1(i)
-                    nchild = symba_plA%nchild(enc_big)
-                    array_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,enc_big)
+                    nchild = symba_plA%kin(enc_big)%nchild
+                    !array_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,enc_big)
                     DO j = 1, nchild
                          symba_plA%helio%swiftest%status(array_child(j)) = INACTIVE
                     END DO
@@ -180,8 +180,8 @@ SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard, m
                    (symba_plA%helio%swiftest%status(index2) == SUPERCATASTROPHIC)) THEN 
                     call symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plplenc_list, i) !tentatively
                     enc_big = plplenc_list%index1(i)
-                    nchild = symba_plA%nchild(enc_big)
-                    array_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,enc_big)
+                    nchild = symba_plA%kin(enc_big)%nchild
+                    !array_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,enc_big)
                     DO j = 1, nchild
                          symba_plA%helio%swiftest%status(array_child(j)) = INACTIVE
                     END DO
@@ -190,8 +190,8 @@ SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard, m
                    (symba_plA%helio%swiftest%status(index2) == HIT_AND_RUN)) THEN 
                     call symba_fragment_calculation(nmergeadd, mergeadd_list, symba_plA, plplenc_list, i) !tentatively
                     enc_big = plplenc_list%index1(i)
-                    nchild = symba_plA%nchild(enc_big)
-                    array_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,enc_big)
+                    nchild = symba_plA%kin(enc_big)%nchild
+                    !array_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,enc_big)
                     DO j = 1, nchild
                          symba_plA%helio%swiftest%status(array_child(j)) = INACTIVE
                     END DO
@@ -200,8 +200,8 @@ SUBROUTINE symba_discard_merge_pl(symba_plA, nplplenc, plplenc_list, ldiscard, m
                    (symba_plA%helio%swiftest%status(index2) == GRAZE_AND_MERGE)) THEN 
 
                     enc_big = plplenc_list%index1(i)
-                    nchild = symba_plA%nchild(enc_big)
-                    array_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,enc_big)
+                    nchild = symba_plA%kin(enc_big)%nchild
+                    !array_child(1:NCHILDMAX) = symba_plA%index_child(1:NCHILDMAX,enc_big)
                     DO j = 1, nchild
                          symba_plA%helio%swiftest%status(array_child(j)) = INACTIVE
                     END DO

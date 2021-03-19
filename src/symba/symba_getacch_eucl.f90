@@ -86,8 +86,8 @@ SUBROUTINE symba_getacch_eucl(lextra_force, t, npl, symba_plA, j2rp2, j4rp4, npl
           i = k_plpl(1,k)
           j = k_plpl(2,k)
           
-          IF ((.NOT. symba_plA%lmerged(i) .OR. (.NOT. symba_plA%lmerged(j)) .OR. &
-               (symba_plA%index_parent(i) /= symba_plA%index_parent(j)))) THEN
+          !IF ((.NOT. symba_plA%lcollision(i) .OR. (.NOT. symba_plA%lcollision(j)) .OR. &
+          !     (symba_plA%index_parent(i) /= symba_plA%index_parent(j)))) THEN
                dx(:) = symba_plA%helio%swiftest%xh(:,j) - symba_plA%helio%swiftest%xh(:,i)
                rlim2 = (symba_plA%helio%swiftest%radius(i) + symba_plA%helio%swiftest%radius(j))**2
                rji2 = DOT_PRODUCT(dx(:), dx(:))
@@ -99,7 +99,7 @@ SUBROUTINE symba_getacch_eucl(lextra_force, t, npl, symba_plA, j2rp2, j4rp4, npl
                   ahp(:,i) = ahp(:,i) + facj * dx(:)
                   ahm(:,j) = ahm(:,j) - faci * dx(:)
                end if
-          ENDIF
+          !ENDIF
      END DO
      !$omp end parallel do
      symba_plA%helio%ah(:,1:npl) = ahp(:, :) + ahm(:,:)
@@ -107,8 +107,8 @@ SUBROUTINE symba_getacch_eucl(lextra_force, t, npl, symba_plA, j2rp2, j4rp4, npl
       DO i = 1, nplplenc
          index_i = plplenc_list%index1(i)
          index_j = plplenc_list%index2(i)
-         IF ((.NOT. symba_plA%lmerged(index_i)) .OR. (.NOT. symba_plA%lmerged(index_j))  &
-               .OR. (symba_plA%index_parent(index_i) /= symba_plA%index_parent(index_j))) THEN !need to update parent/children
+         !IF ((.NOT. symba_plA%lcollision(index_i)) .OR. (.NOT. symba_plA%lcollision(index_j))  &
+         !      .OR. (symba_plA%index_parent(index_i) /= symba_plA%index_parent(index_j))) THEN !need to update parent/children
            dx(:) = symba_plA%helio%swiftest%xh(:,index_j) - symba_plA%helio%swiftest%xh(:,index_i)
            rlim2 = (symba_plA%helio%swiftest%radius(index_i) + symba_plA%helio%swiftest%radius(index_j))**2
            rji2 = DOT_PRODUCT(dx(:), dx(:))
@@ -120,7 +120,7 @@ SUBROUTINE symba_getacch_eucl(lextra_force, t, npl, symba_plA, j2rp2, j4rp4, npl
               symba_plA%helio%ah(:, index_i) = symba_plA%helio%ah(:, index_i) - facj * dx(:)
               symba_plA%helio%ah(:, index_j) = symba_plA%helio%ah(:, index_j) + faci * dx(:)
            end if
-         END IF
+         !END IF
       END DO
 
      IF (j2rp2 /= 0.0_DP) THEN

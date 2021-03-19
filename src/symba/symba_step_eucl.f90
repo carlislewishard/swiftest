@@ -87,7 +87,7 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
 
 ! Internals
      LOGICAL(LGT)              :: lencounter
-     INTEGER(I4B)              :: irec, nplm
+     INTEGER(I4B)              :: irec, nplm, ipl, ipl1, ipl2
      INTEGER(I8B)              :: i, k, counter
      INTEGER(I8B), DIMENSION(:), ALLOCATABLE :: plpl_encounters
      INTEGER(I8B), DIMENSION(:), ALLOCATABLE :: pltp_encounters_indices
@@ -98,12 +98,12 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      
 ! Executable code
 
-     symba_plA%index_parent(1:npl) = (/ (i, i=1, npl) /)
+     symba_plA%kin(1:npl)%parent = (/ (i, i=1, npl) /)
+     symba_plA%kin(:)%nchild = 0
      symba_plA%nplenc(:) = 0
      symba_plA%ntpenc(:) = 0
      symba_plA%levelg(:) = -1
      symba_plA%levelm(:) = -1
-     symba_plA%index_child(:, :) = 0
      symba_tpA%nplenc(:) = 0 
      symba_tpA%levelg(:) = -1
      symba_tpA%levelm(:) = -1 
@@ -126,18 +126,28 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
 
           do k = 1, nplplenc
             do i = 1, 2
-               symba_plA%lmerged(k_plpl(i, plpl_encounters(k))) = .FALSE. ! they have not merged YET
-               symba_plA%nplenc(k_plpl(i, plpl_encounters(k))) = symba_plA%nplenc(k_plpl(i, plpl_encounters(k))) + 1 ! number of particles that planet "i" has close encountered
-               symba_plA%levelg(k_plpl(i, plpl_encounters(k))) = irec ! recursion level
-               symba_plA%levelm(k_plpl(i, plpl_encounters(k))) = irec ! recursion level
-               symba_plA%nchild(k_plpl(i, plpl_encounters(k))) = 0 
+               ipl = k_plpl(i, plpl_encounters(k)) 
+               symba_plA%lcollision(ipl) = .FALSE. ! they have not merged YET
+               symba_plA%nplenc(ipl) = symba_plA%nplenc(k_plpl(i, plpl_encounters(k))) + 1 ! number of particles that planet "i" has close encountered
+               symba_plA%levelg(ipl) = irec ! recursion level
+               symba_plA%levelm(ipl) = irec ! recursion level
+               symba_plA%kin(ipl)%nchild = 0 
+               symba_plA%kin(ipl)%parent = ipl
             end do
+            
 
             plplenc_list%status(k) = ACTIVE ! you are in an encounter
             plplenc_list%lvdotr(k) = plpl_lvdotr(k)! flag of relative accelerations to say if there will be a close encounter in next timestep 
             plplenc_list%level(k)  = irec ! recursion level
-            plplenc_list%index1(k) = k_plpl(1, plpl_encounters(k)) ! index of first planet in encounter
-            plplenc_list%index2(k) = k_plpl(2, plpl_encounters(k)) ! index of second planet in encounter
+            ipl1 = k_plpl(1, plpl_encounters(k))
+            ipl2 = k_plpl(2, plpl_encounters(k)) 
+            if (symba_plA%helio%swiftest%mass(ipl1) >= symba_plA%helio%swiftest%mass(ipl2)) then 
+               plplenc_list%index1(k) = ipl1 
+               plplenc_list%index2(k) = ipl2
+            else
+               plplenc_list%index1(k) = ipl2 
+               plplenc_list%index2(k) = ipl1
+            end if
           end do
           deallocate(plpl_encounters, plpl_lvdotr)
      endif

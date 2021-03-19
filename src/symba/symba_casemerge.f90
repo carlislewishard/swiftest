@@ -1,6 +1,4 @@
-subroutine symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, mergesub_list,  & 
-   symba_plA, nplplenc, plplenc_list, array_index1_child, array_index2_child, m1, m2, rad1, rad2,&
-    x1, x2, v1, v2)
+subroutine symba_casemerge (nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, vbs, param)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
    !! Merge planets.
@@ -12,136 +10,62 @@ subroutine symba_casemerge (t, index_enc, nmergeadd, nmergesub, mergeadd_list, m
    use module_helio
    use module_symba
    use module_swiftestalloc 
-   use module_interfaces, except_this_one => symba_casemerge
+   use module_interfaces, EXCEPT_THIS_ONE => symba_casemerge
    implicit none
 
-   integer(I4B), intent(in)                :: index_enc, nplplenc
-   integer(I4B), intent(inout)             :: nmergeadd, nmergesub
-   real(DP), intent(in)                    :: t
-   real(DP), intent(inout)                 :: m1, m2, rad1, rad2
-   real(DP), dimension(:), intent(inout)   :: x1, x2, v1, v2
-   type(symba_plplenc), intent(inout)      :: plplenc_list
-   type(symba_merger), intent(inout)       :: mergeadd_list, mergesub_list
-   type(symba_pl), intent(inout)           :: symba_plA
-   integer(I4B), dimension(:), intent(in)  :: array_index1_child, array_index2_child
+   integer(I4B), intent(inout)               :: nmergeadd
+   type(symba_merger), intent(inout)         :: mergeadd_list
+   real(DP), dimension(:),   intent(in)      :: mass, radius, vbs
+   real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
+   type(user_input_parameters),intent(inout) :: param
 
-   integer(I4B)                            :: i, j, k, stat1, stat2, index1, index2, indexchild
-   integer(I4B)                            :: index1_child, index2_child, index1_parent, index2_parent
-   integer(I4B)                            :: name1, name2, nchild1, nchild2
-   real(DP)                                :: mtot, Mcb
-   real(DP), dimension(NDIM)               :: xnew, vnew, vbs
-   integer(I4B), dimension(:), allocatable :: array_keep_child, array_rm_child
+   integer(I4B)                            :: j
+   real(DP)                                :: mass_new, radius_new
+   real(DP), dimension(NDIM)               :: xcom, vcom, xc, vc, xcrossv
+   real(DP), dimension(2)                  :: vol
+   real(DP), dimension(NDIM)               :: L_orb_old, L_spin_old
+   real(DP), dimension(NDIM)               :: L_spin_new, rot_new, Ip_new
 
-   index1 = plplenc_list%index1(index_enc)
-   index2 = plplenc_list%index2(index_enc)
-   index1_parent = symba_plA%index_parent(index1)
-   index2_parent = symba_plA%index_parent(index2)
-   name1 = symba_plA%helio%swiftest%name(index1)
-   name2 = symba_plA%helio%swiftest%name(index2)
-   stat1 = symba_plA%helio%swiftest%status(index1)
-   stat2 = symba_plA%helio%swiftest%status(index2)
-   nchild1 = symba_plA%nchild(index1_parent)
-   nchild2 = symba_plA%nchild(index2_parent)
-   vbs = symba_plA%helio%swiftest%vb(:, 1)
-   Mcb = symba_plA%helio%swiftest%mass(1)
+  
+   ! Merged body is created at the barycenter of the original bodies
+   mass_new = sum(mass(:))
+   xcom(:) = (mass(1) * x(:,1) + mass(2) * x(:,2)) / mass_new
+   vcom(:) = (mass(1) * v(:,1) + mass(2) * v(:,2)) / mass_new
 
-   ! The new position and velocity determined from a perfectly inelastic collision
-   mtot = m1 + m2
-   xnew(:) = (m1 * x1(:) + m2 * x2(:)) / mtot
-   vnew(:) = (m1 * v1(:) + m2 * v2(:)) / mtot
-
-   write(*, *) "Merging particles ", name1, " and ", name2, " at time t = ",t
-
-   do k = 1, nplplenc
-      if (plplenc_list%status(k) == ACTIVE) then
-         do i = 0, nchild1
-            if (i == 0) then 
-               index1_child = index1_parent
-            else
-               index1_child = array_index1_child(i)
-            end if 
-            do j = 0, nchild2
-               if (j == 0) then
-                  index2_child = index2_parent
-               else
-                  index2_child = array_index2_child(j)
-               end if
-
-               if ((index1_child == plplenc_list%index1(k)) .and. (index2_child == plplenc_list%index2(k))) then
-                  plplenc_list%status(k) = MERGED
-               else if ((index1_child == plplenc_list%index2(k)) .and. (index2_child == plplenc_list%index1(k))) then
-                  plplenc_list%status(k) = MERGED
-               end if
-            end do
-         end do
-      end if
+   ! Get mass weighted mean of Ip and 
+   Ip_new(:) = (mass(1) * Ip(:,1) + mass(2) * Ip(:,2)) / mass_new
+   vol(:) = 4._DP / 3._DP * pi * radius(:)**3
+   radius_new = sum(vol(:)) / mass_new
+   
+   L_spin_old(:) = L_spin(:,1) + L_spin(:,2)
+   L_orb_old(:) = 0.0_DP
+   ! Compute orbital angular momentum of pre-impact system
+   do j = 1, 2
+      xc(:) = x(:, j) - xcom(:)
+      vc(:) = v(:, j) - vcom(:)
+      call utiL_crossproduct(xc(:), vc(:), xcrossv(:))
+      L_orb_old(:) = L_orb_old(:) + mass(j) * xcrossv(:)
    end do
 
+   ! Conserve angular momentum by putting pre-impact orbital momentum into spin of the new body
+   L_spin_new(:) = L_orb_old(:) + L_spin_old(:) 
 
-   ! the children of parent one are the children we are keeping
-   if (nchild1 > 0) then
-      allocate(array_keep_child(nchild1))
-      array_keep_child(:) = symba_plA%index_child(1:nchild1, index1_parent)
-      ! go through the children of the kept parent and add those children to the array of kept children
-      do i = 1, nchild1
-         indexchild = array_keep_child(i)
-      end do
-   end if
+   ! Assume prinicpal axis rotation on 3rd Ip axis
+   rot_new(:) = L_spin_new(:) / (Ip_new(3) * mass_new * radius_new**2)
 
-   ! the removed parent is assigned as a new child to the list of children of the kept parent
-   ! gives kept parent a new child 
-   symba_plA%index_child((nchild1 + 1), index1_parent) = index2_parent
-
-   symba_plA%index_parent(index2) = index1_parent
-   ! go through the children of the removed parent and add those children to the array of removed children 
-   if (nchild2 > 0) then 
-      allocate(array_rm_child(nchild2))
-      array_rm_child(:) = symba_plA%index_child(1:nchild2, index2_parent)
-      ! the parent of the removed parent is assigned to be the kept parent 
-      ! gives removed parent a new parent
-      do i = 1, nchild2
-         symba_plA%index_parent(array_rm_child(i)) = index1_parent
-         indexchild = array_rm_child(i)
-         ! go through the children of the removed parent and add those children to the list of children of the kept parent
-         symba_plA%index_child(nchild1 + i + 1, index1_parent) = indexchild
-      end do 
-   end if
-   ! updates the number of children of the kept parent
-   symba_plA%nchild(index1_parent) = symba_plA%nchild(index1_parent) + symba_plA%nchild(index2_parent) + 1
-
-
-   call symba_merger_size_check(mergesub_list, nmergesub + 2)  
-   nmergesub = nmergesub + 1
-   mergesub_list%name(nmergesub) = name1
-   mergesub_list%status(nmergesub) = MERGED
-   mergesub_list%xh(:,nmergesub) = symba_plA%helio%swiftest%xh(:, index1) 
-   mergesub_list%vh(:,nmergesub) = symba_plA%helio%swiftest%vh(:, index1) 
-   mergesub_list%mass(nmergesub) = m1
-   mergesub_list%radius(nmergesub) = rad1
-   mergesub_list%nadded(nmergesub) = 1
-   mergesub_list%index_ps(nmergesub) = index1
-   nmergesub = nmergesub + 1
-   mergesub_list%name(nmergesub) = name2
-   mergesub_list%status(nmergesub) = MERGED
-   mergesub_list%xh(:,nmergesub) = symba_plA%helio%swiftest%xh(:, index2) 
-   mergesub_list%vh(:,nmergesub) = symba_plA%helio%swiftest%vh(:, index2)
-   mergesub_list%mass(nmergesub) = m2
-   mergesub_list%radius(nmergesub) = rad2
-   mergesub_list%nadded(nmergesub) = 1
-   mergesub_list%index_ps(nmergesub) = index2
-
+   ! Populate the list of new bodies
    call symba_merger_size_check(mergeadd_list, nmergeadd + 1)  
    nmergeadd = nmergeadd + 1
-   if (m2 > m1) then
-      mergeadd_list%name(nmergeadd) = name2
-      mergeadd_list%status(nmergeadd) = stat2
-   else
-      mergeadd_list%name(nmergeadd) = name1
-      mergeadd_list%status(nmergeadd) = stat1
-   end if
+   param%plmaxname = max(param%plmaxname, param%tpmaxname) + 1
+   mergeadd_list%name(nmergeadd) = param%plmaxname
+   mergeadd_list%status(nmergeadd) = MERGED
    mergeadd_list%ncomp(nmergeadd) = 2
-   mergeadd_list%xh(:,nmergeadd) = xnew(:) 
-   mergeadd_list%vh(:,nmergeadd) = vnew(:) - vbs(:)
-   mergeadd_list%mass(nmergeadd) = mtot
+   mergeadd_list%xh(:,nmergeadd) = xcom(:) 
+   mergeadd_list%vh(:,nmergeadd) = vcom(:) - vbs(:)
+   mergeadd_list%mass(nmergeadd) = mass_new
+   mergeadd_list%radius(nmergeadd) = radius_new
+   mergeadd_list%Ip(:,nmergeadd) = Ip_new(:)
+   mergeadd_list%rot(:,nmergeadd) = rot_new(:)
+
    return 
 end subroutine symba_casemerge
