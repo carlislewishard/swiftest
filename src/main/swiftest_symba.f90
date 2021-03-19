@@ -41,7 +41,7 @@ program swiftest_symba
 
    ! Internals
    logical                       :: lfrag_add, ldiscard, ldiscard_tp
-   integer(I4B)                  :: npl, nplm, ntp, ntp0, nsppl, nsptp, iout, idump, iloop
+   integer(I4B)                  :: npl, nplm, ntp, ntp0, nsppl, nsptp, iout, idump, iloop, i
    integer(I4B)                  :: nplplenc, npltpenc, nmergeadd, nmergesub
    real(DP)                      :: t, tfrac, tbase, mtiny, msys
    real(DP)                      :: Ecollision, Eorbit_before, Eorbit_after, ke, pe
@@ -221,6 +221,11 @@ program swiftest_symba
                write(*,*) 'KE after     : ', ke
                write(*,*) 'PE after     : ', pe
                write(*,*) 'Ltot after   : ', Ltot
+               do i = 1, npl
+                  write(88,*) 'Particle ',symba_plA%helio%swiftest%name(i)
+                  write(88,*) '     vb  ',symba_plA%helio%swiftest%vb(:, i)
+                  write(88,*) '     rot ',symba_plA%helio%swiftest%rot(:, i)
+               end do
                call util_exit(FAILURE)
             end if
             symba_plA%helio%swiftest%Ecollisions = symba_plA%helio%swiftest%Ecollisions + Ecollision
