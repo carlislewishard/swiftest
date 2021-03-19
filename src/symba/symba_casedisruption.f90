@@ -24,6 +24,7 @@ subroutine symba_casedisruption (nmergeadd, mergeadd_list, x, v, mass, radius, r
    real(DP), dimension(:, :), allocatable  :: v_frag, x_frag, rot_frag, Ip_frag
    real(DP), dimension(:), allocatable     :: m_frag, rad_frag
 
+   write(*,*) mass_res
   
    ! Collisional fragments will be uniformly distributed around the pre-impact barycenter
    nfrag = 5 ! This value is set for testing. This needs to be updated such that it is calculated or set by the user
@@ -40,9 +41,8 @@ subroutine symba_casedisruption (nmergeadd, mergeadd_list, x, v, mass, radius, r
 
    ! Get mass weighted mean of Ip and average density
    Ip_new(:) = (mass(1) * Ip(:,1) + mass(2) * Ip(:,2)) / mtot
-   vol(:) = 4._DP / 3._DP * pi * radius(:)**3
+   vol(:) = 4._DP / 3._DP * PI * radius(:)**3
    avg_dens = mtot / sum(vol(:))
-   
 
    ! Distribute the mass among fragments, with a branch to check for the size of the second largest fragment
    m_frag(1) = mass_res(1)
@@ -54,7 +54,7 @@ subroutine symba_casedisruption (nmergeadd, mergeadd_list, x, v, mass, radius, r
    end if
    ! Distribute remaining mass among the remaining bodies
    do i = istart, nfrag
-      m_frag(i) = (mtot - sum(m_frag(1:istart))) / (nfrag - istart) 
+      m_frag(i) = (mtot - sum(m_frag(1:istart - 1))) / (nfrag - istart + 1) 
    end do
 
    ! Distribute any residual mass if there is any and set the radius

@@ -690,16 +690,16 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-         SUBROUTINE symba_casedisruption (nmergeadd, mergeadd_list, x, v, mass, radius, rhill, Lspin, Ip, vbs, &
+         SUBROUTINE symba_casedisruption (nmergeadd, mergeadd_list, x, v, mass, radius, rhill, L_spin, Ip, vbs, &
                                                  mass_res, param)
          USE swiftest_globals
          USE swiftest_data_structures
          USE module_symba
          IMPLICIT NONE
-         integer(I4B), intent(inout)             :: nmergeadd
-         type(symba_merger), intent(inout)       :: mergeadd_list
-         real(DP), dimension(:), intent(in)      :: mass, radius, rhill, vbs, mass_res
-         real(DP), dimension(:,:), intent(in)    :: x, v, Lspin, Ip
+         integer(I4B), intent(inout)               :: nmergeadd
+         type(symba_merger), intent(inout)         :: mergeadd_list
+         real(DP), dimension(:),   intent(in)      :: mass, radius, rhill, vbs, mass_res
+         real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
          type(user_input_parameters),intent(inout) :: param
          END SUBROUTINE symba_casedisruption
      END INTERFACE
