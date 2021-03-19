@@ -20,7 +20,7 @@ subroutine symba_casemerge (nmergeadd, mergeadd_list, x, v, mass, radius, L_spin
    type(user_input_parameters),intent(inout) :: param
 
    integer(I4B)                            :: j
-   real(DP)                                :: mass_new, radius_new
+   real(DP)                                :: mass_new, radius_new, volume_new
    real(DP), dimension(NDIM)               :: xcom, vcom, xc, vc, xcrossv
    real(DP), dimension(2)                  :: vol
    real(DP), dimension(NDIM)               :: L_orb_old, L_spin_old
@@ -34,8 +34,9 @@ subroutine symba_casemerge (nmergeadd, mergeadd_list, x, v, mass, radius, L_spin
 
    ! Get mass weighted mean of Ip and 
    Ip_new(:) = (mass(1) * Ip(:,1) + mass(2) * Ip(:,2)) / mass_new
-   vol(:) = 4._DP / 3._DP * pi * radius(:)**3
-   radius_new = sum(vol(:)) / mass_new
+   vol(:) = 4._DP / 3._DP * PI * radius(:)**3
+   volume_new = sum(vol(:))
+   radius_new = (3 * volume_new / (4 * PI))**(1._DP / 3._DP)
    
    L_spin_old(:) = L_spin(:,1) + L_spin(:,2)
    L_orb_old(:) = 0.0_DP
