@@ -215,7 +215,7 @@ program swiftest_symba
             end if
             Ecollision = Eorbit_before - Eorbit_after    ! Energy change resulting in this collisional event Total running energy offset from collision in this step
             if ((Ecollision /= Ecollision) .or. (abs(Ecollision) > huge(Ecollision))) then 
-               write(*,*) 'Error encountered in colisional energy calculation!'
+               write(*,*) 'Error encountered in collisional energy calculation!'
                write(*,*) 'Eorbit_before: ', Eorbit_before
                write(*,*) 'Eorbit_after : ', Eorbit_after
                call util_exit(FAILURE)
