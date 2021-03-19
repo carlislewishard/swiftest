@@ -15,41 +15,25 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
    real(DP), intent(in)                     :: j2rp2, j4rp4
    integer(I4B), dimension(:,:), intent(in) :: k_plpl
    integer(I8B), intent(in)                 :: num_plpl_comparisons
-   real(QP), intent(out)                    :: ke, pe, te, msys
-   real(QP), dimension(:), intent(out)      :: Ltot
+   real(DP), intent(out)                    :: ke, pe, te, msys
+   real(DP), dimension(:), intent(out)      :: Ltot
    type(swiftest_pl), intent(inout)         :: swiftest_plA
 
 ! internals
    integer(I4B)              :: i, j
-   real(QP)                  :: mass, v2, Mcb, rad, Ip, rot2
-   real(QP), dimension(NDIM) :: h, x, v, xbcb, rot
+   real(DP)                  :: mass, rmag, v2, oblpot, Mcb, rad, Ip, rot2
+   real(DP), dimension(NDIM) :: h, x, v, xbcb, rot
    real(DP), dimension(npl)  :: irh
-   real(DP)                  :: mtmp, rmag, oblpot
    integer(I8B)              :: k
 
 ! executable code
 
-   call coord_h2b(npl, swiftest_plA, mtmp)
-   ! Re-do this at quad precision
-   msys = swiftest_plA%dMcb + sum(swiftest_plA%mass(2:npl)) + swiftest_plA%Mcb_initial
-   ke = 0.0_QP
-
-   x(:) = swiftest_plA%xb(:, 1)
-   v(:) = swiftest_plA%vb(:, 1)
-   rot(:) = swiftest_plA%rot(:, 1)
-   Ip = swiftest_plA%Ip(3, 1)
-   mass = swiftest_plA%mass(1)
-   rad = swiftest_plA%radius(1)
-   v2 = dot_product(v(:), v(:))
-   rot2 = dot_product(rot(:), rot(:))
-   h(1) = x(2) * v(3) - x(3) * v(2)
-   h(2) = x(3) * v(1) - x(1) * v(3)
-   h(3) = x(1) * v(2) - x(2) * v(1)
-   Ltot(:) = swiftest_plA%Lcb_initial + swiftest_plA%dLcb + mass * h(:)
-   ke = 0.5_QP * (swiftest_plA%dMcb + swiftest_plA%Mcb_initial) * (v2 + Ip * rad**2 * rot2)
+   call coord_h2b(npl, swiftest_plA, msys)
+   Ltot = 0.0_DP
+   ke = 0.0_DP
 
    !$omp simd private(x,v,v2,mass,h,rot,Ip,rad,rot2) reduction(+:ke,Ltot)
-   do i = 2, npl 
+   do i = 1, npl 
       x(:) = swiftest_plA%xb(:, i)
       v(:) = swiftest_plA%vb(:, i)
       rot(:) = swiftest_plA%rot(:, i)
@@ -58,20 +42,21 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
       rad = swiftest_plA%radius(i)
       v2 = dot_product(v(:), v(:))
       rot2 = dot_product(rot(:), rot(:))
-      h(1) = x(2) * v(3) - x(3) * v(2)
-      h(2) = x(3) * v(1) - x(1) * v(3)
-      h(3) = x(1) * v(2) - x(2) * v(1)
+      h(1) = mass * (x(2) * v(3) - x(3) * v(2))
+      h(2) = mass * (x(3) * v(1) - x(1) * v(3))
+      h(3) = mass * (x(1) * v(2) - x(2) * v(1))
 
-      Ltot(:) = Ltot(:) + mass * (h(:) + Ip * rot(:) * rad**2)
+      ! Angular momentum from orbit and spin
+      Ltot(:) = Ltot(:) + h(:) + mass * Ip * rot(:) * rad**2
 
       ! Kinetic energy from orbit and spin
-      ke = ke + 0.5_QP * mass * (v2 + Ip * rad**2 * rot2)
+      ke = ke + (0.5_DP * mass * v2) + (0.5_DP * Ip * mass * rad**2 * rot2)
    end do
 
    ! Do the central body potential energy component first
    xbcb(:) = swiftest_plA%xb(:, 1) 
    Mcb = swiftest_plA%mass(1) 
-   pe = 0.0_QP
+   pe = 0.0_DP
    !$omp simd private(rmag) reduction(-:pe)
    do i = 2, npl
       rmag = norm2(swiftest_plA%xb(:, i) - xbcb(:))
