@@ -31,9 +31,9 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
    real(DP), dimension(2)                  :: radius, mass, density, volume, rhill
    real(DP), dimension(2)                  :: radius_si, mass_si, density_si
    real(DP), dimension(NDIM, 2)            :: x, v, x_si, v_si, L_spin, Ip
-   real(DP)                                :: vchild, dentot, Mcb_si
-   real(DP)                                :: mmax, mtmp, mtot
-   real(DP), dimension(NDIM)               :: xr, vr
+   real(DP)                                :: volchild, dentot, Mcb_si
+   real(DP)                                :: mmax, mchild, mtot
+   real(DP), dimension(NDIM)               :: xc, vc, xcom, vcom, xchild, vchild, xcrossv
    real(DP)                                :: mtiny_si
    logical                                 :: lfrag_add, lmerge
    integer(I4B), dimension(:), allocatable :: array_index1_child, array_index2_child, name1, name2
@@ -79,8 +79,8 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
 
       ! Find the barycenter of each body along with its children, if it has any
       do j = 1, 2
-         x(:, j)  = mass(j) * symba_plA%helio%swiftest%xh(:, idx_parent(j))
-         v(:, j)  = mass(j) * symba_plA%helio%swiftest%vb(:, idx_parent(j))
+         x(:, j)  = symba_plA%helio%swiftest%xh(:, idx_parent(j))
+         v(:, j)  = symba_plA%helio%swiftest%vb(:, idx_parent(j))
          Ip(:, j) = mass(j) * symba_plA%helio%swiftest%Ip(:, idx_parent(j))
          ! Assume principal axis rotation about axis corresponding to highest moment of inertia (3rd Ip)
          L_spin(:, j)  = Ip(3, j) * radius(j)**2 * symba_plA%helio%swiftest%rot(:, idx_parent(j))
@@ -94,26 +94,40 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
                   idx_child = array_index2_child(i)
                   name2(1+i) = symba_plA%helio%swiftest%name(idx_child)
                end if
-               mtmp = symba_plA%helio%swiftest%mass(idx_child)
-               vchild = (4.0_DP / 3.0_DP) * pi * symba_plA%helio%swiftest%radius(idx_child)**3
-               volume(j) = volume(j) + vchild
-               if (mtmp > mmax) then
-                  mmax = mtmp
+               mchild = symba_plA%helio%swiftest%mass(idx_child)
+               xchild(:) = symba_plA%helio%swiftest%xh(:, idx_child)
+               vchild(:) = symba_plA%helio%swiftest%vb(:, idx_child)
+               volchild = (4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(idx_child)**3
+               volume(j) = volume(j) + volchild
+               if (mchild > mmax) then ! Check to make sure that the parent is the larger of the two bodies
+                  mmax = mchild
                   name(j) = symba_plA%helio%swiftest%name(idx_child)
                end if
-               mass(j) = mass(j) + mtmp
-               x(:, j) = x(:, j) + mtmp * symba_plA%helio%swiftest%xh(:, idx_child)
-               v(:, j) = v(:, j) + mtmp * symba_plA%helio%swiftest%vb(:, idx_child)
-               L_spin(:, j) = L_spin(:, j) + mtmp * symba_plA%helio%swiftest%Ip(3, idx_child) * symba_plA%helio%swiftest%radius(idx_child)**2 * &
+               ! Get angular momentum of the child-parent pair and add that to the spin
+               xcom(:) = (mass(j) * x(:,j) + mchild * xchild(:)) / (mass(j) + mchild)
+               vcom(:) = (mass(j) * v(:,j) + mchild * vchild(:)) / (mass(j) + mchild)
+               xc(:) = x(:, j) - xcom(:)
+               vc(:) = v(:, j) - vcom(:)
+               call util_crossproduct(xc(:), vc(:), xcrossv(:))
+               L_spin(:, j) = L_spin(:, j) + mass(j) * xcrossv(:)
+               xc(:) = xchild(:) - xcom(:)
+               vc(:) = vchild(:) - vcom(:)
+               call util_crossproduct(xc(:), vc(:), xcrossv(:))
+               L_spin(:, j) = L_spin(:, j) + mchild * xcrossv(:)
+
+               ! Add the child's spin
+               L_spin(:, j) = L_spin(:, j) + mchild * symba_plA%helio%swiftest%Ip(3, idx_child) * symba_plA%helio%swiftest%radius(idx_child)**2 * &
                                           symba_plA%helio%swiftest%rot(:, idx_child)
 
-               Ip(:, j) = Ip(:, j) + mtmp * symba_plA%helio%swiftest%Ip(:, idx_child)
+               ! Merge the child and parent
+               mass(j) = mass(j) + mchild
+               x(:, j) = xcom(:)
+               v(:, j) = vcom(:)
+               Ip(:, j) = Ip(:, j) + mchild * symba_plA%helio%swiftest%Ip(:, idx_child)
             end do
          end if
          density(j) =  mass(j) / volume(j)
          radius(j) = ((3 * mass(j)) / (density(j) * 4 * pi))**(1.0_DP / 3.0_DP)
-         x(:, j) = x(:, j) / mass(j)
-         v(:, j) = v(:, j) / mass(j)
          Ip(:, j) = Ip(:, j) / mass(j)
       end do
 

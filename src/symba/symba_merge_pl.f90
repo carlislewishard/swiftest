@@ -70,7 +70,7 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
       plplenc_list%status(index_enc) = MERGED
       ! Check if either of these particles has been infolved in a collision before. If so, make it a parent
       if (any(symba_plA%lcollision(idx(:)))) then
-         ! This particle has been involved in a collision before. If so, add the currently coliding body to
+         ! At least one of these bodies has been involved in a collision before. If so, add the currently coliding body to
          ! its list of children (along with any of *their* children).
          if (symba_plA%helio%swiftest%mass(idx(1)) > symba_plA%helio%swiftest%mass(idx(2))) then
             index_parent = idx(1)

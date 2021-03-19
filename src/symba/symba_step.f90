@@ -82,8 +82,12 @@ SUBROUTINE symba_step(t, dt, param, npl, ntp,symba_plA, symba_tpA,       &
 
 ! Executable code
 
+   symba_plA%lcollision(:) = .false.
    symba_plA%kin(1:npl)%parent = (/ (i, i=1, npl) /)
    symba_plA%kin(:)%nchild = 0
+   do i = 1, npl
+      if (allocated(symba_plA%kin(i)%child)) deallocate(symba_plA%kin(i)%child)
+   end do
    symba_plA%nplenc(:) = 0
    symba_plA%ntpenc(:) = 0
    symba_plA%levelg(:) = -1
