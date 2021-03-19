@@ -58,23 +58,24 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
       nchild(:) = symba_plA%kin(idx_parent(:))%nchild 
       if (nchild(1) > 0) then
          allocate(array_index1_child, source = symba_plA%kin(idx_parent(1))%child(1:nchild(1)))
-         allocate(name1(nchild(1)))
+         allocate(name1(nchild(1)+1))
       else 
          allocate(array_index1_child(1))
          allocate(name1(1))
          array_index1_child(1) = idx_parent(1) 
-         name1(1) = name(1)
       end if
    
       if (nchild(2) > 0) then
          allocate(array_index2_child, source = symba_plA%kin(idx_parent(2))%child(1:nchild(2)))
-         allocate(name2(nchild(2)))
+         allocate(name2(nchild(2)+1))
+
       else 
          allocate(array_index2_child(1))
          allocate(name2(1))
          array_index2_child(1) = idx_parent(2)
-         name2(1) = name(2)
       end if
+      name1(1) = name(1)
+      name2(1) = name(2)
 
       ! Find the barycenter of each body along with its children, if it has any
       do j = 1, 2
@@ -88,10 +89,10 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
             do i = 1, nchild(j) ! Loop over all children and take the mass weighted mean of the properties
                if (j == 1) then
                   idx_child = array_index1_child(i)
-                  name1(i) = symba_plA%helio%swiftest%name(idx_child)
+                  name1(1+i) = symba_plA%helio%swiftest%name(idx_child)
                else
                   idx_child = array_index2_child(i)
-                  name2(i) = symba_plA%helio%swiftest%name(idx_child)
+                  name2(1+i) = symba_plA%helio%swiftest%name(idx_child)
                end if
                mtmp = symba_plA%helio%swiftest%mass(idx_child)
                vchild = (4.0_DP / 3.0_DP) * pi * symba_plA%helio%swiftest%radius(idx_child)**3
