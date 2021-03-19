@@ -221,6 +221,7 @@ program swiftest_symba
                write(*,*) 'KE after     : ', ke
                write(*,*) 'PE after     : ', pe
                write(*,*) 'Ltot after   : ', Ltot
+               ! TEMPORARY DIAGNOSTIC OUTPUT. Worth formalizing?
                do i = 1, npl
                   write(88,*) 'Particle ',symba_plA%helio%swiftest%name(i)
                   write(88,*) '    mass ',symba_plA%helio%swiftest%mass(i)
