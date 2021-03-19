@@ -218,6 +218,9 @@ program swiftest_symba
                write(*,*) 'Error encountered in collisional energy calculation!'
                write(*,*) 'Eorbit_before: ', Eorbit_before
                write(*,*) 'Eorbit_after : ', Eorbit_after
+               write(*,*) 'KE after     : ', ke
+               write(*,*) 'PE after     : ', pe
+               write(*,*) 'Ltot after   : ', Ltot
                call util_exit(FAILURE)
             end if
             symba_plA%helio%swiftest%Ecollisions = symba_plA%helio%swiftest%Ecollisions + Ecollision

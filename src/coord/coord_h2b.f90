@@ -46,7 +46,6 @@ SUBROUTINE coord_h2b(npl, swiftest_plA, msys)
      xtmp(:) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
      vtmp(:) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
      DO i = 2, npl
-         if (swiftest_plA%status(i) == MERGED) cycle 
          msys = msys + swiftest_plA%mass(i)
          xtmp(:) = xtmp(:) + swiftest_plA%mass(i)*swiftest_plA%xh(:,i)
          vtmp(:) = vtmp(:) + swiftest_plA%mass(i)*swiftest_plA%vh(:,i)
@@ -56,9 +55,8 @@ SUBROUTINE coord_h2b(npl, swiftest_plA, msys)
      xtmp(:) = swiftest_plA%xb(:,1)
      vtmp(:) = swiftest_plA%vb(:,1)
      DO i = 2, npl
-         if (swiftest_plA%status(i) == MERGED) cycle 
-          swiftest_plA%xb(:,i) = swiftest_plA%xh(:,i) + xtmp(:)
-          swiftest_plA%vb(:,i) = swiftest_plA%vh(:,i) + vtmp(:)
+        swiftest_plA%xb(:,i) = swiftest_plA%xh(:,i) + xtmp(:)
+        swiftest_plA%vb(:,i) = swiftest_plA%vh(:,i) + vtmp(:)
      END DO
 
      RETURN
