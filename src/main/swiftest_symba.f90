@@ -224,6 +224,9 @@ program swiftest_symba
                do i = 1, npl
                   write(88,*) 'Particle ',symba_plA%helio%swiftest%name(i)
                   write(88,*) '    mass ',symba_plA%helio%swiftest%mass(i)
+                  write(88,*) '  radius ',symba_plA%helio%swiftest%radius(i)
+                  write(88,*) '      Ip ',symba_plA%helio%swiftest%Ip(:, i)
+                  write(88,*) '      xb ',symba_plA%helio%swiftest%xb(:, i)
                   write(88,*) '      vb ',symba_plA%helio%swiftest%vb(:, i)
                   write(88,*) '     rot ',symba_plA%helio%swiftest%rot(:, i)
                end do
