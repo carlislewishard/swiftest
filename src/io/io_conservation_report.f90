@@ -11,7 +11,7 @@ contains
       real(DP), save                  :: Eorbit_orig, Mtot_orig, Lmag_orig
       real(DP)                        :: ke, pe, Eorbit
       real(DP), dimension(NDIM)       :: Ltot_now
-      real(DP)                        :: Eorbit_error, Eorbit_off_error
+      real(DP)                        :: Eorbit_error, Etotal_error, Ecoll_error
       real(DP)                        :: Mtot_now, Merror
       real(DP)                        :: Lmag_now, Lerror
       logical, save                   :: lfirst = .true.
@@ -19,8 +19,8 @@ contains
       character(len=*), parameter     :: egyheader = '("t,Eorbit,Ecollisions,Lx,Ly,Lz,Mtot")'
       integer(I4B), parameter         :: egyiu = 72
       character(len=*), parameter     :: egytermfmt = '("  DL/L0 = ", ES12.5 &
-                                                       "; DE/|E0| = ", ES12.5, &
-                                                       "; (DE+Ecollisions)/|E0| = ", ES12.5, &
+                                                       "; DEcollisions/|E0| = ", ES12.5, &
+                                                       "; D(Eorbit+Ecollisions)/|E0| = ", ES12.5, &
                                                        "; DM/M0 = ", ES12.5)'
 
 
@@ -54,9 +54,10 @@ contains
          Lmag_now = norm2(Ltot_now)
          Lerror = (Lmag_now - Lmag_orig) / Lmag_orig
          Eorbit_error = (Eorbit - Eorbit_orig) / abs(Eorbit_orig)
-         Eorbit_off_error = (Eorbit + swiftest_plA%Ecollisions - Eorbit_orig) / abs(Eorbit_orig)
+         Ecoll_error = -swiftest_plA%Ecollisions / abs(Eorbit_orig)
+         Etotal_error = (Eorbit + swiftest_plA%Ecollisions - Eorbit_orig) / abs(Eorbit_orig)
          Merror = (Mtot_now - Mtot_orig) / Mtot_orig
-         write(*, egytermfmt) Lerror, Eorbit_error, Eorbit_off_error, Merror
+         write(*, egytermfmt) Lerror, Ecoll_error, Etotal_error, Merror
       end if
 
    end procedure io_conservation_report
