@@ -76,7 +76,7 @@ subroutine symba_casehitandrun (nmergeadd, mergeadd_list, name, x, v, mass, radi
 
       param%plmaxname = max(param%plmaxname, param%tpmaxname)
       ! Put the fragments on the circle surrounding the second body
-      call symba_frag_pos(mtot, rhill, x, v, m_frag(2:nfrag), x_frag(:,2:nfrag), v_frag(:,2:nfrag))
+      call symba_frag_pos(mtot, mass(1), mass(2), rhill, x, v, m_frag(2:nfrag), x_frag(:,2:nfrag), v_frag(:,2:nfrag))
       do i = 2, nfrag
          x_frag(:, i) = x_frag(:, i) + x(:, jproj)
          v_frag(:, i) = v_frag(:, i) + v(:, jproj)
