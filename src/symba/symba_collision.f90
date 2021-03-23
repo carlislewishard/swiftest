@@ -66,7 +66,6 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
       if (nchild(2) > 0) then
          allocate(array_index2_child, source = symba_plA%kin(idx_parent(2))%child(1:nchild(2)))
          allocate(name2(nchild(2)+1))
-
       else 
          allocate(array_index2_child(1))
          allocate(name2(1))

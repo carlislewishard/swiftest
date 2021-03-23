@@ -87,7 +87,7 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
          ! Find out if the child body has any children of its own. The new parent wil inherit its children
          if (nchild_inherit > 0) then
             temp(nchild_orig+1:nchild_orig+nchild_inherit) = symba_plA%kin(index_child)%child(:)
-            ! Set the children's parents to the new parent
+            ! Set the childrens' parent to the new parent
             do i = 1, nchild_inherit
                j = symba_plA%kin(index_child)%child(i)
                symba_plA%kin(j)%parent = index_parent
