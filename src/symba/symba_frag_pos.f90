@@ -20,7 +20,7 @@ subroutine symba_frag_pos (mtot, m1, m2, rhill, x, v, m_frag, x_frag, v_frag)
    real(DP), dimension(NDIM)               :: v_cross_x, delta_v, delta_x
    real(DP)                                :: phase_ang, theta, v_frag_norm, r_frag_norm, v_col_norm, r_col_norm
    real(DP)                                :: f_anelastic, Etot_before
-   real(DP), dimension(NDIM)               :: KE_before, U_before
+   real(DP), dimension(NDIM)               :: KE_before, U_before, v_com
    real(DP), dimension(NDIM)               :: v_col_unit_vec, tri_pro, tri_pro_unit_vec
    integer(I4B), save                      :: thetashift = 0
    integer(I4B), parameter                 :: SHIFTMAX = 9
@@ -30,6 +30,8 @@ subroutine symba_frag_pos (mtot, m1, m2, rhill, x, v, m_frag, x_frag, v_frag)
    ! Find collision velocity
    delta_v(:) = v(:, 2) - v(:, 1)
    delta_x(:) = x(:, 2) - x(:, 1)
+
+   v_com = ((v(:, 1) * m1) + (v(:, 2) * m2)) / (m1 + m2)
 
    v_col_norm = norm2(delta_v(:)) ! pre-collision velocity magnitude
    r_col_norm = norm2(delta_x(:)) ! pre-collision distance 
@@ -56,7 +58,7 @@ subroutine symba_frag_pos (mtot, m1, m2, rhill, x, v, m_frag, x_frag, v_frag)
    ! Calculate the position and velocity of each fragment 
    do i=1, nfrag 
       f_anelastic = 0.1_DP
-      KE_before(:) = (0.5_DP * m1 * (v(:,1) - delta_v)**2) + (0.5_DP * m2 * (v(:,2) - delta_v)**2)
+      KE_before(:) = (0.5_DP * m1 * (v(:,1) - v_com)**2) + (0.5_DP * m2 * (v(:,2) - v_com)**2)
       U_before(:) = (m1 * m2) / delta_x(:) 
       Etot_before = norm2(KE_before(:) + U_before(:))
       v_frag_norm = sqrt(((2.0_DP * f_anelastic) / (nfrag * m_frag(i))) * Etot_before)
