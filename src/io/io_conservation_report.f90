@@ -55,7 +55,7 @@ contains
          Lerror = (Lmag_now - Lmag_orig) / Lmag_orig
          Eorbit_error = (Eorbit - Eorbit_orig) / abs(Eorbit_orig)
          Ecoll_error = -swiftest_plA%Ecollisions / abs(Eorbit_orig)
-         Etotal_error = (Eorbit - (Eorbit_orig + swiftest_plA%Ecollisions)) / abs(Eorbit_orig)
+         Etotal_error = (Eorbit - (Eorbit_orig - swiftest_plA%Ecollisions)) / abs(Eorbit_orig)
          Merror = (Mtot_now - Mtot_orig) / Mtot_orig
          write(*, egytermfmt) Lerror, Ecoll_error, Etotal_error, Merror
       end if
