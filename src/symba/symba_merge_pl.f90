@@ -23,7 +23,7 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
    type(symba_pl), intent(inout)              :: symba_plA
    type(user_input_parameters), intent(inout) :: param
 
-   integer(I4B)                            :: i, j, index_parent, index_child, nchild_inherit, nchild_orig
+   integer(I4B)                            :: i, j, index_parent, index_child, nchild_inherit, nchild_orig, p1, p2
    real(DP), dimension(NDIM)               :: vbs
    integer(I4B), dimension(2)              :: idx, name
    real(DP), dimension(2)                  :: radius, mass 
@@ -68,15 +68,20 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
 
    if (lcollision) then
       plplenc_list%status(index_enc) = MERGED
-      ! Check if either of these particles has been infolved in a collision before. If so, make it a parent
+      ! Check if either of these particles has been involved in a collision before. If so, make it a parent
       if (any(symba_plA%lcollision(idx(:)))) then
          ! At least one of these bodies has been involved in a collision before. If so, add the currently coliding body to
          ! its list of children (along with any of *their* children).
-         if (symba_plA%helio%swiftest%mass(idx(1)) > symba_plA%helio%swiftest%mass(idx(2))) then
-            index_parent = idx(1)
+
+         ! If either of the bodies is already a child of another body, we will use the parent body instead
+         ! Bodies are intialized to be their own parent, in which case idx(1) == p1 and idx(2) == p2
+         p1 = symba_plA%kin(idx(1))%parent
+         p2 = symba_plA%kin(idx(2))%parent 
+         if (symba_plA%helio%swiftest%mass(p1) > symba_plA%helio%swiftest%mass(p1)) then
+            index_parent = p1
             index_child = idx(2)
          else
-            index_parent = idx(2)
+            index_parent = p2
             index_child = idx(1)
          end if
          ! Expand the child array (or create it if necessary) and copy over the previous lists of children
@@ -87,9 +92,9 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
          ! Find out if the child body has any children of its own. The new parent wil inherit its children
          if (nchild_inherit > 0) then
             temp(nchild_orig+1:nchild_orig+nchild_inherit) = symba_plA%kin(index_child)%child(:)
-            ! Set the childrens' parent to the new parent
             do i = 1, nchild_inherit
                j = symba_plA%kin(index_child)%child(i)
+               ! Set the childrens' parent to the new parent
                symba_plA%kin(j)%parent = index_parent
             end do
             deallocate(symba_plA%kin(index_child)%child)
@@ -126,8 +131,8 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
          radius(:) = symba_plA%helio%swiftest%radius(idx(:))
          vbs(:) = symba_plA%helio%swiftest%vb(:, 1)
          do j = 1, 2
-            x(:, j)   = symba_plA%helio%swiftest%xh(:,idx(j)) 
-            v(:, j)   = symba_plA%helio%swiftest%vb(:,idx(j)) - vbs(:)
+            x(:, j)  = symba_plA%helio%swiftest%xh(:,idx(j)) 
+            v(:, j)  = symba_plA%helio%swiftest%vb(:,idx(j)) - vbs(:)
          end do
          call io_write_encounter(t, name(1), name(2), mass(1), mass(2), radius(1), radius(2), x(:, 1), x(:, 2), &
             v(:, 1), v(:, 2), param%encounter_file)
