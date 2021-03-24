@@ -23,7 +23,8 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
    type(symba_pl), intent(inout)              :: symba_plA
    type(user_input_parameters), intent(inout) :: param
 
-   integer(I4B)                            :: i, j, index_parent, index_child, nchild_inherit, nchild_orig, p1, p2
+   integer(I4B)                            :: i, j, index_parent, index_child, p1, p2
+   integer(I4B)                            :: nchild_inherit, nchild_orig, nchild_new
    real(DP), dimension(NDIM)               :: vbs
    integer(I4B), dimension(2)              :: idx, name
    real(DP), dimension(2)                  :: radius, mass 
@@ -79,10 +80,10 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
          p2 = symba_plA%kin(idx(2))%parent 
          if (symba_plA%helio%swiftest%mass(p1) > symba_plA%helio%swiftest%mass(p1)) then
             index_parent = p1
-            index_child = idx(2)
+            index_child = p2
          else
             index_parent = p2
-            index_child = idx(1)
+            index_child = p1
          end if
          ! Expand the child array (or create it if necessary) and copy over the previous lists of children
          nchild_orig = symba_plA%kin(index_parent)%nchild
@@ -102,10 +103,10 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
          end if
          ! Set the current child to its parent
          symba_plA%kin(index_child)%parent = index_parent
-         temp(nchild_orig+nchild_inherit+1) = index_child
+         temp(nchild_orig + nchild_inherit + 1) = index_child
          ! Save the new child array to the parent
          call move_alloc(from=temp, to=symba_plA%kin(index_parent)%child)
-         symba_plA%kin(index_parent)%nchild = nchild_orig+nchild_inherit+1
+         symba_plA%kin(index_parent)%nchild = nchild_orig + nchild_inherit + 1
       end if
       do i = 1, 2
          if (.not.symba_plA%lcollision(idx(i))) then
