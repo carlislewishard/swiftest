@@ -887,13 +887,13 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-         subroutine symba_frag_pos (mtot, m1, m2, rhill, x, v, m_frag, x_frag, v_frag)
+         subroutine symba_frag_pos (x, v, L_spin, Ip, mass, radius, Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag)
             use swiftest_globals
             implicit none
-            real(DP), intent(in)                      :: mtot, m1, m2
-            real(DP), dimension(:), intent(in)        :: rhill, m_frag
-            real(DP), dimension(:,:), intent(in)      :: x, v
-            real(DP), dimension(:,:), intent(out)     :: x_frag, v_frag
+            real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
+            real(DP), dimension(:), intent(in)        :: mass, radius, m_frag, rad_frag
+            real(DP), dimension(:,:), intent(in)      :: Ip_frag
+            real(DP), dimension(:,:), intent(out)     :: x_frag, v_frag, rot_frag
          end subroutine symba_frag_pos
       END INTERFACE
 

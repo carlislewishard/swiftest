@@ -56,12 +56,15 @@ subroutine symba_casesupercatastrophic (nmergeadd, mergeadd_list, x, v, mass, ra
    m_frag(nfrag) = m_frag(nfrag) + (mtot - sum(m_frag(:)))
    rad_frag(:) = (3 * m_frag(:) / (4 * PI * avg_dens))**(1.0_DP / 3.0_DP)
 
+   do i = 1, nfrag
+      Ip_frag(:, i) = Ip_new(:)
+   end do
+
    ! Put the fragments on the circle surrounding the center of mass of the system
-   call symba_frag_pos(mtot, mass(1), mass(2), rhill, x, v, m_frag, x_frag, v_frag)
+   call symba_frag_pos(x, v, L_spin, Ip, mass, radius, Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag)
    do i = 1, nfrag
       x_frag(:, i) = x_frag(:, i) + xcom(:)
       v_frag(:, i) = v_frag(:, i) + vcom(:)
-      Ip_frag(:, i) = Ip_new(:)
    end do
 
    ! Adjust the position, velocity, and rotation vectors of the fragments so that they stay aligned with the center of mass 
