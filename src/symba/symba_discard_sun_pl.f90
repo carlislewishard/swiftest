@@ -55,9 +55,9 @@ subroutine symba_discard_sun_pl(t, npl, msys, swiftest_plA, rmin, rmax, rmaxu, l
 ! internals
    integer(I4B)          :: i
    real(DP)            :: energy, vb2, rb2, rh2, rmin2, rmax2, rmaxu2
-   real(DP)            :: mass, rad, Ipz
+   real(DP)            :: mass, rad, Ipz, Mcb
    logical             :: lupdate_cb, ldiscard_this
-   real(DP), dimension(NDIM) :: Lpl, rot, xb, vb
+   real(DP), dimension(NDIM) :: Lpl, rot, xb, vb, xbcb, vbcb, xcom, vcom
 
 ! executable code
    rmin2 = rmin*rmin
@@ -103,6 +103,13 @@ subroutine symba_discard_sun_pl(t, npl, msys, swiftest_plA, rmin, rmax, rmaxu, l
             call util_crossproduct(xb,vb,Lpl)
             Lpl(:) = mass * (Lpl(:) + Ipz * rad**2 * rot(:))
             if (lupdate_cb) then
+               xbcb(:) = swiftest_plA%xb(:,1)
+               vbcb(:) = swiftest_plA%vb(:,1)
+               Mcb = swiftest_plA%mass(1)
+               xcom(:) = (mass * xb(:) + Mcb * xbcb(:)) / (mass + Mcb)
+               vcom(:) = (mass * vb(:) + Mcb * vbcb(:)) / (mass + Mcb)
+               swiftest_plA%xb(:,1) = xcom(:)
+               swiftest_plA%vb(:,1) = vcom(:) 
                ! Add planet mass to central body accumulator
                swiftest_plA%dMcb = swiftest_plA%dMcb + mass
 
