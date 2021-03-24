@@ -65,14 +65,6 @@ subroutine symba_casedisruption (nmergeadd, mergeadd_list, x, v, mass, radius, r
 
    ! Put the fragments on the circle surrounding the center of mass of the system
    call symba_frag_pos(x, v, L_spin, Ip, mass, radius, Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag)
-   do i = 1, nfrag
-      x_frag(:, i) = x_frag(:, i) + xcom(:)
-      v_frag(:, i) = v_frag(:, i) + vcom(:)
-   end do
-
-   ! Adjust the position, velocity, and rotation vectors of the fragments so that they stay aligned with the center of mass 
-   ! and conserve momentum
-   call symba_frag_adjust(xcom, vcom, x, v, mass, radius, L_spin, Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag)
 
    ! Populate the list of new bodies
    call symba_merger_size_check(mergeadd_list, nmergeadd + nfrag)  

@@ -16,30 +16,34 @@ subroutine symba_frag_adjust (xcom, vcom, x, v, mass, radius, L_spin, Ip_frag, m
    real(DP), dimension(:), intent(in)        :: m_frag, rad_frag
    real(DP), dimension(:,:), intent(out)     :: x_frag, v_frag, rot_frag
 
+   real(DP), dimension(NDIM, 2)            :: rot, Ip
    integer(I4B)                            :: i, j, nfrag
    real(DP)                                :: mtot
-   real(DP), dimension(NDIM)               :: xc, vc, cross_res
-   real(DP), dimension(NDIM)               :: L_orb_old, L_spin_old, L_spin_new, L_orb_new, L_spin_frag
+   real(DP), dimension(NDIM)               :: xc, vc, x_cross_v, vc1, vc2, delta_x
+   real(DP), dimension(NDIM)               :: L_orb_old, L_spin_old, L_spin_new, L_orb_new, L_spin_frag, L_spin_tot
    real(DP), dimension(NDIM)               :: mx_frag, mv_frag, COM_offset_x, COM_offset_v
+   real(DP)                                :: Etot_before, KE_before, U_before, v1mag2, v2mag2
+   real(DP)                                :: U_after, KE_spin_after, KE_after
 
    nfrag = size(m_frag)
    mtot = sum(mass(:))
+   
    L_spin_old(:) = L_spin(:,1) + L_spin(:,2)
    L_orb_old(:) = 0.0_DP
    ! Compute orbital angular momentum of pre-impact system
    do j = 1, 2
       xc(:) = x(:, j) - xcom(:)
       vc(:) = v(:, j) - vcom(:)
-      call utiL_crossproduct(xc(:), vc(:), cross_res(:))
-      L_orb_old(:) = L_orb_old(:) + mass(j) * cross_res(:)
+      call utiL_crossproduct(xc(:), vc(:), x_cross_v(:))
+      L_orb_old(:) = L_orb_old(:) + mass(j) * x_cross_v(:)
    end do
 
    ! Adjust the position and velocity of the fragments as needed to align them with the original trajectory center of mass
    mx_frag(:) = 0.0_DP
    mv_frag(:) = 0.0_DP
    do i = 1, nfrag
-      mx_frag = mx_frag(:) + x_frag(:,i) * m_frag(i)
-      mv_frag = mv_frag(:) + v_frag(:,i) * m_frag(i)
+      mx_frag = mx_frag(:) + (x_frag(:,i) + xcom(:)) * m_frag(i)
+      mv_frag = mv_frag(:) + (v_frag(:,i) + vcom(:)) * m_frag(i)
    end do
    COM_offset_x(:) = xcom(:) - mx_frag(:) / mtot
    COM_offset_v(:) = vcom(:) - mv_frag(:) / mtot
@@ -52,10 +56,8 @@ subroutine symba_frag_adjust (xcom, vcom, x, v, mass, radius, L_spin, Ip_frag, m
    ! AKA whatever angular momentum is lost by the orbit, is picked up by the spin of all the fragments
    L_orb_new(:) = 0.0_DP
    do i = 1, nfrag
-      xc(:) = x_frag(:, i) - xcom(:)
-      vc(:) = v_frag(:, i) - vcom(:)
-      call utiL_crossproduct(xc(:), vc(:), cross_res(:))
-      L_orb_new(:) = L_orb_new(:) + m_frag(i) * cross_res(:)
+      call utiL_crossproduct(x_frag(:, i), v_frag(:, i), x_cross_v(:))
+      L_orb_new(:) = L_orb_new(:) + m_frag(i) * x_cross_v(:)
    end do
 
    L_spin_new(:) = L_orb_old(:) + L_spin_old(:) - L_orb_new(:)

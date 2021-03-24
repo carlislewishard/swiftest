@@ -49,7 +49,9 @@ subroutine symba_casehitandrun (nmergeadd, mergeadd_list, name, x, v, mass, radi
       allocate(v_frag, source = v)
       allocate(Ip_frag, source = Ip)
       allocate(rot_frag(NDIM, nfrag))
-      Ip_new(:) = (mass(1) * Ip(:,1) + mass(2) * Ip(:,2)) / mtot
+      do i = 1, 2
+         rot_frag(:,i) = L_spin(:, i) / (Ip_frag(3, i) * m_frag(i) * rad_frag(i)**2)
+      end do
       
    else ! Imperfect hit and run, so we'll keep the largest body and destroy the other
       nfrag = 5
@@ -84,16 +86,11 @@ subroutine symba_casehitandrun (nmergeadd, mergeadd_list, name, x, v, mass, radi
       call symba_frag_pos(x, v, L_spin, Ip, mass, radius, Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag)
 
       do i = 1, nfrag
-         x_frag(:, i) = x_frag(:, i) + x(:, jproj)
-         v_frag(:, i) = v_frag(:, i) + v(:, jproj)
          name_frag(i) = param%plmaxname + i - 1 
       end do
       param%plmaxname = name_frag(nfrag)
    end if
 
-   ! Adjust the position, velocity, and rotation vectors of the fragments so that they stay aligned with the center of mass 
-   ! and conserve momentum
-   call symba_frag_adjust(xcom, vcom, x, v, mass, radius, L_spin, Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag)
 
    ! Populate the list of new bodies
    call symba_merger_size_check(mergeadd_list, nmergeadd + nfrag)  
