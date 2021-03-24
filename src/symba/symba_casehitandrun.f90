@@ -51,7 +51,7 @@ subroutine symba_casehitandrun (nmergeadd, mergeadd_list, name, x, v, mass, radi
       allocate(rot_frag(NDIM, nfrag))
       Ip_new(:) = (mass(1) * Ip(:,1) + mass(2) * Ip(:,2)) / mtot
       
-   else ! Imperfect hit and run, so we'll keep the largest body and destroy the rest
+   else ! Imperfect hit and run, so we'll keep the largest body and destroy the other
       nfrag = 5
       allocate(m_frag(nfrag))
       allocate(name_frag(nfrag))
@@ -79,10 +79,11 @@ subroutine symba_casehitandrun (nmergeadd, mergeadd_list, name, x, v, mass, radi
       do i = 1, nfrag
          Ip_frag(:, i) = Ip(:, jproj)
       end do
-      ! Put the fragments on the circle surrounding the second body
-      call symba_frag_pos(x, v, L_spin, Ip, mass, radius, Ip_frag(:,2:nfrag), m_frag(2:nfrag), rad_frag(2:nfrag), &
-                                                          x_frag(:, 2:nfrag), v_frag(:, 2:nfrag), rot_frag(:, 2:nfrag))
-      do i = 2, nfrag
+
+      ! Put the fragments on the circle 
+      call symba_frag_pos(x, v, L_spin, Ip, mass, radius, Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag)
+
+      do i = 1, nfrag
          x_frag(:, i) = x_frag(:, i) + x(:, jproj)
          v_frag(:, i) = v_frag(:, i) + v(:, jproj)
          name_frag(i) = param%plmaxname + i - 1 
