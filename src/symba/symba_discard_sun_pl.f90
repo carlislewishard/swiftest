@@ -59,12 +59,35 @@ subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, r
    real(DP)            :: mass, rad, Ipz, Ipcbz, Mcb, radcb
    logical             :: ldiscard_this, ldiscard_cb
    real(DP), dimension(NDIM) :: Lpl, Lcb, rot, rotcb, xb, vb, xbcb, vbcb, xcom, vcom
+   real(DP), dimension(NDIM) :: Lorb0, Lspin0, Lorb1, Lspin1, h, x, v
+   real(DP)             :: v2, rot2, Ip
 
 ! executable code
    rmin2 = rmin*rmin
    rmax2 = rmax*rmax
    rmaxu2 = rmaxu*rmaxu
    ldiscard_cb = .false.
+
+   !******************* TESTING *************************
+   !Lorb0 = 0.0_DP
+   !Lspin0 = 0.0_DP
+   !do i = 1, npl
+   !   x(:) = swiftest_plA%xb(:, i)
+   !   v(:) = swiftest_plA%vb(:, i)
+   !   rot(:) = swiftest_plA%rot(:, i)
+   !   Ip = swiftest_plA%Ip(3, i)
+   !   mass = swiftest_plA%mass(i)
+   !   rad = swiftest_plA%radius(i)
+   !   v2 = dot_product(v(:), v(:))
+   !   rot2 = dot_product(rot(:), rot(:))
+   !   h(1) = x(2) * v(3) - x(3) * v(2)
+   !   h(2) = x(3) * v(1) - x(1) * v(3)
+   !   h(3) = x(1) * v(2) - x(2) * v(1)
+   !   Lorb0(:) = Lorb0(:) + mass * h(:)
+   !   Lspin0(:) = Lspin0(:) + mass * rad**2 * Ip * rot(:)
+   !end do
+   !!****************************************************
+
    do i = 2, npl
       if (swiftest_plA%status(i) == ACTIVE) then
          ldiscard_this = .false.
@@ -143,6 +166,62 @@ subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, r
       call coord_b2h(npl, swiftest_plA)
       if (ntp > 0) call coord_b2h_tp(ntp, swiftest_tpA, swiftest_plA)
    end if
+
+
+   !******************* TESTING *************************
+   !if (ldiscard_cb) then
+   !   Lorb1 = 0.0_DP
+   !   Lspin1 = 0.0_DP
+   !   do i = 1, npl
+   !      if (swiftest_plA%status(i) == DISCARDED_RMIN) cycle
+   !      x(:) = swiftest_plA%xb(:, i)
+   !      v(:) = swiftest_plA%vb(:, i)
+   !      rot(:) = swiftest_plA%rot(:, i)
+   !      Ip = swiftest_plA%Ip(3, i)
+   !      mass = swiftest_plA%mass(i)
+   !      rad = swiftest_plA%radius(i)
+   !      v2 = dot_product(v(:), v(:))
+   !      rot2 = dot_product(rot(:), rot(:))
+   !      h(1) = x(2) * v(3) - x(3) * v(2)
+   !      h(2) = x(3) * v(1) - x(1) * v(3)
+   !      h(3) = x(1) * v(2) - x(2) * v(1)
+   !      Lorb1(:) = Lorb1(:) + mass * h(:)
+   !      Lspin1(:) = Lspin1(:) + mass * rad**2 * Ip * rot(:)
+   !   end do
+   !   write(*,*) 'Before loss: '
+   !   write(*,*) 'Lorb   : ', Lorb0(:)
+   !   write(*,*) '|Lorb| : ', norm2(Lorb0(:))
+   !   write(*,*) 'Lspin  : ', Lspin0(:)
+   !   write(*,*) '|Lspin|: ', norm2(Lspin0(:))
+   !   write(*,*) 'Ltot   : ', Lspin0(:) + Lorb0(:)
+   !   write(*,*) '|Ltot| : ', norm2(Lspin0(:) + Lorb0(:))
+!
+!      write(*,*) 'After loss: '
+!      write(*,*) 'Lorb   : ', Lorb1(:)
+!      write(*,*) '|Lorb| : ', norm2(Lorb1(:))
+!      write(*,*) 'Lspin  : ', Lspin1(:)
+!      write(*,*) '|Lspin|: ', norm2(Lspin1(:))
+!      write(*,*) 'Ltot   : ', Lspin1(:) + Lorb1(:)
+!      write(*,*) '|Ltot| : ', norm2(Lspin1(:) + Lorb1(:))
+!
+!      write(*,*) 'Difference (after - before): '
+!      write(*,*) 'Lorb1 - Lorb0      : ', Lorb1(:) - Lorb0(:)
+!      write(*,*) '|Lorb1| - |Lorb0|  : ', norm2(Lorb1(:)) - norm2(Lorb0(:))
+!      write(*,*) 'Lspin1 - Lspin0    : ', Lspin1(:) - Lspin0(:)
+!      write(*,*) '|Lspin1| - |Lspin0|: ', norm2(Lspin1(:)) - norm2(Lspin0(:))
+!      write(*,*) 'Ltot1 - Ltot0      : ', Lspin1(:) + Lorb1(:) - Lspin0(:) - Lorb0(:)
+!      write(*,*) '|Ltot1| - |Ltot0|  : ', norm2(Lspin1(:) + Lorb1(:)) - norm2(Lspin0(:) + Lorb0(:))
+!
+!      write(*,*) 'Ratio (before / after): '
+!      write(*,*) 'Lorb0 / Lorb1      : ', Lorb0(:) / Lorb1(:)
+!      write(*,*) '|Lorb0| / |Lorb1|  : ', norm2(Lorb0(:)) / norm2(Lorb1(:))
+!      write(*,*) 'Lspin0 / Lspin1    : ', Lspin0(:) / Lspin1(:)
+!      write(*,*) '|Lspin0| / |Lspin1|: ', norm2(Lspin0(:)) / norm2(Lspin1(:))
+!      write(*,*) 'Ltot0 / Ltot1      : ', (Lspin0(:) + Lorb0(:)) / (Lspin1(:) + Lorb1(:))
+!      write(*,*) '|Ltot0| / |Ltot1|  : ', norm2(Lspin0(:) + Lorb0(:)) / norm2(Lspin1(:) + Lorb1(:))
+!      read(*,*)
+!   end if
+   !****************************************************
 
 
    return

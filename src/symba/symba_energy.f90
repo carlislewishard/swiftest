@@ -46,7 +46,7 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msys)
       h(3) = x(1) * v(2) - x(2) * v(1)
 
       ! Angular momentum from orbit and spin
-      Ltot(:) = Ltot(:) + mass * (h(:) + Ip * rot(:) * rad**2)
+      Ltot(:) = Ltot(:) + mass * (h(:) + Ip * rad**2 * rot(:))
 
       ! Kinetic energy from orbit and spin
       ke = ke + 0.5_DP * mass * (v2 + Ip * rad**2 * rot2)
