@@ -867,12 +867,13 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-            subroutine symba_discard_conserve_mtm(swiftest_plA, ipl)
+            subroutine symba_discard_conserve_mtm(swiftest_plA, ipl, lescape)
             use swiftest_globals
             use swiftest_data_structures
             implicit none
             integer(I4B), intent(in)    :: ipl
             type(swiftest_pl), intent(inout) :: swiftest_plA
+            logical, intent(in)        :: lescape
             end subroutine
       END INTERFACE
 

@@ -23,7 +23,7 @@ subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, r
 ! internals
    integer(I4B)          :: i
    real(DP)            :: energy, vb2, rb2, rh2, rmin2, rmax2, rmaxu2
-   logical             :: ldiscard_this, ldiscard_cb
+   logical             :: ldiscard_this, ldiscard_cb, lescape
    real(DP), dimension(NDIM) :: Lorb0, Lspin0, Lorb1, Lspin1, h, x, v
    real(DP)             :: v2, rot2, Ip, ke0, pe0, rote0, ke1, pe1, rote1
 
@@ -32,6 +32,7 @@ subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, r
    rmax2 = rmax*rmax
    rmaxu2 = rmaxu*rmaxu
    ldiscard_cb = .false.
+   lescape = .false.
 
    !******************* TESTING *************************
    ke0 = 0.0_DP
@@ -58,12 +59,13 @@ subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, r
          if ((rmax >= 0.0_DP) .and. (rh2 > rmax2)) then
             ldiscard = .true.
             ldiscard_this = .true.
+            lescape = .true.
             swiftest_plA%status(i) = DISCARDED_RMAX
-               swiftest_plA%Mescape = swiftest_plA%Mescape + swiftest_plA%mass(i)
             write(*, *) "Particle ",  swiftest_plA%name(i), " too far from the central body at t = ", t
          else if ((rmin >= 0.0_DP) .and. (rh2 < rmin2)) then
             ldiscard = .true.
             ldiscard_this = .true.
+            lescape = .false.
             swiftest_plA%status(i) = DISCARDED_RMIN
             write(*, *) "Particle ", swiftest_plA%name(i), " too close to the central body at t = ", t
          else if (rmaxu >= 0.0_DP) then
@@ -73,14 +75,14 @@ subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, r
             if ((energy > 0.0_DP) .and. (rb2 > rmaxu2)) then
                ldiscard = .true.
                ldiscard_this = .true.
+               lescape = .true.
                swiftest_plA%status(i) = DISCARDED_RMAXU
-               swiftest_plA%Mescape = swiftest_plA%Mescape + swiftest_plA%mass(i)
                write(*, *) "Particle ", swiftest_plA%name(i), " is unbound and too far from barycenter at t = ", t
             end if
          end if
          if (ldiscard_this) then
             ldiscard_cb = .true.
-            call symba_discard_conserve_mtm(swiftest_plA, i)
+            call symba_discard_conserve_mtm(swiftest_plA, i, lescape)
          end if
       end if
    end do
