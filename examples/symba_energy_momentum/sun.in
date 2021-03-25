@@ -1,0 +1,18 @@
+3        ! Mars System in SI units
+1 4.28388662e+13 
+.0 .0 .0        ! x y z
+.0 .0 .0        !vx vy vz
+0.4 0.4 0.4 !Ip 
+0.0 0.0 0.0 !rot
+2 3.87032350e+03 2.97272135e+03       ! particle number mass Rhill
+1.62942641e+03                    !particle radius in AU
+-3.50100037e+05 -8.90344807e+05 -1.16096189e+03      ! x y z 
+1.96968977e+01 -7.69668748e+01 1.90000055e-01       ! vx vy vz 
+0.4 0.4 0.4 !Ip 
+0.0 0.0 0.0 !rot
+3 9.35875233e+04 8.60656833e+03       ! particle number mass Rhill
+6.94344459e+03                    !particle radius in AU
+-3.50432670e+06 -8.90649894e+06 -6.13283693e+03      ! x y z 
+1.96781506e+03 -7.75898328e+02 -1.55165450e-01       ! vx vy vz 
+0.4 0.4 0.4 !Ip 
+0.0 0.0 0.0 !rot
