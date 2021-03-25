@@ -268,7 +268,7 @@ program swiftest_symba
             write(*,*) "      Wall time (s): ", finish - start
 
             call param%dump_to_file(t)
-            call io_dump_pl(npl, symba_plA%helio%swiftest, param%lclose, param%lrhill_present)
+            call io_dump_pl(npl, symba_plA%helio%swiftest, param)
             call io_dump_tp(ntp, symba_tpA%helio%swiftest)
             idump = istep_dump
          end if
@@ -326,7 +326,7 @@ program swiftest_symba
    !if (param%lenergy) call io_conservation_report(t, symba_plA%helio%swiftest, npl, j2rp2, j4rp4, k_plpl, &
    !                                               num_plpl_comparisons, param, lterminal=.true.) 
    call param%dump_to_file(t)
-   call io_dump_pl(npl, symba_plA%helio%swiftest, param%lclose, param%lrhill_present)
+   call io_dump_pl(npl, symba_plA%helio%swiftest, param)
    call io_dump_tp(ntp, symba_tpA%helio%swiftest)
 
    call symba_pl_deallocate(symba_plA)

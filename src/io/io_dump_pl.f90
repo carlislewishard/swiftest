@@ -33,7 +33,7 @@
 !  Notes       : Adapted from Martin Duncan's Swift routine io_dump_pl.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE io_dump_pl(npl, swiftest_plA, lclose, lrhill_present)
+SUBROUTINE io_dump_pl(npl, swiftest_plA, param)
 
 ! Modules
      USE swiftest
@@ -41,9 +41,9 @@ SUBROUTINE io_dump_pl(npl, swiftest_plA, lclose, lrhill_present)
      IMPLICIT NONE
 
 ! Arguments
-     LOGICAL(LGT), INTENT(IN)         :: lclose, lrhill_present
      INTEGER(I4B), INTENT(IN)         :: npl
      TYPE(swiftest_pl), INTENT(INOUT) :: swiftest_plA
+      type(user_input_parameters),intent(inout) :: param
 
 ! Internals
    INTEGER(I4B)                     :: ierr
@@ -59,10 +59,14 @@ SUBROUTINE io_dump_pl(npl, swiftest_plA, lclose, lrhill_present)
    write(LUN) npl
    write(LUN) swiftest_plA%name(1:npl)
    write(LUN) swiftest_plA%mass(1:npl)
-   if (lrhill_present) write(LUN) swiftest_plA%rhill(1:npl) 
-   if (lclose) write(LUN) swiftest_plA%radius(1:npl) 
+   if (param%lrhill_present) write(LUN) swiftest_plA%rhill(1:npl) 
+   if (param%lclose) write(LUN) swiftest_plA%radius(1:npl) 
    write(LUN) swiftest_plA%xh(:,1:npl)
    write(LUN) swiftest_plA%vh(:,1:npl)
+   if (param%lrotation) THEN
+      write(LUN) swiftest_plA%Ip(:,:)
+      write(LUN) swiftest_plA%rot(:,:)
+   end if
    close(LUN)
    idx = idx + 1
    if (idx > 2) idx = 1

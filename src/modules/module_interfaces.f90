@@ -488,13 +488,14 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE io_dump_pl(npl, swiftest_plA, lclose, lrhill_present)
+          SUBROUTINE io_dump_pl(npl, swiftest_plA, param)
                USE swiftest_globals
                USE swiftest_data_structures
                IMPLICIT NONE
-               LOGICAL(LGT), INTENT(IN)        :: lclose, lrhill_present
                INTEGER(I4B), INTENT(IN)        :: npl
                TYPE(swiftest_pl), INTENT(INOUT):: swiftest_plA
+               type(user_input_parameters),intent(inout) :: param
+
           END SUBROUTINE io_dump_pl
      END INTERFACE
 

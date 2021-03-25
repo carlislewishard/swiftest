@@ -124,6 +124,9 @@ contains
             if (param_value == "YES" .or. param_value == 'T') param%lenergy = .true.
          case ("EUCL_THRESHOLD")
             read(param_value, *) param%eucl_threshold
+         case ("ROTATION")
+            call util_toupper(param_value)
+            if (param_value == "YES" .or. param_value == 'T') param%lrotation = .true.
 
          ! The following are not yet implemented
          case ("RINGMOONS")
@@ -131,9 +134,7 @@ contains
             if (param_value == "YES" .or. param_value == 'T') param%lringmoons = .true.
          case ("RING_OUTFILE")
             param%ring_outfile = param_value
-         case ("ROTATION")
-            call util_toupper(param_value)
-            if (param_value == "YES" .or. param_value == 'T') param%lrotation = .true. 
+ 
          case ("TIDES")
             call util_toupper(param_value)
             if (param_value == "YES" .or. param_value == 'T') param%ltides = .true. 

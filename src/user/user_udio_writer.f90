@@ -85,15 +85,14 @@ contains
    write(unit, Lfmt) "CHK_CLOSE",param%lclose
    write(unit, Lfmt) "FRAGMENTATION", param%lfragmentation
    write(unit, Ifmt) "EUCL_THRESHOLD", param%eucl_threshold
-   !write(unit, Lfmt) "ROTATION", param%lrotation
-   !write(unit, Lfmt) "TIDES", param%ltides
-   !write(unit, Lfmt) "GR", param%lgr
-   !write(unit, Lfmt) "YARKOVSKY", param%lyarkovsky
-   !write(unit, Lfmt) "YORP", param%lyorp
-   !write(unit, Lfmt) "ENERGY", param%lenergy
-
-   !write(unit, Lfmt) "RINGMOONS", param%lringmoons
-   !if (param%lringmoons) write(unit, Sfmt) "RING_OUTFILE",trim(adjustl(param%ring_outfile))
+   write(unit, Lfmt) "ENERGY", param%lenergy
+   write(unit, Lfmt) "ROTATION", param%lrotation
+   write(unit, Lfmt) "TIDES", param%ltides
+   write(unit, Lfmt) "GR", param%lgr
+   write(unit, Lfmt) "YARKOVSKY", param%lyarkovsky
+   write(unit, Lfmt) "YORP", param%lyorp
+   write(unit, Lfmt) "RINGMOONS", param%lringmoons
+   if (param%lringmoons) write(unit, Sfmt) "RING_OUTFILE",trim(adjustl(param%ring_outfile))
 
 
 
