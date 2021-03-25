@@ -10,17 +10,17 @@
 !
 !  Input
 !    Arguments : npl          : number of planets
-!                swifter_pl1P : pointer to head of Swifter planet structure linked-list
+!                swiftest_pl1P : pointer to head of Swifter planet structure linked-list
 !    Terminal  : none
 !    File      : none
 !
 !  Output
-!    Arguments : swifter_pl1P : pointer to head of Swifter planet structure linked-list
+!    Arguments : swiftest_pl1P : pointer to head of Swifter planet structure linked-list
 !                msys         : total system mass
 !    Terminal  : none
 !    File      : none
 !
-!  Invocation  : CALL coord_h2b(npl, swifter_pl1P, msys)
+!  Invocation  : CALL coord_h2b(npl, swiftest_pl1P, msys)
 !
 !  Notes       : Adapted from Martin Duncan and Hal Levison's Swift routine coord_h2b.f
 !

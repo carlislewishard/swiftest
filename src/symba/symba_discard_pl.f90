@@ -38,7 +38,7 @@
 !  Notes       : Adapted from Hal Levison's Swift routine discard_massive5.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE symba_discard_pl(t, npl, symba_plA, rmin, rmax, rmaxu, qmin, qmin_coord, qmin_alo, qmin_ahi, ldiscard)
+SUBROUTINE symba_discard_pl(t, npl, ntp, symba_plA, symba_tpA, rmin, rmax, rmaxu, qmin, qmin_coord, qmin_alo, qmin_ahi, ldiscard)
 
 ! Modules
      USE swiftest
@@ -48,10 +48,11 @@ SUBROUTINE symba_discard_pl(t, npl, symba_plA, rmin, rmax, rmaxu, qmin, qmin_coo
      IMPLICIT NONE
 
 ! Arguments
-     INTEGER(I4B), INTENT(INOUT) :: npl
+     INTEGER(I4B), INTENT(INOUT) :: npl, ntp
      REAL(DP), INTENT(IN)        :: t, rmin, rmax, rmaxu, qmin, qmin_alo, qmin_ahi
      CHARACTER(*), INTENT(IN)    :: qmin_coord
      TYPE(symba_pl)              :: symba_plA
+     TYPE(symba_tp)              :: symba_tpA
      LOGICAL(LGT), INTENT(INOUT) :: ldiscard
 
 ! Internals
@@ -61,7 +62,7 @@ SUBROUTINE symba_discard_pl(t, npl, symba_plA, rmin, rmax, rmaxu, qmin, qmin_coo
      IF ((rmin >= 0.0_DP) .OR. (rmax >= 0.0_DP) .OR. (rmaxu >= 0.0_DP) .OR. ((qmin >= 0.0_DP) .AND. (qmin_coord == "BARY")))      &
           CALL coord_h2b(npl, symba_plA%helio%swiftest, msys)
      IF ((rmin >= 0.0_DP) .OR. (rmax >= 0.0_DP) .OR. (rmaxu >= 0.0_DP))                                                           &
-          CALL symba_discard_sun_pl(t, npl, msys, symba_plA%helio%swiftest, rmin, rmax, rmaxu, ldiscard)
+          CALL symba_discard_sun_pl(t, npl, ntp, msys, symba_plA%helio%swiftest, symba_tpA%helio%swiftest, rmin, rmax, rmaxu, ldiscard)
      IF (qmin >= 0.0_DP) CALL symba_discard_peri_pl(t, npl, symba_plA, msys, qmin, qmin_alo, qmin_ahi, qmin_coord, ldiscard)
 
      RETURN

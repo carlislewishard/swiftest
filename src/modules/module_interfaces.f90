@@ -30,6 +30,28 @@ MODULE module_interfaces
 
      IMPLICIT NONE
 
+
+     INTERFACE
+          SUBROUTINE coord_b2h(npl, swiftest_plA)
+               USE swiftest_globals
+               USE swiftest_data_structures
+               IMPLICIT NONE
+               INTEGER(I4B), INTENT(IN)  :: npl
+               TYPE(swiftest_pl), INTENT(INOUT) :: swiftest_plA
+          END SUBROUTINE coord_b2h
+     END INTERFACE
+
+     INTERFACE
+          SUBROUTINE coord_b2h_tp(ntp, swiftest_tpA, swiftest_plA)
+               USE swiftest_globals
+               USE swiftest_data_structures
+               IMPLICIT NONE
+               INTEGER(I4B), INTENT(IN)         :: ntp
+               TYPE(swiftest_tp), INTENT(INOUT) :: swiftest_tpA
+               TYPE(swiftest_pl), INTENT(INOUT) :: swiftest_plA
+          END SUBROUTINE coord_b2h_tp
+     END INTERFACE
+
      INTERFACE
           SUBROUTINE coord_h2b(npl, swiftest_plA, msys)
                USE swiftest_globals
@@ -815,29 +837,31 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE symba_discard_pl(t, npl, symba_plA, rmin, rmax, rmaxu, qmin, qmin_coord,          &
+          SUBROUTINE symba_discard_pl(t, npl, ntp, symba_plA, symba_tpA, rmin, rmax, rmaxu, qmin, qmin_coord,          &
                qmin_alo, qmin_ahi, ldiscard)
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_helio
                USE module_symba
                IMPLICIT NONE
-               INTEGER(I4B), INTENT(INOUT)    :: npl
+               INTEGER(I4B), INTENT(INOUT)    :: npl, ntp
                REAL(DP), INTENT(IN)           :: t, rmin, rmax, rmaxu, qmin, qmin_alo, qmin_ahi
                CHARACTER(*), INTENT(IN)       :: qmin_coord
                TYPE(symba_pl), INTENT(INOUT)  :: symba_plA
+               TYPE(symba_tp), INTENT(INOUT)  :: symba_tpA
                LOGICAL(LGT), INTENT(INOUT)    :: ldiscard
           END SUBROUTINE symba_discard_pl
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE symba_discard_sun_pl(t, npl, msys, swiftest_plA, rmin, rmax, rmaxu, ldiscard)
+          SUBROUTINE symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, rmin, rmax, rmaxu, ldiscard)
                USE swiftest_globals
                USE swiftest_data_structures
                IMPLICIT NONE
-               INTEGER(I4B), INTENT(IN)         :: npl
+               INTEGER(I4B), INTENT(IN)         :: npl, ntp
                REAL(DP), INTENT(IN)             :: t, msys, rmin, rmax, rmaxu
                TYPE(swiftest_pl), INTENT(INOUT) :: swiftest_plA
+               TYPE(swiftest_tp), INTENT(INOUT) :: swiftest_tpA
                LOGICAL(LGT), INTENT(INOUT)      :: ldiscard
           END SUBROUTINE symba_discard_sun_pl
      END INTERFACE

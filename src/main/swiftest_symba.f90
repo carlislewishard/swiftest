@@ -183,7 +183,7 @@ program swiftest_symba
       ldiscard_tp = .false.
       lfrag_add = .false.
       call symba_collision(t, npl, symba_plA, nplplenc, plplenc_list, ldiscard, mergeadd_list, nmergeadd, param)
-      call symba_discard_pl(t, npl, symba_plA, rmin, rmax, rmaxu, qmin, qmin_coord, qmin_alo, qmin_ahi, ldiscard)
+      call symba_discard_pl(t, npl, ntp, symba_plA, symba_tpA, rmin, rmax, rmaxu, qmin, qmin_coord, qmin_alo, qmin_ahi, ldiscard)
       call symba_discard_tp(t, npl, ntp, symba_plA, symba_tpA, dt, rmin, rmax, rmaxu, qmin, qmin_coord, &    
             qmin_alo, qmin_ahi, param%lrhill_present, ldiscard_tp)
       if (ldiscard .or. ldiscard_tp .or. lfrag_add) then
@@ -234,8 +234,8 @@ program swiftest_symba
                call util_exit(FAILURE)
             end if
             symba_plA%helio%swiftest%Ecollisions = symba_plA%helio%swiftest%Ecollisions + Ecollision
-            call io_conservation_report(t, symba_plA%helio%swiftest, npl, j2rp2, j4rp4, k_plpl, &
-                                                  num_plpl_comparisons, param, lterminal=.true.) 
+            !call io_conservation_report(t, symba_plA%helio%swiftest, npl, j2rp2, j4rp4, k_plpl, &
+            !                                      num_plpl_comparisons, param, lterminal=.true.) 
          end if
       end if
 
@@ -323,8 +323,8 @@ program swiftest_symba
 
    end do
 
-   if (param%lenergy) call io_conservation_report(t, symba_plA%helio%swiftest, npl, j2rp2, j4rp4, k_plpl, &
-                                                  num_plpl_comparisons, param, lterminal=.true.) 
+   !if (param%lenergy) call io_conservation_report(t, symba_plA%helio%swiftest, npl, j2rp2, j4rp4, k_plpl, &
+   !                                               num_plpl_comparisons, param, lterminal=.true.) 
    call param%dump_to_file(t)
    call io_dump_pl(npl, symba_plA%helio%swiftest, param%lclose, param%lrhill_present)
    call io_dump_tp(ntp, symba_tpA%helio%swiftest)

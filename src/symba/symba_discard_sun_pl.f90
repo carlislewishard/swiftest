@@ -31,7 +31,7 @@
 !  Notes     : Adapted from Hal Levison's Swift routine discard_massive5.f
 !
 !**********************************************************************************************************************************
-subroutine symba_discard_sun_pl(t, npl, msys, swiftest_plA, rmin, rmax, rmaxu, ldiscard)
+subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, rmin, rmax, rmaxu, ldiscard)
    !! author: David A. Minton
    !!
    !! Check to see if planets should be discarded based on their positions relative to the Sun.
@@ -47,17 +47,18 @@ subroutine symba_discard_sun_pl(t, npl, msys, swiftest_plA, rmin, rmax, rmaxu, l
    implicit none
 
 ! arguments
-   integer(I4B), intent(in)       :: npl
+   integer(I4B), intent(in)       :: npl, ntp
    real(DP), intent(in)         :: t, msys, rmin, rmax, rmaxu
    type(swiftest_pl), intent(inout) :: swiftest_plA
+   type(swiftest_tp), intent(inout) :: swiftest_tpA
    logical(LGT), intent(inout)    :: ldiscard
 
 ! internals
    integer(I4B)          :: i
    real(DP)            :: energy, vb2, rb2, rh2, rmin2, rmax2, rmaxu2
-   real(DP)            :: mass, rad, Ipz, Mcb
+   real(DP)            :: mass, rad, Ipz, Ipcbz, Mcb, radcb
    logical             :: lupdate_cb, ldiscard_this
-   real(DP), dimension(NDIM) :: Lpl, rot, xb, vb, xbcb, vbcb, xcom, vcom
+   real(DP), dimension(NDIM) :: Lpl, Lcb, rot, rotcb, xb, vb, xbcb, vbcb, xcom, vcom
 
 ! executable code
    rmin2 = rmin*rmin
@@ -70,13 +71,14 @@ subroutine symba_discard_sun_pl(t, npl, msys, swiftest_plA, rmin, rmax, rmaxu, l
          if ((rmax >= 0.0_DP) .and. (rh2 > rmax2)) then
             ldiscard = .true.
             ldiscard_this = .true.
-            lupdate_cb = .false.
+            !lupdate_cb = .true.
             swiftest_plA%status(i) = DISCARDED_RMAX
+            swiftest_plA%Mescape = swiftest_plA%Mescape + mass
             write(*, *) "Particle ",  swiftest_plA%name(i), " too far from the central body at t = ", t
          else if ((rmin >= 0.0_DP) .and. (rh2 < rmin2)) then
             ldiscard = .true.
             ldiscard_this = .true.
-            lupdate_cb = .true.
+            !lupdate_cb = .true.
             swiftest_plA%status(i) = DISCARDED_RMIN
             write(*, *) "Particle ", swiftest_plA%name(i), " too close to the central body at t = ", t
          else if (rmaxu >= 0.0_DP) then
@@ -86,8 +88,9 @@ subroutine symba_discard_sun_pl(t, npl, msys, swiftest_plA, rmin, rmax, rmaxu, l
             if ((energy > 0.0_DP) .and. (rb2 > rmaxu2)) then
                ldiscard = .true.
                ldiscard_this = .true.
-               lupdate_cb = .true.
+               !lupdate_cb = .true.
                swiftest_plA%status(i) = DISCARDED_RMAXU
+               swiftest_plA%Mescape = swiftest_plA%Mescape + mass
                write(*, *) "Particle ", swiftest_plA%name(i), " is unbound and too far from barycenter at t = ", t
             end if
          end if
@@ -99,33 +102,42 @@ subroutine symba_discard_sun_pl(t, npl, msys, swiftest_plA, rmin, rmax, rmaxu, l
             Ipz = swiftest_plA%Ip(3,i)
             rad = swiftest_plA%radius(i)
             mass = swiftest_plA%mass(i) 
-            ! Orbital angular momentum
-            call util_crossproduct(xb,vb,Lpl)
-            Lpl(:) = mass * (Lpl(:) + Ipz * rad**2 * rot(:))
-            if (lupdate_cb) then
-               xbcb(:) = swiftest_plA%xb(:,1)
-               vbcb(:) = swiftest_plA%vb(:,1)
-               Mcb = swiftest_plA%mass(1)
-               xcom(:) = (mass * xb(:) + Mcb * xbcb(:)) / (mass + Mcb)
-               vcom(:) = (mass * vb(:) + Mcb * vbcb(:)) / (mass + Mcb)
-               swiftest_plA%xb(:,1) = xcom(:)
-               swiftest_plA%vb(:,1) = vcom(:) 
-               ! Add planet mass to central body accumulator
-               swiftest_plA%dMcb = swiftest_plA%dMcb + mass
 
-               ! Update mass of central body to be consistent with its total mass
-               swiftest_plA%mass(1) = swiftest_plA%Mcb_initial + swiftest_plA%dMcb
+            xbcb(:) = swiftest_plA%xb(:,1)
+            vbcb(:) = swiftest_plA%vb(:,1)
+            rotcb(:) = swiftest_plA%rot(:,1)
+            Mcb = swiftest_plA%mass(1)
+            Ipcbz = swiftest_plA%Ip(3,1)
+            radcb = swiftest_plA%radius(1)
+            xcom(:) = (mass * xb(:) + Mcb * xbcb(:)) / (mass + Mcb)
+            vcom(:) = (mass * vb(:) + Mcb * vbcb(:)) / (mass + Mcb)
 
-               ! Add planet angular momentum to central body accumulator
-               swiftest_plA%dLcb(:) = swiftest_plA%dLcb(:) + Lpl(:)
+            call util_crossproduct(xb-xcom,vb-vcom,Lpl)
+            Lpl(:) = mass * (Lpl(:) + rad**2 * Ipz * rot(:))
 
-               ! Update rotation of central body to by consistent with its angular momentum 
-               swiftest_plA%rot(:,1) = (swiftest_plA%Lcb_initial(:) + swiftest_plA%dLcb(:)) / &
-                  (swiftest_plA%Ip(3,1) * swiftest_plA%mass(1) * swiftest_plA%radius(1)**2)
-            else ! This is an escaped body, so just keep track of the lost mass ang angular momentum
-               swiftest_plA%Mescape = swiftest_plA%Mescape + mass
-               swiftest_plA%Lescape(:) = swiftest_plA%Lescape(:) + Lpl(:)
-            end if
+            call util_crossproduct(xbcb-xcom,vbcb-vcom,Lcb)
+            Lcb(:) = Mcb * (Lcb(:) + radcb**2 * Ipcbz * rotcb(:))
+  
+            swiftest_plA%xb(:,1) = xcom(:)
+            swiftest_plA%vb(:,1) = vcom(:) 
+
+            ! Add planet mass to central body accumulator
+            swiftest_plA%dMcb = swiftest_plA%dMcb + mass
+
+            ! Update mass of central body to be consistent with its total mass
+            Mcb = swiftest_plA%Mcb_initial + swiftest_plA%dMcb
+            swiftest_plA%mass(1) = Mcb
+            
+            ! Add planet angular momentum to central body accumulator
+            swiftest_plA%dLcb(:) =  Lpl(:) + Lcb(:) - swiftest_plA%Lcb_initial
+
+            ! Update rotation of central body to by consistent with its angular momentum 
+            swiftest_plA%rot(:,1) = (swiftest_plA%Lcb_initial(:) + swiftest_plA%dLcb(:)) / (Ipcbz * Mcb * radcb**2)        
+
+            ! Because the central body has changed position, we need to adjust the heliocentric position and velocities of everything
+            call coord_b2h(npl, swiftest_plA)
+            if (ntp > 0) call coord_b2h_tp(ntp, swiftest_tpA, swiftest_plA)
+
          end if
       end if
    end do
