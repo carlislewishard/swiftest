@@ -57,13 +57,14 @@ subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, r
    integer(I4B)          :: i
    real(DP)            :: energy, vb2, rb2, rh2, rmin2, rmax2, rmaxu2
    real(DP)            :: mass, rad, Ipz, Ipcbz, Mcb, radcb
-   logical             :: lupdate_cb, ldiscard_this
+   logical             :: ldiscard_this, ldiscard_cb
    real(DP), dimension(NDIM) :: Lpl, Lcb, rot, rotcb, xb, vb, xbcb, vbcb, xcom, vcom
 
 ! executable code
    rmin2 = rmin*rmin
    rmax2 = rmax*rmax
    rmaxu2 = rmaxu*rmaxu
+   ldiscard_cb = .false.
    do i = 2, npl
       if (swiftest_plA%status(i) == ACTIVE) then
          ldiscard_this = .false.
@@ -71,14 +72,12 @@ subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, r
          if ((rmax >= 0.0_DP) .and. (rh2 > rmax2)) then
             ldiscard = .true.
             ldiscard_this = .true.
-            !lupdate_cb = .true.
             swiftest_plA%status(i) = DISCARDED_RMAX
             swiftest_plA%Mescape = swiftest_plA%Mescape + mass
             write(*, *) "Particle ",  swiftest_plA%name(i), " too far from the central body at t = ", t
          else if ((rmin >= 0.0_DP) .and. (rh2 < rmin2)) then
             ldiscard = .true.
             ldiscard_this = .true.
-            !lupdate_cb = .true.
             swiftest_plA%status(i) = DISCARDED_RMIN
             write(*, *) "Particle ", swiftest_plA%name(i), " too close to the central body at t = ", t
          else if (rmaxu >= 0.0_DP) then
@@ -88,14 +87,13 @@ subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, r
             if ((energy > 0.0_DP) .and. (rb2 > rmaxu2)) then
                ldiscard = .true.
                ldiscard_this = .true.
-               !lupdate_cb = .true.
                swiftest_plA%status(i) = DISCARDED_RMAXU
                swiftest_plA%Mescape = swiftest_plA%Mescape + mass
                write(*, *) "Particle ", swiftest_plA%name(i), " is unbound and too far from barycenter at t = ", t
             end if
          end if
          if (ldiscard_this) then
-
+            ldiscard_cb = .true.
             xb(:) = swiftest_plA%xb(:,i)
             vb(:) = swiftest_plA%vb(:,i)
             rot(:) = swiftest_plA%rot(:,i)
@@ -134,14 +132,16 @@ subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, r
             ! Update position and velocity of central body
             swiftest_plA%xb(:,1) = xcom(:)
             swiftest_plA%vb(:,1) = vcom(:)
-
-            ! Because the central body has changed position, we need to adjust the heliocentric position and velocities of everything
-            call coord_b2h(npl, swiftest_plA)
-            if (ntp > 0) call coord_b2h_tp(ntp, swiftest_tpA, swiftest_plA)
-
          end if
       end if
    end do
+
+   if (ldiscard_cb) then
+      ! Because the central body has changed position, we need to adjust the heliocentric position and velocities of everything
+      call coord_b2h(npl, swiftest_plA)
+      if (ntp > 0) call coord_b2h_tp(ntp, swiftest_tpA, swiftest_plA)
+   end if
+
 
    return
 
