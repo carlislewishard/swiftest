@@ -117,10 +117,7 @@ subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, r
 
             call util_crossproduct(xbcb-xcom,vbcb-vcom,Lcb)
             Lcb(:) = Mcb * Lcb(:) 
-  
-            swiftest_plA%xb(:,1) = xcom(:)
-            swiftest_plA%vb(:,1) = vcom(:) 
-
+ 
             ! Add planet mass to central body accumulator
             swiftest_plA%dMcb = swiftest_plA%dMcb + mass
 
@@ -133,6 +130,10 @@ subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, r
 
             ! Update rotation of central body to by consistent with its angular momentum 
             swiftest_plA%rot(:,1) = (swiftest_plA%Lcb_initial(:) + swiftest_plA%dLcb(:)) / (Ipcbz * Mcb * radcb**2)        
+             
+            ! Update position and velocity of central body
+            swiftest_plA%xb(:,1) = xcom(:)
+            swiftest_plA%vb(:,1) = vcom(:)
 
             ! Because the central body has changed position, we need to adjust the heliocentric position and velocities of everything
             call coord_b2h(npl, swiftest_plA)
@@ -141,8 +142,6 @@ subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, r
          end if
       end if
    end do
-
-
 
    return
 
