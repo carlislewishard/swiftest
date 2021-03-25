@@ -94,6 +94,7 @@ subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, r
          end if
          if (ldiscard_this) then
             ldiscard_cb = .true.
+
             xb(:) = swiftest_plA%xb(:,i)
             vb(:) = swiftest_plA%vb(:,i)
             rot(:) = swiftest_plA%rot(:,i)
@@ -104,9 +105,10 @@ subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, r
             xbcb(:) = swiftest_plA%xb(:,1)
             vbcb(:) = swiftest_plA%vb(:,1)
             rotcb(:) = swiftest_plA%rot(:,1)
-            Mcb = swiftest_plA%mass(1)
             Ipcbz = swiftest_plA%Ip(3,1)
             radcb = swiftest_plA%radius(1)
+            Mcb = swiftest_plA%mass(1)
+
             xcom(:) = (mass * xb(:) + Mcb * xbcb(:)) / (mass + Mcb)
             vcom(:) = (mass * vb(:) + Mcb * vbcb(:)) / (mass + Mcb)
 
@@ -124,7 +126,7 @@ subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, r
             swiftest_plA%mass(1) = Mcb
             
             ! Add planet angular momentum to central body accumulator
-            swiftest_plA%dLcb(:) = swiftest_plA%dLcb(:) + Lpl(:) + Lcb(:) 
+            swiftest_plA%dLcb(:) = Lpl(:) + Lcb(:) + swiftest_plA%dLcb(:)
 
             ! Update rotation of central body to by consistent with its angular momentum 
             swiftest_plA%rot(:,1) = (swiftest_plA%Lcb_initial(:) + swiftest_plA%dLcb(:)) / (Ipcbz * Mcb * radcb**2)        
