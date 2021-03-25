@@ -15,6 +15,7 @@ module swiftest_globals
 
    integer, parameter :: SP = real32  !! Symbolic name for kind types of single-precision reals
    integer, parameter :: DP = real64  !! Symbolic name for kind types of double-precision reals
+   integer, parameter :: QP = real128 !! Symbolic name for kind types of quad-precision reals
 
    integer, parameter :: LGT = KIND(.TRUE.)
       !! Symbolic name for kind type of default logical
