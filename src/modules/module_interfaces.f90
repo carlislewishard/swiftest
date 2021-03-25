@@ -867,6 +867,16 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
+            subroutine symba_discard_conserve_mtm(swiftest_plA, ipl)
+            use swiftest_globals
+            use swiftest_data_structures
+            implicit none
+            integer(I4B), intent(in)    :: ipl
+            type(swiftest_pl), intent(inout) :: swiftest_plA
+            end subroutine
+      END INTERFACE
+
+     INTERFACE
           SUBROUTINE symba_discard_tp(t, npl, ntp, symba_plA, symba_tpA, dt, &
                rmin, rmax, rmaxu, qmin, qmin_coord, qmin_alo, qmin_ahi, lrhill_present, ldiscard_tp)
                USE swiftest_globals

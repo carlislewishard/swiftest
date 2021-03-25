@@ -1,36 +1,3 @@
-!**********************************************************************************************************************************
-!
-!  Unit Name   : symba_discard_sun_pl
-!  Unit Type   : subroutine
-!  Project   : Swiftest
-!  Package   : symba
-!  Language    : Fortran 90/95
-!
-!  Description : Check to see if planets should be discarded based on their positions relative to the Sun
-!
-!  Input
-!    Arguments : t        : time
-!          npl      : number of planets
-!          msys       : total system mass
-!          swifter_pl1P : pointer to head of Swifter planet structure linked-list
-!          rmin       : minimum allowed heliocentric radius
-!          rmax       : maximum allowed heliocentric radius
-!          rmaxu      : maximum allowed heliocentric radius for unbound planets
-!          ldiscard    : logical flag indicating whether any planets are discarded
-!    Terminal  : none
-!    File    : none
-!
-!  Output
-!    Arguments : swifter_pl1P : pointer to head of Swifter planet structure linked-list
-!          ldiscard    : logical flag indicating whether any planets are discarded
-!    Terminal  : status message
-!    File    : none
-!
-!  Invocation  : CALL symba_discard_sun_pl(t, npl, msys, swifter_pl1P, rmin, rmax, rmaxu, ldiscard)
-!
-!  Notes     : Adapted from Hal Levison's Swift routine discard_massive5.f
-!
-!**********************************************************************************************************************************
 subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, rmin, rmax, rmaxu, ldiscard)
    !! author: David A. Minton
    !!
@@ -56,11 +23,9 @@ subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, r
 ! internals
    integer(I4B)          :: i
    real(DP)            :: energy, vb2, rb2, rh2, rmin2, rmax2, rmaxu2
-   real(DP)            :: mass, rad, Ipz, Ipcbz, Mcb, radcb
    logical             :: ldiscard_this, ldiscard_cb
-   real(DP), dimension(NDIM) :: Lpl, Lcb, rot, rotcb, xb, vb, xbcb, vbcb, xcom, vcom
    real(DP), dimension(NDIM) :: Lorb0, Lspin0, Lorb1, Lspin1, h, x, v
-   real(DP)             :: v2, rot2, Ip
+   real(DP)             :: v2, rot2, Ip, ke0, pe0, rote0, ke1, pe1, rote1
 
 ! executable code
    rmin2 = rmin*rmin
@@ -69,8 +34,9 @@ subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, r
    ldiscard_cb = .false.
 
    !******************* TESTING *************************
-   !Lorb0 = 0.0_DP
-   !Lspin0 = 0.0_DP
+   ke0 = 0.0_DP
+   pe0 = 0.0_DP
+   rote0 = 0.0_DP
    !do i = 1, npl
    !   x(:) = swiftest_plA%xb(:, i)
    !   v(:) = swiftest_plA%vb(:, i)
@@ -80,11 +46,8 @@ subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, r
    !   rad = swiftest_plA%radius(i)
    !   v2 = dot_product(v(:), v(:))
    !   rot2 = dot_product(rot(:), rot(:))
-   !   h(1) = x(2) * v(3) - x(3) * v(2)
-   !   h(2) = x(3) * v(1) - x(1) * v(3)
-   !   h(3) = x(1) * v(2) - x(2) * v(1)
-   !   Lorb0(:) = Lorb0(:) + mass * h(:)
-   !   Lspin0(:) = Lspin0(:) + mass * rad**2 * Ip * rot(:)
+   !   ke = ke + 0.5_DP * mass * v2 
+   !   rote = rote + 0.5_DP * mass * Ip * rad**2 * rot2
    !end do
    !!****************************************************
 
@@ -96,7 +59,7 @@ subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, r
             ldiscard = .true.
             ldiscard_this = .true.
             swiftest_plA%status(i) = DISCARDED_RMAX
-            swiftest_plA%Mescape = swiftest_plA%Mescape + mass
+               swiftest_plA%Mescape = swiftest_plA%Mescape + swiftest_plA%mass(i)
             write(*, *) "Particle ",  swiftest_plA%name(i), " too far from the central body at t = ", t
          else if ((rmin >= 0.0_DP) .and. (rh2 < rmin2)) then
             ldiscard = .true.
@@ -111,52 +74,13 @@ subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, r
                ldiscard = .true.
                ldiscard_this = .true.
                swiftest_plA%status(i) = DISCARDED_RMAXU
-               swiftest_plA%Mescape = swiftest_plA%Mescape + mass
+               swiftest_plA%Mescape = swiftest_plA%Mescape + swiftest_plA%mass(i)
                write(*, *) "Particle ", swiftest_plA%name(i), " is unbound and too far from barycenter at t = ", t
             end if
          end if
          if (ldiscard_this) then
             ldiscard_cb = .true.
-
-            xb(:) = swiftest_plA%xb(:,i)
-            vb(:) = swiftest_plA%vb(:,i)
-            rot(:) = swiftest_plA%rot(:,i)
-            Ipz = swiftest_plA%Ip(3,i)
-            rad = swiftest_plA%radius(i)
-            mass = swiftest_plA%mass(i) 
-
-            xbcb(:) = swiftest_plA%xb(:,1)
-            vbcb(:) = swiftest_plA%vb(:,1)
-            rotcb(:) = swiftest_plA%rot(:,1)
-            Ipcbz = swiftest_plA%Ip(3,1)
-            radcb = swiftest_plA%radius(1)
-            Mcb = swiftest_plA%mass(1)
-
-            xcom(:) = (mass * xb(:) + Mcb * xbcb(:)) / (mass + Mcb)
-            vcom(:) = (mass * vb(:) + Mcb * vbcb(:)) / (mass + Mcb)
-
-            call util_crossproduct(xb-xcom,vb-vcom,Lpl)
-            Lpl(:) = mass * (Lpl(:) + rad**2 * Ipz * rot(:))
-
-            call util_crossproduct(xbcb-xcom,vbcb-vcom,Lcb)
-            Lcb(:) = Mcb * Lcb(:) 
- 
-            ! Add planet mass to central body accumulator
-            swiftest_plA%dMcb = swiftest_plA%dMcb + mass
-
-            ! Update mass of central body to be consistent with its total mass
-            Mcb = swiftest_plA%Mcb_initial + swiftest_plA%dMcb
-            swiftest_plA%mass(1) = Mcb
-            
-            ! Add planet angular momentum to central body accumulator
-            swiftest_plA%dLcb(:) = Lpl(:) + Lcb(:) + swiftest_plA%dLcb(:)
-
-            ! Update rotation of central body to by consistent with its angular momentum 
-            swiftest_plA%rot(:,1) = (swiftest_plA%Lcb_initial(:) + swiftest_plA%dLcb(:)) / (Ipcbz * Mcb * radcb**2)        
-             
-            ! Update position and velocity of central body
-            swiftest_plA%xb(:,1) = xcom(:)
-            swiftest_plA%vb(:,1) = vcom(:)
+            call symba_discard_conserve_mtm(swiftest_plA, i)
          end if
       end if
    end do
