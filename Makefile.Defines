@@ -67,12 +67,12 @@ GPAR = -fopenmp -ftree-parallelize-loops=4
 GMEM = -fsanitize=undefined -fsanitize=address -fsanitize=leak 
 GWARNINGS = -Wall -Warray-bounds  -Wimplicit-interface -Wextra -Warray-temporaries
 
-#FFLAGS  = -qopt-report=5 -no-wrap-margin -O3 $(SIMDVEC) $(PAR) $(STRICTREAL) $(HEAPARR)
+FFLAGS  = -qopt-report=5 -no-wrap-margin -O3 $(SIMDVEC) $(PAR) $(STRICTREAL) #$(HEAPARR)
 #FFLAGS  = $(IDEBUG)
-#FORTRAN = ifort
+FORTRAN = ifort
 
-FORTRAN = gfortran
-FFLAGS =  -ffree-line-length-none $(GDEBUG)
+#FORTRAN = gfortran
+#FFLAGS =  -ffree-line-length-none $(GDEBUG)
 AR     = ar
 
 # DO NOT include in CFLAGS the "-c" option to compile object only
