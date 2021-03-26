@@ -52,8 +52,8 @@ SUBROUTINE io_dump_pl(npl, swiftest_plA, param)
 
    open(unit = LUN, file = DUMP_PL_FILE(idx), form = "UNFORMATTED", status = 'REPLACE', iostat = ierr)
    if (ierr /= 0) then
-      write(*, *) "swiftest error:"
-      write(*, *) "   unable to open binary dump file ", trim(dump_pl_file(idx))
+      write(*, *) "Swiftest error:"
+      write(*, *) "   Unable to open binary dump file ", trim(dump_pl_file(idx))
       call util_exit(failure)
    end if
    write(LUN) npl

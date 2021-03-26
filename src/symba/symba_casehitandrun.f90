@@ -86,7 +86,7 @@ subroutine symba_casehitandrun (nmergeadd, mergeadd_list, name, x, v, mass, radi
       call symba_frag_pos(x, v, L_spin, Ip, mass, radius, Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag)
 
       do i = 1, nfrag
-         name_frag(i) = param%plmaxname + i - 1 
+         name_frag(i) = param%plmaxname + i 
       end do
       param%plmaxname = name_frag(nfrag)
    end if
