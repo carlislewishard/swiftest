@@ -8,7 +8,7 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msys)
    !!  
    !! Adapted from Martin Duncan's Swift routine anal_energy.f
    use swiftest
-   use module_interfaces, except_this_one => symba_energy
+   use module_interfaces, EXCEPT_THIS_ONE => symba_energy
    implicit none
 
 ! arguments
@@ -20,60 +20,57 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msys)
 
 ! internals
    integer(I4B)              :: i, j
-   real(DP)                  :: mass, rmag, v2, oblpot, Ip, rot2, rad
-   real(DP), dimension(NDIM) :: h, dx, x, v, rot
+   real(DP)                  :: rmag, v2, rot2, oblpot
+   real(DP), dimension(NDIM) :: h, dx
    real(DP), dimension(npl)  :: irh
 
 
 ! executable code
 
    call coord_h2b(npl, swiftest_plA, msys)
-   Ltot = 0.0_DP
-   ke = 0.0_DP
 
-   !$omp simd private(x,v,v2,mass,h,rot,Ip,rad,rot2) reduction(+:ke,Ltot)
-   do i = 1, npl
-      x(:) = swiftest_plA%xb(:, i)
-      v(:) = swiftest_plA%vb(:, i)
-      rot(:) = swiftest_plA%rot(:, i)
-      Ip = swiftest_plA%Ip(3, i)
-      mass = swiftest_plA%mass(i)
-      rad = swiftest_plA%radius(i)
-      v2 = dot_product(v(:), v(:))
-      rot2 = dot_product(rot(:), rot(:))
-      h(1) = x(2) * v(3) - x(3) * v(2)
-      h(2) = x(3) * v(1) - x(1) * v(3)
-      h(3) = x(1) * v(2) - x(2) * v(1)
+   associate(xb => swiftest_plA%xb, vb => swiftest_plA%vb, mass => swiftest_plA%mass, radius => swiftest_plA%radius, &
+             Ip => swiftest_plA%Ip, rot => swiftest_plA%rot, xh => swiftest_plA%xh)
+      Ltot = 0.0_DP
+      ke = 0.0_DP
+      !$omp simd private(v2,rot2,h) reduction(+:ke,Ltot)
+      do i = 1, npl
+         v2 = dot_product(vb(:,i), vb(:,i))
+         rot2 = dot_product(rot(:,i), rot(:,i))
+         h(1) = xb(2,i) * vb(3,i) - xb(3,i) * vb(2,i)
+         h(2) = xb(3,i) * vb(1,i) - xb(1,i) * vb(3,i)
+         h(3) = xb(1,i) * vb(2,i) - xb(2,i) * vb(1,i)
 
-      ! Angular momentum from orbit and spin
-      Ltot(:) = Ltot(:) + mass * (h(:) + Ip * rad**2 * rot(:))
+         ! Angular momentum from orbit and spin
+         Ltot(:) = Ltot(:) + mass(i) * (h(:) + Ip(3,i) * radius(i)**2 * rot(:,i))
 
-      ! Kinetic energy from orbit and spin
-      ke = ke + 0.5_DP * mass * (v2 + Ip * rad**2 * rot2)
-   end do
-
-   pe = 0.0_DP
-   !$omp parallel do default(private) &
-   !$omp shared (swiftest_plA, npl) &
-   !$omp reduction (-:pe)
-   do i = 1, npl - 1
-      do j = i + 1, npl
-         dx(:) = swiftest_plA%xb(:, j) - swiftest_plA%xb(:, i) 
-         rmag = norm2(dx(:)) 
-         if (rmag > tiny(rmag)) pe = pe - swiftest_plA%mass(i) * swiftest_plA%mass(j) / rmag 
+         ! Kinetic energy from orbit and spin
+         ke = ke + 0.5_DP * mass(i) * (v2 + Ip(3,i) * radius(i)**2 * rot2)
       end do
-   end do
-   !$omp end parallel do
 
-   if (j2rp2 /= 0.0_DP) then
-      !$omp simd private(rmag)
-      do i = 2, npl
-         rmag = norm2(swiftest_plA%xh(:,i))
-         irh(i) = 1.0_DP / rmag
+      pe = 0.0_DP
+      !$omp parallel do default(private) &
+      !$omp shared (xb, mass, npl) &
+      !$omp reduction (-:pe)
+      do i = 1, npl - 1
+         do j = i + 1, npl
+            dx(:) = xb(:, j) - xb(:, i) 
+            rmag = norm2(dx(:)) 
+            if (rmag > tiny(rmag)) pe = pe - mass(i) * mass(j) / rmag 
+         end do
       end do
-      call obl_pot(npl, swiftest_plA, j2rp2, j4rp4, swiftest_plA%xh(:,:), irh, oblpot)
-      pe = pe + oblpot
-   end if
+      !$omp end parallel do
+
+      if (j2rp2 /= 0.0_DP) then
+         !$omp simd private(rmag)
+         do i = 2, npl
+            rmag = norm2(xh(:,i))
+            irh(i) = 1.0_DP / rmag
+         end do
+         call obl_pot(npl, swiftest_plA, j2rp2, j4rp4, xh(:,:), irh, oblpot)
+         pe = pe + oblpot
+      end if
+   end associate
 
    te = ke + pe
 
