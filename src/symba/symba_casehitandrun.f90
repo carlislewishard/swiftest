@@ -1,4 +1,4 @@
-subroutine symba_casehitandrun (nmergeadd, mergeadd_list, name, x, v, mass, radius, rhill, L_spin, Ip, vbs, &
+subroutine symba_casehitandrun (nmergeadd, mergeadd_list, name, x, v, mass, radius, L_spin, Ip, vbs, &
                                         mass_res, param)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
@@ -14,7 +14,7 @@ subroutine symba_casehitandrun (nmergeadd, mergeadd_list, name, x, v, mass, radi
    integer(I4B), intent(inout)               :: nmergeadd
    type(symba_merger), intent(inout)         :: mergeadd_list
    integer(I4B), dimension(:), intent(in)    :: name
-   real(DP), dimension(:),   intent(in)      :: mass, radius, rhill, vbs, mass_res
+   real(DP), dimension(:),   intent(in)      :: mass, radius, vbs, mass_res
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
    type(user_input_parameters),intent(inout) :: param
 
@@ -22,7 +22,6 @@ subroutine symba_casehitandrun (nmergeadd, mergeadd_list, name, x, v, mass, radi
    real(DP)                                :: mtot, avg_dens
    real(DP), dimension(NDIM)               :: xcom, vcom
    real(DP), dimension(2)                  :: vol
-   real(DP), dimension(NDIM)               :: Ip_new
    real(DP), dimension(:, :), allocatable  :: v_frag, x_frag, rot_frag, Ip_frag
    real(DP), dimension(:), allocatable     :: m_frag, rad_frag
    integer(I4B), dimension(:), allocatable :: name_frag

@@ -1,4 +1,4 @@
-subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba_plA, nplplenc, plplenc_list, param)
+subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba_plA, plplenc_list, param)
    !! author: Jennifer L.L. Pouplin, Carlisle A. wishard, and David A. Minton
    !!
    !! Check for a collision between planets in SyMBA. This subroutine only flags collising bodies, but does not resolve the outcome.
@@ -15,7 +15,7 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
    implicit none
 
    integer(I4B), intent(in)                   :: index_enc
-   integer(I4B), intent(in)                   :: npl, nplplenc
+   integer(I4B), intent(in)                   :: npl
    integer(I4B), intent(inout)                :: nmergesub
    real(DP), intent(in)                       :: t, dt
    type(symba_plplenc), intent(inout)         :: plplenc_list
@@ -88,7 +88,8 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
          ! Expand the child array (or create it if necessary) and copy over the previous lists of children
          nchild_orig = symba_plA%kin(index_parent)%nchild
          nchild_inherit = symba_plA%kin(index_child)%nchild
-         allocate(temp(nchild_orig + nchild_inherit + 1))
+         nchild_new = nchild_orig + nchild_inherit + 1
+         allocate(temp(nchild_new))
          if (nchild_orig > 0) temp(1:nchild_orig) = symba_plA%kin(index_parent)%child(:)
          ! Find out if the child body has any children of its own. The new parent wil inherit its children
          if (nchild_inherit > 0) then
@@ -103,7 +104,7 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
          end if
          ! Set the current child to its parent
          symba_plA%kin(index_child)%parent = index_parent
-         temp(nchild_orig + nchild_inherit + 1) = index_child
+         temp(nchild_new) = index_child
          ! Save the new child array to the parent
          call move_alloc(from=temp, to=symba_plA%kin(index_parent)%child)
          symba_plA%kin(index_parent)%nchild = nchild_orig + nchild_inherit + 1

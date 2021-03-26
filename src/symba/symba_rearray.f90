@@ -1,5 +1,5 @@
 subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
-   discard_tpA,param, ldiscard, ldiscard_tp)
+   discard_tpA, ldiscard, ldiscard_tp)
    !! Author: the Purdue Swiftest Team -  David A. Minton, Carlisle A. Wishard, Jennifer L.L. Pouplin, and Jacob R. Elliott
    !!
    !! Clean up tp and pl arrays to remove discarded bodies and add new bodies
@@ -18,7 +18,6 @@ subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
    type(swiftest_tp), intent(inout)        :: discard_tpA
    type(swiftest_pl), intent(inout)        :: discard_plA
    type(symba_merger), intent(inout)       :: mergeadd_list 
-   type(user_input_parameters),intent(in)  :: param
    logical, intent(in)                     :: ldiscard, ldiscard_tp 
 
 ! internals

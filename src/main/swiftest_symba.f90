@@ -55,10 +55,11 @@ program swiftest_symba
    type(symba_pltpenc)           :: pltpenc_list
    type(symba_merger)            :: mergeadd_list, mergesub_list
    real(DP)                      :: start, finish
-   INTEGER(I8B)                  :: clock_count, count_rate, count_max
-   INTEGER(I4B)                  :: ierr
-   INTEGER(I4B), DIMENSION(:,:), ALLOCATABLE :: k_plpl, k_pltp
-   INTEGER(I8B)                  :: num_plpl_comparisons, num_pltp_comparisons
+   integer(I8B)                  :: clock_count, count_rate, count_max
+   integer(I4B)                  :: ierr
+   integer(I4B), dimension(:,:), allocatable :: k_plpl, k_pltp
+   integer(I8B)                  :: num_plpl_comparisons, num_pltp_comparisons
+   integer(I4B), parameter       :: EGYDUMP = 88
 
 ! Executable code
 
@@ -188,7 +189,7 @@ program swiftest_symba
       call symba_collision(t, npl, symba_plA, nplplenc, plplenc_list, ldiscard, mergeadd_list, nmergeadd, param)
       if (ldiscard .or. ldiscard_tp .or. lfrag_add) then
          call symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
-            discard_tpA, param, ldiscard, ldiscard_tp)
+            discard_tpA, ldiscard, ldiscard_tp)
 
          if (ldiscard .or. ldiscard_tp) then
             call io_discard_write_symba(t, mtiny, npl, nsppl, nsptp, nmergesub, symba_plA, &
@@ -222,15 +223,19 @@ program swiftest_symba
                write(*,*) 'PE after     : ', pe
                write(*,*) 'Ltot after   : ', Ltot
                ! TEMPORARY DIAGNOSTIC OUTPUT. Worth formalizing?
-               do i = 1, npl
-                  write(88,*) 'Particle ',symba_plA%helio%swiftest%name(i)
-                  write(88,*) '    mass ',symba_plA%helio%swiftest%mass(i)
-                  write(88,*) '  radius ',symba_plA%helio%swiftest%radius(i)
-                  write(88,*) '      Ip ',symba_plA%helio%swiftest%Ip(:, i)
-                  write(88,*) '      xb ',symba_plA%helio%swiftest%xb(:, i)
-                  write(88,*) '      vb ',symba_plA%helio%swiftest%vb(:, i)
-                  write(88,*) '     rot ',symba_plA%helio%swiftest%rot(:, i)
-               end do
+               open(unit = EGYDUMP, file = "energy_failure_particle_dump.dat",status="replace", iostat=ierr)
+               if (ierr /= 0) then
+                  do i = 1, npl
+                     write(EGYDUMP, *) 'Particle ',symba_plA%helio%swiftest%name(i)
+                     write(EGYDUMP, *) '    mass ',symba_plA%helio%swiftest%mass(i)
+                     write(EGYDUMP, *) '  radius ',symba_plA%helio%swiftest%radius(i)
+                     write(EGYDUMP, *) '      Ip ',symba_plA%helio%swiftest%Ip(:, i)
+                     write(EGYDUMP, *) '      xb ',symba_plA%helio%swiftest%xb(:, i)
+                     write(EGYDUMP, *) '      vb ',symba_plA%helio%swiftest%vb(:, i)
+                     write(EGYDUMP, *) '     rot ',symba_plA%helio%swiftest%rot(:, i)
+                  end do
+               end if
+               close(EGYDUMP)
                call util_exit(FAILURE)
             end if
             symba_plA%helio%swiftest%Ecollisions = symba_plA%helio%swiftest%Ecollisions + Ecollision

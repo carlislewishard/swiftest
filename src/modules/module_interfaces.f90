@@ -713,7 +713,7 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-         SUBROUTINE symba_casedisruption (nmergeadd, mergeadd_list, x, v, mass, radius, rhill, L_spin, Ip, vbs, &
+         SUBROUTINE symba_casedisruption (nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, vbs, &
                                                  mass_res, param)
          USE swiftest_globals
          USE swiftest_data_structures
@@ -721,14 +721,14 @@ MODULE module_interfaces
          IMPLICIT NONE
          integer(I4B), intent(inout)               :: nmergeadd
          type(symba_merger), intent(inout)         :: mergeadd_list
-         real(DP), dimension(:),   intent(in)      :: mass, radius, rhill, vbs, mass_res
+         real(DP), dimension(:),   intent(in)      :: mass, radius, vbs, mass_res
          real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
          type(user_input_parameters),intent(inout) :: param
          END SUBROUTINE symba_casedisruption
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE symba_casehitandrun (nmergeadd, mergeadd_list, name, x, v, mass, radius, rhill, Lspin, Ip, vbs, &
+          SUBROUTINE symba_casehitandrun (nmergeadd, mergeadd_list, name, x, v, mass, radius, Lspin, Ip, vbs, &
             mass_res, param)
             USE swiftest_globals
             USE swiftest_data_structures
@@ -737,7 +737,7 @@ MODULE module_interfaces
             integer(I4B), intent(inout)             :: nmergeadd
             type(symba_merger), intent(inout)       :: mergeadd_list
             integer(I4B), dimension(:), intent(in)  :: name
-            real(DP), dimension(:), intent(in)      :: mass, radius, rhill, vbs, mass_res
+            real(DP), dimension(:), intent(in)      :: mass, radius, vbs, mass_res
             real(DP), dimension(:,:), intent(in)    :: x, v, Lspin, Ip
             type(user_input_parameters),intent(inout) :: param
           END SUBROUTINE symba_casehitandrun
@@ -758,7 +758,7 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-         SUBROUTINE symba_casesupercatastrophic (nmergeadd, mergeadd_list, x, v, mass, radius, rhill, Lspin, Ip, vbs, &
+         SUBROUTINE symba_casesupercatastrophic (nmergeadd, mergeadd_list, x, v, mass, radius, Lspin, Ip, vbs, &
                                                  mass_res, param)
          USE swiftest_globals
          USE swiftest_data_structures
@@ -766,7 +766,7 @@ MODULE module_interfaces
          IMPLICIT NONE
          integer(I4B), intent(inout)             :: nmergeadd
          type(symba_merger), intent(inout)       :: mergeadd_list
-         real(DP), dimension(:), intent(in)      :: mass, radius, rhill, vbs, mass_res
+         real(DP), dimension(:), intent(in)      :: mass, radius, vbs, mass_res
          real(DP), dimension(:,:), intent(in)    :: x, v, Lspin, Ip
          type(user_input_parameters),intent(inout) :: param
          END SUBROUTINE symba_casesupercatastrophic
@@ -805,14 +805,14 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba_plA, nplplenc, plplenc_list, param)
+          SUBROUTINE symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba_plA, plplenc_list, param)
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_helio
                USE module_symba
                IMPLICIT NONE
                INTEGER(I4B), INTENT(IN)                  :: index_enc
-               INTEGER(I4B), INTENT(IN)                  :: npl,  nplplenc
+               INTEGER(I4B), INTENT(IN)                  :: npl
                INTEGER(I4B), INTENT(INOUT)               :: nmergesub
                REAL(DP), INTENT(IN)                      :: t, dt
                TYPE(symba_plplenc), INTENT(INOUT)        :: plplenc_list
@@ -1070,7 +1070,7 @@ MODULE module_interfaces
 
      INTERFACE
           SUBROUTINE symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
-                                   discard_tpA, param, ldiscard, ldiscard_tp)
+                                   discard_tpA, ldiscard, ldiscard_tp)
                USE swiftest_globals
                USE module_swiftestalloc 
                USE swiftest_data_structures
@@ -1084,7 +1084,6 @@ MODULE module_interfaces
                TYPE(swiftest_tp), INTENT(INOUT)              :: discard_tpA
                TYPE(swiftest_pl), INTENT(INOUT)              :: discard_plA
                TYPE(symba_merger), INTENT(INOUT)             :: mergeadd_list 
-               TYPE(user_input_parameters),intent(in)        :: param
                LOGICAL(LGT), INTENT(IN)                      :: ldiscard, ldiscard_tp 
 
           END SUBROUTINE symba_rearray

@@ -28,7 +28,7 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
    real(DP), dimension(NDIM)               :: vbs
    integer(I4B)                            :: regime, idx_child, status
    integer(I4B), dimension(2)              :: idx, idx_parent, nchild, name 
-   real(DP), dimension(2)                  :: radius, mass, density, volume, rhill
+   real(DP), dimension(2)                  :: radius, mass, density, volume
    real(DP), dimension(2)                  :: radius_si, mass_si, density_si
    real(DP), dimension(NDIM, 2)            :: x, v, x_si, v_si, L_spin, Ip
    real(DP)                                :: volchild, dentot, Mcb_si
@@ -51,7 +51,6 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
       name(:) = symba_plA%helio%swiftest%name(idx_parent(:))
       radius(:) = symba_plA%helio%swiftest%radius(idx_parent(:))
       volume(:) =  (4.0_DP / 3.0_DP) * PI * radius(:)**3
-      rhill(:) = symba_plA%helio%swiftest%rhill(idx_parent(:))
    
       nchild(:) = symba_plA%kin(idx_parent(:))%nchild 
       if (nchild(1) > 0) then
@@ -171,14 +170,14 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
       case (COLLRESOLVE_REGIME_DISRUPTION)
          write(*, '("Disruption between particles ",20(I6,",",:))') name1(:), name2(:) 
          status = DISRUPTION
-         call symba_casedisruption(nmergeadd, mergeadd_list, x, v, mass, radius, rhill, L_spin, Ip, vbs, mass_res, param)
+         call symba_casedisruption(nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, vbs, mass_res, param)
       case (COLLRESOLVE_REGIME_SUPERCATASTROPHIC)
          write(*, '("Supercatastrophic disruption between particles ",20(I6,",",:))') name1(:), name2(:) 
          status = SUPERCATASTROPHIC
-         call symba_casesupercatastrophic(nmergeadd, mergeadd_list, x, v, mass, radius, rhill, L_spin, Ip, vbs, mass_res, param)
+         call symba_casesupercatastrophic(nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, vbs, mass_res, param)
       case (COLLRESOLVE_REGIME_HIT_AND_RUN)
          write(*, '("Hit and run between particles ",20(I6,",",:))') name1(:), name2(:) 
-         call symba_casehitandrun(nmergeadd, mergeadd_list, name, x, v, mass, radius, rhill, L_spin, Ip, vbs, mass_res, param)
+         call symba_casehitandrun(nmergeadd, mergeadd_list, name, x, v, mass, radius, L_spin, Ip, vbs, mass_res, param)
          status = HIT_AND_RUN
       case (COLLRESOLVE_REGIME_MERGE, COLLRESOLVE_REGIME_GRAZE_AND_MERGE)
          write(*, '("Merging particles ",20(I6,",",:))') name1(:), name2(:) 

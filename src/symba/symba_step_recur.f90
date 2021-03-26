@@ -166,7 +166,7 @@ RECURSIVE SUBROUTINE symba_step_recur(t, ireci, npl, nplm, ntp, symba_plA, symba
                     IF (((plplenc_list%status(i) == ACTIVE) .AND.                                                                 &
                         (symba_plA%levelg(index_i) >= ireci) .AND.                                                              &
                         (symba_plA%levelg(index_j) >= ireci))) THEN 
-                        CALL symba_merge_pl (t, dtl, i, nmergesub, mergesub_list, npl, symba_plA, nplplenc, plplenc_list, param)
+                        CALL symba_merge_pl (t, dtl, i, nmergesub, mergesub_list, npl, symba_plA, plplenc_list, param)
                      END IF
                END DO
                DO i = 1, npltpenc
@@ -263,7 +263,7 @@ RECURSIVE SUBROUTINE symba_step_recur(t, ireci, npl, nplm, ntp, symba_plA, symba
                          IF ((plplenc_list%status(i) == ACTIVE) .AND.   &
                              (symba_plA%levelg(index_i) >= ireci) .AND. &
                              (symba_plA%levelg(index_j) >= ireci))  THEN    
-                             CALL symba_merge_pl(t, dtl, i, nmergesub, mergesub_list, npl, symba_plA, nplplenc, plplenc_list, param)
+                             CALL symba_merge_pl(t, dtl, i, nmergesub, mergesub_list, npl, symba_plA, plplenc_list, param)
                          END IF
                     END DO
                     DO i = 1, npltpenc

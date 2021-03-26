@@ -19,11 +19,9 @@ subroutine symba_frag_adjust (xcom, vcom, x, v, mass, radius, L_spin, Ip_frag, m
    real(DP), dimension(NDIM, 2)            :: rot, Ip
    integer(I4B)                            :: i, j, nfrag
    real(DP)                                :: mtot
-   real(DP), dimension(NDIM)               :: xc, vc, x_cross_v, vc1, vc2, delta_x
-   real(DP), dimension(NDIM)               :: L_orb_old, L_spin_old, L_spin_new, L_orb_new, L_spin_frag, L_spin_tot
+   real(DP), dimension(NDIM)               :: xc, vc, x_cross_v
+   real(DP), dimension(NDIM)               :: L_orb_old, L_spin_old, L_spin_new, L_orb_new, L_spin_frag
    real(DP), dimension(NDIM)               :: mx_frag, mv_frag, COM_offset_x, COM_offset_v
-   real(DP)                                :: Etot_before, KE_before, U_before, v1mag2, v2mag2
-   real(DP)                                :: U_after, KE_spin_after, KE_after
 
    nfrag = size(m_frag)
    mtot = sum(mass(:))

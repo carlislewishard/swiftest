@@ -28,11 +28,11 @@ subroutine symba_step_reset(npl, symba_plA, symba_tpA, plplenc_list, pltpenc_lis
    end do
    symba_plA%nplenc(:) = 0
    symba_plA%ntpenc(:) = 0
-   symba_plA%levelg(:) = -1
-   symba_plA%levelm(:) = -1
+   symba_plA%levelg(:) = 0
+   symba_plA%levelm(:) = 0
    symba_tpA%nplenc(:) = 0 
-   symba_tpA%levelg(:) = -1
-   symba_tpA%levelm(:) = -1
+   symba_tpA%levelg(:) = 0
+   symba_tpA%levelm(:) = 0
 
    !************************
    ! Placeholder for when the data structures get re-done

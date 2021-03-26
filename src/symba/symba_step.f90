@@ -117,11 +117,7 @@ subroutine symba_step(t, dt, param, npl, ntp,symba_plA, symba_tpA,       &
                   plplenc_list%index2(nplplenc) = i
                end if
                symba_plA%nplenc(i) = symba_plA%nplenc(i) + 1
-               symba_plA%levelg(i) = irec
-               symba_plA%levelm(i) = irec
                symba_plA%nplenc(j) = symba_plA%nplenc(j) + 1
-               symba_plA%levelg(j) = irec
-               symba_plA%levelm(j) = irec
                !$omp end critical
             end if
          end do
@@ -134,11 +130,7 @@ subroutine symba_step(t, dt, param, npl, ntp,symba_plA, symba_tpA,       &
                npltpenc = npltpenc + 1
                call symba_pltpenc_size_check(pltpenc_list, npltpenc)
                symba_plA%ntpenc(i) = symba_plA%ntpenc(i) + 1
-               symba_plA%levelg(i) = irec
-               symba_plA%levelm(i) = irec
                symba_tpA%nplenc(j) = symba_tpA%nplenc(j) + 1
-               symba_tpA%levelg(j) = irec
-               symba_tpA%levelm(j) = irec
                pltpenc_list%status(npltpenc) = ACTIVE
                pltpenc_list%lvdotr(npltpenc) = lvdotr
                pltpenc_list%level(npltpenc) = irec

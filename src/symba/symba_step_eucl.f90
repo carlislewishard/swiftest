@@ -98,23 +98,10 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      
 ! Executable code
 
-     symba_plA%kin(1:npl)%parent = (/ (i, i=1, npl) /)
-     symba_plA%kin(:)%nchild = 0
-     symba_plA%nplenc(:) = 0
-     symba_plA%ntpenc(:) = 0
-     symba_plA%levelg(:) = -1
-     symba_plA%levelm(:) = -1
-     symba_tpA%nplenc(:) = 0 
-     symba_tpA%levelg(:) = -1
-     symba_tpA%levelm(:) = -1 
-
-     nplplenc = 0 
+     call symba_step_reset(npl, symba_plA, symba_tpA, plplenc_list, pltpenc_list, mergeadd_list, mergesub_list)
+     nplplenc = 0
      npltpenc = 0
-
      irec = 0
-
-     if (.not. allocated(mergeadd_list%status)) call symba_merger_allocate(mergeadd_list, 1)
-     if (.not. allocated(mergesub_list%status)) call symba_merger_allocate(mergesub_list, 1)
 
 ! ALL THIS NEEDS TO BE CHANGED TO THE TREE SEARCH FUNCTION FOR ENCOUNTERS
 
@@ -127,12 +114,7 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
           do k = 1, nplplenc
             do i = 1, 2
                ipl = k_plpl(i, plpl_encounters(k)) 
-               symba_plA%lcollision(ipl) = .FALSE. ! they have not merged YET
                symba_plA%nplenc(ipl) = symba_plA%nplenc(k_plpl(i, plpl_encounters(k))) + 1 ! number of particles that planet "i" has close encountered
-               symba_plA%levelg(ipl) = irec ! recursion level
-               symba_plA%levelm(ipl) = irec ! recursion level
-               symba_plA%kin(ipl)%nchild = 0 
-               symba_plA%kin(ipl)%parent = ipl
             end do
             
 
@@ -155,8 +137,6 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      if(ntp>0)then
          allocate(pltp_lencounters(num_pltp_comparisons))
          allocate(pltp_lvdotr(num_pltp_comparisons))
-
-
          pltp_lencounters = .false.
          pltp_lvdotr = .false.
 
@@ -181,12 +161,7 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
                enddo
 
                symba_plA%ntpenc(k_pltp(1,pltp_encounters_indices(:))) = symba_plA%ntpenc(k_pltp(1,pltp_encounters_indices(:))) + 1
-               symba_plA%levelg(k_pltp(1,pltp_encounters_indices(:))) = 0
-               symba_plA%levelm(k_pltp(1,pltp_encounters_indices(:))) = 0
-
                symba_tpA%nplenc(k_pltp(2,pltp_encounters_indices(:))) = symba_tpA%nplenc(k_pltp(2,pltp_encounters_indices(:))) + 1
-               symba_tpA%levelg(k_pltp(2,pltp_encounters_indices(:))) = 0
-               symba_tpA%levelm(k_pltp(2,pltp_encounters_indices(:))) = 0
 
                pltpenc_list%status(1:npltpenc) = ACTIVE
                pltpenc_list%lvdotr(1:npltpenc) = pltp_lvdotr(pltp_encounters_indices(:))
