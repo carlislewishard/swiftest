@@ -23,7 +23,7 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
    type(symba_pl), intent(inout)              :: symba_plA
    type(user_input_parameters), intent(inout) :: param
 
-   integer(I4B)                            :: i, j, index_parent, index_child, p1, p2
+   integer(I4B)                            :: i, j, k, index_parent, index_child, p1, p2
    integer(I4B)                            :: nchild_inherit, nchild_orig, nchild_new
    real(DP), dimension(NDIM)               :: vbs
    integer(I4B), dimension(2)              :: idx, name
@@ -78,6 +78,7 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
          ! Bodies are intialized to be their own parent, in which case idx(1) == p1 and idx(2) == p2
          p1 = symba_plA%kin(idx(1))%parent
          p2 = symba_plA%kin(idx(2))%parent 
+         if (p1 == p2) return ! This is a collision between to children of a shared parent. We will ignore it.
          if (symba_plA%helio%swiftest%mass(p1) > symba_plA%helio%swiftest%mass(p1)) then
             index_parent = p1
             index_child = p2
@@ -88,6 +89,25 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
          ! Expand the child array (or create it if necessary) and copy over the previous lists of children
          nchild_orig = symba_plA%kin(index_parent)%nchild
          nchild_inherit = symba_plA%kin(index_child)%nchild
+         !do i = 1, nchild_orig 
+         !   do j = i, nchild_inherit
+         !      if (symba_plA%kin(index_parent)%child(i) == symba_plA%kin(index_child)%child(j)) then
+         !         write(*,*) "Duplicate child! This should not happen!"
+         !         write(*,*) "index of body1 : ",idx(1)
+         !         write(*,*) "index of body2 : ",idx(2)
+         !         write(*,*) "index of parent: ",index_parent
+         !         write(*,*) "index of child:  ",index_child
+         !         write(*,*) "Duplicate child: ",symba_plA%kin(index_parent)%child(i)
+         !         write(*,*) "Recorded parent: ",symba_plA%kin(symba_plA%kin(index_parent)%child(i))%parent
+         !         write(*,*) "Children of this body: "
+         !         do k = 1, symba_plA%kin(index_parent)%nchild
+         !            write(*,*) symba_plA%kin(index_parent)%child(k)
+         !         end do
+         !         call util_exit(FAILURE)
+         !      end if
+         !   end do
+         !end do
+
          nchild_new = nchild_orig + nchild_inherit + 1
          allocate(temp(nchild_new))
          if (nchild_orig > 0) temp(1:nchild_orig) = symba_plA%kin(index_parent)%child(1:nchild_orig)
@@ -108,6 +128,7 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
          ! Save the new child array to the parent
          symba_plA%kin(index_parent)%nchild = nchild_new
          call move_alloc(from=temp, to=symba_plA%kin(index_parent)%child)
+
       end if
       do i = 1, 2
          if (.not.symba_plA%lcollision(idx(i))) then
