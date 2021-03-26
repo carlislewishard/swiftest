@@ -34,8 +34,8 @@ subroutine symba_reorder_pl(npl, symba_plA)
    symba_plwkspA%helio%swiftest%rhill(:) = symba_plA%helio%swiftest%rhill(:)
 
    ! sort by mass
-   call util_index(symba_plA%helio%swiftest%mass, sort_index)
-   write(*,*) "************ REORDER ***************"
+   call util_index(symba_plA%helio%swiftest%mass(1:npl), sort_index)
+   !write(*,*) "************ REORDER ***************"
    do i = 1, npl
       symba_plA%helio%swiftest%name(i) = symba_plwkspA%helio%swiftest%name(sort_index(npl-i+1))
       symba_plA%helio%swiftest%status(i) = symba_plwkspA%helio%swiftest%status(sort_index(npl-i+1))

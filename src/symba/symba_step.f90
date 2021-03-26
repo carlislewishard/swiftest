@@ -6,16 +6,16 @@
 !  Package     : symba
 !  Language    : Fortran 90/95
 !
-!  Description : Step planets and active test particles ahead in democratic heliocentric coordinates, descending the recursive
+!  Description : Step planets and ACTIVE test particles ahead in democratic heliocentric coordinates, descending the recursive
 !                branch if necessary to handle possible close encounters
 !
 !  Input
 !    Arguments : lfirst         : logical flag indicating whether current invocation is the first
 !                t              : time
 !                npl            : number of planets
-!                ntp            : number of active test particles
+!                ntp            : number of ACTIVE test particles
 !                symba_pl1P     : pointer to head of SyMBA planet structure linked-list
-!                symba_tp1P     : pointer to head of active SyMBA test particle structure linked-list
+!                symba_tp1P     : pointer to head of ACTIVE SyMBA test particle structure linked-list
 !                param%j2rp2          : J2 * R**2 for the Sun
 !                param%j4rp4          : J4 * R**4 for the Sun
 !                dt             : time step
@@ -33,7 +33,7 @@
 !  Output
 !    Arguments : lfirst         : logical flag indicating whether current invocation is the first
 !                symba_pl1P     : pointer to head of SyMBA planet structure linked-list
-!                symba_tp1P     : pointer to head of active SyMBA test particle structure linked-list
+!                symba_tp1P     : pointer to head of ACTIVE SyMBA test particle structure linked-list
 !                nplplenc       : number of planet-planet encounters
 !                npltpenc       : number of planet-test particle encounters
 !                plplenc_list   : array of planet-planet encounter structures
@@ -52,151 +52,114 @@
 !  Notes       : Adapted from Hal Levison's Swift routine symba5_step_pl.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE symba_step(t, dt, param, npl, ntp,symba_plA, symba_tpA,       &
+subroutine symba_step(t, dt, param, npl, ntp,symba_plA, symba_tpA,       &
                nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub,&
                mergeadd_list, mergesub_list)
-
+   !! author: The Purdue Swiftest Team -  David A. Minton, Carlisle A. Wishard, Jennifer L.L. Pouplin, and Jacob R. Elliott
+   !!
+   !! Step planets and ACTIVE test particles ahead in democratic heliocentric coordinates, descending the recursive
+   !! branch if necessary to handle possible close encounters
+   !!  
+   !! Adapted from Swifter by David E. Kaufmanna symba_step.f90
+   !! Adapted from Hal Levison's Swift routine symba5_step_pl.f
 ! Modules
-     USE swiftest
-     USE module_helio
-     USE module_symba
-     USE module_swiftestalloc
-     USE module_interfaces, EXCEPT_THIS_ONE => symba_step
-     IMPLICIT NONE
+     use swiftest
+     use module_helio
+     use module_symba
+     use module_swiftestalloc
+     use module_interfaces, EXCEPT_THIS_ONE => symba_step
+     implicit none
 
 ! Arguments
-     TYPE(user_input_parameters), INTENT(INOUT)       :: param        ! Derived type containing user defined parameters 
-     INTEGER(I4B), INTENT(IN)                         :: npl, ntp
-     INTEGER(I4B), INTENT(INOUT)                      :: nplplenc, npltpenc, nmergeadd, nmergesub
-     REAL(DP), INTENT(IN)                             :: t, dt
-     TYPE(symba_pl), INTENT(INOUT)                    :: symba_plA
-     TYPE(symba_tp), INTENT(INOUT)                    :: symba_tpA
-     TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
-     TYPE(symba_pltpenc), INTENT(INOUT)               :: pltpenc_list
-     TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
+     type(user_input_parameters), intent(inout)       :: param        ! derived type containing user defined parameters 
+     integer(I4B), intent(in)                         :: npl, ntp
+     integer(I4B), intent(inout)                      :: nplplenc, npltpenc, nmergeadd, nmergesub
+     real(DP), intent(in)                             :: t, dt
+     type(symba_pl), intent(inout)                    :: symba_plA
+     type(symba_tp), intent(inout)                    :: symba_tpA
+     type(symba_plplenc), intent(inout)               :: plplenc_list
+     type(symba_pltpenc), intent(inout)               :: pltpenc_list
+     type(symba_merger), intent(inout)                :: mergeadd_list, mergesub_list
 ! Internals
-     LOGICAL(LGT)              :: lencounter, lvdotr
-     INTEGER(I4B)              :: i, j, irec, nplm
-     REAL(DP), DIMENSION(NDIM) :: xr, vr
-     LOGICAL, SAVE             :: lfirst = .true.
+     logical(lgt)              :: lencounter, lvdotr
+     integer(I4B)              :: i, j, irec, nplm
+     real(DP), dimension(NDIM) :: xr, vr
+     logical, save             :: lfirst = .true.
 
 ! Executable code
-
-   symba_plA%lcollision(:) = .false.
-   symba_plA%kin(1:npl)%parent = (/ (i, i=1, npl) /)
-   symba_plA%kin(:)%nchild = 0
-   do i = 1, npl
-      if (allocated(symba_plA%kin(i)%child)) deallocate(symba_plA%kin(i)%child)
-   end do
-   symba_plA%nplenc(:) = 0
-   symba_plA%ntpenc(:) = 0
-   symba_plA%levelg(:) = -1
-   symba_plA%levelm(:) = -1
-   symba_tpA%nplenc(:) = 0 
-   symba_tpA%levelg(:) = -1
-   symba_tpA%levelm(:) = -1
-
+   irec = 0
+   call symba_step_reset(npl, symba_plA, symba_tpA, plplenc_list, pltpenc_list, mergeadd_list, mergesub_list)
    nplplenc = 0
    npltpenc = 0
-   irec = 0
-
    nplm = count(symba_plA%helio%swiftest%mass(1:npl) >= param%mtiny)
-   if (.not. allocated(plplenc_list%status)) call symba_plplenc_allocate(plplenc_list, 1)
-   if (.not. allocated(pltpenc_list%status)) call symba_pltpenc_allocate(pltpenc_list, 1)
-   if (.not. allocated(mergeadd_list%status)) call symba_merger_allocate(mergeadd_list, 1)
-   if (.not. allocated(mergesub_list%status)) call symba_merger_allocate(mergesub_list, 1)
 
-     DO i = 2, nplm
-         !$omp parallel do schedule(static) default(private) &
-         !$omp shared(i, npl, nplm, symba_plA, param, dt, irec, plplenc_list, nplplenc)
-         DO j = i + 1, npl
-               xr(:) = symba_plA%helio%swiftest%xh(:,j) - symba_plA%helio%swiftest%xh(:,i)
-               vr(:) = symba_plA%helio%swiftest%vh(:,j) - symba_plA%helio%swiftest%vh(:,i)
-               CALL symba_chk(xr(:), vr(:), symba_plA%helio%swiftest%rhill(i), &
-                    symba_plA%helio%swiftest%rhill(j), dt, irec, lencounter, lvdotr)
-               IF (lencounter) THEN
-                  !$omp critical
-                  nplplenc = nplplenc + 1
-                  call symba_plplenc_size_check(plplenc_list, nplplenc)
-                  plplenc_list%status(nplplenc) = ACTIVE
-                  plplenc_list%lvdotr(nplplenc) = lvdotr
-                  plplenc_list%level(nplplenc) = irec
-                  ! Set the first body to be the biggest in the encounter list
-                  if (symba_plA%helio%swiftest%mass(i) >= symba_plA%helio%swiftest%mass(j)) then
-                     plplenc_list%index1(nplplenc) = i
-                     plplenc_list%index2(nplplenc) = j
-                  else
-                     plplenc_list%index1(nplplenc) = j
-                     plplenc_list%index2(nplplenc) = i
-                  end if
-                  symba_plA%lcollision(i) = .FALSE.
-                  symba_plA%nplenc(i) = symba_plA%nplenc(i) + 1
-                  symba_plA%levelg(i) = irec
-                  symba_plA%levelm(i) = irec
-                  symba_plA%kin(i)%nchild = 0 
-                  symba_plA%kin(i)%parent = i 
-                  symba_plA%lcollision(j) = .FALSE.
-                  symba_plA%nplenc(j) = symba_plA%nplenc(j) + 1
-                  symba_plA%levelg(j) = irec
-                  symba_plA%levelm(j) = irec
-                  symba_plA%kin(j)%nchild = 0
-                  symba_plA%kin(j)%parent = j
-                  !$omp end critical
-               END IF
-          END DO
-         !$omp end parallel do
-          DO j = 1, ntp
-               xr(:) = symba_tpA%helio%swiftest%xh(:,j) - symba_plA%helio%swiftest%xh(:,i)
-               vr(:) = symba_tpA%helio%swiftest%vh(:,j) - symba_plA%helio%swiftest%vh(:,i)
-               CALL symba_chk(xr(:), vr(:), symba_plA%helio%swiftest%rhill(i), 0.0_DP, dt, irec, lencounter, lvdotr)
-               IF (lencounter) THEN
-                  npltpenc = npltpenc + 1
-                  call symba_pltpenc_size_check(pltpenc_list, npltpenc)
-                  symba_plA%ntpenc(i) = symba_plA%ntpenc(i) + 1
-                  symba_plA%levelg(i) = irec
-                  symba_plA%levelm(i) = irec
-                  symba_tpA%nplenc(j) = symba_tpA%nplenc(j) + 1
-                  symba_tpA%levelg(j) = irec
-                  symba_tpA%levelm(j) = irec
-                  pltpenc_list%status(npltpenc) = ACTIVE
-                  pltpenc_list%lvdotr(npltpenc) = lvdotr
-                  pltpenc_list%level(npltpenc) = irec
-                  pltpenc_list%indexpl(npltpenc) = i
-                  pltpenc_list%indextp(npltpenc) = j
-               END IF
-          END DO
-     END DO
+   do i = 2, nplm
+      !$omp parallel do schedule(static) default(private) &
+      !$omp shared(i, npl, nplm, symba_plA, param, dt, irec, plplenc_list, nplplenc)
+      do j = i + 1, npl
+            xr(:) = symba_plA%helio%swiftest%xh(:,j) - symba_plA%helio%swiftest%xh(:,i)
+            vr(:) = symba_plA%helio%swiftest%vh(:,j) - symba_plA%helio%swiftest%vh(:,i)
+            call symba_chk(xr(:), vr(:), symba_plA%helio%swiftest%rhill(i), &
+                  symba_plA%helio%swiftest%rhill(j), dt, irec, lencounter, lvdotr)
+            if (lencounter) then
+               !$omp critical
+               nplplenc = nplplenc + 1
+               call symba_plplenc_size_check(plplenc_list, nplplenc)
+               plplenc_list%status(nplplenc) = ACTIVE
+               plplenc_list%lvdotr(nplplenc) = lvdotr
+               plplenc_list%level(nplplenc) = irec
+               ! set the first body to be the biggest in the encounter list
+               if (symba_plA%helio%swiftest%mass(i) >= symba_plA%helio%swiftest%mass(j)) then
+                  plplenc_list%index1(nplplenc) = i
+                  plplenc_list%index2(nplplenc) = j
+               else
+                  plplenc_list%index1(nplplenc) = j
+                  plplenc_list%index2(nplplenc) = i
+               end if
+               symba_plA%nplenc(i) = symba_plA%nplenc(i) + 1
+               symba_plA%levelg(i) = irec
+               symba_plA%levelm(i) = irec
+               symba_plA%nplenc(j) = symba_plA%nplenc(j) + 1
+               symba_plA%levelg(j) = irec
+               symba_plA%levelm(j) = irec
+               !$omp end critical
+            end if
+         end do
+      !$omp end parallel do
+         do j = 1, ntp
+            xr(:) = symba_tpA%helio%swiftest%xh(:,j) - symba_plA%helio%swiftest%xh(:,i)
+            vr(:) = symba_tpA%helio%swiftest%vh(:,j) - symba_plA%helio%swiftest%vh(:,i)
+            call symba_chk(xr(:), vr(:), symba_plA%helio%swiftest%rhill(i), 0.0_DP, dt, irec, lencounter, lvdotr)
+            if (lencounter) then
+               npltpenc = npltpenc + 1
+               call symba_pltpenc_size_check(pltpenc_list, npltpenc)
+               symba_plA%ntpenc(i) = symba_plA%ntpenc(i) + 1
+               symba_plA%levelg(i) = irec
+               symba_plA%levelm(i) = irec
+               symba_tpA%nplenc(j) = symba_tpA%nplenc(j) + 1
+               symba_tpA%levelg(j) = irec
+               symba_tpA%levelm(j) = irec
+               pltpenc_list%status(npltpenc) = ACTIVE
+               pltpenc_list%lvdotr(npltpenc) = lvdotr
+               pltpenc_list%level(npltpenc) = irec
+               pltpenc_list%indexpl(npltpenc) = i
+               pltpenc_list%indextp(npltpenc) = j
+            end if
+         end do
+   end do
 
-     lencounter = ((nplplenc > 0) .OR. (npltpenc > 0))
-     IF (lencounter) THEN
-          CALL symba_step_interp(t, npl, nplm, ntp, symba_plA, symba_tpA, &
+     lencounter = ((nplplenc > 0) .or. (npltpenc > 0))
+     if (lencounter) then
+          call symba_step_interp(t, npl, nplm, ntp, symba_plA, symba_tpA, &
                dt, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, &
                nmergesub, mergeadd_list, mergesub_list,  param)
-          lfirst = .TRUE.
-     ELSE 
-          CALL symba_step_helio(lfirst, param%lextra_force, t, npl, nplm, ntp,&
+          lfirst = .true.
+     else 
+          call symba_step_helio(lfirst, param%lextra_force, t, npl, nplm, ntp,&
                symba_plA%helio, symba_tpA%helio, &
                param%j2rp2, param%j4rp4, dt)
-     END IF
+     end if
 
-     RETURN
+     return
 
-END SUBROUTINE symba_step
-!**********************************************************************************************************************************
-!
-!  Author(s)   : David E. Kaufmann
-!
-!  Revision Control System (RCS) Information
-!
-!  Source File : $RCSfile$
-!  Full Path   : $Source$
-!  Revision    : $Revision$
-!  Date        : $Date$
-!  Programmer  : $Author$
-!  Locked By   : $Locker$
-!  State       : $State$
-!
-!  Modification History:
-!
-!  $Log$
-!**********************************************************************************************************************************
+eND SUBROUTINE symba_step

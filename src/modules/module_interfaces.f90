@@ -1383,6 +1383,21 @@ MODULE module_interfaces
      END INTERFACE
 
      interface
+         subroutine symba_step_reset(npl, symba_plA, symba_tpA, plplenc_list, pltpenc_list, mergeadd_list, mergesub_list)
+         use swiftest_globals
+         use swiftest_data_structures
+         USE module_symba
+         implicit none
+         integer(I4B), intent(in) :: npl
+         type(symba_pl), intent(inout)  :: symba_plA
+         type(symba_tp), intent(inout)  :: symba_tpA
+         type(symba_plplenc), intent(inout)   :: plplenc_list
+         type(symba_pltpenc), intent(inout)   :: pltpenc_list
+         type(symba_merger), intent(inout)    :: mergeadd_list, mergesub_list
+         end subroutine symba_step_reset
+      end interface 
+
+     interface
          function symba_mergeadd_eoffset(npl, symba_plA, mergeadd_list, mergesub_list, addi, &
             addf, subi, subf, param) result(eoffset)
             USE swiftest_globals

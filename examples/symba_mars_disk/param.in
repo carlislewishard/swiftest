@@ -2,7 +2,7 @@
 NPLMAX         10000
 NTPMAX         0
 T0             0.0 
-TSTOP          31536000000.0
+TSTOP          6.03500E+06
 DT             500.0
 PL_IN          mars.in
 TP_IN          tp.in
