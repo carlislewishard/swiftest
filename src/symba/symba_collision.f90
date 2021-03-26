@@ -47,6 +47,7 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
 
       idx_parent(:) = symba_plA%kin(idx(:))%parent
       if (idx_parent(1) == idx_parent(2)) cycle ! These are both children of the same parent, so skip this pair
+
       mass(:) = symba_plA%helio%swiftest%mass(idx_parent(:))
       name(:) = symba_plA%helio%swiftest%name(idx_parent(:))
       radius(:) = symba_plA%helio%swiftest%radius(idx_parent(:))

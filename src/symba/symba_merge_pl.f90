@@ -70,7 +70,7 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
    if (lcollision) then
       plplenc_list%status(index_enc) = MERGED
       ! Check if either of these particles has been involved in a collision before. If so, make it a parent
-      if (any(symba_plA%lcollision(idx(:)))) then
+      if (symba_plA%lcollision(idx(1)) .or. symba_plA%lcollision(idx(2))) then
          ! At least one of these bodies has been involved in a collision before. If so, add the currently coliding body to
          ! its list of children (along with any of *their* children).
 
@@ -90,24 +90,24 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
          nchild_inherit = symba_plA%kin(index_child)%nchild
          nchild_new = nchild_orig + nchild_inherit + 1
          allocate(temp(nchild_new))
-         if (nchild_orig > 0) temp(1:nchild_orig) = symba_plA%kin(index_parent)%child(:)
-         ! Find out if the child body has any children of its own. The new parent wil inherit its children
+         if (nchild_orig > 0) temp(1:nchild_orig) = symba_plA%kin(index_parent)%child(1:nchild_orig)
+         ! Find out if the child body has any children of its own. The new parent wil inherit these children
          if (nchild_inherit > 0) then
-            temp(nchild_orig+1:nchild_orig+nchild_inherit) = symba_plA%kin(index_child)%child(:)
+            temp(nchild_orig+1:nchild_orig+nchild_inherit) = symba_plA%kin(index_child)%child(1:nchild_inherit)
             do i = 1, nchild_inherit
                j = symba_plA%kin(index_child)%child(i)
                ! Set the childrens' parent to the new parent
                symba_plA%kin(j)%parent = index_parent
             end do
-            deallocate(symba_plA%kin(index_child)%child)
-            symba_plA%kin(index_child)%nchild = 0
          end if
-         ! Set the current child to its parent
+         if (allocated(symba_plA%kin(index_child)%child)) deallocate(symba_plA%kin(index_child)%child)
+         symba_plA%kin(index_child)%nchild = 0
+         ! Add the new child to its parent
          symba_plA%kin(index_child)%parent = index_parent
          temp(nchild_new) = index_child
          ! Save the new child array to the parent
+         symba_plA%kin(index_parent)%nchild = nchild_new
          call move_alloc(from=temp, to=symba_plA%kin(index_parent)%child)
-         symba_plA%kin(index_parent)%nchild = nchild_orig + nchild_inherit + 1
       end if
       do i = 1, 2
          if (.not.symba_plA%lcollision(idx(i))) then
@@ -136,8 +136,8 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
             x(:, j)  = symba_plA%helio%swiftest%xh(:,idx(j)) 
             v(:, j)  = symba_plA%helio%swiftest%vb(:,idx(j)) - vbs(:)
          end do
-         call io_write_encounter(t, name(1), name(2), mass(1), mass(2), radius(1), radius(2), x(:, 1), x(:, 2), &
-            v(:, 1), v(:, 2), param%encounter_file)
+         !call io_write_encounter(t, name(1), name(2), mass(1), mass(2), radius(1), radius(2), x(:, 1), x(:, 2), &
+         !   v(:, 1), v(:, 2), param%encounter_file)
       end if
    end if
 
