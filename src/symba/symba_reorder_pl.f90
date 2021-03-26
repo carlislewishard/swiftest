@@ -1,114 +1,57 @@
-!**********************************************************************************************************************************
-!
-!  Unit Name   : symba_reorder_pl
-!  Unit Type   : subroutine
-!  Project     : Swiftest
-!  Package     : symba
-!  Language    : Fortran 90/95
-!
-!  Description : Rearrange SyMBA planet arrays in order of decreasing mass
-!
-!  Input
-!    Arguments : npl        : number of planets
-!                symba_plA  : structure of arrays of SyMBA planet 
-!    Terminal  : none
-!    File      : none
-!
-!  Output
-!    Arguments : symba_plA : structure of arrays of SyMBA planet 
-!    Terminal  : none
-!    File      : none
-!
-!  Invocation  : CALL symba_reorder_pl(npl, symba_plA)
-!
-!  Notes       : 
-!
-!**********************************************************************************************************************************
-SUBROUTINE symba_reorder_pl(npl, symba_plA)
+subroutine symba_reorder_pl(npl, symba_plA)
+   !! author: The Purdue Swiftest Team -  David A. Minton, Carlisle A. Wishard, Jennifer L.L. Pouplin, and Jacob R. Elliott
+   !!
+   !! Rearrange symba planet arrays in order of decreasing mass
+   !!   
+   use swiftest
+   use swiftest_globals
+   use swiftest_data_structures
+   use module_swiftestalloc
+   USE module_symba
+   use module_interfaces, EXCEPT_THIS_ONE => symba_reorder_pl
+   implicit none
 
-! Modules
-     USE swiftest
-     USE module_helio
-     USE module_symba
-     USE module_interfaces, EXCEPT_THIS_ONE => symba_reorder_pl
-     IMPLICIT NONE
+   integer(I4B), intent(in) :: npl
+   type(symba_pl), intent(inout)  :: symba_plA
 
-! Arguments
-     INTEGER(I4B), INTENT(IN) :: npl
-     TYPE(symba_pl), INTENT(INOUT)  :: symba_plA
+   integer(I4B)                  :: i
+   integer(I4B), dimension(:), allocatable   :: sort_index
+   type(symba_pl)                  :: symba_plwkspA
 
-! Internals
-     INTEGER(I4B)                              :: i
-     INTEGER(I4B), DIMENSION(:), ALLOCATABLE   :: index
-     REAL(DP), DIMENSION(:), ALLOCATABLE       :: mass
-     REAL(DP), DIMENSION(:,:), allocatable     :: symba_plwkspA
-     INTEGER(I4B), DIMENSION(:,:), allocatable :: symba_plwkspA_id_status
+   call symba_pl_allocate(symba_plwkspA,npl)
+   allocate(sort_index(npl))
 
-! Executable code
-     ALLOCATE(index(npl), mass(npl))
-     ALLOCATE(symba_plwkspA(12,npl))
-     ALLOCATE(symba_plwkspA_id_status(2,npl))
+   symba_plwkspA%helio%swiftest%name(:) = symba_plA%helio%swiftest%name(:)
+   symba_plwkspA%helio%swiftest%status(:) = symba_plA%helio%swiftest%status(:)
+   symba_plwkspA%helio%swiftest%mass(:) = symba_plA%helio%swiftest%mass(:)
+   symba_plwkspA%helio%swiftest%radius(:) = symba_plA%helio%swiftest%radius(:)
+   symba_plwkspA%helio%swiftest%xh(:,:) = symba_plA%helio%swiftest%xh(:,:)
+   symba_plwkspA%helio%swiftest%vh(:,:) = symba_plA%helio%swiftest%vh(:,:)
+   symba_plwkspA%helio%swiftest%xb(:,:) = symba_plA%helio%swiftest%xb(:,:)
+   symba_plwkspA%helio%swiftest%vb(:,:) = symba_plA%helio%swiftest%vb(:,:)
+   symba_plwkspA%helio%swiftest%rot(:,:) = symba_plA%helio%swiftest%rot(:,:)
+   symba_plwkspA%helio%swiftest%Ip(:,:) = symba_plA%helio%swiftest%Ip(:,:)
+   symba_plwkspA%helio%swiftest%rhill(:) = symba_plA%helio%swiftest%rhill(:)
 
-     DO i = 1, npl
-          mass(i) = symba_plA%helio%swiftest%mass(i)
-          symba_plwkspA_id_status(1,i) = symba_plA%helio%swiftest%name(i)
-          symba_plwkspA_id_status(2,i) = symba_plA%helio%swiftest%status(i)
-          symba_plwkspA(1,i) = symba_plA%helio%swiftest%mass(i)
-          symba_plwkspA(2,i) = symba_plA%helio%swiftest%radius(i)
-          symba_plwkspA(3,i) = symba_plA%helio%swiftest%xh(1,i)
-          symba_plwkspA(4,i) = symba_plA%helio%swiftest%xh(2,i)
-          symba_plwkspA(5,i) = symba_plA%helio%swiftest%xh(3,i)
-          symba_plwkspA(6,i) = symba_plA%helio%swiftest%vh(1,i)
-          symba_plwkspA(7,i) = symba_plA%helio%swiftest%vh(2,i)
-          symba_plwkspA(8,i) = symba_plA%helio%swiftest%vh(3,i)
-          symba_plwkspA(9,i) = symba_plA%helio%swiftest%rhill(i)
-          symba_plwkspA(10,i) = symba_plA%helio%ah(1,i)
-          symba_plwkspA(11,i) = symba_plA%helio%ah(2,i)
-          symba_plwkspA(12,i) = symba_plA%helio%ah(3,i)
-     END DO
-     CALL util_index(mass, index)
-     WRITE(*,*) "************ REORDER ***************"
-     DO i = 1, npl
-          symba_plA%helio%swiftest%name(i) = symba_plwkspA_id_status(1,index(npl-i+1))
-          symba_plA%helio%swiftest%status(i) = symba_plwkspA_id_status(2,index(npl-i+1))
-          symba_plA%helio%swiftest%mass(i) = symba_plwkspA(1,index(npl-i+1))
-          symba_plA%helio%swiftest%radius(i) = symba_plwkspA(2,index(npl-i+1))
-          symba_plA%helio%swiftest%xh(1,i) = symba_plwkspA(3,index(npl-i+1))
-          symba_plA%helio%swiftest%xh(2,i) = symba_plwkspA(4,index(npl-i+1))
-          symba_plA%helio%swiftest%xh(3,i) = symba_plwkspA(5,index(npl-i+1))
-          symba_plA%helio%swiftest%vh(1,i) = symba_plwkspA(6,index(npl-i+1))
-          symba_plA%helio%swiftest%vh(2,i) = symba_plwkspA(7,index(npl-i+1))
-          symba_plA%helio%swiftest%vh(3,i) = symba_plwkspA(8,index(npl-i+1))
-          symba_plA%helio%swiftest%rhill(i) = symba_plwkspA(9,index(npl-i+1))
-          symba_plA%helio%ah(1,i) = symba_plwkspA(10,index(npl-i+1))
-          symba_plA%helio%ah(2,i) = symba_plwkspA(11,index(npl-i+1))
-          symba_plA%helio%ah(3,i) = symba_plwkspA(12,index(npl-i+1))
+   ! sort by mass
+   call util_index(symba_plA%helio%swiftest%mass, sort_index)
+   write(*,*) "************ REORDER ***************"
+   do i = 1, npl
+      symba_plA%helio%swiftest%name(i) = symba_plwkspA%helio%swiftest%name(sort_index(npl-i+1))
+      symba_plA%helio%swiftest%status(i) = symba_plwkspA%helio%swiftest%status(sort_index(npl-i+1))
+      symba_plA%helio%swiftest%mass(i) = symba_plwkspA%helio%swiftest%mass(sort_index(npl-i+1))
+      symba_plA%helio%swiftest%radius(i) = symba_plwkspA%helio%swiftest%radius(sort_index(npl-i+1))
+      symba_plA%helio%swiftest%xh(:,i) = symba_plwkspA%helio%swiftest%xh(:,sort_index(npl-i+1))
+      symba_plA%helio%swiftest%vh(:,i) = symba_plwkspA%helio%swiftest%vh(:,sort_index(npl-i+1))
+      symba_plA%helio%swiftest%xb(:,i) = symba_plwkspA%helio%swiftest%xb(:,sort_index(npl-i+1))
+      symba_plA%helio%swiftest%vb(:,i) = symba_plwkspA%helio%swiftest%vb(:,sort_index(npl-i+1))
+      symba_plA%helio%swiftest%rot(:,i) = symba_plwkspA%helio%swiftest%rot(:,sort_index(npl-i+1))
+      symba_plA%helio%swiftest%Ip(:,i) = symba_plwkspA%helio%swiftest%Ip(:,sort_index(npl-i+1))
+      symba_plA%helio%swiftest%rhill(i) = symba_plwkspA%helio%swiftest%rhill(sort_index(npl-i+1))
+   end do
+   call symba_pl_deallocate(symba_plwkspA)
+   deallocate(sort_index)
 
+   return
 
-     END DO
-     IF (ALLOCATED(symba_plwkspA)) DEALLOCATE(symba_plwkspA)
-     IF (ALLOCATED(symba_plwkspA_id_status)) DEALLOCATE(symba_plwkspA_id_status)
-     IF (ALLOCATED(mass)) DEALLOCATE(mass)
-     IF (ALLOCATED(index)) DEALLOCATE(index)
-
-     RETURN
-
-END SUBROUTINE symba_reorder_pl
-!**********************************************************************************************************************************
-!
-!  Author(s)   : David E. Kaufmann
-!
-!  Revision Control System (RCS) Information
-!
-!  Source File : $RCSfile$
-!  Full Path   : $Source$
-!  Revision    : $Revision$
-!  Date        : $Date$
-!  Programmer  : $Author$
-!  Locked By   : $Locker$
-!  State       : $State$
-!
-!  Modification History:
-!
-!  $Log$
-!**********************************************************************************************************************************
+end subroutine symba_reorder_pl
