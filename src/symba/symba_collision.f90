@@ -75,9 +75,11 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
       name2(1) = name(2)
 
       ! Find the barycenter of each body along with its children, if it has any
+      x(:, 1)  = plplenc_list%x1(:,idx(1))!symba_plA%helio%swiftest%xh(:, idx_parent(j))
+      v(:, 1)  = plplenc_list%v1(:,idx(1))!symba_plA%helio%swiftest%vb(:, idx_parent(j))
+      x(:, 2)  = plplenc_list%x2(:,idx(2))
+      v(:, 2)  = plplenc_list%v2(:,idx(2))
       do j = 1, 2
-         x(:, j)  = symba_plA%helio%swiftest%xh(:, idx_parent(j))
-         v(:, j)  = symba_plA%helio%swiftest%vb(:, idx_parent(j))
          Ip(:, j) = mass(j) * symba_plA%helio%swiftest%Ip(:, idx_parent(j))
          ! Assume principal axis rotation about axis corresponding to highest moment of inertia (3rd Ip)
          L_spin(:, j)  = Ip(3, j) * radius(j)**2 * symba_plA%helio%swiftest%rot(:, idx_parent(j))
