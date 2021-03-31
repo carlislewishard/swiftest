@@ -30,14 +30,14 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
    real(DP), dimension(2)                     :: radius, mass 
    real(DP), dimension(NDIM, 2)               :: x, v
    real(DP)                                   :: r2, rlim, rlim2, vdotr, tcr2, dt2, a, e, q
-   real(DP)                                   :: mtot
+   !real(DP)                                   :: mtot
    real(DP), dimension(NDIM)                  :: xr, vr
    logical                                    :: lcollision
    integer(I4B), dimension(:), allocatable    :: temp
-   real(DP)                                   :: n, a1, a2, r1, r2, f1, f2, x1, x2, y1, y2
+   !real(DP)                                   :: n, a1, a2, r1, r2, f1, f2, x1, x2, y1, y2
    real(DP)                                   :: m1, m2, mtot, vx1, vx2, vy1, vy2
    real(DP), dimension(NDIM)                  :: xh1, xh2, vb1, vb2, vbcom, xhcom
-   real(DP), dimension(NDIM)                  :: v1_wrt2, v1, v2, v1_unit_vec, v2_unit_vec, p1, p2
+   !real(DP), dimension(NDIM)                  :: v1_wrt2, v1, v2, v1_unit_vec, v2_unit_vec, p1, p2
 
    ! recalculates vbs 
    call coord_vb2vh(npl, symba_plA%helio%swiftest)
@@ -48,10 +48,10 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
 
    m1 = symba_plA%helio%swiftest%mass(idx(1))         ! mass of larger parent
    m2 = symba_plA%helio%swiftest%mass(idx(2))         ! mass of smaller parent
-   xh1(:) = symba_plA%helio%swiftest%xh(idx(1))       ! heliocentric position of larger parent at time collision is detected / deemed inevitable
-   xh2(:) = symba_plA%helio%swiftest%xh(idx(2))       ! heliocentric position of smaller parent at time collision is detected / deemed inevitable
-   vb1(:) = symba_plA%helio%swiftest%vb(idx(1))       ! barycentric velocity of larger parent at time collision is detected / deemed inevitable
-   vb2(:) = symba_plA%helio%swiftest%vb(idx(2))       ! barycentric velocity of smaller parent at time collision is detected / deemed inevitable
+   xh1(:) = symba_plA%helio%swiftest%xh(:,idx(1))     ! heliocentric position of larger parent at time collision is detected / deemed inevitable
+   xh2(:) = symba_plA%helio%swiftest%xh(:,idx(2))     ! heliocentric position of smaller parent at time collision is detected / deemed inevitable
+   vb1(:) = symba_plA%helio%swiftest%vb(:,idx(1))     ! barycentric velocity of larger parent at time collision is detected / deemed inevitable
+   vb2(:) = symba_plA%helio%swiftest%vb(:,idx(2))     ! barycentric velocity of smaller parent at time collision is detected / deemed inevitable
 
    vbcom(:) = (m1 * vb1 + m2 * vb2) / (m1 + m2)
    xhcom(:) = (m1 * xh1 + m2 * xh2) / (m1 + m2)
@@ -77,6 +77,7 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
             call orbel_xv2aeq(xr(:), vr(:), mtot, a, e, q)
             if (q < rlim) then 
                lcollision = .true.
+            end if
          end if
 
       end if
