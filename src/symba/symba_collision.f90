@@ -30,10 +30,10 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
    integer(I4B), dimension(2)              :: idx, idx_parent, nchild, name 
    real(DP), dimension(2)                  :: radius, mass, density, volume
    real(DP), dimension(2)                  :: radius_si, mass_si, density_si
-   real(DP), dimension(NDIM, 2)            :: x, v, L_spin, Ip
+   real(DP), dimension(NDIM, 2)            :: x, v, L_spin, Ip, x_plplenc, v_plplenc
    real(DP)                                :: volchild, dentot, Mcb_si
    real(DP)                                :: mmax, mchild, mtot
-   real(DP), dimension(NDIM)               :: xc, vc, xcom, vcom, xchild, vchild, xcrossv
+   real(DP), dimension(NDIM)               :: xc, vc, xcom, vcom, xchild, vchild, xcrossv, xcom_plplenc, vcom_plplenc
    real(DP)                                :: mtiny_si
    integer(I4B), dimension(:), allocatable :: array_index1_child, array_index2_child, name1, name2
    real(DP)                                :: mlr, mslr
@@ -74,6 +74,11 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
       name1(1) = name(1)
       name2(1) = name(2)
 
+      x_plplenc(:,1) = plplenc_list%xh1(:,index_enc)
+      x_plplenc(:,2) = plplenc_list%xh2(:,index_enc)
+      v_plplenc(:,1) = plplenc_list%vb1(:,index_enc)
+      v_plplenc(:,2) = plplenc_list%vb2(:,index_enc)
+
       ! Find the barycenter of each body along with its children, if it has any
       do j = 1, 2
          x(:, j)  = symba_plA%helio%swiftest%xh(:, idx_parent(j))
@@ -103,6 +108,8 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
                ! Get angular momentum of the child-parent pair and add that to the spin
                xcom(:) = (mass(j) * x(:,j) + mchild * xchild(:)) / (mass(j) + mchild)
                vcom(:) = (mass(j) * v(:,j) + mchild * vchild(:)) / (mass(j) + mchild)
+               xcom_plplenc(:) = (mass(j) * x_plplenc(:,j) + mchild * xchild(:)) / (mass(j) + mchild)
+               vcom_plplenc(:) = (mass(j) * v_plplenc(:,j) + mchild * vchild(:)) / (mass(j) + mchild)
                xc(:) = x(:, j) - xcom(:)
                vc(:) = v(:, j) - vcom(:)
                call util_crossproduct(xc(:), vc(:), xcrossv(:))
@@ -140,10 +147,10 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
          end if
          mass_si(:)    = (mass(:) / GU) * MU2KG 
          radius_si(:)  = radius(:) * DU2M
-         x1_si(:)      = plplenc_list%xh1(:,index_enc) * DU2M
-         v1_si(:)      = plplenc_list%vb1(:,index_enc) * DU2M / TU2S
-         x2_si(:)      = plplenc_list%xh2(:,index_enc) * DU2M
-         v2_si(:)      = plplenc_list%vb2(:,index_enc) * DU2M / TU2S
+         x1_si(:)      = x_plplenc(:,1) * DU2M
+         v1_si(:)      = v_plplenc(:,1) * DU2M / TU2S
+         x2_si(:)      = x_plplenc(:,2) * DU2M
+         v2_si(:)      = v_plplenc(:,2) * DU2M / TU2S
          density_si(:) = (density(:) / GU) * MU2KG / DU2M**3
          Mcb_si        = symba_plA%helio%swiftest%mass(1) * MU2KG / GU
          mtiny_si      = (param%mtiny / GU) * MU2KG
