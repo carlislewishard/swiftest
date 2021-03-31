@@ -70,10 +70,10 @@ MODULE module_symba
       integer(I4B), dimension(:),   allocatable :: index2   ! position of the second planet in encounter
       integer(I4B), dimension(:),   allocatable :: enc_child   ! the child of the encounter
       integer(I4B), dimension(:),   allocatable :: enc_parent   ! the child of the encounter
-      real(DP),     dimension(:,:), allocatable :: x1          ! the position of parent 1 in encounter
-      real(DP),     dimension(:,:), allocatable :: x2          ! the position of parent 2 in encounter
-      real(DP),     dimension(:,:), allocatable :: v1          ! the velocity of parent 1 in encounter
-      real(DP),     dimension(:,:), allocatable :: v2          ! the velocity of parent 2 in encounter
+      real(DP),     dimension(:,:), allocatable :: xh1          ! the heliocentric position of parent 1 in encounter
+      real(DP),     dimension(:,:), allocatable :: xh2          ! the heliocentric position of parent 2 in encounter
+      real(DP),     dimension(:,:), allocatable :: vb1          ! the barycentric velocity of parent 1 in encounter
+      real(DP),     dimension(:,:), allocatable :: vb2          ! the barycentric velocity of parent 2 in encounter
    end type symba_plplenc
 
    type symba_pltpenc

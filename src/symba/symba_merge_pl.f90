@@ -68,34 +68,6 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
    ! checks if bodies are actively colliding in this time step
    if (r2 <= rlim2) then 
       lcollision = .true.
-
-      !! The velocity of body 1 with respect to body 2
-      v1_wrt2 = sqrt(vb1**2 - (m1 * m2 / sqrt(r2)) + (m1 * m2 / rlim))                    !! From conservation of energy
-      !! The velocity of body 2 with respect to the barycenter of the collision
-      v2 = ((m1 * vb1) + (m2 * vb2) - (m1 * v1_wrt2)) / (m1 + m2)                         !! From conservation of linear momentum
-      !! The velocity of body 1 with respect to the barycenter of the collision
-      v1 = v1_wrt2 + v2
-
-      !! The position of body 1 with respect to the barycenter of the collision
-      v1_unit_vec = - v1 / norm2(v1)                                                      !! The opposite trajectory of body 1 
-      p1 = xhcom * (m2 / mtot) * v1_unit_vec
-      plplenc_list%x1(1,index_enc) = p1(1) + xhcom(1)
-      plplenc_list%x1(2,index_enc) = p1(2) + xhcom(2)
-      plplenc_list%x1(3,index_enc) = xh1(3)
-      plplenc_list%v1(1,index_enc) = v1(1) + vbcom(1)
-      plplenc_list%v1(2,index_enc) = v1(2) + vbcom(2)
-      plplenc_list%v1(3,index_enc) = vb1(3)
-
-      !! The position of body 2 with respect to the barycenter of the collision
-      v2_unit_vec = - v2 / norm2(v2)                                                      !! The opposite trajectory of body 2
-      p2 = xhcom * (m1 / mtot) * v2_unit_vec
-      plplenc_list%x2(1,index_enc) = p2(1) + xhcom(1)
-      plplenc_list%x2(2,index_enc) = p2(2) + xhcom(2)
-      plplenc_list%x2(3,index_enc) = xh2(3)
-      plplenc_list%v2(1,index_enc) = v2(1) + vbcom(1)
-      plplenc_list%v2(2,index_enc) = v2(2) + vbcom(2)
-      plplenc_list%v2(3,index_enc) = vb2(3)
-
       ! if they are not actively colliding in  this time step, checks if they are going to collide next time step based on velocities and q
    else 
       if (plplenc_list%lvdotr(index_enc) .and. (vdotr > 0.0_DP)) then 
@@ -105,44 +77,52 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
             call orbel_xv2aeq(xr(:), vr(:), mtot, a, e, q)
             if (q < rlim) then 
                lcollision = .true.
-
-               n = sqrt(mtot / (a**3))                                                    !! Eq. 2.26 Murray & Dermott
-
-               !! The orbit of body 1 with respect to the barycenter of the collision
-               a1 = a * (m2 / mtot)                                                       !! Eq. 2.109 Murray & Dermott
-               r1 = rlim * (m2 / mtot)                                                    !! Eq. 2.109 Murray & Dermott
-               f1 = acos(((a1 * (1.0_DP - e**2)) / (r1 * e)) - (1.0_DP / e))              !! Eq. 2.20 Murray & Dermott
-               x1 = r1 * cos(f1)                                                          !! Eq. 2.21 Murray & Dermott
-               y1 = r1 * sin(f1)                                                          !! Eq. 2.21 Murray & Dermott
-               vx1 = = - ((n * a1) / sqrt(1 - e**2)) * sin(f1)                            !! Eq. 2.36 Murray & Dermott
-               vy1 = ((n * a1) / sqrt(1 - e**2)) * (e + cos(f1))                          !! Eq. 2.36 Murray & Dermott
-               plplenc_list%x1(1,index_enc) = x1 + xhcom(1)
-               plplenc_list%x1(2,index_enc) = y1 + xhcom(2)
-               plplenc_list%x1(3,index_enc) = xh1(3)
-               plplenc_list%v1(1,index_enc) = vx1 + vbcom(1)
-               plplenc_list%v1(2,index_enc) = vy1 + vbcom(2)
-               plplenc_list%v1(3,index_enc) = vb1(3)
-
-               !! The orbit of body 2 with respect to the barycenter of the collision
-               a2 = a * (m1 / mtot)                                                       !! Eq. 2.109 Murray & Dermott
-               r2 = rlim * (m1 / mtot)                                                    !! Eq. 2.109 Murray & Dermott
-               f2 = acos(((a2 * (1.0_DP - e**2)) / (r2 * e)) - (1.0_DP / e))              !! Eq. 2.20 Murray & Dermott
-               x2 = r2 * cos(f2)                                                          !! Eq. 2.21 Murray & Dermott
-               y2 = r2 * sin(f2)                                                          !! Eq. 2.21 Murray & Dermott
-               vx2 = = - ((n * a2) / sqrt(1 - e**2)) * sin(f2)                            !! Eq. 2.36 Murray & Dermott
-               vy2 = ((n * a2) / sqrt(1 - e**2)) * (e + cos(f2))                          !! Eq. 2.36 Murray & Dermott
-               plplenc_list%x2(1,index_enc) = x2 + xhcom(1)
-               plplenc_list%x2(2,index_enc) = y2 + xhcom(2)
-               plplenc_list%x2(3,index_enc) = xh2(3)
-               plplenc_list%v2(1,index_enc) = vx2 + vbcom(1)
-               plplenc_list%v2(2,index_enc) = vy2 + vbcom(2)
-               plplenc_list%v2(3,index_enc) = vb2(3)
          end if
 
       end if
    end if
 
    if (lcollision) then
+
+      !call orbel_xv2aeq(xr(:), vr(:), mtot, a, e, q)
+      
+      !n = sqrt(mtot / (a**3))                                                    !! Eq. 2.26 Murray & Dermott
+
+      !! The orbit of body 1 with respect to the barycenter of the collision
+      !a1 = a * (m2 / mtot)                                                       !! Eq. 2.109 Murray & Dermott
+      !r1 = rlim * (m2 / mtot)                                                    !! Eq. 2.109 Murray & Dermott
+      !f1 = acos(((a1 * (e**2 - 1.0_DP)) / (r1 * e)) - (1.0_DP / e))              !! Eq. 2.20 Murray & Dermott
+      !x1 = r1 * cos(f1)                                                          !! Eq. 2.21 Murray & Dermott
+      !y1 = r1 * sin(f1)                                                          !! Eq. 2.21 Murray & Dermott
+      !vx1 = = - ((n * a1) / sqrt(1 - e**2)) * sin(f1)                            !! Eq. 2.36 Murray & Dermott
+      !vy1 = ((n * a1) / sqrt(1 - e**2)) * (e + cos(f1))                          !! Eq. 2.36 Murray & Dermott
+      !plplenc_list%x1(1,index_enc) = x1 + xhcom(1)
+      !plplenc_list%x1(2,index_enc) = y1 + xhcom(2)
+      !plplenc_list%x1(3,index_enc) = xh1(3)
+      !plplenc_list%v1(1,index_enc) = vx1 + vbcom(1)
+      !plplenc_list%v1(2,index_enc) = vy1 + vbcom(2)
+      !plplenc_list%v1(3,index_enc) = vb1(3)
+
+      !! The orbit of body 2 with respect to the barycenter of the collision
+      !a2 = a * (m1 / mtot)                                                       !! Eq. 2.109 Murray & Dermott
+      !r2 = rlim * (m1 / mtot)                                                    !! Eq. 2.109 Murray & Dermott
+      !f2 = acos(((a2 * (e**2 - 1.0_DP)) / (r2 * e)) - (1.0_DP / e))              !! Eq. 2.20 Murray & Dermott
+      !x2 = r2 * cos(f2)                                                          !! Eq. 2.21 Murray & Dermott
+      !y2 = r2 * sin(f2)                                                          !! Eq. 2.21 Murray & Dermott
+      !vx2 = = - ((n * a2) / sqrt(1 - e**2)) * sin(f2)                            !! Eq. 2.36 Murray & Dermott
+      !vy2 = ((n * a2) / sqrt(1 - e**2)) * (e + cos(f2))                          !! Eq. 2.36 Murray & Dermott
+      !plplenc_list%x2(1,index_enc) = x2 + xhcom(1)
+      !plplenc_list%x2(2,index_enc) = y2 + xhcom(2)
+      !plplenc_list%x2(3,index_enc) = xh2(3)
+      !plplenc_list%v2(1,index_enc) = vx2 + vbcom(1)
+      !plplenc_list%v2(2,index_enc) = vy2 + vbcom(2)
+      !plplenc_list%v2(3,index_enc) = vb2(3)
+
+      plplenc_list%xh1(:,idx(1)) = xh1(:)
+      plplenc_list%vb1(:,idx(1)) = vb1(:)
+      plplenc_list%xh2(:,idx(2)) = xh2(:)
+      plplenc_list%vb2(:,idx(2)) = vb2(:)
+
       plplenc_list%status(index_enc) = MERGED
       ! Check if either of these particles has been involved in a collision before. If so, make it a parent
       if (symba_plA%lcollision(idx(1)) .or. symba_plA%lcollision(idx(2))) then
