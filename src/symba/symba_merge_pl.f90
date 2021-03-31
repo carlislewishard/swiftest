@@ -119,10 +119,10 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
       !plplenc_list%v2(2,index_enc) = vy2 + vbcom(2)
       !plplenc_list%v2(3,index_enc) = vb2(3)
 
-      plplenc_list%xh1(:,idx(1)) = xh1(:)
-      plplenc_list%vb1(:,idx(1)) = vb1(:)
-      plplenc_list%xh2(:,idx(2)) = xh2(:)
-      plplenc_list%vb2(:,idx(2)) = vb2(:)
+      plplenc_list%xh1(:,index_enc) = xh1(:)
+      plplenc_list%vb1(:,index_enc) = vb1(:)
+      plplenc_list%xh2(:,index_enc) = xh2(:)
+      plplenc_list%vb2(:,index_enc) = vb2(:)
 
       plplenc_list%status(index_enc) = MERGED
       ! Check if either of these particles has been involved in a collision before. If so, make it a parent
