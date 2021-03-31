@@ -25,12 +25,12 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
    integer(I4B), parameter                 :: NRES = 3   !! Number of collisional product results
    integer(I4B)                            :: i, j, index_enc, jtarg, jproj
    real(DP), dimension(NRES)               :: mass_res
-   real(DP), dimension(NDIM)               :: vbs
+   real(DP), dimension(NDIM)               :: vbs, x1_si, v1_si, x2_si, v2_si
    integer(I4B)                            :: regime, idx_child, status
    integer(I4B), dimension(2)              :: idx, idx_parent, nchild, name 
    real(DP), dimension(2)                  :: radius, mass, density, volume
    real(DP), dimension(2)                  :: radius_si, mass_si, density_si
-   real(DP), dimension(NDIM, 2)            :: x, v, x_si, v_si, L_spin, Ip
+   real(DP), dimension(NDIM, 2)            :: x, v, L_spin, Ip
    real(DP)                                :: volchild, dentot, Mcb_si
    real(DP)                                :: mmax, mchild, mtot
    real(DP), dimension(NDIM)               :: xc, vc, xcom, vcom, xchild, vchild, xcrossv
@@ -75,11 +75,9 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
       name2(1) = name(2)
 
       ! Find the barycenter of each body along with its children, if it has any
-      x(:, 1)  = plplenc_list%xh1(:,index_enc)!symba_plA%helio%swiftest%xh(:, idx_parent(j))
-      v(:, 1)  = plplenc_list%vb1(:,index_enc)!symba_plA%helio%swiftest%vb(:, idx_parent(j))
-      x(:, 2)  = plplenc_list%xh2(:,index_enc)
-      v(:, 2)  = plplenc_list%vb2(:,index_enc)
       do j = 1, 2
+         x(:, j)  = symba_plA%helio%swiftest%xh(:, idx_parent(j))
+         v(:, j)  = symba_plA%helio%swiftest%vb(:, idx_parent(j))
          Ip(:, j) = mass(j) * symba_plA%helio%swiftest%Ip(:, idx_parent(j))
          ! Assume principal axis rotation about axis corresponding to highest moment of inertia (3rd Ip)
          L_spin(:, j)  = Ip(3, j) * radius(j)**2 * symba_plA%helio%swiftest%rot(:, idx_parent(j))
@@ -142,8 +140,10 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
          end if
          mass_si(:)    = (mass(:) / GU) * MU2KG 
          radius_si(:)  = radius(:) * DU2M
-         x_si(:, :)    = x(:, :) * DU2M
-         v_si(:, :)    = v(:, :) * DU2M / TU2S
+         x1_si(:)      = plplenc_list%xh1(:,index_enc) * DU2M
+         v1_si(:)      = plplenc_list%vb1(:,index_enc) * DU2M / TU2S
+         x2_si(:)      = plplenc_list%xh2(:,index_enc) * DU2M
+         v2_si(:)      = plplenc_list%vb2(:,index_enc) * DU2M / TU2S
          density_si(:) = (density(:) / GU) * MU2KG / DU2M**3
          Mcb_si        = symba_plA%helio%swiftest%mass(1) * MU2KG / GU
          mtiny_si      = (param%mtiny / GU) * MU2KG
@@ -152,9 +152,17 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
    
          mtot = sum(mass_si(:)) 
          dentot = sum(mass_si(:) * density_si(:)) / mtot 
+
+         !x(:, 1)  = plplenc_list%xh1(:,index_enc)!symba_plA%helio%swiftest%xh(:, idx_parent(j))
+         !v(:, 1)  = plplenc_list%vb1(:,index_enc)!symba_plA%helio%swiftest%vb(:, idx_parent(j))
+         !x(:, 2)  = plplenc_list%xh2(:,index_enc)
+         !v(:, 2)  = plplenc_list%vb2(:,index_enc)
    
-         call symba_regime(Mcb_si, mass_si(jtarg), mass_si(jproj), radius_si(jtarg), radius_si(jproj), x_si(:, jtarg), x_si(:, jproj),& 
-                           v_si(:, jtarg), v_si(:, jproj), density_si(jtarg), density_si(jproj), regime, mlr, mslr, mtiny_si)
+         !call symba_regime(Mcb_si, mass_si(jtarg), mass_si(jproj), radius_si(jtarg), radius_si(jproj), x_si(:, jtarg), x_si(:, jproj),& 
+         !                  v_si(:, jtarg), v_si(:, jproj), density_si(jtarg), density_si(jproj), regime, mlr, mslr, mtiny_si)
+
+         call symba_regime(Mcb_si, mass_si(jtarg), mass_si(jproj), radius_si(jtarg), radius_si(jproj), x1_si(:), x2_si(:),& 
+               v1_si(:), v2_si(:), density_si(jtarg), density_si(jproj), regime, mlr, mslr, mtiny_si)
 
          mass_res(1) = min(max(mlr, 0.0_DP), mtot)
          mass_res(2) = min(max(mslr, 0.0_DP), mtot)
