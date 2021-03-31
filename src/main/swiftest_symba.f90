@@ -287,6 +287,10 @@ program swiftest_symba
          plplenc_list%index2(:) = 0
          plplenc_list%enc_child(:) = 0 
          plplenc_list%enc_parent(:) = 0
+         plplenc_list%xh1(:,:) = 0
+         plplenc_list%xh2(:,:) = 0
+         plplenc_list%vb1(:,:) = 0
+         plplenc_list%vb2(:,:) = 0
       end if
 
       if (allocated(pltpenc_list%status)) then

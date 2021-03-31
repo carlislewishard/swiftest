@@ -90,6 +90,10 @@ module module_swiftestalloc
       allocate(plplenc_list%index2(n))
       allocate(plplenc_list%enc_child(n))
       allocate(plplenc_list%enc_parent(n))
+      allocate(plplenc_list%xh1(NDIM, n))
+      allocate(plplenc_list%xh2(NDIM, n))
+      allocate(plplenc_list%vb1(NDIM, n))
+      allocate(plplenc_list%vb2(NDIM, n))
 
       plplenc_list%lvdotr(:) = .false.
       plplenc_list%status(:) = 0
@@ -98,6 +102,10 @@ module module_swiftestalloc
       plplenc_list%index2(:) = 1
       plplenc_list%enc_child(:) = 1
       plplenc_list%enc_parent(:) = 1
+      plplenc_list%xh1(:, :) = 0
+      plplenc_list%xh2(:, :) = 0
+      plplenc_list%vb1(:, :) = 0
+      plplenc_list%vb2(:, :) = 0
       return
    end subroutine symba_plplenc_allocate
 
@@ -271,6 +279,10 @@ module module_swiftestalloc
       if (allocated(plplenc_list%index2)) deallocate(plplenc_list%index2)
       if (allocated(plplenc_list%enc_child)) deallocate(plplenc_list%enc_child)
       if (allocated(plplenc_list%enc_parent)) deallocate(plplenc_list%enc_parent)
+      if (allocated(plplenc_list%xh1)) deallocate(plplenc_list%xh1)
+      if (allocated(plplenc_list%xh2)) deallocate(plplenc_list%xh2)
+      if (allocated(plplenc_list%vb1)) deallocate(plplenc_list%vb1)
+      if (allocated(plplenc_list%vb2)) deallocate(plplenc_list%vb2)
       return
    end subroutine symba_plplenc_deallocate
 
