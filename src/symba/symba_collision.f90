@@ -40,7 +40,7 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
 
    ! Recompute central body barycentric velocity
    call coord_h2b(npl, symba_plA%helio%swiftest, msys)
-   xbs = symba_plA%helio%swiftest%xb(:, 1)
+   xbs = 0.0_DP !symba_plA%helio%swiftest%xb(:, 1)
    vbs = symba_plA%helio%swiftest%vb(:, 1)
 
    ! First determine the collisional regime for each colliding pair
@@ -81,7 +81,7 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
 
       ! Find the barycenter of each body along with its children, if it has any
       do j = 1, 2
-         x(:, j)  = symba_plA%helio%swiftest%xb(:, idx_parent(j))
+         x(:, j)  = symba_plA%helio%swiftest%xh(:, idx_parent(j))
          v(:, j)  = symba_plA%helio%swiftest%vb(:, idx_parent(j))
          Ip(:, j) = mass(j) * symba_plA%helio%swiftest%Ip(:, idx_parent(j))
          ! Assume principal axis rotation about axis corresponding to highest moment of inertia (3rd Ip)
@@ -97,7 +97,7 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
                   name2(1+i) = symba_plA%helio%swiftest%name(idx_child)
                end if
                mchild = symba_plA%helio%swiftest%mass(idx_child)
-               xchild(:) = symba_plA%helio%swiftest%xb(:, idx_child)
+               xchild(:) = symba_plA%helio%swiftest%xh(:, idx_child)
                vchild(:) = symba_plA%helio%swiftest%vb(:, idx_child)
                volchild = (4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(idx_child)**3
                volume(j) = volume(j) + volchild

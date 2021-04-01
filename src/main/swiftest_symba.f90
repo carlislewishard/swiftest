@@ -44,7 +44,7 @@ program swiftest_symba
    integer(I4B)                  :: npl, nplm, ntp, ntp0, nsppl, nsptp, iout, idump, iloop, i
    integer(I4B)                  :: nplplenc, npltpenc, nmergeadd, nmergesub
    real(DP)                      :: t, tfrac, tbase, mtiny, msys
-   real(DP)                      :: Ecollision, Eorbit_before, Eorbit_after, ke, pe
+   real(DP)                      :: Ecollision, Eorbit_before, Eorbit_after, ke, pe, ke_before, pe_before, ke_after, pe_after
    real(DP), dimension(NDIM)     :: Ltot
    character(STRMAX)             :: inparfile
    type(symba_pl)                :: symba_plA
@@ -175,9 +175,9 @@ program swiftest_symba
       if (param%lenergy) then
          if(num_plpl_comparisons > param%eucl_threshold) then
             call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, &
-                  ke, pe, Eorbit_before, Ltot, msys)
+                  ke_before, pe_before, Eorbit_before, Ltot, msys)
          else
-            call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, Eorbit_before, Ltot, msys)
+            call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke_before, pe_before, Eorbit_before, Ltot, msys)
          end if
       end if
       ldiscard = .false. 
@@ -191,7 +191,7 @@ program swiftest_symba
          call symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
             discard_tpA, ldiscard, ldiscard_tp)
 
-         if (ldiscard .or. ldiscard_tp) then
+         if (ldiscard .or. ldiscard_tp .or. lfrag_add) then
             call io_discard_write_symba(t, mtiny, npl, nsppl, nsptp, nmergesub, symba_plA, &
                discard_plA, discard_tpA, mergeadd_list, mergesub_list, discard_file, param%lbig_discard) 
             nmergeadd = 0
@@ -210,11 +210,21 @@ program swiftest_symba
          if (param%lenergy) then
             if(num_plpl_comparisons > param%eucl_threshold) then
                call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, &
-                  ke, pe, Eorbit_after, Ltot, msys)
+                  ke_after, pe_after, Eorbit_after, Ltot, msys)
             else
-               call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke, pe, Eorbit_after, Ltot, msys)
+               call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke_after, pe_after, Eorbit_after, Ltot, msys)
             end if
             Ecollision = Eorbit_before - Eorbit_after    ! Energy change resulting in this collisional event Total running energy offset from collision in this step
+            !write(*,*) 'PE_before    : ',pe_before
+            !write(*,*) 'PE_after     : ',pe_after
+            !write(*,*) 'Delta PE     : ',pe_after - pe_before
+            !write(*,*) 'KE_before    : ',ke_before
+            !write(*,*) 'KE_after     : ',ke_after
+            !write(*,*) 'Delta KE     : ',ke_after - ke_before
+            !write(*,*) 'Eorbit_before: ',Eorbit_before
+            !write(*,*) 'Eorbit_after : ',Eorbit_after
+            !write(*,*) 'Delta Eorbit : ', Eorbit_after - Eorbit_before
+            !read(*,*)
             if ((Ecollision /= Ecollision) .or. (abs(Ecollision) > huge(Ecollision))) then 
                write(*,*) 'Error encountered in collisional energy calculation!'
                write(*,*) 'Eorbit_before: ', Eorbit_before
