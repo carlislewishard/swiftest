@@ -30,14 +30,11 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
    real(DP), dimension(2)                     :: radius, mass 
    real(DP), dimension(NDIM, 2)               :: x, v
    real(DP)                                   :: r2, rlim, rlim2, vdotr, tcr2, dt2, a, e, q
-   !real(DP)                                   :: mtot
    real(DP), dimension(NDIM)                  :: xr, vr
    logical                                    :: lcollision
    integer(I4B), dimension(:), allocatable    :: temp
-   !real(DP)                                   :: n, a1, a2, r1, r2, f1, f2, x1, x2, y1, y2
    real(DP)                                   :: m1, m2, mtot, vx1, vx2, vy1, vy2
    real(DP), dimension(NDIM)                  :: xh1, xh2, vb1, vb2, vbcom, xhcom
-   !real(DP), dimension(NDIM)                  :: v1_wrt2, v1, v2, v1_unit_vec, v2_unit_vec, p1, p2
 
    ! recalculates vbs 
    call coord_vb2vh(npl, symba_plA%helio%swiftest)
@@ -85,40 +82,6 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
 
    if (lcollision) then
 
-      !call orbel_xv2aeq(xr(:), vr(:), mtot, a, e, q)
-      
-      !n = sqrt(mtot / (a**3))                                                    !! Eq. 2.26 Murray & Dermott
-
-      !! The orbit of body 1 with respect to the barycenter of the collision
-      !a1 = a * (m2 / mtot)                                                       !! Eq. 2.109 Murray & Dermott
-      !r1 = rlim * (m2 / mtot)                                                    !! Eq. 2.109 Murray & Dermott
-      !f1 = acos(((a1 * (e**2 - 1.0_DP)) / (r1 * e)) - (1.0_DP / e))              !! Eq. 2.20 Murray & Dermott
-      !x1 = r1 * cos(f1)                                                          !! Eq. 2.21 Murray & Dermott
-      !y1 = r1 * sin(f1)                                                          !! Eq. 2.21 Murray & Dermott
-      !vx1 = = - ((n * a1) / sqrt(1 - e**2)) * sin(f1)                            !! Eq. 2.36 Murray & Dermott
-      !vy1 = ((n * a1) / sqrt(1 - e**2)) * (e + cos(f1))                          !! Eq. 2.36 Murray & Dermott
-      !plplenc_list%x1(1,index_enc) = x1 + xhcom(1)
-      !plplenc_list%x1(2,index_enc) = y1 + xhcom(2)
-      !plplenc_list%x1(3,index_enc) = xh1(3)
-      !plplenc_list%v1(1,index_enc) = vx1 + vbcom(1)
-      !plplenc_list%v1(2,index_enc) = vy1 + vbcom(2)
-      !plplenc_list%v1(3,index_enc) = vb1(3)
-
-      !! The orbit of body 2 with respect to the barycenter of the collision
-      !a2 = a * (m1 / mtot)                                                       !! Eq. 2.109 Murray & Dermott
-      !r2 = rlim * (m1 / mtot)                                                    !! Eq. 2.109 Murray & Dermott
-      !f2 = acos(((a2 * (e**2 - 1.0_DP)) / (r2 * e)) - (1.0_DP / e))              !! Eq. 2.20 Murray & Dermott
-      !x2 = r2 * cos(f2)                                                          !! Eq. 2.21 Murray & Dermott
-      !y2 = r2 * sin(f2)                                                          !! Eq. 2.21 Murray & Dermott
-      !vx2 = = - ((n * a2) / sqrt(1 - e**2)) * sin(f2)                            !! Eq. 2.36 Murray & Dermott
-      !vy2 = ((n * a2) / sqrt(1 - e**2)) * (e + cos(f2))                          !! Eq. 2.36 Murray & Dermott
-      !plplenc_list%x2(1,index_enc) = x2 + xhcom(1)
-      !plplenc_list%x2(2,index_enc) = y2 + xhcom(2)
-      !plplenc_list%x2(3,index_enc) = xh2(3)
-      !plplenc_list%v2(1,index_enc) = vx2 + vbcom(1)
-      !plplenc_list%v2(2,index_enc) = vy2 + vbcom(2)
-      !plplenc_list%v2(3,index_enc) = vb2(3)
-
       plplenc_list%xh1(:,index_enc) = xh1(:)
       plplenc_list%vb1(:,index_enc) = vb1(:)
       plplenc_list%xh2(:,index_enc) = xh2(:)
@@ -142,30 +105,13 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
             index_parent = p2
             index_child = p1
          end if
+
          ! Expand the child array (or create it if necessary) and copy over the previous lists of children
          nchild_orig = symba_plA%kin(index_parent)%nchild
          nchild_inherit = symba_plA%kin(index_child)%nchild
-         !do i = 1, nchild_orig 
-         !   do j = i, nchild_inherit
-         !      if (symba_plA%kin(index_parent)%child(i) == symba_plA%kin(index_child)%child(j)) then
-         !         write(*,*) "Duplicate child! This should not happen!"
-         !         write(*,*) "index of body1 : ",idx(1)
-         !         write(*,*) "index of body2 : ",idx(2)
-         !         write(*,*) "index of parent: ",index_parent
-         !         write(*,*) "index of child:  ",index_child
-         !         write(*,*) "Duplicate child: ",symba_plA%kin(index_parent)%child(i)
-         !         write(*,*) "Recorded parent: ",symba_plA%kin(symba_plA%kin(index_parent)%child(i))%parent
-         !         write(*,*) "Children of this body: "
-         !         do k = 1, symba_plA%kin(index_parent)%nchild
-         !            write(*,*) symba_plA%kin(index_parent)%child(k)
-         !         end do
-         !         call util_exit(FAILURE)
-         !      end if
-         !   end do
-         !end do
-
          nchild_new = nchild_orig + nchild_inherit + 1
          allocate(temp(nchild_new))
+
          if (nchild_orig > 0) temp(1:nchild_orig) = symba_plA%kin(index_parent)%child(1:nchild_orig)
          ! Find out if the child body has any children of its own. The new parent wil inherit these children
          if (nchild_inherit > 0) then
@@ -213,8 +159,6 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
             x(:, j)  = symba_plA%helio%swiftest%xh(:,idx(j)) 
             v(:, j)  = symba_plA%helio%swiftest%vb(:,idx(j)) - vbs(:)
          end do
-         !call io_write_encounter(t, name(1), name(2), mass(1), mass(2), radius(1), radius(2), x(:, 1), x(:, 2), &
-         !   v(:, 1), v(:, 2), param%encounter_file)
       end if
    end if
 
