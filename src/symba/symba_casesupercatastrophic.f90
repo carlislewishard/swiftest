@@ -1,4 +1,4 @@
-subroutine symba_casesupercatastrophic (nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, vbs, &
+subroutine symba_casesupercatastrophic (nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, &
                                         mass_res, param)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
@@ -13,7 +13,7 @@ subroutine symba_casesupercatastrophic (nmergeadd, mergeadd_list, x, v, mass, ra
 
    integer(I4B), intent(inout)               :: nmergeadd
    type(symba_merger), intent(inout)         :: mergeadd_list
-   real(DP), dimension(:),   intent(in)      :: mass, radius, vbs, mass_res
+   real(DP), dimension(:),   intent(in)      :: mass, radius, xbs, vbs, mass_res
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
    type(user_input_parameters),intent(inout) :: param
 

@@ -25,7 +25,7 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
    integer(I4B), parameter                 :: NRES = 3   !! Number of collisional product results
    integer(I4B)                            :: i, j, index_enc, jtarg, jproj
    real(DP), dimension(NRES)               :: mass_res
-   real(DP), dimension(NDIM)               :: vbs, x1_si, v1_si, x2_si, v2_si
+   real(DP), dimension(NDIM)               :: xbs, vbs, x1_si, v1_si, x2_si, v2_si
    integer(I4B)                            :: regime, idx_child, status
    integer(I4B), dimension(2)              :: idx, idx_parent, nchild, name 
    real(DP), dimension(2)                  :: radius, mass, density, volume
@@ -36,7 +36,12 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
    real(DP), dimension(NDIM)               :: xc, vc, xcom, vcom, xchild, vchild, xcrossv
    real(DP)                                :: mtiny_si
    integer(I4B), dimension(:), allocatable :: array_index1_child, array_index2_child, name1, name2
-   real(DP)                                :: mlr, mslr
+   real(DP)                                :: mlr, mslr, msys
+
+   ! Recompute central body barycentric velocity
+   call coord_h2b(npl, symba_plA%helio%swiftest, msys)
+   xbs = symba_plA%helio%swiftest%xb(:, 1)
+   vbs = symba_plA%helio%swiftest%vb(:, 1)
 
    ! First determine the collisional regime for each colliding pair
    do index_enc = 1, nplplenc
@@ -76,7 +81,7 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
 
       ! Find the barycenter of each body along with its children, if it has any
       do j = 1, 2
-         x(:, j)  = symba_plA%helio%swiftest%xh(:, idx_parent(j))
+         x(:, j)  = symba_plA%helio%swiftest%xb(:, idx_parent(j))
          v(:, j)  = symba_plA%helio%swiftest%vb(:, idx_parent(j))
          Ip(:, j) = mass(j) * symba_plA%helio%swiftest%Ip(:, idx_parent(j))
          ! Assume principal axis rotation about axis corresponding to highest moment of inertia (3rd Ip)
@@ -92,7 +97,7 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
                   name2(1+i) = symba_plA%helio%swiftest%name(idx_child)
                end if
                mchild = symba_plA%helio%swiftest%mass(idx_child)
-               xchild(:) = symba_plA%helio%swiftest%xh(:, idx_child)
+               xchild(:) = symba_plA%helio%swiftest%xb(:, idx_child)
                vchild(:) = symba_plA%helio%swiftest%vb(:, idx_child)
                volchild = (4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(idx_child)**3
                volume(j) = volume(j) + volchild
@@ -165,29 +170,25 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
          regime = COLLRESOLVE_REGIME_MERGE
       end if
 
-      ! Recompute central body barycentric velocity
-      call coord_vb2vh(npl, symba_plA%helio%swiftest)
-      vbs = symba_plA%helio%swiftest%vb(:, 1)
-
       write(*, *) "Collision detected at time t = ",t
       !! Use the positions and velocities of the parents and their children after the step is complete to generate the fragments
       select case (regime)
       case (COLLRESOLVE_REGIME_DISRUPTION)
          write(*, '("Disruption between particles ",20(I6,",",:))') name1(:), name2(:) 
          status = DISRUPTION
-         call symba_casedisruption(nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, vbs, mass_res, param)
+         call symba_casedisruption(nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, mass_res, param)
       case (COLLRESOLVE_REGIME_SUPERCATASTROPHIC)
          write(*, '("Supercatastrophic disruption between particles ",20(I6,",",:))') name1(:), name2(:) 
          status = SUPERCATASTROPHIC
-         call symba_casesupercatastrophic(nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, vbs, mass_res, param)
+         call symba_casesupercatastrophic(nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, mass_res, param)
       case (COLLRESOLVE_REGIME_HIT_AND_RUN)
          write(*, '("Hit and run between particles ",20(I6,",",:))') name1(:), name2(:) 
-         call symba_casehitandrun(nmergeadd, mergeadd_list, name, x, v, mass, radius, L_spin, Ip, vbs, mass_res, param)
+         call symba_casehitandrun(nmergeadd, mergeadd_list, name, x, v, mass, radius, L_spin, Ip, xbs, vbs, mass_res, param)
          status = HIT_AND_RUN
       case (COLLRESOLVE_REGIME_MERGE, COLLRESOLVE_REGIME_GRAZE_AND_MERGE)
          write(*, '("Merging particles ",20(I6,",",:))') name1(:), name2(:) 
          status = MERGED
-         call symba_casemerge(nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, vbs, param)
+         call symba_casemerge(nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, param)
       case default 
          write(*,*) "Error in symba_collision, unrecognized collision regime"
          call util_exit(FAILURE)

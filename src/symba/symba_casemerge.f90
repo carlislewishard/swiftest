@@ -1,4 +1,4 @@
-subroutine symba_casemerge (nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, vbs, param)
+subroutine symba_casemerge (nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, param)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
    !! Merge planets.
@@ -15,7 +15,7 @@ subroutine symba_casemerge (nmergeadd, mergeadd_list, x, v, mass, radius, L_spin
 
    integer(I4B), intent(inout)               :: nmergeadd
    type(symba_merger), intent(inout)         :: mergeadd_list
-   real(DP), dimension(:),   intent(in)      :: mass, radius, vbs
+   real(DP), dimension(:),   intent(in)      :: mass, radius, xbs, vbs
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
    type(user_input_parameters),intent(inout) :: param
 
@@ -61,7 +61,7 @@ subroutine symba_casemerge (nmergeadd, mergeadd_list, x, v, mass, radius, L_spin
    mergeadd_list%name(nmergeadd) = param%plmaxname
    mergeadd_list%status(nmergeadd) = MERGED
    mergeadd_list%ncomp(nmergeadd) = 2
-   mergeadd_list%xh(:,nmergeadd) = xcom(:) 
+   mergeadd_list%xh(:,nmergeadd) = xcom(:) - xbs(:)
    mergeadd_list%vh(:,nmergeadd) = vcom(:) - vbs(:)
    mergeadd_list%mass(nmergeadd) = mass_new
    mergeadd_list%radius(nmergeadd) = radius_new

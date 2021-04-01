@@ -1,4 +1,4 @@
-subroutine symba_casedisruption (nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, vbs, &
+subroutine symba_casedisruption (nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, &
                                         mass_res, param)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
@@ -13,7 +13,7 @@ subroutine symba_casedisruption (nmergeadd, mergeadd_list, x, v, mass, radius, L
 
    integer(I4B), intent(inout)               :: nmergeadd
    type(symba_merger), intent(inout)         :: mergeadd_list
-   real(DP), dimension(:),   intent(in)      :: mass, radius, vbs, mass_res
+   real(DP), dimension(:),   intent(in)      :: mass, radius, xbs, vbs, mass_res
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
    type(user_input_parameters),intent(inout) :: param
 
@@ -74,7 +74,7 @@ subroutine symba_casedisruption (nmergeadd, mergeadd_list, x, v, mass, radius, L
       mergeadd_list%name(nmergeadd) = param%plmaxname
       mergeadd_list%status(nmergeadd) = DISRUPTION
       mergeadd_list%ncomp(nmergeadd) = 2
-      mergeadd_list%xh(:,nmergeadd) = x_frag(:, i) 
+      mergeadd_list%xh(:,nmergeadd) = x_frag(:, i) - xbs(:)
       mergeadd_list%vh(:,nmergeadd) = v_frag(:, i) - vbs(:)
       mergeadd_list%mass(nmergeadd) = m_frag(i)
       mergeadd_list%radius(nmergeadd) = rad_frag(i)

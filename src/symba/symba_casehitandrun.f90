@@ -1,4 +1,4 @@
-subroutine symba_casehitandrun (nmergeadd, mergeadd_list, name, x, v, mass, radius, L_spin, Ip, vbs, &
+subroutine symba_casehitandrun (nmergeadd, mergeadd_list, name, x, v, mass, radius, L_spin, Ip, xbs, vbs, &
                                         mass_res, param)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
@@ -14,7 +14,7 @@ subroutine symba_casehitandrun (nmergeadd, mergeadd_list, name, x, v, mass, radi
    integer(I4B), intent(inout)               :: nmergeadd
    type(symba_merger), intent(inout)         :: mergeadd_list
    integer(I4B), dimension(:), intent(in)    :: name
-   real(DP), dimension(:),   intent(in)      :: mass, radius, vbs, mass_res
+   real(DP), dimension(:),   intent(in)      :: mass, radius, xbs, vbs, mass_res
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
    type(user_input_parameters),intent(inout) :: param
 
@@ -98,7 +98,7 @@ subroutine symba_casehitandrun (nmergeadd, mergeadd_list, name, x, v, mass, radi
       mergeadd_list%name(nmergeadd) = name_frag(i) 
       mergeadd_list%status(nmergeadd) = HIT_AND_RUN
       mergeadd_list%ncomp(nmergeadd) = 2
-      mergeadd_list%xh(:,nmergeadd) = x_frag(:, i) 
+      mergeadd_list%xh(:,nmergeadd) = x_frag(:, i) - xbs(:)
       mergeadd_list%vh(:,nmergeadd) = v_frag(:, i) - vbs(:)
       mergeadd_list%mass(nmergeadd) = m_frag(i)
       mergeadd_list%radius(nmergeadd) = rad_frag(i)
