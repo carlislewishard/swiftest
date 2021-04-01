@@ -130,27 +130,28 @@ subroutine symba_frag_pos (x, v, L_spin, Ip, mass, radius, Ip_frag, m_frag, rad_
 
    ! REMOVE THE FOLLOWING AFTER TESTING
    ! Calculate the new energy of the system of fragments
-   !KE_after = 0.0_DP
-   !do i = 1, nfrag
-   !   KE_after = KE_after + 0.5_DP * m_frag(i) * dot_product(v_frag(:,i), v_frag(:,i))
-   !end do
-   !U_after = 0.0_DP
-   !do j = 1, nfrag - 1
-   !   do i = j+1, nfrag
-   !      delta_x(:) = x_frag(:,i) - x_frag(:,j)
-   !      U_after = U_after - m_frag(i) * m_frag(j) / norm2(delta_x(:))
-   !   end do 
-   !end do
+   KE_after = 0.0_DP
+   do i = 1, nfrag
+      KE_after = KE_after + 0.5_DP * m_frag(i) * dot_product(v_frag(:,i), v_frag(:,i))
+   end do
+   U_after = 0.0_DP
+   do j = 1, nfrag - 1
+      do i = j+1, nfrag
+         delta_x(:) = x_frag(:,i) - x_frag(:,j)
+         U_after = U_after - m_frag(i) * m_frag(j) / norm2(delta_x(:))
+      end do 
+   end do
 
-   !write(*,*) "SYMBA_FRAG_POS KE_before : ", KE_before + KE_spin_before
-   !write(*,*) "SYMBA_FRAG_POS KE_after : ", KE_after + KE_spin_after
-   !write(*,*) "SYMBA_FRAG_POS KE_ratio : ", (KE_after + KE_spin_after) / (KE_before + KE_spin_before)
-   !write(*,*) "SYMBA_FRAG_POS U_before : ", U_before
-   !write(*,*) "SYMBA_FRAG_POS U_after : ", U_after
-   !write(*,*) "SYMBA_FRAG_POS U_ratio : ", U_after / U_before
-   !write(*,*) "SYMBA_FRAG_POS E_before : ", KE_before + KE_spin_before + U_before
-   !write(*,*) "SYMBA_FRAG_POS E_after : ", KE_after + KE_spin_after + U_after
-   !write(*,*) "SYMBA_FRAG_POS E_ratio : ", (KE_after + KE_spin_after + U_after) / (KE_before + KE_spin_before + U_before)
+   write(*,*) "SYMBA_FRAG_POS KE_before : ", KE_before + KE_spin_before
+   write(*,*) "SYMBA_FRAG_POS KE_after  : ", KE_after + KE_spin_after
+   write(*,*) "SYMBA_FRAG_POS KE_ratio  : ", (KE_after + KE_spin_after) / (KE_before + KE_spin_before)
+   write(*,*) "SYMBA_FRAG_POS U_before  : ", U_before
+   write(*,*) "SYMBA_FRAG_POS U_after   : ", U_after
+   write(*,*) "SYMBA_FRAG_POS U_ratio   : ", U_after / U_before
+   write(*,*) "SYMBA_FRAG_POS E_before  : ", KE_before + KE_spin_before + U_before
+   write(*,*) "SYMBA_FRAG_POS E_after   : ", KE_after + KE_spin_after + U_after
+   write(*,*) "SYMBA_FRAG_POS E_ratio   : ", (KE_after + KE_spin_after + U_after) / (KE_before + KE_spin_before + U_before)
+   read(*,*)
 
    do i = 1, nfrag
       x_frag(:, i) = x_frag(:, i) + xcom(:)
