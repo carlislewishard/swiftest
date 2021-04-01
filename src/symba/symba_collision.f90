@@ -30,10 +30,10 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
    integer(I4B), dimension(2)              :: idx, idx_parent, nchild, name 
    real(DP), dimension(2)                  :: radius, mass, density, volume
    real(DP), dimension(2)                  :: radius_si, mass_si, density_si
-   real(DP), dimension(NDIM, 2)            :: x, v, L_spin, Ip, x_plplenc, v_plplenc
+   real(DP), dimension(NDIM, 2)            :: x, v, L_spin, Ip
    real(DP)                                :: volchild, dentot, Mcb_si
    real(DP)                                :: mmax, mchild, mtot
-   real(DP), dimension(NDIM)               :: xc, vc, xcom, vcom, xchild, vchild, xcrossv, xcom_plplenc, vcom_plplenc
+   real(DP), dimension(NDIM)               :: xc, vc, xcom, vcom, xchild, vchild, xcrossv
    real(DP)                                :: mtiny_si
    integer(I4B), dimension(:), allocatable :: array_index1_child, array_index2_child, name1, name2
    real(DP)                                :: mlr, mslr
@@ -74,11 +74,6 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
       name1(1) = name(1)
       name2(1) = name(2)
 
-      x_plplenc(:,1) = plplenc_list%xh1(:,index_enc)
-      x_plplenc(:,2) = plplenc_list%xh2(:,index_enc)
-      v_plplenc(:,1) = plplenc_list%vb1(:,index_enc)
-      v_plplenc(:,2) = plplenc_list%vb2(:,index_enc)
-
       ! Find the barycenter of each body along with its children, if it has any
       do j = 1, 2
          x(:, j)  = symba_plA%helio%swiftest%xh(:, idx_parent(j))
@@ -108,8 +103,6 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
                ! Get angular momentum of the child-parent pair and add that to the spin
                xcom(:) = (mass(j) * x(:,j) + mchild * xchild(:)) / (mass(j) + mchild)
                vcom(:) = (mass(j) * v(:,j) + mchild * vchild(:)) / (mass(j) + mchild)
-               xcom_plplenc(:) = (mass(j) * x_plplenc(:,j) + mchild * xchild(:)) / (mass(j) + mchild)
-               vcom_plplenc(:) = (mass(j) * v_plplenc(:,j) + mchild * vchild(:)) / (mass(j) + mchild)
                xc(:) = x(:, j) - xcom(:)
                vc(:) = v(:, j) - vcom(:)
                call util_crossproduct(xc(:), vc(:), xcrossv(:))
@@ -145,13 +138,13 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
             jtarg = 2
             jproj = 1
          end if
-         mass_si(:)    = (mass(:) / GU) * MU2KG 
-         radius_si(:)  = radius(:) * DU2M
-         x1_si(:)      = x_plplenc(:,1) * DU2M
-         v1_si(:)      = v_plplenc(:,1) * DU2M / TU2S
-         x2_si(:)      = x_plplenc(:,2) * DU2M
-         v2_si(:)      = v_plplenc(:,2) * DU2M / TU2S
-         density_si(:) = (density(:) / GU) * MU2KG / DU2M**3
+         mass_si(:)    = (mass(:) / GU) * MU2KG                            !! The collective mass of the parent and its children
+         radius_si(:)  = radius(:) * DU2M                                  !! The collective radius of the parent and its children
+         x1_si(:)      = plplenc_list%xh1(:,index_enc) * DU2M              !! The position of the parent from inside the step (at collision)
+         v1_si(:)      = plplenc_list%vb1(:,index_enc) * DU2M / TU2S       !! The velocity of the parent from inside the step (at collision)
+         x2_si(:)      = plplenc_list%xh2(:,index_enc) * DU2M              !! The position of the parent from inside the step (at collision)
+         v2_si(:)      = plplenc_list%vb2(:,index_enc) * DU2M / TU2S       !! The velocity of the parent from inside the step (at collision)
+         density_si(:) = (density(:) / GU) * MU2KG / DU2M**3               !! The collective density of the parent and its children
          Mcb_si        = symba_plA%helio%swiftest%mass(1) * MU2KG / GU
          mtiny_si      = (param%mtiny / GU) * MU2KG
       
@@ -160,14 +153,7 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
          mtot = sum(mass_si(:)) 
          dentot = sum(mass_si(:) * density_si(:)) / mtot 
 
-         !x(:, 1)  = plplenc_list%xh1(:,index_enc)!symba_plA%helio%swiftest%xh(:, idx_parent(j))
-         !v(:, 1)  = plplenc_list%vb1(:,index_enc)!symba_plA%helio%swiftest%vb(:, idx_parent(j))
-         !x(:, 2)  = plplenc_list%xh2(:,index_enc)
-         !v(:, 2)  = plplenc_list%vb2(:,index_enc)
-   
-         !call symba_regime(Mcb_si, mass_si(jtarg), mass_si(jproj), radius_si(jtarg), radius_si(jproj), x_si(:, jtarg), x_si(:, jproj),& 
-         !                  v_si(:, jtarg), v_si(:, jproj), density_si(jtarg), density_si(jproj), regime, mlr, mslr, mtiny_si)
-
+         !! Use the positions and velocities of the parents from indside the step (at collision) to calculate the collisional regime
          call symba_regime(Mcb_si, mass_si(jtarg), mass_si(jproj), radius_si(jtarg), radius_si(jproj), x1_si(:), x2_si(:),& 
                v1_si(:), v2_si(:), density_si(jtarg), density_si(jproj), regime, mlr, mslr, mtiny_si)
 
@@ -184,6 +170,7 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
       vbs = symba_plA%helio%swiftest%vb(:, 1)
 
       write(*, *) "Collision detected at time t = ",t
+      !! Use the positions and velocities of the parents and their children after the step is complete to generate the fragments
       select case (regime)
       case (COLLRESOLVE_REGIME_DISRUPTION)
          write(*, '("Disruption between particles ",20(I6,",",:))') name1(:), name2(:) 
