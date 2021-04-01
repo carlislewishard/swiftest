@@ -27,7 +27,7 @@
 !  Notes       : Adapted from Luke Dones' Swift routine orbel_xv2aeq.f
 !
 !**********************************************************************************************************************************
-SUBROUTINE orbel_xv2aeq(x, v, mu, a, e, q)
+pure SUBROUTINE orbel_xv2aeq(x, v, mu, a, e, q)
 
 ! Modules
      USE swiftest

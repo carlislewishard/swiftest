@@ -32,7 +32,7 @@
 !                tperi < 0 means nearest pericenter passage is in the past
 !
 !**********************************************************************************************************************************
-SUBROUTINE orbel_xv2aqt(x, v, mu, a, q, capm, tperi)
+pure SUBROUTINE orbel_xv2aqt(x, v, mu, a, q, capm, tperi)
 
 ! Modules
      USE swiftest
