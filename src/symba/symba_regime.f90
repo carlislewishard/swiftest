@@ -53,8 +53,6 @@ SUBROUTINE symba_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, d
 ! Constants
      INTEGER(I4B)                  :: N1 = 1  !number of objects with mass equal to the largest remnant from LS12
      INTEGER(I4B)                  :: N2 = 2  !number of objects with mass larger than second largest remnant from LS12
-     !INTEGER(I4B)                  :: N1g = 2  !number of objects with mass equal to the largest remnant from LS12 if Mp = Mtarg
-     !INTEGER(I4B)                  :: N2g = 4  !number of objects with mass larger than second largest remnant from LS12 if Mp = Mtarg
      REAL(DP)                      :: density1 = 1000.0_DP !standard density parameter from LS12 [kg/m3]
      REAL(DP)                      :: c_star = 1.8_DP !3.0 #3.0# #5#1.8 #1.8 #Measure of dissipation of energy within the target (Chambers frag.f90)
      REAL(DP)                      :: mu_bar = 0.37_DP !0.385#0.37#0.3333# 3.978 # 1/3 material parameter for hydrodynamic planet-size bodies (LS12)
@@ -104,7 +102,6 @@ SUBROUTINE symba_regime(Mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, d
       QR_erosion = 2 * (1.0_DP - m1 / mtot) * QRD_pstar
       verosion = (2* QR_erosion * mtot / mu)** (1.0_DP / 2.0_DP)
       QR = mu*(vimp**2) / mtot / 2.0_DP
-      !QRD_lr = calc_QRD_lr(m2, m1, mint)
      !Calculate Mass largest remnant Mlr 
       Mlr = (1.0_DP - QR / QRD_pstar / 2.0_DP) * mtot  ! [kg] #(Eq 5)
      !Calculate vsupercat
@@ -211,7 +208,6 @@ function calc_QRD_rev(Mp,Mtarg,mint,den1,den2, vimp) result(ans)
    QRD_pstar_rev = QRD_pstar * (vhill / vescp)**crufu !rufu et al. eq (3)
    !calc QR_supercat_rev
    QR_supercat_rev = 1.8_DP * QRD_pstar_rev 
-   !V_supercat_rev = ( 2.0_DP * QR_supercat_rev * Mtot_rev / mu_rev ) ** (1.0_DP / 2.0_DP)
    if (QR_rev > QR_supercat_rev ) then 
       Mslr = Mtot_rev * (0.1_DP * ((QR_rev / (QRD_pstar_rev * 1.8_DP))**(-1.5_DP)))     !Eq (44)
    else if ( QR_rev < QRD_pstar_rev ) then 
@@ -238,33 +234,6 @@ function calc_b(proj_pos, proj_vel, targ_pos, targ_vel) result(ans)
     ans = sin(angle)
   return 
 end function calc_b
-
-! function calc_b(Mp_pos, Mp_vel, Mp_r, Mtarg_pos, Mtarg_vel, Mtarg_r) result(b)
-!    implicit none
-!    real(DP), intent(in), DIMENSION(3) :: Mp_pos, Mp_vel, Mtarg_pos, Mtarg_vel
-!    real(DP), intent(in) :: Mp_r, Mtarg_r
-!    real(DP) :: h_sq, b, dvel_sq
-!    real(DP), DIMENSION(3) :: dpos, dvel, h
-
-!    dpos(1) = mtarg_pos(1) - mp_pos(1)
-!    dpos(2) = mtarg_pos(2) - mp_pos(2)
-!    dpos(3) = mtarg_pos(3) - mp_pos(3)
-
-!    dvel(1) = mtarg_vel(1) - mp_vel(1)
-!    dvel(2) = mtarg_vel(2) - mp_vel(2)
-!    dvel(3) = mtarg_vel(3) - mp_vel(3)
-
-!    h(1) = (dpos(2) * dvel(3)) - (dpos(3) * dvel(2))
-!    h(2) = (dpos(3) * dvel(1)) - (dpos(1) * dvel(3))
-!    h(3) = (dpos(1) * dvel(2)) - (dpos(2) * dvel(1))
-
-!    h_sq = (h(1) * h(1)) + (h(2) * h(2)) + (h(3) * h(3))
-!    dvel_sq = (dvel(1) * dvel(1)) + (dvel(2) * dvel(2)) + (dvel(3) * dvel(3))
-
-!    b = (h_sq / (((Mp_r + Mtarg_r) ** 2.0_DP) * dvel_sq)) ** (1.0_DP / 2.0_DP)
-!    print(b,"b")
-!    return
-! end function calc_b
 
 END SUBROUTINE symba_regime
 !**********************************************************************************************************************************
