@@ -1,4 +1,4 @@
-subroutine symba_casesupercatastrophic (nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, &
+subroutine symba_casesupercatastrophic (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, &
                                         mass_res, param)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
@@ -13,9 +13,11 @@ subroutine symba_casesupercatastrophic (nmergeadd, mergeadd_list, x, v, mass, ra
 
    integer(I4B), intent(inout)               :: nmergeadd
    type(symba_merger), intent(inout)         :: mergeadd_list
+   type(symba_pl), intent(inout)             :: symba_pla
    real(DP), dimension(:),   intent(in)      :: mass, radius, xbs, vbs, mass_res
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
    type(user_input_parameters),intent(inout) :: param
+   integer(I4B), dimension(2), intent(inout) :: idx_parents
 
    integer(I4B)                            :: i, nfrag
    real(DP)                                :: mtot, avg_dens, min_frag_mass
@@ -61,7 +63,7 @@ subroutine symba_casesupercatastrophic (nmergeadd, mergeadd_list, x, v, mass, ra
    end do
 
    ! Put the fragments on the circle surrounding the center of mass of the system
-   call symba_frag_pos(x, v, L_spin, Ip, mass, radius, Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag)
+   call symba_frag_pos(symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag)
 
    ! Populate the list of new bodies
    call symba_merger_size_check(mergeadd_list, nmergeadd + nfrag)  
