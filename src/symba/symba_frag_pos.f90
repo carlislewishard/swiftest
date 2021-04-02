@@ -36,8 +36,15 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
    allocate(family(fam_size))
    family(1) = idx_parents(1)
    family(2) = idx_parents(2)
-   family(3:symba_plA%kin(idx_parents(1))%nchild) = symba_plA%kin(idx_parents(1))%child(:)
-   family(symba_plA%kin(idx_parents(1))%nchild + 1:symba_plA%kin(idx_parents(2))%nchild) = symba_plA%kin(idx_parents(2))%child(:)
+
+   if (symba_plA%kin(idx_parents(1))%nchild > 0) then
+      family(3:symba_plA%kin(idx_parents(1))%nchild) = symba_plA%kin(idx_parents(1))%child(:)
+      if (symba_plA%kin(idx_parents(2))%nchild > 0) then
+         family(symba_plA%kin(idx_parents(1))%nchild + 1:symba_plA%kin(idx_parents(2))%nchild) = symba_plA%kin(idx_parents(2))%child(:)
+      end if 
+   else if (symba_plA%kin(idx_parents(2))%nchild > 0) then
+      family(3:symba_plA%kin(idx_parents(2))%nchild) = symba_plA%kin(idx_parents(2))%child(:)
+   end if 
 
    nfrag = size(x_frag, 2)
    mtot = sum(mass(:))
