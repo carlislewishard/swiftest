@@ -127,28 +127,28 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
 
    end do
 
-   ! Calculate the new potential energy of the system of fragments on each other
    U_after = 0.0_DP
-   do j = 1, nfrag - 1
-      do i = j+1, nfrag
-         delta_x(:) = x_frag(:,i) - x_frag(:,j)
-         U_after = U_after - m_frag(i) * m_frag(j) / norm2(delta_x(:))
-      end do 
-   end do
-
-   U_frag_after = 0.0_DP
-   !! Go through all the bodies in the system and add up their potential energy contribution
+   ! Calculate the new potential energy of the system of fragments on each other
    do i = 1, nfrag
       do j = 1, size(symba_plA%helio%swiftest%mass(:))
-      !! Skip a body in symba_plA if it is one of the parent bodies
+         !! Skip a body in symba_plA if it is one of the parent bodies
          if ((symba_plA%helio%swiftest%name(j) == symba_plA%helio%swiftest%name(idx_parents(1))) &
             .or. (symba_plA%helio%swiftest%name(j) == symba_plA%helio%swiftest%name(idx_parents(1)))) cycle
-         !! Add up the potential energy contribution of each body on each fragment
-         U_frag_after = U_frag_after - (m_frag(i) * symba_plA%helio%swiftest%mass(j) / norm2((x_frag(:,i) + xcom(:)) - symba_plA%helio%swiftest%xh(:,j))) 
+         !! Pluck out two bodies, one from the fragment array and one from symba_plA
+         !! Set the mass, position, and velocity of the body in the system
+         m_other = symba_plA%helio%swiftest%mass(j)
+         xh_other = symba_plA%helio%swiftest%xh(:,j)
+         !! Calculate the potential energy between the two bodies
+         U_after = U_after - (m_frag(i) * m_other / norm2((x_frag(:,i) + xcom(:)) - xh_other))
       end do 
-   end do
 
-   U_after = U_after + U_frag_after
+      do j = 1, nfrag
+         !! If we have selected the same fragment in both the inner loop and the outer loop, skip it
+         if (i == j) cycle
+         !! Calculate the potential energy between the two bodies
+         U_after = U_after - m_frag(i) * m_frag(j) / norm2(x_frag(:,i) - x_frag(:,j))
+      end do
+   end do
 
    ! Adjust fragment positions so that they have the same potential energy as the original collisional pair
    x_frag(:,:) = x_frag(:,:) * U_after / U_before
