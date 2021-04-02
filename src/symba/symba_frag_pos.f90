@@ -20,7 +20,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
 
    real(DP), dimension(NDIM, 2)            :: rot
    integer(I4B)                            :: i, j, nfrag, fam_size
-   real(DP), dimension(NDIM)               :: v_cross_x, delta_v, delta_x, L_spin_tot, xcom, vcom
+   real(DP), dimension(NDIM)               :: v_cross_x, delta_v, delta_x, xcom, vcom
    real(DP)                                :: mtot, phase_ang, theta, v_frag_norm, r_frag_norm, v_col_norm, r_col_norm
    real(DP)                                :: f_anelastic, Etot_before, KE_before, U_before, v1mag2, v2mag2, U_p1_before, U_p2_before 
    real(DP)                                :: U_after, KE_spin_before, KE_spin_after, KE_after, KE_corrected, U_corrected, U_frag_after
@@ -30,13 +30,12 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
    integer(I4B), save                      :: thetashift = 0
    integer(I4B), parameter                 :: SHIFTMAX = 9
    real(DP), dimension(2)                  :: m
-   real(DP), dimension(:), allocatable     :: family
+   integer(I4B), dimension(:), allocatable :: family
 
    fam_size = 2 + symba_plA%kin(idx_parents(1))%nchild + symba_plA%kin(idx_parents(2))%nchild
    allocate(family(fam_size))
    family(1) = idx_parents(1)
    family(2) = idx_parents(2)
-
    family(3:symba_plA%kin(idx_parents(1))%nchild) = symba_plA%kin(idx_parents(1))%child(:)
    family(symba_plA%kin(idx_parents(1))%nchild + 1:symba_plA%kin(idx_parents(2))%nchild) = symba_plA%kin(idx_parents(2))%child(:)
 
@@ -106,11 +105,16 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
    phase_ang = theta * thetashift / SHIFTMAX
    thetashift = thetashift + 1
    IF (thetashift >= shiftmax) thetashift = 0
+
    ! Calculate the triple product to get the plane of the fragment distribution
+   delta_v(:) = v(:, 2) - v(:, 1)
+   delta_x(:) = x(:, 2) - x(:, 1)
    call util_crossproduct(delta_v,delta_x,v_cross_x)
    call util_crossproduct(v_cross_x,delta_v,tri_pro)
-
    tri_pro_unit_vec(:) = tri_pro(:) / norm2(tri_pro(:))
+   v_col_norm = norm2(delta_v(:))               ! pre-collision velocity magnitude
+   r_col_norm = norm2(delta_x(:))               ! pre-collision distance 
+   v_col_unit_vec(:) = delta_v(:) / v_col_norm  ! unit vector of collision velocity 
 
    do i = 1, nfrag
       ! Place the fragments on the collision plane at a distance proportional to mass wrt the collisional barycenter
