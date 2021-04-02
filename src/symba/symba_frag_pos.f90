@@ -28,6 +28,17 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
    integer(I4B), save                      :: thetashift = 0
    integer(I4B), parameter                 :: SHIFTMAX = 9
    real(DP), dimension(2)                  :: m
+   real(DP), dimension(:), allocatable     :: family
+
+   allocate(family(2 + symba_plA%kin%(idx_parents(1))%nchild + symba_plA%kin%(idx_parents(2))%nchild))
+   family(1) = idx_parents(1)
+   family(2) = idx_parents(2)
+   do i = 3, symba_plA%kin%(idx_parents(1))%nchild
+      family(i) = symba_plA%kin%(idx_parents(1))%child(i)
+   end do
+   do i = symba_plA%kin%(idx_parents(1))%nchild + 1, symba_plA%kin%(idx_parents(2))%nchild
+      family(i) = symba_plA%kin%(idx_parents(2))%child(i)
+   end do
 
    nfrag = size(x_frag, 2)
    mtot = sum(mass(:))
@@ -36,46 +47,56 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
 
    m(:) = symba_plA%helio%swiftest%mass(idx_parents(:)) ! just the parents, not including their children
 
-   ! Now work out where to put the new bodies such that we conserve momentum and lose an appropriate amount of energy
-   ! Find collision velocity
-   delta_v(:) = v(:, 2) - v(:, 1)
-   delta_x(:) = x(:, 2) - x(:, 1)
+   U_before = 0.0_DP
+   KE_before = 0.0_DP
+   Ltot = 0.0_DP
 
-   v_com(:) = ((v(:, 1) * mass(1)) + (v(:, 2) * mass(2))) / mtot
+   do i = 1, size(family)
+      !! Set the mass, position, and velocity of the body in the family
+      m_family = symba_plA%helio%swiftest%mass(family(i))
+      xh_family = symba_plA%helio%swiftest%xh(:,family(i))
+      xb_family = symba_plA%helio%swiftest%xb(:,family(i))
+      vb_family = symba_plA%helio%swiftest%vb(:,family(i))
+      ip_family = symba_plA%helio%swiftest%ip(3,family(i))
+      rad_family = symba_plA%helio%swiftest%radius(family(i))
+      rot_family = symba_plA%helio%swiftest%rot(:,family(i))
 
-   v_col_norm = norm2(delta_v(:)) ! pre-collision velocity magnitude
-   r_col_norm = norm2(delta_x(:)) ! pre-collision distance 
-   v_col_unit_vec(:) = delta_v(:) / v_col_norm ! unit vector of collision velocity 
+      do j = 1, size(symba_plA%helio%swiftest%mass(:))
+         !! Pluck out two bodies, one from the family array and one from symba_plA
+         !! If the body in symba_plA is the same as the body in the family array, skip it
+         if (symba_plA%helio%swiftest%name(j) == symba_plA%helio%swiftest%name(family(i))) cycle
 
-   f_anelastic = 0.1_DP ! TODO: Should this be set by the user or kept as a constant?
-   vc1(:) = v(:,1) - v_com(:)
-   vc2(:) = v(:,2) - v_com(:)
-   v1mag2 = dot_product(vc1(:), vc1(:))
-   v2mag2 = dot_product(vc2(:), vc2(:))
+         !! Set the mass, position, and velocity of the body in the system
+         m_other = symba_plA%helio%swiftest%mass(j)
+         xh_other = symba_plA%helio%swiftest%xh(:,j)
+         vb_other = symba_plA%helio%swiftest%vb(:,j)
 
-   ! Add in kinetic energy from the orbit and from spin
-   KE_before = 0.5_DP * (mass(1) * v1mag2 + mass(2) * v2mag2) 
-   rot(:,1) = L_spin(:,1) / (mass(1) * Ip(3,1) * radius(1)**2)
-   rot(:,2) = L_spin(:,2) / (mass(2) * Ip(3,2) * radius(2)**2)
-   L_spin_tot(:) = L_spin(:,1) + L_spin(:,2)
-   KE_spin_before = 0.5_DP * (dot_product(rot(:,1),L_spin(:,1)) + dot_product(rot(:,2),L_spin(:,2)))
+         !! If the body in symba_plA is parent 1, then set the mass to be of parent 1 without its children
+         if (symba_plA%helio%swiftest%name(j) == symba_plA%helio%swiftest%name(idx_parents(1))) m_other = m(1)
+         !! If the body in symba_plA is parent 2, then set the mass to be of parent 2 without its children
+         if (symba_plA%helio%swiftest%name(j) == symba_plA%helio%swiftest%name(idx_parents(1))) m_other = m(2)
+         !! If the body in family is parent 1, then set the mass to be of parent 1 without its children
+         if (symba_plA%helio%swiftest%name(family(1)) == symba_plA%helio%swiftest%name(idx_parents(1))) m_family = m(1)
+         !! If the body in family is parent 2, then set the mass to be of parent 2 without its children
+         if (symba_plA%helio%swiftest%name(family(2)) == symba_plA%helio%swiftest%name(idx_parents(2))) m_family = m(2)
 
-   U_p1_before = 0.0_DP
-   U_p2_before = 0.0_DP
+         !! Calculate the potential energy between the two bodies
+         U_before = U_before - (m_family * m_other / norm2(xh_family - xh_other))
+      end do 
 
-   !! Go through all the bodies in the system and add up their potential energy contribution
-   do i = 1, size(symba_plA%helio%swiftest%mass(:))
-      !! Skip a body in symba_plA if it is one of the parent bodies
-      if ((symba_plA%helio%swiftest%name(i) == symba_plA%helio%swiftest%name(idx_parents(1))) &
-         .or. (symba_plA%helio%swiftest%name(i) == symba_plA%helio%swiftest%name(idx_parents(2)))) cycle
-      !! Add up the potential energy contribution of each body on parent 1
-      U_p1_before = U_p1_before - (m(1) * symba_plA%helio%swiftest%mass(i) / norm2(x(:,1) - symba_plA%helio%swiftest%xh(:,i))) 
-      !! Add up the potential energy contribution of each body on parent 2
-      U_p2_before = U_p2_before - (m(2) * symba_plA%helio%swiftest%mass(i) / norm2(x(:,2) - symba_plA%helio%swiftest%xh(:,i))) 
+      !! Find the angular momentum 
+      v2 = dot_product(vb_family(i), vb_family(i))
+      rot2 = dot_product(rot_family, rot_family)
+      h(1) = xb_family(2) * vb_family(3) - xb_family(3) * vb_family(2)
+      h(2) = xb_family(3) * vb_family(1) - xb_family(1) * vb_family(3)
+      h(3) = xb_family(1) * vb_family(2) - xb_family(2) * vb_family(1)
+      
+      !! Calculate the orbital and rotational kinetic energy between the two bodies 
+      Ltot(:) = Ltot(:) + m_family * (h(:) + ip_family * rad_family**2 * rot_family)
+      KE_before = KE_before + 0.5_DP * m_family * (v2 + ip_family * rad_family**2 * rot2)
    end do
 
-   U_before = - (m(1) * m(2) / r_col_norm) - U_p1_before - U_p2_before
-   Etot_before = KE_before + KE_spin_before + U_before
+   Etot_before = KE_before + U_before
 
    ! Calculate the position of each fragment 
    ! Theta is a phase shift value that ensures that successive nearby collisions in a single step are rotated to avoid possible overlap
@@ -117,17 +138,17 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
 
    U_frag_after = 0.0_DP
    !! Go through all the bodies in the system and add up their potential energy contribution
-   do i = 1, size(symba_plA%helio%swiftest%mass(:))
+   do i = 1, nfrag
+      do j = 1, size(symba_plA%helio%swiftest%mass(:))
       !! Skip a body in symba_plA if it is one of the parent bodies
-      if ((symba_plA%helio%swiftest%name(i) == symba_plA%helio%swiftest%name(idx_parents(1))) &
-         .or. (symba_plA%helio%swiftest%name(i) == symba_plA%helio%swiftest%name(idx_parents(1)))) cycle
-      do j = 1, nfrag
+         if ((symba_plA%helio%swiftest%name(j) == symba_plA%helio%swiftest%name(idx_parents(1))) &
+            .or. (symba_plA%helio%swiftest%name(j) == symba_plA%helio%swiftest%name(idx_parents(1)))) cycle
          !! Add up the potential energy contribution of each body on each fragment
-         U_frag_after = U_frag_after - (m_frag(j) * symba_plA%helio%swiftest%mass(i) / norm2((x_frag(:,j) + xcom(:)) - symba_plA%helio%swiftest%xh(:,i))) 
+         U_frag_after = U_frag_after - (m_frag(i) * symba_plA%helio%swiftest%mass(j) / norm2((x_frag(:,i) + xcom(:)) - symba_plA%helio%swiftest%xh(:,j))) 
       end do 
    end do
 
-   U_after = U_after - U_frag_after
+   U_after = U_after + U_frag_after
 
    ! Adjust fragment positions so that they have the same potential energy as the original collisional pair
    x_frag(:,:) = x_frag(:,:) * U_after / U_before
@@ -147,6 +168,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
    ! Adjust the fragment velocities so that they have the their total energy reduced by an amount set by the anelastic parameter
    ! Make sure we don't end up with negative energy (bound system). If so, we'll adjust the radius so that the potential energy
    ! takes up the negative part
+   f_anelastic = 0.1_DP ! TODO: Should this be set by the user or kept as a constant?
    KE_corrected = f_anelastic * Etot_before - KE_spin_after - U_after
    if (KE_corrected < 0.0_DP) then
       U_corrected = U_after + KE_corrected
