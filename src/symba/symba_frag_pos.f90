@@ -180,13 +180,11 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
    write(*,*) "SYMBA_FRAG_POS E_before  : ", KE_before + KE_spin_before + U_before
    write(*,*) "SYMBA_FRAG_POS E_after   : ", KE_after + KE_spin_after + U_after
    write(*,*) "SYMBA_FRAG_POS E_ratio   : ", (KE_after + KE_spin_after + U_after) / (KE_before + KE_spin_before + U_before)
-   read(*,*)
 
    do i = 1, nfrag
       x_frag(:, i) = x_frag(:, i) + xcom(:)
       v_frag(:, i) = v_frag(:, i) + vcom(:)
    end do
-
 
    return 
 end subroutine symba_frag_pos
