@@ -19,26 +19,26 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
    type(symba_pl)                            :: symba_pla
 
    real(DP), dimension(NDIM, 2)            :: rot
-   integer(I4B)                            :: i, j, nfrag
+   integer(I4B)                            :: i, j, nfrag, fam_size
    real(DP), dimension(NDIM)               :: v_cross_x, delta_v, delta_x, L_spin_tot, xcom, vcom
    real(DP)                                :: mtot, phase_ang, theta, v_frag_norm, r_frag_norm, v_col_norm, r_col_norm
    real(DP)                                :: f_anelastic, Etot_before, KE_before, U_before, v1mag2, v2mag2, U_p1_before, U_p2_before 
    real(DP)                                :: U_after, KE_spin_before, KE_spin_after, KE_after, KE_corrected, U_corrected, U_frag_after
    real(DP), dimension(NDIM)               :: v_col_unit_vec, tri_pro, tri_pro_unit_vec, v_com, vc1, vc2
+   real(DP), dimension(NDIM)               :: xh_family, xb_family, vb_family, rot_family, xh_other, vb_other, Ltot, h
+   real(DP)                                :: m_family, rad_family, m_other, rot2, v2, ip_family
    integer(I4B), save                      :: thetashift = 0
    integer(I4B), parameter                 :: SHIFTMAX = 9
    real(DP), dimension(2)                  :: m
    real(DP), dimension(:), allocatable     :: family
 
-   allocate(family(2 + symba_plA%kin%(idx_parents(1))%nchild + symba_plA%kin%(idx_parents(2))%nchild))
+   fam_size = 2 + symba_plA%kin(idx_parents(1))%nchild + symba_plA%kin(idx_parents(2))%nchild
+   allocate(family(fam_size))
    family(1) = idx_parents(1)
    family(2) = idx_parents(2)
-   do i = 3, symba_plA%kin%(idx_parents(1))%nchild
-      family(i) = symba_plA%kin%(idx_parents(1))%child(i)
-   end do
-   do i = symba_plA%kin%(idx_parents(1))%nchild + 1, symba_plA%kin%(idx_parents(2))%nchild
-      family(i) = symba_plA%kin%(idx_parents(2))%child(i)
-   end do
+
+   family(3:symba_plA%kin(idx_parents(1))%nchild) = symba_plA%kin(idx_parents(1))%child(:)
+   family(symba_plA%kin(idx_parents(1))%nchild + 1:symba_plA%kin(idx_parents(2))%nchild) = symba_plA%kin(idx_parents(2))%child(:)
 
    nfrag = size(x_frag, 2)
    mtot = sum(mass(:))
@@ -53,11 +53,11 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
 
    do i = 1, size(family)
       !! Set the mass, position, and velocity of the body in the family
-      m_family = symba_plA%helio%swiftest%mass(family(i))
-      xh_family = symba_plA%helio%swiftest%xh(:,family(i))
-      xb_family = symba_plA%helio%swiftest%xb(:,family(i))
-      vb_family = symba_plA%helio%swiftest%vb(:,family(i))
-      ip_family = symba_plA%helio%swiftest%ip(3,family(i))
+      m_family   = symba_plA%helio%swiftest%mass(family(i))
+      xh_family  = symba_plA%helio%swiftest%xh(:,family(i))
+      xb_family  = symba_plA%helio%swiftest%xb(:,family(i))
+      vb_family  = symba_plA%helio%swiftest%vb(:,family(i))
+      ip_family  = symba_plA%helio%swiftest%ip(3,family(i))
       rad_family = symba_plA%helio%swiftest%radius(family(i))
       rot_family = symba_plA%helio%swiftest%rot(:,family(i))
 
@@ -85,7 +85,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       end do 
 
       !! Find the angular momentum 
-      v2 = dot_product(vb_family(i), vb_family(i))
+      v2   = dot_product(vb_family, vb_family)
       rot2 = dot_product(rot_family, rot_family)
       h(1) = xb_family(2) * vb_family(3) - xb_family(3) * vb_family(2)
       h(2) = xb_family(3) * vb_family(1) - xb_family(1) * vb_family(3)
@@ -93,7 +93,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       
       !! Calculate the orbital and rotational kinetic energy between the two bodies 
       Ltot(:) = Ltot(:) + m_family * (h(:) + ip_family * rad_family**2 * rot_family)
-      KE_before = KE_before + 0.5_DP * m_family * (v2 + ip_family * rad_family**2 * rot2)
+      KE_before = KE_before + 0.5_DP * m_family * (v2 + ip_family * rot2 * rad_family**2)
    end do
 
    Etot_before = KE_before + U_before
@@ -208,5 +208,6 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       v_frag(:, i) = v_frag(:, i) + vcom(:)
    end do
 
+   deallocate(family)
    return 
 end subroutine symba_frag_pos
