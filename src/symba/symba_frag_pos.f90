@@ -22,16 +22,19 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
    integer(I4B)                            :: i, j, nfrag
    real(DP), dimension(NDIM)               :: v_cross_x, delta_v, delta_x, L_spin_tot, xcom, vcom
    real(DP)                                :: mtot, phase_ang, theta, v_frag_norm, r_frag_norm, v_col_norm, r_col_norm
-   real(DP)                                :: f_anelastic, Etot_before, KE_before, U_before, v1mag2, v2mag2
+   real(DP)                                :: f_anelastic, Etot_before, KE_before, U_before, v1mag2, v2mag2, U_p1, U_p2
    real(DP)                                :: U_after, KE_spin_before, KE_spin_after, KE_after, KE_corrected, U_corrected
    real(DP), dimension(NDIM)               :: v_col_unit_vec, tri_pro, tri_pro_unit_vec, v_com, vc1, vc2
    integer(I4B), save                      :: thetashift = 0
    integer(I4B), parameter                 :: SHIFTMAX = 9
+   real(DP), dimension(2)                  :: m
 
    nfrag = size(x_frag, 2)
    mtot = sum(mass(:))
    xcom(:) = (mass(1) * x(:,1) + mass(2) * x(:,2)) / mtot
-   vcom(:) = (mass(1) * v(:,1) + mass(2) * v(:,2)) / mtot  
+   vcom(:) = (mass(1) * v(:,1) + mass(2) * v(:,2)) / mtot 
+
+   m(:) = symba_plA%helio%swiftest%mass(idx_parents(:)) ! just the parents, not including their children
 
    ! Now work out where to put the new bodies such that we conserve momentum and lose an appropriate amount of energy
    ! Find collision velocity
@@ -57,8 +60,20 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
    L_spin_tot(:) = L_spin(:,1) + L_spin(:,2)
    KE_spin_before = 0.5_DP * (dot_product(rot(:,1),L_spin(:,1)) + dot_product(rot(:,2),L_spin(:,2)))
 
-   ! Add in potential energy
-   U_before = -mass(1) * mass(2) / r_col_norm
+   U_p1 = 0.0_DP
+   U_p2 = 0.0_DP
+   !! Go through all the bodies in the system and add up their potential energy contribution
+   do i = 1, size(symba_plA%helio%swiftest%mass(:))
+      !! Skip a body in symba_plA if it is one of the parent bodies
+      if ((symba_plA%helio%swiftest%name(i) == symba_plA%helio%swiftest%name(idx_parents(1))) &
+         .or. (symba_plA%helio%swiftest%name(i) == symba_plA%helio%swiftest%name(idx_parents(1)))) cycle
+      !! Add up the potential energy contribution of each body on parent 1
+      U_p1 = U_p1 - (m(1) * symba_plA%helio%swiftest%mass(i) / norm2(x(:,1) - symba_plA%helio%swiftest%xh(:,i))) 
+      !! Add up the potential energy contribution of each body on parent 2
+      U_p2 = U_p2 - (m(2) * symba_plA%helio%swiftest%mass(i) / norm2(x(:,2) - symba_plA%helio%swiftest%xh(:,i))) 
+   end do
+
+   U_before = - (m(1) * m(2) / r_col_norm) - U_p1 - U_p2
    Etot_before = KE_before + KE_spin_before + U_before
 
    ! Calculate the position of each fragment 
