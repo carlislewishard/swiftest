@@ -22,8 +22,8 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
    integer(I4B)                            :: i, j, nfrag
    real(DP), dimension(NDIM)               :: v_cross_x, delta_v, delta_x, L_spin_tot, xcom, vcom
    real(DP)                                :: mtot, phase_ang, theta, v_frag_norm, r_frag_norm, v_col_norm, r_col_norm
-   real(DP)                                :: f_anelastic, Etot_before, KE_before, U_before, v1mag2, v2mag2, U_p1, U_p2
-   real(DP)                                :: U_after, KE_spin_before, KE_spin_after, KE_after, KE_corrected, U_corrected
+   real(DP)                                :: f_anelastic, Etot_before, KE_before, U_before, v1mag2, v2mag2, U_p1_before, U_p2_before 
+   real(DP)                                :: U_after, KE_spin_before, KE_spin_after, KE_after, KE_corrected, U_corrected, U_frag_after
    real(DP), dimension(NDIM)               :: v_col_unit_vec, tri_pro, tri_pro_unit_vec, v_com, vc1, vc2
    integer(I4B), save                      :: thetashift = 0
    integer(I4B), parameter                 :: SHIFTMAX = 9
@@ -60,20 +60,20 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
    L_spin_tot(:) = L_spin(:,1) + L_spin(:,2)
    KE_spin_before = 0.5_DP * (dot_product(rot(:,1),L_spin(:,1)) + dot_product(rot(:,2),L_spin(:,2)))
 
-   U_p1 = 0.0_DP
-   U_p2 = 0.0_DP
+   U_p1_before = 0.0_DP
+   U_p2_before = 0.0_DP
    !! Go through all the bodies in the system and add up their potential energy contribution
    do i = 1, size(symba_plA%helio%swiftest%mass(:))
       !! Skip a body in symba_plA if it is one of the parent bodies
       if ((symba_plA%helio%swiftest%name(i) == symba_plA%helio%swiftest%name(idx_parents(1))) &
          .or. (symba_plA%helio%swiftest%name(i) == symba_plA%helio%swiftest%name(idx_parents(1)))) cycle
       !! Add up the potential energy contribution of each body on parent 1
-      U_p1 = U_p1 - (m(1) * symba_plA%helio%swiftest%mass(i) / norm2(x(:,1) - symba_plA%helio%swiftest%xh(:,i))) 
+      U_p1_before = U_p1_before - (m(1) * symba_plA%helio%swiftest%mass(i) / norm2(x(:,1) - symba_plA%helio%swiftest%xh(:,i))) 
       !! Add up the potential energy contribution of each body on parent 2
-      U_p2 = U_p2 - (m(2) * symba_plA%helio%swiftest%mass(i) / norm2(x(:,2) - symba_plA%helio%swiftest%xh(:,i))) 
+      U_p2_before = U_p2_before - (m(2) * symba_plA%helio%swiftest%mass(i) / norm2(x(:,2) - symba_plA%helio%swiftest%xh(:,i))) 
    end do
 
-   U_before = - (m(1) * m(2) / r_col_norm) - U_p1 - U_p2
+   U_before = - (m(1) * m(2) / r_col_norm) - U_p1_before - U_p2_before
    Etot_before = KE_before + KE_spin_before + U_before
 
    ! Calculate the position of each fragment 
@@ -106,7 +106,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
 
    end do
 
-   ! Calculate the new potential energy of the system of fragments
+   ! Calculate the new potential energy of the system of fragments on each other
    U_after = 0.0_DP
    do j = 1, nfrag - 1
       do i = j+1, nfrag
@@ -114,6 +114,20 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
          U_after = U_after - m_frag(i) * m_frag(j) / norm2(delta_x(:))
       end do 
    end do
+
+   U_frag_after = 0.0_DP
+   !! Go through all the bodies in the system and add up their potential energy contribution
+   do i = 1, size(symba_plA%helio%swiftest%mass(:))
+      !! Skip a body in symba_plA if it is one of the parent bodies
+      if ((symba_plA%helio%swiftest%name(i) == symba_plA%helio%swiftest%name(idx_parents(1))) &
+         .or. (symba_plA%helio%swiftest%name(i) == symba_plA%helio%swiftest%name(idx_parents(1)))) cycle
+      do j = 1, nfrag
+         !! Add up the potential energy contribution of each body on each fragment
+         U_frag_after = U_frag_after - (m_frag(j) * symba_plA%helio%swiftest%mass(i) / norm2((x_frag(:,j) + xcom(:)) - symba_plA%helio%swiftest%xh(:,i))) 
+      end do 
+   end do
+
+   U_after = U_after - U_frag_after
 
    ! Adjust fragment positions so that they have the same potential energy as the original collisional pair
    x_frag(:,:) = x_frag(:,:) * U_after / U_before
