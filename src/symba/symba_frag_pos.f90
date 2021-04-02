@@ -62,11 +62,12 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
 
    U_p1_before = 0.0_DP
    U_p2_before = 0.0_DP
+
    !! Go through all the bodies in the system and add up their potential energy contribution
    do i = 1, size(symba_plA%helio%swiftest%mass(:))
       !! Skip a body in symba_plA if it is one of the parent bodies
       if ((symba_plA%helio%swiftest%name(i) == symba_plA%helio%swiftest%name(idx_parents(1))) &
-         .or. (symba_plA%helio%swiftest%name(i) == symba_plA%helio%swiftest%name(idx_parents(1)))) cycle
+         .or. (symba_plA%helio%swiftest%name(i) == symba_plA%helio%swiftest%name(idx_parents(2)))) cycle
       !! Add up the potential energy contribution of each body on parent 1
       U_p1_before = U_p1_before - (m(1) * symba_plA%helio%swiftest%mass(i) / norm2(x(:,1) - symba_plA%helio%swiftest%xh(:,i))) 
       !! Add up the potential energy contribution of each body on parent 2
@@ -84,7 +85,6 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
    phase_ang = theta * thetashift / SHIFTMAX
    thetashift = thetashift + 1
    IF (thetashift >= shiftmax) thetashift = 0
-
    ! Calculate the triple product to get the plane of the fragment distribution
    call util_crossproduct(delta_v,delta_x,v_cross_x)
    call util_crossproduct(v_cross_x,delta_v,tri_pro)
@@ -145,8 +145,6 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
    end do
 
    ! Adjust the fragment velocities so that they have the their total energy reduced by an amount set by the anelastic parameter
-
-
    ! Make sure we don't end up with negative energy (bound system). If so, we'll adjust the radius so that the potential energy
    ! takes up the negative part
    KE_corrected = f_anelastic * Etot_before - KE_spin_after - U_after
