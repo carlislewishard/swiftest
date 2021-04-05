@@ -1,5 +1,5 @@
-subroutine symba_casesupercatastrophic (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, &
-                                        mass_res, param)
+subroutine symba_casesupercatastrophic (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, &
+                                        xbs, vbs, mass_res, param)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
    !! Create the fragments resulting from a supercatastrophic collision
@@ -73,7 +73,7 @@ subroutine symba_casesupercatastrophic (symba_plA, idx_parents, nmergeadd, merge
       mergeadd_list%name(nmergeadd) = param%plmaxname
       mergeadd_list%status(nmergeadd) = SUPERCATASTROPHIC
       mergeadd_list%ncomp(nmergeadd) = 2
-      mergeadd_list%xh(:,nmergeadd) = x_frag(:, i) 
+      mergeadd_list%xh(:,nmergeadd) = x_frag(:, i) - xbs(:)
       mergeadd_list%vh(:,nmergeadd) = v_frag(:, i) - vbs(:)
       mergeadd_list%mass(nmergeadd) = m_frag(i)
       mergeadd_list%radius(nmergeadd) = rad_frag(i)

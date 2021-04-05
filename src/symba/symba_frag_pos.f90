@@ -63,12 +63,12 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       do i = 1, fam_size
          ! Calculate the potential energy between family members
          do j = i + 1, fam_size
-            U_before = U_before - Mpl(family(i)) * Mpl(family(j)) / norm2(xhpl(:,family(i)) - xhpl(:,family(j)))
+            U_before = U_before - Mpl(family(i)) * Mpl(family(j)) / norm2(xbpl(:,family(i)) - xbpl(:,family(j)))
          end do
          
          ! Add the contribution due to non-family members
          do j = 1, non_fam_size
-            U_before = U_before - Mpl(family(i)) * Mpl(non_family(j)) / norm2(xhpl(:,family(i)) - xhpl(:,non_family(j)))
+            U_before = U_before - Mpl(family(i)) * Mpl(non_family(j)) / norm2(xbpl(:,family(i)) - xbpl(:,non_family(j)))
          end do
 
          !! Calculate the orbital and spin kinetic energy
@@ -140,7 +140,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
          end do
          ! Add the contribution due to non-family members
          do j = 1, non_fam_size
-            U_after = U_after - m_frag(i) * Mpl(non_family(j)) / norm2(x_frag(:,i) - xhpl(:,non_family(j)))
+            U_after = U_after - m_frag(i) * Mpl(non_family(j)) / norm2(x_frag(:,i) - xbpl(:,non_family(j)))
          end do
       end do
 
