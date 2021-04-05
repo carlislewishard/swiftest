@@ -14,27 +14,33 @@ subroutine symba_reorder_pl(npl, symba_plA)
    integer(I4B), intent(in) :: npl
    type(symba_pl), intent(inout)  :: symba_plA
 
-   integer(I4B)                  :: i
+   integer(I4B)                  :: i,j,narr
    integer(I4B), dimension(:), allocatable   :: sort_index
    type(symba_pl)                  :: symba_plwkspA
+   logical, dimension(:), allocatable :: lactive
 
+   narr = size(symba_plA%helio%swiftest%status(:))
    call symba_pl_allocate(symba_plwkspA,npl)
+   allocate(lactive(narr))
    allocate(sort_index(npl))
+   lactive(:) = symba_plA%helio%swiftest%status(:) == ACTIVE
 
-   symba_plwkspA%helio%swiftest%name(:) = symba_plA%helio%swiftest%name(:)
-   symba_plwkspA%helio%swiftest%status(:) = symba_plA%helio%swiftest%status(:)
-   symba_plwkspA%helio%swiftest%mass(:) = symba_plA%helio%swiftest%mass(:)
-   symba_plwkspA%helio%swiftest%radius(:) = symba_plA%helio%swiftest%radius(:)
-   symba_plwkspA%helio%swiftest%xh(:,:) = symba_plA%helio%swiftest%xh(:,:)
-   symba_plwkspA%helio%swiftest%vh(:,:) = symba_plA%helio%swiftest%vh(:,:)
-   symba_plwkspA%helio%swiftest%xb(:,:) = symba_plA%helio%swiftest%xb(:,:)
-   symba_plwkspA%helio%swiftest%vb(:,:) = symba_plA%helio%swiftest%vb(:,:)
-   symba_plwkspA%helio%swiftest%rot(:,:) = symba_plA%helio%swiftest%rot(:,:)
-   symba_plwkspA%helio%swiftest%Ip(:,:) = symba_plA%helio%swiftest%Ip(:,:)
-   symba_plwkspA%helio%swiftest%rhill(:) = symba_plA%helio%swiftest%rhill(:)
+   symba_plwkspA%helio%swiftest%name(:) = pack(symba_plA%helio%swiftest%name(:), lactive)
+   symba_plwkspA%helio%swiftest%status(:) = pack(symba_plA%helio%swiftest%status(:), lactive)
+   symba_plwkspA%helio%swiftest%mass(:) = pack(symba_plA%helio%swiftest%mass(:), lactive)
+   symba_plwkspA%helio%swiftest%radius(:) = pack(symba_plA%helio%swiftest%radius(:), lactive)
+   symba_plwkspA%helio%swiftest%rhill(:) = pack(symba_plA%helio%swiftest%rhill(:), lactive)
+   do i = 1, NDIM
+      symba_plwkspA%helio%swiftest%xh(i,:) = pack(symba_plA%helio%swiftest%xh(i,:), lactive)
+      symba_plwkspA%helio%swiftest%vh(i,:) = pack(symba_plA%helio%swiftest%vh(i,:), lactive)
+      symba_plwkspA%helio%swiftest%xb(i,:) = pack(symba_plA%helio%swiftest%xb(i,:), lactive)
+      symba_plwkspA%helio%swiftest%vb(i,:) = pack(symba_plA%helio%swiftest%vb(i,:), lactive)
+      symba_plwkspA%helio%swiftest%rot(i,:) = pack(symba_plA%helio%swiftest%rot(i,:), lactive)
+      symba_plwkspA%helio%swiftest%Ip(i,:) = pack(symba_plA%helio%swiftest%Ip(i,:), lactive)
+   end do
 
    ! sort by mass
-   call util_index(symba_plA%helio%swiftest%mass(1:npl), sort_index)
+   call util_index(pack(symba_plA%helio%swiftest%mass(:), lactive), sort_index)
    !write(*,*) "************ REORDER ***************"
    do i = 1, npl
       symba_plA%helio%swiftest%name(i) = symba_plwkspA%helio%swiftest%name(sort_index(npl-i+1))
@@ -49,6 +55,8 @@ subroutine symba_reorder_pl(npl, symba_plA)
       symba_plA%helio%swiftest%Ip(:,i) = symba_plwkspA%helio%swiftest%Ip(:,sort_index(npl-i+1))
       symba_plA%helio%swiftest%rhill(i) = symba_plwkspA%helio%swiftest%rhill(sort_index(npl-i+1))
    end do
+   symba_plA%helio%swiftest%name(npl+1:narr) = 0
+   symba_plA%helio%swiftest%status(npl+1:narr) = INACTIVE
    call symba_pl_deallocate(symba_plwkspA)
    deallocate(sort_index)
 
