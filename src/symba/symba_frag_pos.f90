@@ -19,7 +19,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
    type(symba_pl)                            :: symba_pla
 
    real(DP), dimension(NDIM, 2)            :: rot
-   integer(I4B)                            :: i, j, nfrag, fam_size, istart, non_fam_size
+   integer(I4B)                            :: i, j, nfrag, fam_size, istart, non_fam_size, npl
    real(DP), dimension(NDIM)               :: v_cross_x, delta_v, delta_x, xcom, vcom
    real(DP)                                :: mtot, phase_ang, theta, v_frag_norm, r_frag_norm, v_col_norm, r_col_norm
    real(DP)                                :: f_anelastic, Etot_before, KE_before, U_before, v1mag2, v2mag2, U_p1_before, U_p2_before 
@@ -46,10 +46,11 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       if (nchild2 > 0) family(istart+1:istart+1+nchild2) = symba_plA%kin(idx_parents(2))%child(:)
 
       ! Make the list of non-family members (bodies not involved in the collision)
-      non_fam_size = count(status(:) == ACTIVE) - fam_size
+      npl = count(status(:) == ACTIVE)
+      non_fam_size = npl - fam_size
       allocate(non_family(non_fam_size))
       i = 0
-      do j = 1, non_fam_size
+      do j = 1, npl
          if (any(family(:) == j)) cycle
          i = i + 1
          non_family(i) = j
@@ -157,7 +158,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       f_anelastic = 0.1_DP ! TODO: Should this be set by the user or kept as a constant?
       KE_corrected = f_anelastic * Etot_before - KE_spin_after - U_after
 
-      v_frag(:,:) = v_frag(:,:) * sqrt(KE_corrected / KE_after) 
+      v_frag(:,:) = v_frag(:,:) * sqrt(KE_after / KE_corrected) 
 
       ! REMOVE THE FOLLOWING AFTER TESTING
       ! Calculate the new energy of the system of fragments
