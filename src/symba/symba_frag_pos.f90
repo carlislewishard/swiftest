@@ -112,7 +112,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       do i = 1, nfrag
          ! Place the fragments on the collision plane at a distance proportional to mass wrt the collisional barycenter
          ! This gets updated later after the new potential energy is calculated
-         r_frag_norm = r_col_norm * mtot / m_frag(i)
+         r_frag_norm = 0.1_DP * r_col_norm * mtot / m_frag(i)
 
          x_frag(:,i) =  r_frag_norm * ((cos(phase_ang + theta * i)) * v_col_unit_vec(:)  + &
                                        (sin(phase_ang + theta * i)) * tri_pro_unit_vec(:)) 
@@ -153,15 +153,21 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       f_anelastic = 0.1_DP ! TODO: Should this be set by the user or kept as a constant?
       KE_residual = KE_after + KE_spin_after + U_after - (f_anelastic * Etot_before)
 
+      write(*,*) "SYMBA_FRAG_POS KE_before : ", KE_before + KE_spin_before
+      write(*,*) "SYMBA_FRAG_POS KE_after  : ", KE_after + KE_spin_after
       write(*,*) 'KE_residual: ',KE_residual
 
       A = 0.0_DP
       B = 0.0_DP
 
+      write(*,*) ' vcom: ',vcom(:)
       do i = 1, nfrag
          A = A + m_frag(i) * dot_product(v_frag(:,i), v_frag(:,i))
          B = B + m_frag(i) * dot_product(v_frag(:,i), vcom(:))
+         write(*,*) i,' v_frag: ',v_frag(:,i)
       end do
+      write(*,*) 'A: ',A
+      write(*,*) 'B: ',B
 
       f_corrected = (- B + sqrt((B + A)**2 + (2 * A * KE_residual))) / A
       v_frag(:,:) = f_corrected * v_frag(:,:)
@@ -180,8 +186,8 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       end do
       Etot_after = KE_after + KE_spin_after + U_after
 
-      write(*,*) "SYMBA_FRAG_POS KE_before : ", KE_before + KE_spin_before
-      write(*,*) "SYMBA_FRAG_POS KE_after  : ", KE_after + KE_spin_after
+
+      write(*,*) "SYMBA_FRAG_POS KE_corr   : ", KE_after + KE_spin_after
       write(*,*) "SYMBA_FRAG_POS KE_ratio  : ", (KE_after + KE_spin_after) / (KE_before + KE_spin_before)
       write(*,*) "SYMBA_FRAG_POS U_before  : ", U_before
       write(*,*) "SYMBA_FRAG_POS U_after   : ", U_after
