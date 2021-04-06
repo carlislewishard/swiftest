@@ -21,12 +21,12 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
    real(DP), dimension(NDIM, 2)            :: rot
    integer(I4B)                            :: i, j, nfrag, fam_size, istart, non_fam_size, npl
    real(DP), dimension(NDIM)               :: v_cross_x, delta_v, delta_x, xcom, vcom
-   real(DP)                                :: mtot, phase_ang, theta, v_frag_norm, r_frag_norm, v_col_norm, r_col_norm
+   real(DP)                                :: mtot, phase_ang, theta, v_frag_norm, r_frag_norm, v_col_norm, r_col_norm, KE_residual
    real(DP)                                :: f_anelastic, Etot_before, KE_before, U_before, v1mag2, v2mag2, U_p1_before, U_p2_before 
    real(DP)                                :: U_after, KE_spin_before, KE_spin_after, KE_after, KE_corrected, U_corrected, U_frag_after
    real(DP), dimension(NDIM)               :: v_col_unit_vec, tri_pro, tri_pro_unit_vec, v_com, vc1, vc2
    real(DP), dimension(NDIM)               :: Ltot, h
-   real(DP)                                :: rot2, v2, ip_family
+   real(DP)                                :: rot2, v2, ip_family, f_corrected, A, B
    integer(I4B), save                      :: thetashift = 0
    integer(I4B), parameter                 :: SHIFTMAX = 9
    integer(I4B), dimension(:), allocatable :: family, non_family
@@ -161,9 +161,18 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       ! Make sure we don't end up with negative energy (bound system). If so, we'll adjust the radius so that the potential energy
       ! takes up the negative part
       f_anelastic = 0.1_DP ! TODO: Should this be set by the user or kept as a constant?
-      KE_corrected = f_anelastic * Etot_before - KE_spin_after - U_after
+      KE_residual = KE_after + KE_spin_after + U_after - (f_anelastic * Etot_before)
 
-      v_frag(:,:) = v_frag(:,:) * sqrt(KE_after / KE_corrected) 
+      A = 0.0_DP
+      B = 0.0_DP
+
+      do i = 1, nfrag
+         A = A + (m_frag(i) * norm2(v_frag(:,i))**2)
+         B = B + (m_frag(i) * (dot_product(v_frag(:,i), vcom)))
+      end do
+
+      f_corrected = (- B + sqrt((B + A)**2 + (2 * KE_residual))) / A
+      v_frag(:,:) = f_corrected * v_frag(:,:)
 
       ! REMOVE THE FOLLOWING AFTER TESTING
       ! Calculate the new energy of the system of fragments
