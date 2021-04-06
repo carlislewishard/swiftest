@@ -157,6 +157,11 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
          KE_spin_after = 0.5_DP * m_frag(i) * rad_frag(i)**2 * Ip_frag(3,i) * dot_product(rot_frag(:,i), rot_frag(:,i))
       end do
 
+      do i = 1, nfrag
+         x_frag(:, i) = x_frag(:, i) + xcom(:)
+         v_frag(:, i) = v_frag(:, i) + vcom(:)
+      end do
+
       ! Adjust the fragment velocities so that they have the their total energy reduced by an amount set by the anelastic parameter
       ! Make sure we don't end up with negative energy (bound system). If so, we'll adjust the radius so that the potential energy
       ! takes up the negative part
@@ -190,11 +195,6 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       write(*,*) "SYMBA_FRAG_POS E_before  : ", KE_before + KE_spin_before + U_before
       write(*,*) "SYMBA_FRAG_POS E_after   : ", KE_after + KE_spin_after + U_after
       write(*,*) "SYMBA_FRAG_POS E_ratio   : ", (KE_after + KE_spin_after + U_after) / (KE_before + KE_spin_before + U_before)
-
-      do i = 1, nfrag
-         x_frag(:, i) = x_frag(:, i) + xcom(:)
-         v_frag(:, i) = v_frag(:, i) + vcom(:)
-      end do
 
       deallocate(family, non_family)
    end associate
