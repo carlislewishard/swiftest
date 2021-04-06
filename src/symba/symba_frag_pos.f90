@@ -35,6 +35,12 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
              xhpl => symba_plA%helio%swiftest%xh, xbpl => symba_plA%helio%swiftest%xh, vbpl => symba_plA%helio%swiftest%vb, &
              Mpl => symba_plA%helio%swiftest%mass, Ippl => symba_plA%helio%swiftest%Ip, radpl => symba_plA%helio%swiftest%radius, &
              rotpl => symba_plA%helio%swiftest%rot, status => symba_plA%helio%swiftest%status)
+
+      ! Find the center of mass of the collisional system
+      mtot = sum(mass(:))
+      xcom(:) = (mass(1) * x(:,1) + mass(2) * x(:,2)) / mtot
+      vcom(:) = (mass(1) * v(:,1) + mass(2) * v(:,2)) / mtot 
+
       ! Make the list of family members (bodies involved in the collision)
       fam_size = 2 + nchild1 + nchild2
       allocate(family(fam_size))
@@ -60,6 +66,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       KE_before = 0.0_DP
       Ltot = 0.0_DP
 
+      r_col_norm = 0.0_DP
       do i = 1, fam_size
          ! Calculate the potential energy between family members
          do j = i + 1, fam_size
@@ -79,16 +86,15 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
          !! Calculate the orbital and rotational kinetic energy between the two bodies 
          Ltot(:) = Ltot(:) + Mpl(family(i)) * (h(:) + Ippl(3, family(i)) * radpl(family(i))**2 * rotpl(:,family(i)))
          KE_before = KE_before + 0.5_DP * Mpl(family(i)) * (v2 + Ippl(3,family(i)) * rot2 * radpl(family(i))*2)
+         r_col_norm = r_col_norm + Mpl(family(i)) * norm2(xbpl(:,family(i)) - xcom(:))
       end do
+      r_col_norm = r_col_norm / mtot 
 
       Etot_before = KE_before + U_before
 
       ! Now create the fragment distribution
       nfrag = size(x_frag, 2)
-      mtot = sum(mass(:))
-      ! Find the center of mass of the collisional system
-      xcom(:) = (mass(1) * x(:,1) + mass(2) * x(:,2)) / mtot
-      vcom(:) = (mass(1) * v(:,1) + mass(2) * v(:,2)) / mtot 
+
 
       ! Calculate the position of each fragment 
       ! Theta is a phase shift value that ensures that successive nearby collisions in a single step are rotated to avoid possible overlap
@@ -106,13 +112,12 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       call util_crossproduct(v_cross_x,delta_v,tri_pro)
       tri_pro_unit_vec(:) = tri_pro(:) / norm2(tri_pro(:))
       v_col_norm = norm2(delta_v(:))               ! pre-collision velocity magnitude
-      r_col_norm = norm2(delta_x(:))               ! pre-collision distance 
       v_col_unit_vec(:) = delta_v(:) / v_col_norm  ! unit vector of collision velocity 
-
+      r_col_norm = r_col_norm / nfrag
       do i = 1, nfrag
          ! Place the fragments on the collision plane at a distance proportional to mass wrt the collisional barycenter
          ! This gets updated later after the new potential energy is calculated
-         r_frag_norm = 0.1_DP * r_col_norm * mtot / m_frag(i)
+         r_frag_norm = r_col_norm * mtot / m_frag(i)
 
          x_frag(:,i) =  r_frag_norm * ((cos(phase_ang + theta * i)) * v_col_unit_vec(:)  + &
                                        (sin(phase_ang + theta * i)) * tri_pro_unit_vec(:)) 
@@ -160,18 +165,18 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       A = 0.0_DP
       B = 0.0_DP
 
-      write(*,*) ' vcom: ',vcom(:)
       do i = 1, nfrag
          A = A + m_frag(i) * dot_product(v_frag(:,i), v_frag(:,i))
          B = B + m_frag(i) * dot_product(v_frag(:,i), vcom(:))
-         write(*,*) i,' v_frag: ',v_frag(:,i)
       end do
-      write(*,*) 'A: ',A
-      write(*,*) 'B: ',B
 
-      f_corrected = (- B + sqrt((B + A)**2 + (2 * A * KE_residual))) / A
+      if ((B + A)**2 + (2 * A * KE_residual) > 0.0_DP) then
+         f_corrected = (- B + sqrt((B + A)**2 + (2 * A * KE_residual))) / A
+      else
+         f_corrected = 0.0_DP
+      end if
       write(*,*) 'f_corrected: ',f_corrected
-      v_frag(:,:) = f_corrected * v_frag(:,:)
+      v_frag(:,:) =  f_corrected * v_frag(:,:) 
 
       ! Shift the fragments into the system barycenter frame
       do i = 1, nfrag
@@ -186,7 +191,6 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
          KE_after = KE_after + 0.5_DP * m_frag(i) * dot_product(v_frag(:,i), v_frag(:,i))
       end do
       Etot_after = KE_after + KE_spin_after + U_after
-
 
       write(*,*) "SYMBA_FRAG_POS KE_corr   : ", KE_after + KE_spin_after
       write(*,*) "SYMBA_FRAG_POS KE_ratio  : ", (KE_after + KE_spin_after) / (KE_before + KE_spin_before)
