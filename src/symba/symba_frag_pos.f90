@@ -170,6 +170,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       write(*,*) 'B: ',B
 
       f_corrected = (- B + sqrt((B + A)**2 + (2 * A * KE_residual))) / A
+      write(*,*) 'f_corrected: ',f_corrected
       v_frag(:,:) = f_corrected * v_frag(:,:)
 
       ! Shift the fragments into the system barycenter frame
@@ -194,7 +195,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       write(*,*) "SYMBA_FRAG_POS U_ratio   : ", U_after / U_before
       write(*,*) "SYMBA_FRAG_POS E_before  : ", KE_before + KE_spin_before + U_before
       write(*,*) "SYMBA_FRAG_POS E_after   : ", KE_after + KE_spin_after + U_after
-      write(*,*) "SYMBA_FRAG_POS 1 - (E - E')/|E|   : ", 1.0_DP - (Etot_before - Etot_after) / abs(Etot_before)
+      write(*,*) "SYMBA_FRAG_POS E_before / E_after   : ", Etot_before / Etot_after
 
       deallocate(family, non_family)
    end associate
