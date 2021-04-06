@@ -73,8 +73,8 @@ GWARNINGS = -Wall -Warray-bounds  -Wimplicit-interface -Wextra -Warray-temporari
 FFLAGS  = -init=snan,arrays -traceback -no-wrap-margin -O3 -g $(STRICTREAL) #$(SIMDVEC) $(PAR)  #$(HEAPARR)
 FORTRAN = ifort
 
-#FORTRAN = gfortran
-#FFLAGS =  -ffree-line-length-none $(GDEBUG)
+FORTRAN = gfortran
+FFLAGS =  -ffree-line-length-none $(GDEBUG)
 AR     = ar
 
 # DO NOT include in CFLAGS the "-c" option to compile object only

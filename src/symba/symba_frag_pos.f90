@@ -16,13 +16,13 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
    real(DP), dimension(:,:), intent(in)      :: Ip_frag
    real(DP), dimension(:,:), intent(out)     :: x_frag, v_frag, rot_frag
    integer(I4B), dimension(2), intent(inout) :: idx_parents
-   type(symba_pl)                            :: symba_pla
+   type(symba_pl)                            :: symba_plA
 
    real(DP), dimension(NDIM, 2)            :: rot
    integer(I4B)                            :: i, j, nfrag, fam_size, istart, non_fam_size, npl
    real(DP), dimension(NDIM)               :: v_cross_x, delta_v, delta_x, xcom, vcom
    real(DP)                                :: mtot, phase_ang, theta, v_frag_norm, r_frag_norm, v_col_norm, r_col_norm, KE_residual
-   real(DP)                                :: f_anelastic, Etot_before, KE_before, U_before, v1mag2, v2mag2, U_p1_before, U_p2_before 
+   real(DP)                                :: f_anelastic, Etot_before, Etot_after, KE_before, U_before, v1mag2, v2mag2, U_p1_before, U_p2_before 
    real(DP)                                :: U_after, KE_spin_before, KE_spin_after, KE_after, KE_corrected, U_corrected, U_frag_after
    real(DP), dimension(NDIM)               :: v_col_unit_vec, tri_pro, tri_pro_unit_vec, v_com, vc1, vc2
    real(DP), dimension(NDIM)               :: Ltot, h
@@ -126,11 +126,6 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       ! Adjust fragment positionx so that their center of mass follows the original pre-impact trajectory
       call symba_frag_adjust (xcom, vcom, x, v, mass, radius, L_spin, Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag)
 
-      do i = 1, nfrag
-         x_frag(:, i) = x_frag(:, i) + xcom(:)
-         v_frag(:, i) = v_frag(:, i) + vcom(:)
-      end do
-
       U_after = 0.0_DP
       ! Calculate the new potential energy of the system 
       do i = 1, nfrag
@@ -140,26 +135,16 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
          end do
          ! Add the contribution due to non-family members
          do j = 1, non_fam_size
-            U_after = U_after - m_frag(i) * Mpl(non_family(j)) / norm2(x_frag(:,i) - xbpl(:,non_family(j)))
+            U_after = U_after - m_frag(i) * Mpl(non_family(j)) / norm2(x_frag(:,i) + xcom(:) - xbpl(:,non_family(j)))
          end do
-      end do
-
-      do i = 1, nfrag
-         x_frag(:, i) = x_frag(:, i) - xcom(:)
-         v_frag(:, i) = v_frag(:, i) - vcom(:)
       end do
 
       ! Compute the current kinetic energy of the system so we can scale the velocity vectors to the correct value
       KE_after = 0.0_DP
       KE_spin_after = 0.0_DP
       do i = 1, nfrag
-         KE_after = KE_after + 0.5_DP * m_frag(i) * dot_product(v_frag(:,i), v_frag(:,i))
+         KE_after = KE_after + 0.5_DP * m_frag(i) * dot_product(v_frag(:,i) + vcom(:), v_frag(:,i) + vcom(:))
          KE_spin_after = 0.5_DP * m_frag(i) * rad_frag(i)**2 * Ip_frag(3,i) * dot_product(rot_frag(:,i), rot_frag(:,i))
-      end do
-
-      do i = 1, nfrag
-         x_frag(:, i) = x_frag(:, i) + xcom(:)
-         v_frag(:, i) = v_frag(:, i) + vcom(:)
       end do
 
       ! Adjust the fragment velocities so that they have the their total energy reduced by an amount set by the anelastic parameter
@@ -168,16 +153,24 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       f_anelastic = 0.1_DP ! TODO: Should this be set by the user or kept as a constant?
       KE_residual = KE_after + KE_spin_after + U_after - (f_anelastic * Etot_before)
 
+      write(*,*) 'KE_residual: ',KE_residual
+
       A = 0.0_DP
       B = 0.0_DP
 
       do i = 1, nfrag
-         A = A + (m_frag(i) * (dot_product(v_frag(:,i), v_frag(:,i))))
-         B = B + (m_frag(i) * (dot_product(v_frag(:,i), vcom)))
+         A = A + m_frag(i) * dot_product(v_frag(:,i), v_frag(:,i))
+         B = B + m_frag(i) * dot_product(v_frag(:,i), vcom(:))
       end do
 
       f_corrected = (- B + sqrt((B + A)**2 + (2 * KE_residual))) / A
       v_frag(:,:) = f_corrected * v_frag(:,:)
+
+      ! Shift the fragments into the system barycenter frame
+      do i = 1, nfrag
+         x_frag(:,i) = x_frag(:, i) + xcom(:)
+         v_frag(:,i) = v_frag(:, i) + vcom(:)
+      end do
 
       ! REMOVE THE FOLLOWING AFTER TESTING
       ! Calculate the new energy of the system of fragments
@@ -185,6 +178,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       do i = 1, nfrag
          KE_after = KE_after + 0.5_DP * m_frag(i) * dot_product(v_frag(:,i), v_frag(:,i))
       end do
+      Etot_after = KE_after + KE_spin_after + U_after
 
       write(*,*) "SYMBA_FRAG_POS KE_before : ", KE_before + KE_spin_before
       write(*,*) "SYMBA_FRAG_POS KE_after  : ", KE_after + KE_spin_after
@@ -194,7 +188,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       write(*,*) "SYMBA_FRAG_POS U_ratio   : ", U_after / U_before
       write(*,*) "SYMBA_FRAG_POS E_before  : ", KE_before + KE_spin_before + U_before
       write(*,*) "SYMBA_FRAG_POS E_after   : ", KE_after + KE_spin_after + U_after
-      write(*,*) "SYMBA_FRAG_POS E_ratio   : ", (KE_after + KE_spin_after + U_after) / (KE_before + KE_spin_before + U_before)
+      write(*,*) "SYMBA_FRAG_POS 1 - (E - E')/|E|   : ", 1.0_DP - (Etot_before - Etot_after) / abs(Etot_before)
 
       deallocate(family, non_family)
    end associate
