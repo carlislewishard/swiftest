@@ -163,7 +163,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
          B = B + m_frag(i) * dot_product(v_frag(:,i), vcom(:))
       end do
 
-      f_corrected = (- B + sqrt((B + A)**2 + (2 * KE_residual))) / A
+      f_corrected = (- B + sqrt((B + A)**2 + (2 * A * KE_residual))) / A
       v_frag(:,:) = f_corrected * v_frag(:,:)
 
       ! Shift the fragments into the system barycenter frame
