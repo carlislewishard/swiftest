@@ -172,7 +172,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       B = 0.0_DP
 
       do i = 1, nfrag
-         A = A + (m_frag(i) * norm2(v_frag(:,i))**2)
+         A = A + (m_frag(i) * (dot_product(v_frag(:,i), v_frag(:,i))))
          B = B + (m_frag(i) * (dot_product(v_frag(:,i), vcom)))
       end do
 
