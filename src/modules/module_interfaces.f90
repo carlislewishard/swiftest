@@ -748,11 +748,13 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE symba_casemerge (nmergeadd, mergeadd_list, x, v, mass, radius, Lspin, Ip, xbs, vbs, param)
+          SUBROUTINE symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, Lspin, Ip, xbs, vbs, param)
           USE swiftest_globals
           USE swiftest_data_structures
           USE module_symba
           IMPLICIT NONE
+          type(symba_pl), intent(inout)             :: symba_plA
+          integer(I4B), dimension(2), intent(inout) :: idx_parents
           integer(I4B), intent(inout)             :: nmergeadd
           type(symba_merger), intent(inout)       :: mergeadd_list
           real(DP), dimension(:), intent(in)      :: mass, radius, xbs, vbs

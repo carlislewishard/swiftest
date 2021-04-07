@@ -48,8 +48,8 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       family(2) = idx_parents(2)
       istart = 2 + nchild1
 
-      if (nchild1 > 0) family(3:istart) = symba_plA%kin(idx_parents(1))%child(:)
-      if (nchild2 > 0) family(istart+1:istart+1+nchild2) = symba_plA%kin(idx_parents(2))%child(:)
+      if (nchild1 > 0) family(3:istart) = symba_plA%kin(idx_parents(1))%child(1:nchild1)
+      if (nchild2 > 0) family(istart+1:istart+1+nchild2) = symba_plA%kin(idx_parents(2))%child(1:nchild2)
 
       ! Make the list of non-family members (bodies not involved in the collision)
       npl = count(status(:) == ACTIVE)
@@ -94,7 +94,6 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
 
       ! Now create the fragment distribution
       nfrag = size(x_frag, 2)
-
 
       ! Calculate the position of each fragment 
       ! Theta is a phase shift value that ensures that successive nearby collisions in a single step are rotated to avoid possible overlap
@@ -155,12 +154,12 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       ! Adjust the fragment velocities so that they have the their total energy reduced by an amount set by the anelastic parameter
       ! Make sure we don't end up with negative energy (bound system). If so, we'll adjust the radius so that the potential energy
       ! takes up the negative part
-      f_anelastic = 0.1_DP ! TODO: Should this be set by the user or kept as a constant?
-      KE_residual = KE_after + KE_spin_after + U_after - (f_anelastic * Etot_before)
+      f_anelastic = 10.0_DP ! TODO: Should this be set by the user or kept as a constant?
+      KE_residual = KE_after + KE_spin_after + U_after - f_anelastic * Etot_before  
 
-      write(*,*) "SYMBA_FRAG_POS KE_before : ", KE_before + KE_spin_before
-      write(*,*) "SYMBA_FRAG_POS KE_after  : ", KE_after + KE_spin_after
-      write(*,*) 'KE_residual: ',KE_residual
+      !write(*,*) "SYMBA_FRAG_POS Etot_before : ", Etot_before
+      !write(*,*) "SYMBA_FRAG_POS Etot_after  : ", KE_after + KE_spin_after + U_after
+      !write(*,*) 'KE_residual: ',KE_residual
 
       A = 0.0_DP
       B = 0.0_DP
@@ -170,12 +169,14 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
          B = B + m_frag(i) * dot_product(v_frag(:,i), vcom(:))
       end do
 
-      if ((B + A)**2 + (2 * A * KE_residual) > 0.0_DP) then
-         f_corrected = (- B + sqrt((B + A)**2 + (2 * A * KE_residual))) / A
+      if ((B + A)**2 - 2 * A * KE_residual > 0.0_DP) then
+         f_corrected = (- B + sqrt((B + A)**2 - 2 * A * KE_residual)) / A
       else
          f_corrected = 0.0_DP
       end if
-      write(*,*) 'f_corrected: ',f_corrected
+      !write(*,*) 'A: ',A
+      !write(*,*) 'B: ',B
+     ! write(*,*) 'f_corrected: ',f_corrected
       v_frag(:,:) =  f_corrected * v_frag(:,:) 
 
       ! Shift the fragments into the system barycenter frame
@@ -192,14 +193,14 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       end do
       Etot_after = KE_after + KE_spin_after + U_after
 
-      write(*,*) "SYMBA_FRAG_POS KE_corr   : ", KE_after + KE_spin_after
-      write(*,*) "SYMBA_FRAG_POS KE_ratio  : ", (KE_after + KE_spin_after) / (KE_before + KE_spin_before)
-      write(*,*) "SYMBA_FRAG_POS U_before  : ", U_before
-      write(*,*) "SYMBA_FRAG_POS U_after   : ", U_after
-      write(*,*) "SYMBA_FRAG_POS U_ratio   : ", U_after / U_before
-      write(*,*) "SYMBA_FRAG_POS E_before  : ", KE_before + KE_spin_before + U_before
-      write(*,*) "SYMBA_FRAG_POS E_after   : ", KE_after + KE_spin_after + U_after
-      write(*,*) "SYMBA_FRAG_POS E_before / E_after   : ", Etot_before / Etot_after
+     ! write(*,*) "SYMBA_FRAG_POS KE_corr   : ", KE_after + KE_spin_after
+     ! write(*,*) "SYMBA_FRAG_POS KE_ratio  : ", (KE_after + KE_spin_after) / (KE_before + KE_spin_before)
+     ! write(*,*) "SYMBA_FRAG_POS U_before  : ", U_before
+     ! write(*,*) "SYMBA_FRAG_POS U_after   : ", U_after
+     ! write(*,*) "SYMBA_FRAG_POS U_ratio   : ", U_after / U_before
+     ! write(*,*) "SYMBA_FRAG_POS E_before  : ", KE_before + KE_spin_before + U_before
+     ! write(*,*) "SYMBA_FRAG_POS E_after   : ", KE_after + KE_spin_after + U_after
+     ! write(*,*) "SYMBA_FRAG_POS E_before / E_after   : ", Etot_before / Etot_after
 
       deallocate(family, non_family)
    end associate

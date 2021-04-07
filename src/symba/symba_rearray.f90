@@ -21,53 +21,54 @@ subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
    logical, intent(in)                     :: ldiscard, ldiscard_tp 
 
 ! internals
-   integer(I4B)                           :: i, nkpl, nktp
-   logical, dimension(npl)                :: discard_l_pl 
+   integer(I4B)                           :: i, nkpl, nktp, ntot
+   logical, dimension(:), allocatable     :: discard_l_pl 
    logical, dimension(ntp)                :: discard_l_tp
+   real(DP)                               :: msys_old, msys_new
 
 ! executable code
    if (ldiscard) then 
       nsppl = 0
-      nkpl = 0
-      discard_l_pl(1:npl) = (symba_plA%helio%swiftest%status(1:npl) /= ACTIVE) 
-      nsppl = count(discard_l_pl)
-      nkpl = npl - nsppl
-
+      nkpl = count(symba_plA%helio%swiftest%status(:) == ACTIVE)
+      nsppl = npl - nkpl
+      allocate(discard_l_pl(npl))
       call discard_plA%alloc(nsppl)
+      discard_l_pl(:) = (symba_plA%helio%swiftest%status(1:npl) /= ACTIVE) 
 
       ! Spill discarded bodies into discard list
-      discard_plA%name(1:nsppl)   = pack(symba_plA%helio%swiftest%name(1:npl), discard_l_pl)
-      discard_plA%status(1:nsppl) = pack(symba_plA%helio%swiftest%status(1:npl), discard_l_pl)
-      discard_plA%mass(1:nsppl)   = pack(symba_plA%helio%swiftest%mass(1:npl), discard_l_pl)
-      discard_plA%radius(1:nsppl) = pack(symba_plA%helio%swiftest%radius(1:npl), discard_l_pl)
-      discard_plA%rhill(1:nsppl)  = pack(symba_plA%helio%swiftest%rhill(1:npl), discard_l_pl)
+      discard_plA%name(:)   = pack(symba_plA%helio%swiftest%name(1:npl),   discard_l_pl)
+      discard_plA%status(:) = pack(symba_plA%helio%swiftest%status(1:npl), discard_l_pl)
+      discard_plA%mass(:)   = pack(symba_plA%helio%swiftest%mass(1:npl),   discard_l_pl)
+      discard_plA%radius(:) = pack(symba_plA%helio%swiftest%radius(1:npl), discard_l_pl)
+      discard_plA%rhill(:)  = pack(symba_plA%helio%swiftest%rhill(1:npl),  discard_l_pl)
       do i = 1, NDIM
-         discard_plA%xh(i,1:nsppl)  = pack(symba_plA%helio%swiftest%xh(i,1:npl),  discard_l_pl)
-         discard_plA%vh(i,1:nsppl)  = pack(symba_plA%helio%swiftest%vh(i,1:npl),  discard_l_pl)
-         discard_plA%xb(i,1:nsppl)  = pack(symba_plA%helio%swiftest%xb(i,1:npl),  discard_l_pl)
-         discard_plA%vb(i,1:nsppl)  = pack(symba_plA%helio%swiftest%vb(i,1:npl),  discard_l_pl)
-         discard_plA%ip(i,1:nsppl)  = pack(symba_plA%helio%swiftest%ip(i,1:npl),  discard_l_pl)
-         discard_plA%rot(i,1:nsppl) = pack(symba_plA%helio%swiftest%rot(i,1:npl), discard_l_pl)
+         discard_plA%xh(i,:)  = pack(symba_plA%helio%swiftest%xh(i,1:npl),  discard_l_pl)
+         discard_plA%vh(i,:)  = pack(symba_plA%helio%swiftest%vh(i,1:npl),  discard_l_pl)
+         discard_plA%xb(i,:)  = pack(symba_plA%helio%swiftest%xb(i,1:npl),  discard_l_pl)
+         discard_plA%vb(i,:)  = pack(symba_plA%helio%swiftest%vb(i,1:npl),  discard_l_pl)
+         discard_plA%ip(i,:)  = pack(symba_plA%helio%swiftest%ip(i,1:npl),  discard_l_pl)
+         discard_plA%rot(i,:) = pack(symba_plA%helio%swiftest%rot(i,1:npl), discard_l_pl)
       end do
 
-      ! Pack kept bodies down 
-      symba_plA%helio%swiftest%name(1:nkpl)   = pack(symba_plA%helio%swiftest%name(1:npl),   .not. discard_l_pl)
-      symba_plA%helio%swiftest%status(1:nkpl) = pack(symba_plA%helio%swiftest%status(1:npl), .not. discard_l_pl)
-      symba_plA%helio%swiftest%mass(1:nkpl)   = pack(symba_plA%helio%swiftest%mass(1:npl),   .not. discard_l_pl)
-      symba_plA%helio%swiftest%radius(1:nkpl) = pack(symba_plA%helio%swiftest%radius(1:npl), .not. discard_l_pl)
-      symba_plA%helio%swiftest%rhill(1:nkpl)  = pack(symba_plA%helio%swiftest%rhill(1:npl),  .not. discard_l_pl)
-      do i = 1, NDIM
-         symba_plA%helio%swiftest%xh(i,1:nkpl)  = pack(symba_plA%helio%swiftest%xh(i,1:npl),  .not. discard_l_pl)
-         symba_plA%helio%swiftest%vh(i,1:nkpl)  = pack(symba_plA%helio%swiftest%vh(i,1:npl),  .not. discard_l_pl)
-         symba_plA%helio%swiftest%xb(i,1:nkpl)  = pack(symba_plA%helio%swiftest%xb(i,1:npl),  .not. discard_l_pl)
-         symba_plA%helio%swiftest%vb(i,1:nkpl)  = pack(symba_plA%helio%swiftest%vb(i,1:npl),  .not. discard_l_pl)
-         symba_plA%helio%swiftest%ip(i,1:nkpl)  = pack(symba_plA%helio%swiftest%ip(i,1:npl),  .not. discard_l_pl)
-         symba_plA%helio%swiftest%rot(i,1:nkpl) = pack(symba_plA%helio%swiftest%rot(i,1:npl), .not. discard_l_pl)
-         symba_plA%helio%ah(i,1:nkpl)           = pack(symba_plA%helio%ah(i,1:npl),           .not. discard_l_pl)
-      end do
+      if (nkpl > 0) then
+         ! Pack kept bodies down 
+         symba_plA%helio%swiftest%name(1:nkpl)   = pack(symba_plA%helio%swiftest%name(1:npl),   .not. discard_l_pl)
+         symba_plA%helio%swiftest%status(1:nkpl) = pack(symba_plA%helio%swiftest%status(1:npl), .not. discard_l_pl)
+         symba_plA%helio%swiftest%mass(1:nkpl)   = pack(symba_plA%helio%swiftest%mass(1:npl),   .not. discard_l_pl)
+         symba_plA%helio%swiftest%radius(1:nkpl) = pack(symba_plA%helio%swiftest%radius(1:npl), .not. discard_l_pl)
+         symba_plA%helio%swiftest%rhill(1:nkpl)  = pack(symba_plA%helio%swiftest%rhill(1:npl),  .not. discard_l_pl)
+         do i = 1, NDIM
+            symba_plA%helio%swiftest%xh(i,1:nkpl)  = pack(symba_plA%helio%swiftest%xh(i,1:npl),  .not. discard_l_pl)
+            symba_plA%helio%swiftest%vh(i,1:nkpl)  = pack(symba_plA%helio%swiftest%vh(i,1:npl),  .not. discard_l_pl)
+            symba_plA%helio%swiftest%xb(i,1:nkpl)  = pack(symba_plA%helio%swiftest%xb(i,1:npl),  .not. discard_l_pl)
+            symba_plA%helio%swiftest%vb(i,1:nkpl)  = pack(symba_plA%helio%swiftest%vb(i,1:npl),  .not. discard_l_pl)
+            symba_plA%helio%swiftest%ip(i,1:nkpl)  = pack(symba_plA%helio%swiftest%ip(i,1:npl),  .not. discard_l_pl)
+            symba_plA%helio%swiftest%rot(i,1:nkpl) = pack(symba_plA%helio%swiftest%rot(i,1:npl), .not. discard_l_pl)
+         end do
+      end if
 
       if (nkpl + nmergeadd > npl) call util_resize_pl(symba_plA, nkpl+nmergeadd, npl)
-      npl = nkpl  + nmergeadd
+      npl = nkpl + nmergeadd
 
       !add merge products to the end of the planet list
       symba_plA%helio%swiftest%status(nkpl+1:npl) = ACTIVE
@@ -83,7 +84,16 @@ subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
 
       call util_hills(npl, symba_plA%helio%swiftest)
 
+      npl = count(symba_plA%helio%swiftest%status(1:npl) == ACTIVE)
+      ntot= size(symba_plA%helio%swiftest%status(:))
+      if (ntot > npl) then
+         symba_plA%helio%swiftest%status(npl+1:ntot) = INACTIVE
+         symba_plA%helio%swiftest%mass(npl+1:ntot) = 0.0_DP
+         symba_plA%helio%swiftest%name(npl+1:ntot) = -1
+      end if
+
       symba_plA%helio%swiftest%nbody = npl
+
       !call symba_reorder_pl(npl, symba_plA)
    end if 
 

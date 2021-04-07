@@ -11,13 +11,13 @@ subroutine symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_lis
    use module_interfaces, EXCEPT_THIS_ONE => symba_casedisruption
    implicit none
 
+   type(symba_pl), intent(inout)             :: symba_plA
+   integer(I4B), dimension(2), intent(inout) :: idx_parents
    integer(I4B), intent(inout)               :: nmergeadd
    type(symba_merger), intent(inout)         :: mergeadd_list
-   type(symba_pl), intent(inout)             :: symba_pla
    real(DP), dimension(:),   intent(in)      :: mass, radius, xbs, vbs, mass_res
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
    type(user_input_parameters),intent(inout) :: param
-   integer(I4B), dimension(2), intent(inout) :: idx_parents
 
    integer(I4B)                            :: i,  istart, nfrag
    real(DP)                                :: mtot, avg_dens

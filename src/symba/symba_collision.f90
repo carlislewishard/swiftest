@@ -32,33 +32,42 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
    real(DP), dimension(2)                  :: radius_si, mass_si, density_si
    real(DP), dimension(NDIM, 2)            :: x, v, L_spin, Ip
    real(DP)                                :: volchild, dentot, Mcb_si
-   real(DP)                                :: mmax, mchild, mtot
+   real(DP)                                :: mchild, mtot
    real(DP), dimension(NDIM)               :: xc, vc, xcom, vcom, xchild, vchild, xcrossv
    real(DP)                                :: mtiny_si
    integer(I4B), dimension(:), allocatable :: array_index1_child, array_index2_child, name1, name2
-   real(DP)                                :: mlr, mslr, msys
+   real(DP)                                :: mlr, mslr, msys, msys_new
+
+
+   ! First determine the collisional regime for each colliding pair
+   ldiscard = any(plplenc_list%status(1:nplplenc) == COLLISION_PARENT)
+   if (.not.ldiscard) return
 
    ! Recompute central body barycentric velocity
    call coord_h2b(npl, symba_plA%helio%swiftest, msys)
    xbs = symba_plA%helio%swiftest%xb(:, 1)
    vbs = symba_plA%helio%swiftest%vb(:, 1)
 
-   ! First determine the collisional regime for each colliding pair
+   ! Set the appropriate flags for each of the discard types
    do index_enc = 1, nplplenc
-      if (plplenc_list%status(index_enc) /= MERGED) cycle
-      ldiscard = .true.
+      if (plplenc_list%status(index_enc) /= COLLISION_PARENT) cycle
       idx(1) = plplenc_list%index1(index_enc)
       idx(2) = plplenc_list%index2(index_enc)
 
       idx_parent(:) = symba_plA%kin(idx(:))%parent
-      if (idx_parent(1) == idx_parent(2)) cycle ! These are both children of the same parent, so skip this pair
+      nchild(:) = symba_plA%kin(idx_parent(:))%nchild 
+      if (idx_parent(1) == idx_parent(2)) then
+         idx_parent(2) = symba_plA%kin(idx_parent(1))%child(nchild(1))
+         nchild(1) = nchild(1) - 1
+         symba_plA%kin(idx_parent(1))%nchild = nchild(1)
+         nchild(2) = 0
+      end if
 
       mass(:) = symba_plA%helio%swiftest%mass(idx_parent(:))
       name(:) = symba_plA%helio%swiftest%name(idx_parent(:))
       radius(:) = symba_plA%helio%swiftest%radius(idx_parent(:))
       volume(:) =  (4.0_DP / 3.0_DP) * PI * radius(:)**3
    
-      nchild(:) = symba_plA%kin(idx_parent(:))%nchild 
       if (nchild(1) > 0) then
          allocate(array_index1_child, source = symba_plA%kin(idx_parent(1))%child(1:nchild(1)))
          allocate(name1(nchild(1)+1))
@@ -86,7 +95,6 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
          Ip(:, j) = mass(j) * symba_plA%helio%swiftest%Ip(:, idx_parent(j))
          ! Assume principal axis rotation about axis corresponding to highest moment of inertia (3rd Ip)
          L_spin(:, j)  = Ip(3, j) * radius(j)**2 * symba_plA%helio%swiftest%rot(:, idx_parent(j))
-         mmax = mass(j)
          if (nchild(j) > 0) then
             do i = 1, nchild(j) ! Loop over all children and take the mass weighted mean of the properties
                if (j == 1) then
@@ -101,10 +109,6 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
                vchild(:) = symba_plA%helio%swiftest%vb(:, idx_child)
                volchild = (4.0_DP / 3.0_DP) * PI * symba_plA%helio%swiftest%radius(idx_child)**3
                volume(j) = volume(j) + volchild
-               if (mchild > mmax) then ! Check to make sure that the parent is the larger of the two bodies
-                  mmax = mchild
-                  name(j) = symba_plA%helio%swiftest%name(idx_child)
-               end if
                ! Get angular momentum of the child-parent pair and add that to the spin
                xcom(:) = (mass(j) * x(:,j) + mchild * xchild(:)) / (mass(j) + mchild)
                vcom(:) = (mass(j) * v(:,j) + mchild * vchild(:)) / (mass(j) + mchild)
@@ -171,29 +175,30 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
       end if
 
       write(*, *) "Collision detected at time t = ",t
+      ! Set the appropriate flags for each of the discard types
       !! Use the positions and velocities of the parents and their children after the step is complete to generate the fragments
       select case (regime)
       case (COLLRESOLVE_REGIME_DISRUPTION)
          write(*, '("Disruption between particles ",20(I6,",",:))') name1(:), name2(:) 
          status = DISRUPTION
-         call symba_casedisruption(symba_plA, idx, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, mass_res, param)
+         call symba_casedisruption(symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, mass_res, param)
       case (COLLRESOLVE_REGIME_SUPERCATASTROPHIC)
          write(*, '("Supercatastrophic disruption between particles ",20(I6,",",:))') name1(:), name2(:) 
          status = SUPERCATASTROPHIC
-         call symba_casesupercatastrophic(symba_plA, idx, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, mass_res, param)
+         call symba_casesupercatastrophic(symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, mass_res, param)
       case (COLLRESOLVE_REGIME_HIT_AND_RUN)
          write(*, '("Hit and run between particles ",20(I6,",",:))') name1(:), name2(:) 
-         call symba_casehitandrun(symba_plA, idx, nmergeadd, mergeadd_list, name, x, v, mass, radius, L_spin, Ip, xbs, vbs, mass_res, param)
+         call symba_casehitandrun(symba_plA, idx_parent, nmergeadd, mergeadd_list, name, x, v, mass, radius, L_spin, Ip, xbs, vbs, mass_res, param)
          status = HIT_AND_RUN
       case (COLLRESOLVE_REGIME_MERGE, COLLRESOLVE_REGIME_GRAZE_AND_MERGE)
          write(*, '("Merging particles ",20(I6,",",:))') name1(:), name2(:) 
          status = MERGED
-         call symba_casemerge(nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, param)
+         call symba_casemerge(symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, param)
       case default 
          write(*,*) "Error in symba_collision, unrecognized collision regime"
          call util_exit(FAILURE)
       end select
-      ! Set the appropriate flags for each of the discard types
+
       symba_plA%helio%swiftest%status(idx_parent(:)) = status
       do j = 1, 2
          if (nchild(j) > 0) then

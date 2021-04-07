@@ -1,4 +1,4 @@
-subroutine symba_casemerge (nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, param)
+subroutine symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, param)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
    !! Merge planets.
@@ -13,6 +13,8 @@ subroutine symba_casemerge (nmergeadd, mergeadd_list, x, v, mass, radius, L_spin
    use module_interfaces, EXCEPT_THIS_ONE => symba_casemerge
    implicit none
 
+   type(symba_pl), intent(inout)             :: symba_plA
+   integer(I4B), dimension(2), intent(inout) :: idx_parents
    integer(I4B), intent(inout)               :: nmergeadd
    type(symba_merger), intent(inout)         :: mergeadd_list
    real(DP), dimension(:),   intent(in)      :: mass, radius, xbs, vbs
@@ -25,10 +27,23 @@ subroutine symba_casemerge (nmergeadd, mergeadd_list, x, v, mass, radius, L_spin
    real(DP), dimension(2)                  :: vol
    real(DP), dimension(NDIM)               :: L_orb_old, L_spin_old
    real(DP), dimension(NDIM)               :: L_spin_new, rot_new, Ip_new
+   integer(I4B), dimension(:), allocatable :: family
+   integer(I4B)                            :: fam_size, istart
 
   
+   ! Make the list of family members (bodies involved in the collision)
+   associate(nchild1 => symba_plA%kin(idx_parents(1))%nchild, nchild2 => symba_plA%kin(idx_parents(2))%nchild)
+      fam_size = 2 + nchild1 + nchild2
+      allocate(family(fam_size))
+      family(1) = idx_parents(1)
+      family(2) = idx_parents(2)
+      istart = 2 + nchild1
+
+      if (nchild1 > 0) family(3:istart) = symba_plA%kin(idx_parents(1))%child(1:nchild1)
+      if (nchild2 > 0) family(istart+1:istart+1+nchild2) = symba_plA%kin(idx_parents(2))%child(1:nchild2)
+      mass_new = sum(symba_plA%helio%swiftest%mass(family(:)))
+   end associate
    ! Merged body is created at the barycenter of the original bodies
-   mass_new = sum(mass(:))
    xcom(:) = (mass(1) * x(:,1) + mass(2) * x(:,2)) / mass_new
    vcom(:) = (mass(1) * v(:,1) + mass(2) * v(:,2)) / mass_new
 

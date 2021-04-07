@@ -21,9 +21,9 @@ subroutine symba_step_reset(npl, symba_plA, symba_tpA, plplenc_list, pltpenc_lis
    integer(I4B)                  :: i
 
    symba_plA%lcollision(:) = .false.
-   symba_plA%kin(1:npl)%parent = (/ (i, i=1, npl) /)
+   symba_plA%kin(:)%parent = (/ (i, i=1, size(symba_plA%kin(:))) /)
    symba_plA%kin(:)%nchild = 0
-   do i = 1, npl
+   do i = 1, size(symba_plA%kin(:))
       if (allocated(symba_plA%kin(i)%child)) deallocate(symba_plA%kin(i)%child)
    end do
    symba_plA%nplenc(:) = 0
@@ -39,11 +39,14 @@ subroutine symba_step_reset(npl, symba_plA, symba_tpA, plplenc_list, pltpenc_lis
    plplenc_list%nplplenc = 0
    pltpenc_list%npltpenc = 0
    !************************
-
    if (.not. allocated(plplenc_list%status)) call symba_plplenc_allocate(plplenc_list, 1)
    if (.not. allocated(pltpenc_list%status)) call symba_pltpenc_allocate(pltpenc_list, 1)
    if (.not. allocated(mergeadd_list%status)) call symba_merger_allocate(mergeadd_list, 1)
    if (.not. allocated(mergesub_list%status)) call symba_merger_allocate(mergesub_list, 1)
+   plplenc_list%status(:) = 0
+   pltpenc_list%status(:) = 0
+   mergeadd_list%status(:) = 0
+   mergesub_list%status(:) = 0
 
    return
 end subroutine symba_step_reset
