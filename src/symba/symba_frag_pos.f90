@@ -56,8 +56,8 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       non_fam_size = npl - fam_size
       allocate(non_family(non_fam_size))
       i = 0
-      do j = 1, npl
-         if (any(family(:) == j)) cycle
+      do j = 1, size(status(:))
+         if (any(family(:) == j) .or. (status(j) /= ACTIVE)) cycle
          i = i + 1
          non_family(i) = j
       end do
