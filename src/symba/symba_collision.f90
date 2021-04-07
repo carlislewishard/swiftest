@@ -40,7 +40,7 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
 
 
    ! First determine the collisional regime for each colliding pair
-   ldiscard = any(plplenc_list%status(1:nplplenc) == COLLISION_PARENT)
+   ldiscard = any(plplenc_list%status(1:nplplenc) == COLLISION_PRIMARY)
    if (.not.ldiscard) return
 
    ! Recompute central body barycentric velocity
@@ -50,7 +50,7 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
 
    ! Set the appropriate flags for each of the discard types
    do index_enc = 1, nplplenc
-      if (plplenc_list%status(index_enc) /= COLLISION_PARENT) cycle
+      if (plplenc_list%status(index_enc) /= COLLISION_PRIMARY) cycle
       idx(1) = plplenc_list%index1(index_enc)
       idx(2) = plplenc_list%index2(index_enc)
 

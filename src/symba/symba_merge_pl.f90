@@ -91,9 +91,9 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
       if (symba_plA%lcollision(idx(1)) .or. symba_plA%lcollision(idx(2))) then
          ! At least one of these bodies has been involved in a collision before. If so, add the currently coliding body to
          ! its list of children (along with any of *their* children).
-         plplenc_list%status(index_enc) = COLLISION_CHILD
+         plplenc_list%status(index_enc) = COLLISION_SECONDARY
       else
-         plplenc_list%status(index_enc) = COLLISION_PARENT
+         plplenc_list%status(index_enc) = COLLISION_PRIMARY
       end if
 
       p1 = symba_plA%kin(idx(1))%parent
