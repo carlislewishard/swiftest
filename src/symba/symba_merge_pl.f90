@@ -82,23 +82,15 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
 
    if (lcollision) then
 
+      plplenc_list%status(index_enc) = COLLISION
       plplenc_list%xh1(:,index_enc) = xh1(:)
       plplenc_list%vb1(:,index_enc) = vb1(:)
       plplenc_list%xh2(:,index_enc) = xh2(:)
       plplenc_list%vb2(:,index_enc) = vb2(:)
-
-      ! Check if either of these particles has been involved in a collision before. If so, make it a parent
-      if (symba_plA%lcollision(idx(1)) .or. symba_plA%lcollision(idx(2))) then
-         ! At least one of these bodies has been involved in a collision before. If so, add the currently coliding body to
-         ! its list of children (along with any of *their* children).
-         plplenc_list%status(index_enc) = COLLISION_SECONDARY
-      else
-         plplenc_list%status(index_enc) = COLLISION_PRIMARY
-      end if
-
       p1 = symba_plA%kin(idx(1))%parent
-      p2 = symba_plA%kin(idx(2))%parent 
+      p2 = symba_plA%kin(idx(2))%parent
       if (p1 == p2) return ! This is a collision between to children of a shared parent. We will ignore it.
+
       if (symba_plA%helio%swiftest%mass(p1) > symba_plA%helio%swiftest%mass(p1)) then
          index_parent = p1
          index_child = p2

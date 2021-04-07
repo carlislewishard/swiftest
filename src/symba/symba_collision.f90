@@ -40,7 +40,7 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
 
 
    ! First determine the collisional regime for each colliding pair
-   ldiscard = any(plplenc_list%status(1:nplplenc) == COLLISION_PRIMARY)
+   ldiscard = any(plplenc_list%status(1:nplplenc) == COLLISION)
    if (.not.ldiscard) return
 
    ! Recompute central body barycentric velocity
@@ -50,18 +50,27 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
 
    ! Set the appropriate flags for each of the discard types
    do index_enc = 1, nplplenc
-      if (plplenc_list%status(index_enc) /= COLLISION_PRIMARY) cycle
+      if (plplenc_list%status(index_enc) /= COLLISION) cycle ! Not the primary collision for this pair
+
+      ! Index values of the original particle pair 
       idx(1) = plplenc_list%index1(index_enc)
       idx(2) = plplenc_list%index2(index_enc)
 
+      if (any(symba_plA%helio%swiftest%status(idx(:)) /= ACTIVE)) cycle ! One of these two bodies is already gone
+
+      ! Index values for the parents of this particle pair
       idx_parent(:) = symba_plA%kin(idx(:))%parent
+
       nchild(:) = symba_plA%kin(idx_parent(:))%nchild 
+      ! If all of these bodies share a parent, but this is still a unique collision, move the last child
+      ! out of the parent's position and make it the secondary body
       if (idx_parent(1) == idx_parent(2)) then
          idx_parent(2) = symba_plA%kin(idx_parent(1))%child(nchild(1))
          nchild(1) = nchild(1) - 1
          symba_plA%kin(idx_parent(1))%nchild = nchild(1)
          nchild(2) = 0
       end if
+
 
       mass(:) = symba_plA%helio%swiftest%mass(idx_parent(:))
       name(:) = symba_plA%helio%swiftest%name(idx_parent(:))
