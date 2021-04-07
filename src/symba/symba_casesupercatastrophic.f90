@@ -28,7 +28,7 @@ subroutine symba_casesupercatastrophic (symba_plA, idx_parents, nmergeadd, merge
    real(DP), dimension(:), allocatable     :: m_frag, rad_frag
   
    ! Collisional fragments will be uniformly distributed around the pre-impact barycenter
-   nfrag = 10 ! This value is set for testing. This needs to be updated such that it is calculated or set by the user
+   nfrag = 20 ! This value is set for testing. This needs to be updated such that it is calculated or set by the user
    allocate(m_frag(nfrag))
    allocate(rad_frag(nfrag))
    allocate(x_frag(NDIM, nfrag))

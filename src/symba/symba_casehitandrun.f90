@@ -55,7 +55,7 @@ subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list
       end do
       
    else ! Imperfect hit and run, so we'll keep the largest body and destroy the other
-      nfrag = 5
+      nfrag = 10
       allocate(m_frag(nfrag))
       allocate(name_frag(nfrag))
       allocate(rad_frag(nfrag))
