@@ -25,16 +25,36 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
    real(DP)                                :: f_anelastic, Etot_before, Etot_after, KE_before, U_before, v1mag2, v2mag2, U_p1_before, U_p2_before 
    real(DP)                                :: U_after, KE_spin_before, KE_spin_after, KE_after, KE_corrected, U_corrected, U_frag_after
    real(DP), dimension(NDIM)               :: v_col_unit_vec, tri_pro, tri_pro_unit_vec, v_com, vc1, vc2
-   real(DP), dimension(NDIM)               :: Ltot, h
+   real(DP), dimension(NDIM)               :: Ltot, h, dx
    real(DP)                                :: rot2, v2, ip_family, f_corrected, A, B
    integer(I4B), save                      :: thetashift = 0
    integer(I4B), parameter                 :: SHIFTMAX = 9
    integer(I4B), dimension(:), allocatable :: family, non_family
+   real(DP)                                :: Esys, rmag
 
    associate(nchild1 => symba_plA%kin(idx_parents(1))%nchild, nchild2 => symba_plA%kin(idx_parents(2))%nchild, &
              xhpl => symba_plA%helio%swiftest%xh, xbpl => symba_plA%helio%swiftest%xh, vbpl => symba_plA%helio%swiftest%vb, &
              Mpl => symba_plA%helio%swiftest%mass, Ippl => symba_plA%helio%swiftest%Ip, radpl => symba_plA%helio%swiftest%radius, &
              rotpl => symba_plA%helio%swiftest%rot, status => symba_plA%helio%swiftest%status)
+
+      ! Find the total system energy
+      npl = count(status(:) == ACTIVE)
+      Esys = 0.0_DP
+      do i = 1, npl
+         if (status(i) /=ACTIVE) cycle
+         v2 = dot_product(vbpl(:,i), vbpl(:,i))
+         rot2 = dot_product(rotpl(:,i), rotpl(:,i))
+         Esys = Esys + 0.5_DP * Mpl(i) * (v2 + Ippl(3,i) * radpl(i)**2 * rot2)
+      end do
+      do i = 1, npl - 1
+         if (status(i) /=ACTIVE) cycle
+         do j = i + 1, npl
+            if (status(j) /=ACTIVE) cycle
+            dx(:) = xbpl(:, j) - xbpl(:, i) 
+            rmag = norm2(dx(:)) 
+            if (rmag > tiny(rmag)) Esys = Esys - Mpl(i) * Mpl(j) / rmag 
+         end do
+      end do
 
       ! Find the center of mass of the collisional system
       mtot = sum(mass(:))
@@ -52,7 +72,6 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       if (nchild2 > 0) family(istart+1:istart+1+nchild2) = symba_plA%kin(idx_parents(2))%child(1:nchild2)
 
       ! Make the list of non-family members (bodies not involved in the collision)
-      npl = count(status(:) == ACTIVE)
       non_fam_size = npl - fam_size
       allocate(non_family(non_fam_size))
       i = 0
@@ -163,12 +182,12 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       write(*,*)   '             Energy normalized by |Etot_before|'
       write(*,*)   '             | T_orb    T_spin    U        Etot'
       write(*,*)   ' -----------------------------------------------'
-      write(*,100) ' original    |',KE_before / abs(Etot_before), KE_spin_before / abs(Etot_before), U_before / abs(Etot_before),Etot_before/abs(Etot_before)
-      write(*,100) ' first pass  |',KE_after / abs(Etot_before), KE_spin_after / abs(Etot_before), U_after / abs(Etot_before), Etot_after / abs(Etot_before)
+      write(*,100) ' original    |',KE_before / abs(Esys), KE_spin_before / abs(Esys), U_before / abs(Esys),Etot_before/abs(Esys)
+      write(*,100) ' first pass  |',KE_after / abs(Esys), KE_spin_after / abs(Esys), U_after / abs(Esys), Etot_after / abs(Esys)
       write(*,*)   ' -----------------------------------------------'
-      write(*,100) ' change      |',(KE_after - KE_before) / abs(Etot_before), (KE_spin_after - KE_spin_before)/ abs(Etot_before), (U_after - U_before) / abs(Etot_before), (Etot_after-Etot_before) / abs(Etot_before)
+      write(*,100) ' change      |',(KE_after - KE_before) / abs(Esys), (KE_spin_after - KE_spin_before)/ abs(Esys), (U_after - U_before) / abs(Esys), (Etot_after-Etot_before) / abs(Esys)
       write(*,*)   ' -----------------------------------------------'
-      write(*,100) ' T_res       |',KE_residual / abs(Etot_before)
+      write(*,100) ' T_res       |',KE_residual / abs(Esys)
 
 
       A = 0.0_DP
