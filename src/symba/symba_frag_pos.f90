@@ -187,21 +187,21 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       ! Make sure we don't end up with negative energy (bound system). If so, we'll adjust the radius so that the potential energy
       ! takes up the negative part
       f_anelastic = 1.000_DP ! TODO: Should this be set by the user or kept as a constant?
-      KE_residual = KE_after + KE_spin_after + U_after - f_anelastic * Etot_before 
-100 format (A14,4(ES9.2,1X,:))
+      KE_residual = KE_spin_after + U_after - U_before - f_anelastic * (KE_before + KE_spin_before) 
+100 format (A14,5(ES9.2,1X,:))
       write(*,   "('              Energy normalized by |Esystem_original|')")
-      write(*,   "('             |    T_orb    T_spin         U      Etot')")
-      write(*,   "(' ----------------------------------------------------')")
-      write(*,100) ' original    |',KE_before / abs(Esys), KE_spin_before / abs(Esys), U_before / abs(Esys),Etot_before/abs(Esys)
-      write(*,100) ' first pass  |',KE_after / abs(Esys), KE_spin_after / abs(Esys), U_after / abs(Esys), Etot_after / abs(Esys)
-      write(*,   "(' ----------------------------------------------------')")
-      write(*,100) ' change      |',(KE_after - KE_before) / abs(Esys), (KE_spin_after - KE_spin_before)/ abs(Esys), (U_after - U_before) / abs(Esys), (Etot_after-Etot_before) / abs(Esys)
-      write(*,   "(' ----------------------------------------------------')")
+      write(*,   "('             |    T_orb    T_spin         T         U      Etot')")
+      write(*,   "(' ------------------------------------------------------------------')")
+      write(*,100) ' original    |',KE_before / abs(Esys), KE_spin_before / abs(Esys),(KE_before + KE_spin_before) / abs(Esys), U_before / abs(Esys),Etot_before/abs(Esys)
+      write(*,100) ' first pass  |',KE_after / abs(Esys), KE_spin_after / abs(Esys), (KE_after + KE_spin_after) / abs(Esys), U_after / abs(Esys), Etot_after / abs(Esys)
+      write(*,   "(' ------------------------------------------------------------------')")
+      write(*,100) ' change      |',(KE_after - KE_before) / abs(Esys), (KE_spin_after - KE_spin_before)/ abs(Esys), (KE_after + KE_spin_after - KE_before - KE_spin_before)/ abs(Esys), (U_after - U_before) / abs(Esys), (Etot_after-Etot_before) / abs(Esys)
+      write(*,   "(' ------------------------------------------------------------------')")
       write(*,100) ' T_res       |',KE_residual / abs(Esys)
 
       A = 0.0_DP
       B = 0.0_DP
-      C = 2 * (KE_spin_after + U_after - f_anelastic * Etot_before) 
+      C = 2 * KE_residual
 
       do i = 1, nfrag
          A = A + m_frag(i) * dot_product(v_frag(:,i), v_frag(:,i))
@@ -230,11 +230,11 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       end do
       Etot_after = KE_after + KE_spin_after + U_after
       write(*,100) 'f_corrected: ',f_corrected
-      write(*,   "(' ----------------------------------------------------')")
-      write(*,100) ' final       |',KE_after / abs(Esys), KE_spin_after / abs(Esys), U_after / abs(Esys), Etot_after / abs(Esys)
-      write(*,   "(' ----------------------------------------------------')")
-      write(*,100) ' change      |',(KE_after - KE_before) / abs(Esys), (KE_spin_after - KE_spin_before)/ abs(Esys), (U_after - U_before) / abs(Esys), (Etot_after-Etot_before) / abs(Esys)
-      write(*,   "(' ----------------------------------------------------')")
+      write(*,   "(' ------------------------------------------------------------------')")
+      write(*,100) ' final       |',KE_after / abs(Esys), KE_spin_after / abs(Esys), (KE_after + KE_spin_after) / abs(Esys), U_after / abs(Esys), Etot_after / abs(Esys)
+      write(*,   "(' ------------------------------------------------------------------')")
+      write(*,100) ' change      |',(KE_after - KE_before) / abs(Esys), (KE_spin_after - KE_spin_before)/ abs(Esys), (KE_after + KE_spin_after - KE_before - KE_spin_before)/ abs(Esys), (U_after - U_before) / abs(Esys), (Etot_after-Etot_before) / abs(Esys)
+      write(*,   "(' ------------------------------------------------------------------')")
       write(*,*)   
 
       deallocate(family, non_family)
