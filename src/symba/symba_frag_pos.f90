@@ -52,12 +52,12 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       if (nchild2 > 0) family(istart+1:istart+1+nchild2) = symba_plA%kin(idx_parents(2))%child(1:nchild2)
 
       ! Make the list of non-family members (bodies not involved in the collision)
-      npl = count(status(:) == ACTIVE)
+      npl = count(status(:) /= INACTIVE)
       non_fam_size = npl - fam_size
       allocate(non_family(non_fam_size))
       i = 0
       do j = 1, size(status(:))
-         if (any(family(:) == j) .or. (status(j) /= ACTIVE)) cycle
+         if (any(family(:) == j) .or. (status(j) == INACTIVE)) cycle
          i = i + 1
          non_family(i) = j
       end do
@@ -87,10 +87,9 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
          !! Calculate the orbital and rotational kinetic energy between the two bodies 
          Ltot(:) = Ltot(:) + Mpl(family(i)) * (h(:) + Ippl(3, family(i)) * radpl(family(i))**2 * rotpl(:,family(i)))
          KE_before = KE_before + 0.5_DP * Mpl(family(i)) * v2 
-         KE_spin_before = KE_spin_before + 0.5_DP * Mpl(family(i)) * Ippl(3,family(i)) * rot2 * radpl(family(i))*2
-         r_col_norm = r_col_norm + Mpl(family(i)) * norm2(xbpl(:,family(i)) - xcom(:))
+         KE_spin_before = KE_spin_before + 0.5_DP * Mpl(family(i)) * Ippl(3,family(i)) * rot2 * radpl(family(i))**2
+         r_col_norm = r_col_norm + radpl(family(i)) !Mpl(family(i)) * norm2(xbpl(:,family(i)) - xcom(:))
       end do
-      r_col_norm = r_col_norm / mtot 
 
       Etot_before = KE_before + KE_spin_before + U_before
 
@@ -150,13 +149,13 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       KE_spin_after = 0.0_DP
       do i = 1, nfrag
          KE_after = KE_after + 0.5_DP * m_frag(i) * dot_product(v_frag(:,i) + vcom(:), v_frag(:,i) + vcom(:))
-         KE_spin_after = 0.5_DP * m_frag(i) * rad_frag(i)**2 * Ip_frag(3,i) * dot_product(rot_frag(:,i), rot_frag(:,i))
+         KE_spin_after = KE_spin_after + 0.5_DP * m_frag(i) * rad_frag(i)**2 * Ip_frag(3,i) * dot_product(rot_frag(:,i), rot_frag(:,i))
       end do
 
       ! Adjust the fragment velocities so that they have the their total energy reduced by an amount set by the anelastic parameter
       ! Make sure we don't end up with negative energy (bound system). If so, we'll adjust the radius so that the potential energy
       ! takes up the negative part
-      f_anelastic = 2.0_DP ! TODO: Should this be set by the user or kept as a constant?
+      f_anelastic = 1.000_DP ! TODO: Should this be set by the user or kept as a constant?
       KE_residual = KE_after + KE_spin_after + U_after - f_anelastic * Etot_before  
 
       write(*,*) "SYMBA_FRAG_POS Etot_before : ", Etot_before
@@ -178,7 +177,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       end if
       !write(*,*) 'A: ',A
       !write(*,*) 'B: ',B
-     ! write(*,*) 'f_corrected: ',f_corrected
+      write(*,*) 'f_corrected: ',f_corrected
       v_frag(:,:) =  f_corrected * v_frag(:,:) 
 
       ! Shift the fragments into the system barycenter frame

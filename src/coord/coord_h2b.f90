@@ -48,7 +48,7 @@ SUBROUTINE coord_h2b(npl, swiftest_plA, msys)
          xtmp(:) = xtmp(:) + swiftest_plA%mass(i)*swiftest_plA%xh(:,i)
          vtmp(:) = vtmp(:) + swiftest_plA%mass(i)*swiftest_plA%vh(:,i)
      END DO
-     msys = swiftest_plA%dMcb + sum(swiftest_plA%mass(2:npl), swiftest_plA%status(2:npl) == ACTIVE) + swiftest_plA%Mcb_initial
+     msys = swiftest_plA%dMcb + sum(swiftest_plA%mass(2:npl), swiftest_plA%status(2:npl) /= INACTIVE) + swiftest_plA%Mcb_initial
      swiftest_plA%xb(:,1) = -xtmp(:) / msys                                  
      swiftest_plA%vb(:,1) = -vtmp(:) / msys                                  
      xtmp(:) = swiftest_plA%xb(:,1)

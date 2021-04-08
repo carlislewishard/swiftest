@@ -8,7 +8,7 @@ subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
    use module_swiftestalloc 
    use module_helio
    use module_symba
-   use module_interfaces, except_this_one => symba_rearray
+   use module_interfaces, EXCEPT_THIS_ONE => symba_rearray
    implicit none
 
 ! arguments

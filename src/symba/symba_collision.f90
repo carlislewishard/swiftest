@@ -1,4 +1,5 @@
-subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard, mergeadd_list, nmergeadd, param)
+subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard, mergeadd_list, nmergeadd, &
+                            discard_plA, param)
    !! author: Jennifer L.L. Pouplin, Carlisle A. wishard, and David A. Minton
    !!
    !! Check for merger between planets in SyMBA. If the user has turned on the FRAGMENTATION feature, it will call the 
@@ -14,12 +15,13 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
    implicit none
 
    real(DP), intent(in)                      :: t
-   integer(I4B), intent(in)                  :: npl
+   integer(I4B), intent(inout)                  :: npl
    integer(I4B), intent(inout)               :: nplplenc, nmergeadd
    type(symba_pl)                            :: symba_pla
    type(symba_plplenc), intent(inout)        :: plplenc_list
    type(symba_merger), intent(inout)         :: mergeadd_list
    logical, intent(inout)                    :: ldiscard
+   type(swiftest_pl), intent(inout)          :: discard_plA
    type(user_input_parameters),intent(inout) :: param
 
    integer(I4B), parameter                 :: NRES = 3   !! Number of collisional product results
@@ -221,7 +223,21 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
             end do
          end if
       end do
+      call symba_rearray_pl(npl, symba_plA, nmergeadd, mergeadd_list, discard_plA)
+      nmergeadd = 0
 
+      if (allocated(mergeadd_list%name)) then
+         mergeadd_list%name(:) = 0
+         mergeadd_list%index_ps(:) = 0
+         mergeadd_list%status(:) = -1
+         mergeadd_list%ncomp(:) = 0
+         mergeadd_list%xh(:,:) = 0
+         mergeadd_list%vh(:,:) = 0
+         mergeadd_list%mass(:) = 0
+         mergeadd_list%radius(:) = 0
+         mergeadd_list%IP(:,:) = 0
+         mergeadd_list%rot(:,:) = 0
+      end if
       deallocate(array_index1_child, array_index2_child, name1, name2)
    end do
 

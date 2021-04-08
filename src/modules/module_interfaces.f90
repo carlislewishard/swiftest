@@ -795,19 +795,21 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE symba_collision(t, npl, symba_plA, nplplenc, plplenc_list, ldiscard, mergeadd_list, nmergeadd, param)
+          SUBROUTINE symba_collision(t, npl, symba_plA, nplplenc, plplenc_list, ldiscard, mergeadd_list, nmergeadd, &
+                                     discard_plA, param)
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_helio
                USE module_symba
                IMPLICIT NONE
                real(DP), intent(in)                      :: t
-               integer(I4B), intent(in)                  :: npl
+               integer(I4B), intent(inout)               :: npl
                integer(I4B), intent(inout)               :: nplplenc, nmergeadd
                type(symba_pl)                            :: symba_pla
                type(symba_plplenc), intent(inout)        :: plplenc_list
                type(symba_merger), intent(inout)         :: mergeadd_list
                logical, intent(inout)                    :: ldiscard
+               type(swiftest_pl), intent(inout)          :: discard_plA
                type(user_input_parameters),intent(inout) :: param
           END SUBROUTINE symba_collision
      END INTERFACE
@@ -1084,11 +1086,8 @@ MODULE module_interfaces
           SUBROUTINE symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
                                    discard_tpA, ldiscard, ldiscard_tp)
                USE swiftest_globals
-               USE module_swiftestalloc 
                USE swiftest_data_structures
-               USE module_helio
                USE module_symba
-               use user
                IMPLICIT NONE
                INTEGER(I4B), INTENT(INOUT)                   :: npl, ntp, nsppl, nsptp, nmergeadd 
                TYPE(symba_pl), INTENT(INOUT)                 :: symba_plA
@@ -1097,9 +1096,20 @@ MODULE module_interfaces
                TYPE(swiftest_pl), INTENT(INOUT)              :: discard_plA
                TYPE(symba_merger), INTENT(INOUT)             :: mergeadd_list 
                LOGICAL(LGT), INTENT(IN)                      :: ldiscard, ldiscard_tp 
-
           END SUBROUTINE symba_rearray
+
+          subroutine symba_rearray_pl(npl, symba_plA, nmergeadd, mergeadd_list, discard_plA)
+            use swiftest_globals
+            USE swiftest_data_structures
+            use module_symba
+            implicit none
+            integer(I4B), intent(inout)             :: npl,  nmergeadd 
+            type(symba_pl), intent(inout)           :: symba_plA
+            type(swiftest_pl), intent(inout)        :: discard_plA
+            type(symba_merger), intent(inout)       :: mergeadd_list 
+         end subroutine symba_rearray_pl
      END INTERFACE  
+
 
      INTERFACE
           SUBROUTINE symba_reorder_pl(npl, symba_plA)
