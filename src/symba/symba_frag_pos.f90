@@ -52,12 +52,12 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       if (nchild2 > 0) family(istart+1:istart+1+nchild2) = symba_plA%kin(idx_parents(2))%child(1:nchild2)
 
       ! Make the list of non-family members (bodies not involved in the collision)
-      npl = count(status(:) /= INACTIVE)
+      npl = count(status(:) == ACTIVE)
       non_fam_size = npl - fam_size
       allocate(non_family(non_fam_size))
       i = 0
       do j = 1, size(status(:))
-         if (any(family(:) == j) .or. (status(j) == INACTIVE)) cycle
+         if (any(family(:) == j) .or. (status(j) /= ACTIVE)) cycle
          i = i + 1
          non_family(i) = j
       end do
@@ -159,7 +159,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       ! takes up the negative part
       f_anelastic = 1.000_DP ! TODO: Should this be set by the user or kept as a constant?
       KE_residual = KE_after + KE_spin_after + U_after - f_anelastic * Etot_before 
-100 format (A14,4(F9.5,1X,:))
+100 format (A14,4(ES9.2,1X,:))
       write(*,*)   '             Energy normalized by |Etot_before|'
       write(*,*)   '             | T_orb    T_spin    U        Etot'
       write(*,*)   ' -----------------------------------------------'
