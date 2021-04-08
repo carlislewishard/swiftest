@@ -73,7 +73,6 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
          nchild(2) = 0
       end if
 
-
       mass(:) = symba_plA%helio%swiftest%mass(idx_parent(:))
       name(:) = symba_plA%helio%swiftest%name(idx_parent(:))
       radius(:) = symba_plA%helio%swiftest%radius(idx_parent(:))
