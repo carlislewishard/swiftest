@@ -37,7 +37,8 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
              Mpl => symba_plA%helio%swiftest%mass, Ippl => symba_plA%helio%swiftest%Ip, radpl => symba_plA%helio%swiftest%radius, &
              rotpl => symba_plA%helio%swiftest%rot, status => symba_plA%helio%swiftest%status)
 
-      ! Find the total system energy
+      !****************************************************************k*
+      ! Find the total system energy for reporting (testing only)
       npl = size(status(:))
       Esys = 0.0_DP
       do i = 1, npl
@@ -55,6 +56,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
             if (rmag > tiny(rmag)) Esys = Esys - Mpl(i) * Mpl(j) / rmag 
          end do
       end do
+      !****************************************************************k*
 
       ! Find the center of mass of the collisional system
       mtot = sum(mass(:))
