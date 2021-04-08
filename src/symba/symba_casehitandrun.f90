@@ -104,8 +104,8 @@ subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list
          do i = 1, nfrag
             name_frag(i) = param%plmaxname + i 
          end do
+         param%plmaxname = name_frag(nfrag)
       end if
-      param%plmaxname = name_frag(nfrag)
    end if
 
    ! Populate the list of new bodies
