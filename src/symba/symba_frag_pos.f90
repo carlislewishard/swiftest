@@ -93,6 +93,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
 
       Etot_before = KE_before + KE_spin_before + U_before
 
+
       ! Now create the fragment distribution
       nfrag = size(x_frag, 2)
 
@@ -113,11 +114,12 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       tri_pro_unit_vec(:) = tri_pro(:) / norm2(tri_pro(:))
       v_col_norm = norm2(delta_v(:))               ! pre-collision velocity magnitude
       v_col_unit_vec(:) = delta_v(:) / v_col_norm  ! unit vector of collision velocity 
-      r_col_norm = r_col_norm / nfrag
+      !r_col_norm = r_col_norm / nfrag
+      r_frag_norm = 2 * rad_frag(1) / theta
       do i = 1, nfrag
          ! Place the fragments on the collision plane at a distance proportional to mass wrt the collisional barycenter
          ! This gets updated later after the new potential energy is calculated
-         r_frag_norm = r_col_norm * mtot / m_frag(i)
+         !r_frag_norm = r_col_norm * mtot / m_frag(i)
 
          x_frag(:,i) =  r_frag_norm * ((cos(phase_ang + theta * i)) * v_col_unit_vec(:)  + &
                                        (sin(phase_ang + theta * i)) * tri_pro_unit_vec(:)) 
@@ -151,16 +153,24 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
          KE_after = KE_after + 0.5_DP * m_frag(i) * dot_product(v_frag(:,i) + vcom(:), v_frag(:,i) + vcom(:))
          KE_spin_after = KE_spin_after + 0.5_DP * m_frag(i) * rad_frag(i)**2 * Ip_frag(3,i) * dot_product(rot_frag(:,i), rot_frag(:,i))
       end do
+      Etot_after = KE_after + KE_spin_after + U_after
 
       ! Adjust the fragment velocities so that they have the their total energy reduced by an amount set by the anelastic parameter
       ! Make sure we don't end up with negative energy (bound system). If so, we'll adjust the radius so that the potential energy
       ! takes up the negative part
       f_anelastic = 1.000_DP ! TODO: Should this be set by the user or kept as a constant?
-      KE_residual = KE_after + KE_spin_after + U_after - f_anelastic * Etot_before  
+      KE_residual = KE_after + KE_spin_after + U_after - f_anelastic * Etot_before 
+100 format (A14,4(F9.5,1X,:))
+      write(*,*)   '             Energy normalized by |Etot_before|'
+      write(*,*)   '             | T_orb    T_spin    U        Etot'
+      write(*,*)   ' -----------------------------------------------'
+      write(*,100) ' original    |',KE_before / abs(Etot_before), KE_spin_before / abs(Etot_before), U_before / abs(Etot_before),Etot_before/abs(Etot_before)
+      write(*,100) ' first pass  |',KE_after / abs(Etot_before), KE_spin_after / abs(Etot_before), U_after / abs(Etot_before), Etot_after / abs(Etot_before)
+      write(*,*)   ' -----------------------------------------------'
+      write(*,100) ' change      |',(KE_after - KE_before) / abs(Etot_before), (KE_spin_after - KE_spin_before)/ abs(Etot_before), (U_after - U_before) / abs(Etot_before), (Etot_after-Etot_before) / abs(Etot_before)
+      write(*,*)   ' -----------------------------------------------'
+      write(*,100) ' T_res       |',KE_residual / abs(Etot_before)
 
-      write(*,*) "SYMBA_FRAG_POS Etot_before : ", Etot_before
-      write(*,*) "SYMBA_FRAG_POS Etot_after  : ", KE_after + KE_spin_after + U_after
-      write(*,*) 'KE_residual: ',KE_residual
 
       A = 0.0_DP
       B = 0.0_DP
@@ -177,7 +187,6 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       end if
       !write(*,*) 'A: ',A
       !write(*,*) 'B: ',B
-      write(*,*) 'f_corrected: ',f_corrected
       v_frag(:,:) =  f_corrected * v_frag(:,:) 
 
       ! Shift the fragments into the system barycenter frame
@@ -193,15 +202,12 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
          KE_after = KE_after + 0.5_DP * m_frag(i) * dot_product(v_frag(:,i), v_frag(:,i))
       end do
       Etot_after = KE_after + KE_spin_after + U_after
-
-      write(*,*) "SYMBA_FRAG_POS KE_corr   : ", KE_after + KE_spin_after
-      write(*,*) "SYMBA_FRAG_POS KE_ratio  : ", (KE_after + KE_spin_after) / (KE_before + KE_spin_before)
-      write(*,*) "SYMBA_FRAG_POS U_before  : ", U_before
-      write(*,*) "SYMBA_FRAG_POS U_after   : ", U_after
-      write(*,*) "SYMBA_FRAG_POS U_ratio   : ", U_after / U_before
-      write(*,*) "SYMBA_FRAG_POS E_before  : ", KE_before + KE_spin_before + U_before
-      write(*,*) "SYMBA_FRAG_POS E_after   : ", KE_after + KE_spin_after + U_after
-      write(*,*) "SYMBA_FRAG_POS E_before / E_after   : ", Etot_before / Etot_after
+      write(*,100) 'f_corrected: ',f_corrected
+      write(*,*)   ' ----------------------------------------------'
+      write(*,100) ' final       |',KE_after / abs(Etot_before), KE_spin_after / abs(Etot_before), U_after / abs(Etot_before), Etot_after / abs(Etot_before)
+      write(*,*)   ' -----------------------------------------------'
+      write(*,100) ' change      |',(KE_after - KE_before) / abs(Etot_before), (KE_spin_after - KE_spin_before)/ abs(Etot_before), (U_after - U_before) / abs(Etot_before), (Etot_after-Etot_before) / abs(Etot_before)
+      write(*,*)   ' ----------------------------------------------'
 
       deallocate(family, non_family)
    end associate

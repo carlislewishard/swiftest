@@ -215,16 +215,6 @@ program swiftest_symba
                call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke_after, pe_after, Eorbit_after, Ltot, msys)
             end if
             Ecollision = Eorbit_before - Eorbit_after    ! Energy change resulting in this collisional event Total running energy offset from collision in this step
-            !write(*,*) 'PE_before    : ',pe_before
-            !write(*,*) 'PE_after     : ',pe_after
-            !write(*,*) 'Delta PE     : ',pe_after - pe_before
-            !write(*,*) 'KE_before    : ',ke_before
-            !write(*,*) 'KE_after     : ',ke_after
-            !write(*,*) 'Delta KE     : ',ke_after - ke_before
-            !write(*,*) 'Eorbit_before: ',Eorbit_before
-            !write(*,*) 'Eorbit_after : ',Eorbit_after
-            !write(*,*) 'Delta Eorbit : ', Eorbit_after - Eorbit_before
-            !read(*,*)
             if ((Ecollision /= Ecollision) .or. (abs(Ecollision) > huge(Ecollision))) then 
                write(*,*) 'Error encountered in collisional energy calculation!'
                write(*,*) 'Eorbit_before: ', Eorbit_before
