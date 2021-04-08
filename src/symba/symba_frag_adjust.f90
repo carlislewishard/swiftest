@@ -10,11 +10,11 @@ subroutine symba_frag_adjust (xcom, vcom, x, v, mass, radius, L_spin, Ip_frag, m
    use module_interfaces, EXCEPT_THIS_ONE => symba_frag_adjust
    implicit none
 
-   real(DP), dimension(:),   intent(in)      :: xcom, vcom, mass, radius
-   real(DP), dimension(:,:), intent(in)      :: x, v, L_spin
-   real(DP), dimension(:,:), intent(in)      :: Ip_frag
-   real(DP), dimension(:), intent(in)        :: m_frag, rad_frag
-   real(DP), dimension(:,:), intent(out)     :: x_frag, v_frag, rot_frag
+   real(DP), dimension(:),   intent(in)    :: xcom, vcom, mass, radius
+   real(DP), dimension(:,:), intent(in)    :: x, v, L_spin
+   real(DP), dimension(:,:), intent(in)    :: Ip_frag
+   real(DP), dimension(:), intent(in)      :: m_frag, rad_frag
+   real(DP), dimension(:,:), intent(out)   :: x_frag, v_frag, rot_frag
 
    real(DP), dimension(NDIM, 2)            :: rot, Ip
    integer(I4B)                            :: i, j, nfrag
