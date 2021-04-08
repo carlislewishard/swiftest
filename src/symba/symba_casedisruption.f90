@@ -25,6 +25,7 @@ subroutine symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_lis
    real(DP), dimension(2)                  :: vol
    real(DP), dimension(:, :), allocatable  :: v_frag, x_frag, rot_frag, Ip_frag
    real(DP), dimension(:), allocatable     :: m_frag, rad_frag
+   logical                                 :: lmerge
 
    ! Collisional fragments will be uniformly distributed around the pre-impact barycenter
    nfrag = 10 ! This value is set for testing. This needs to be updated such that it is calculated or set by the user
@@ -66,23 +67,29 @@ subroutine symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_lis
    end do
 
    ! Put the fragments on the circle surrounding the center of mass of the system
-   call symba_frag_pos(symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag)
+   call symba_frag_pos(symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, &
+                        Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag, lmerge)
 
-   ! Populate the list of new bodies
-   call symba_merger_size_check(mergeadd_list, nmergeadd + nfrag)  
-   do i = 1, nfrag
-      nmergeadd = nmergeadd + 1
-      param%plmaxname = max(param%plmaxname, param%tpmaxname) + 1
-      mergeadd_list%name(nmergeadd) = param%plmaxname
-      mergeadd_list%status(nmergeadd) = DISRUPTION
-      mergeadd_list%ncomp(nmergeadd) = 2
-      mergeadd_list%xh(:,nmergeadd) = x_frag(:, i) - xbs(:)
-      mergeadd_list%vh(:,nmergeadd) = v_frag(:, i) - vbs(:)
-      mergeadd_list%mass(nmergeadd) = m_frag(i)
-      mergeadd_list%radius(nmergeadd) = rad_frag(i)
-      mergeadd_list%Ip(:,nmergeadd) = Ip_frag(:, i)
-      mergeadd_list%rot(:,nmergeadd) = rot_frag(:, i)
-   end do 
+   if (lmerge) then
+      write(*,*) 'Should have been a merge instead.'
+      call symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, param)
+   else
+      ! Populate the list of new bodies
+      call symba_merger_size_check(mergeadd_list, nmergeadd + nfrag)  
+      do i = 1, nfrag
+         nmergeadd = nmergeadd + 1
+         param%plmaxname = max(param%plmaxname, param%tpmaxname) + 1
+         mergeadd_list%name(nmergeadd) = param%plmaxname
+         mergeadd_list%status(nmergeadd) = DISRUPTION
+         mergeadd_list%ncomp(nmergeadd) = 2
+         mergeadd_list%xh(:,nmergeadd) = x_frag(:, i) - xbs(:)
+         mergeadd_list%vh(:,nmergeadd) = v_frag(:, i) - vbs(:)
+         mergeadd_list%mass(nmergeadd) = m_frag(i)
+         mergeadd_list%radius(nmergeadd) = rad_frag(i)
+         mergeadd_list%Ip(:,nmergeadd) = Ip_frag(:, i)
+         mergeadd_list%rot(:,nmergeadd) = rot_frag(:, i)
+      end do 
+   end if
 
    return 
 end subroutine symba_casedisruption

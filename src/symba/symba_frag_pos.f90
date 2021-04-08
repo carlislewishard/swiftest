@@ -1,4 +1,5 @@
-subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag)
+subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, &
+                           Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag, lmerge)
    !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
    !! Places the collision fragments on a circle oriented with a plane defined
@@ -11,12 +12,13 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
    use module_interfaces, EXCEPT_THIS_ONE => symba_frag_pos
    implicit none
 
+   type(symba_pl), intent(inout)             :: symba_plA
+   integer(I4B), dimension(:), intent(in)    :: idx_parents
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
    real(DP), dimension(:), intent(in)        :: mass, radius, m_frag, rad_frag
    real(DP), dimension(:,:), intent(in)      :: Ip_frag
    real(DP), dimension(:,:), intent(out)     :: x_frag, v_frag, rot_frag
-   integer(I4B), dimension(2), intent(inout) :: idx_parents
-   type(symba_pl)                            :: symba_plA
+   logical, intent(out)                      :: lmerge ! Answers the question: Should this have been a merger instead?
 
    real(DP), dimension(NDIM, 2)            :: rot
    integer(I4B)                            :: i, j, k, nfrag, fam_size, istart, non_fam_size, npl
@@ -211,8 +213,10 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
 
       if ((B**2 - A * C) > 0.0_DP) then
          f_corrected = (- B + sqrt(B**2 - A * C)) / A
+         lmerge = .false.
       else
          f_corrected = 0.0_DP
+         lmerge = .true.
       end if
       v_frag(:,:) =  f_corrected * v_frag(:,:) 
 

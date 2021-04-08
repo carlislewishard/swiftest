@@ -27,6 +27,7 @@ subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list
    real(DP), dimension(:, :), allocatable  :: v_frag, x_frag, rot_frag, Ip_frag
    real(DP), dimension(:), allocatable     :: m_frag, rad_frag
    integer(I4B), dimension(:), allocatable :: name_frag
+   logical                                 :: lmerge
 
    mtot = sum(mass(:))
    xcom(:) = (mass(1) * x(:,1) + mass(2) * x(:,2)) / mtot
@@ -83,15 +84,29 @@ subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list
          Ip_frag(:, i) = Ip(:, jproj)
       end do
 
-      ! Put the fragments on the circle 
-      call symba_frag_pos(symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag)
-
-      do i = 1, nfrag
-         name_frag(i) = param%plmaxname + i 
-      end do
+      ! Put the fragments on the circle surrounding the center of mass of the system
+      call symba_frag_pos(symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, &
+                           Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag, lmerge)
+      if (lmerge) then
+         write(*,*) 'Should have been a pure hit and run instead'
+         nfrag = 2
+         deallocate(m_frag);    allocate(m_frag, source = mass)
+         deallocate(name_frag); allocate(name_frag, source = name)
+         deallocate(rad_frag);  allocate(rad_frag, source = radius)
+         deallocate(x_frag);    allocate(x_frag, source = x)
+         deallocate(v_frag);    allocate(v_frag, source = v)
+         deallocate(Ip_frag);   allocate(Ip_frag, source = Ip)
+         deallocate(rot_frag);  allocate(rot_frag(NDIM, nfrag))
+         do i = 1, 2
+            rot_frag(:,i) = L_spin(:, i) / (Ip_frag(3, i) * m_frag(i) * rad_frag(i)**2)
+         end do
+      else
+         do i = 1, nfrag
+            name_frag(i) = param%plmaxname + i 
+         end do
+      end if
       param%plmaxname = name_frag(nfrag)
    end if
-
 
    ! Populate the list of new bodies
    call symba_merger_size_check(mergeadd_list, nmergeadd + nfrag)  
