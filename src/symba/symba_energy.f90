@@ -35,7 +35,7 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msys)
       ke = 0.0_DP
       !!$omp simd private(v2,rot2,h) reduction(+:ke,Ltot)
       do i = 1, npl
-         if (status(i) /=ACTIVE) cycle
+         if (status(i) /= ACTIVE) cycle
          v2 = dot_product(vb(:,i), vb(:,i))
          rot2 = dot_product(rot(:,i), rot(:,i))
          h(1) = xb(2,i) * vb(3,i) - xb(3,i) * vb(2,i)
@@ -54,9 +54,9 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msys)
       !!$omp shared (xb, mass, npl) &
       !!$omp reduction (-:pe)
       do i = 1, npl - 1
-         if (status(i) /=ACTIVE) cycle
+         if (status(i) /= ACTIVE) cycle
          do j = i + 1, npl
-            if (status(j) /=ACTIVE) cycle
+            if (status(j) /= ACTIVE) cycle
             dx(:) = xb(:, j) - xb(:, i) 
             rmag = norm2(dx(:)) 
             if (rmag > tiny(rmag)) pe = pe - mass(i) * mass(j) / rmag 
@@ -67,7 +67,7 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msys)
       if (j2rp2 /= 0.0_DP) then
          !!$omp simd private(rmag)
          do i = 2, npl
-            if (status(i) /=ACTIVE) cycle
+            if (status(i) /= ACTIVE) cycle
             rmag = norm2(xh(:,i))
             irh(i) = 1.0_DP / rmag
          end do
