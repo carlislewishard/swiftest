@@ -38,18 +38,18 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
              rotpl => symba_plA%helio%swiftest%rot, status => symba_plA%helio%swiftest%status)
 
       ! Find the total system energy
-      npl = count(status(:) == ACTIVE)
+      npl = size(status(:))
       Esys = 0.0_DP
       do i = 1, npl
-         if (status(i) /=ACTIVE) cycle
+         if (status(i) /= ACTIVE) cycle
          v2 = dot_product(vbpl(:,i), vbpl(:,i))
          rot2 = dot_product(rotpl(:,i), rotpl(:,i))
          Esys = Esys + 0.5_DP * Mpl(i) * (v2 + Ippl(3,i) * radpl(i)**2 * rot2)
       end do
       do i = 1, npl - 1
-         if (status(i) /=ACTIVE) cycle
+         if (status(i) /= ACTIVE) cycle
          do j = i + 1, npl
-            if (status(j) /=ACTIVE) cycle
+            if (status(j) /= ACTIVE) cycle
             dx(:) = xbpl(:, j) - xbpl(:, i) 
             rmag = norm2(dx(:)) 
             if (rmag > tiny(rmag)) Esys = Esys - Mpl(i) * Mpl(j) / rmag 
@@ -179,14 +179,14 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       f_anelastic = 1.000_DP ! TODO: Should this be set by the user or kept as a constant?
       KE_residual = KE_after + KE_spin_after + U_after - f_anelastic * Etot_before 
 100 format (A14,4(ES9.2,1X,:))
-      write(*,*)   '             Energy normalized by |Etot_before|'
-      write(*,*)   '             | T_orb    T_spin    U        Etot'
-      write(*,*)   ' -----------------------------------------------'
+      write(*,   "('              Energy normalized by |Esystem_original|')")
+      write(*,   "('             |    T_orb    T_spin         U      Etot')")
+      write(*,   "(' ----------------------------------------------------')")
       write(*,100) ' original    |',KE_before / abs(Esys), KE_spin_before / abs(Esys), U_before / abs(Esys),Etot_before/abs(Esys)
       write(*,100) ' first pass  |',KE_after / abs(Esys), KE_spin_after / abs(Esys), U_after / abs(Esys), Etot_after / abs(Esys)
-      write(*,*)   ' -----------------------------------------------'
+      write(*,   "(' ----------------------------------------------------')")
       write(*,100) ' change      |',(KE_after - KE_before) / abs(Esys), (KE_spin_after - KE_spin_before)/ abs(Esys), (U_after - U_before) / abs(Esys), (Etot_after-Etot_before) / abs(Esys)
-      write(*,*)   ' -----------------------------------------------'
+      write(*,   "(' ----------------------------------------------------')")
       write(*,100) ' T_res       |',KE_residual / abs(Esys)
 
 
@@ -203,8 +203,6 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       else
          f_corrected = 0.0_DP
       end if
-      !write(*,*) 'A: ',A
-      !write(*,*) 'B: ',B
       v_frag(:,:) =  f_corrected * v_frag(:,:) 
 
       ! Shift the fragments into the system barycenter frame
@@ -221,11 +219,12 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       end do
       Etot_after = KE_after + KE_spin_after + U_after
       write(*,100) 'f_corrected: ',f_corrected
-      write(*,*)   ' ----------------------------------------------'
-      write(*,100) ' final       |',KE_after / abs(Etot_before), KE_spin_after / abs(Etot_before), U_after / abs(Etot_before), Etot_after / abs(Etot_before)
-      write(*,*)   ' -----------------------------------------------'
-      write(*,100) ' change      |',(KE_after - KE_before) / abs(Etot_before), (KE_spin_after - KE_spin_before)/ abs(Etot_before), (U_after - U_before) / abs(Etot_before), (Etot_after-Etot_before) / abs(Etot_before)
-      write(*,*)   ' ----------------------------------------------'
+      write(*,   "(' ----------------------------------------------------')")
+      write(*,100) ' final       |',KE_after / abs(Esys), KE_spin_after / abs(Esys), U_after / abs(Esys), Etot_after / abs(Esys)
+      write(*,   "(' ----------------------------------------------------')")
+      write(*,100) ' change      |',(KE_after - KE_before) / abs(Esys), (KE_spin_after - KE_spin_before)/ abs(Esys), (U_after - U_before) / abs(Esys), (Etot_after-Etot_before) / abs(Esys)
+      write(*,   "(' ----------------------------------------------------')")
+      write(*,*)   
 
       deallocate(family, non_family)
    end associate
