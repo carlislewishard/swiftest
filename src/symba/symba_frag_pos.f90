@@ -19,18 +19,19 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
    type(symba_pl)                            :: symba_plA
 
    real(DP), dimension(NDIM, 2)            :: rot
-   integer(I4B)                            :: i, j, nfrag, fam_size, istart, non_fam_size, npl
-   real(DP), dimension(NDIM)               :: v_cross_x, delta_v, delta_x, xcom, vcom
+   integer(I4B)                            :: i, j, k, nfrag, fam_size, istart, non_fam_size, npl
+   real(DP), dimension(NDIM)               :: xc, vc, x_cross_v, delta_r, delta_v, xcom, vcom
    real(DP)                                :: mtot, phase_ang, theta, v_frag_norm, r_frag_norm, v_col_norm, r_col_norm, KE_residual
-   real(DP)                                :: f_anelastic, Etot_before, Etot_after, KE_before, U_before, v1mag2, v2mag2, U_p1_before, U_p2_before 
+   real(DP)                                :: f_anelastic, Etot_before, Etot_after, KE_before, U_before
    real(DP)                                :: U_after, KE_spin_before, KE_spin_after, KE_after, KE_corrected, U_corrected, U_frag_after
-   real(DP), dimension(NDIM)               :: v_col_unit_vec, tri_pro, tri_pro_unit_vec, v_com, vc1, vc2
+   real(DP), dimension(NDIM)               :: r_col_unit_vec, v_col_unit_vec, v_plane_unit_vec
    real(DP), dimension(NDIM)               :: Ltot, h, dx
-   real(DP)                                :: rot2, v2, ip_family, f_corrected, A, B
+   real(DP)                                :: rot2, v2, f_corrected, A, B, C
    integer(I4B), save                      :: thetashift = 0
    integer(I4B), parameter                 :: SHIFTMAX = 9
    integer(I4B), dimension(:), allocatable :: family, non_family
    real(DP)                                :: Esys, rmag
+
 
    associate(nchild1 => symba_plA%kin(idx_parents(1))%nchild, nchild2 => symba_plA%kin(idx_parents(2))%nchild, &
              xhpl => symba_plA%helio%swiftest%xh, xbpl => symba_plA%helio%swiftest%xh, vbpl => symba_plA%helio%swiftest%vb, &
@@ -88,7 +89,6 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       U_before = 0.0_DP
       KE_before = 0.0_DP
       KE_spin_before = 0.0_DP
-      Ltot = 0.0_DP
 
       r_col_norm = 0.0_DP
       do i = 1, fam_size
@@ -108,7 +108,6 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
          call util_crossproduct(xbpl(:,family(i)), vbpl(:,family(i)), h(:))
          
          !! Calculate the orbital and rotational kinetic energy between the two bodies 
-         Ltot(:) = Ltot(:) + Mpl(family(i)) * (h(:) + Ippl(3, family(i)) * radpl(family(i))**2 * rotpl(:,family(i)))
          KE_before = KE_before + 0.5_DP * Mpl(family(i)) * v2 
          KE_spin_before = KE_spin_before + 0.5_DP * Mpl(family(i)) * Ippl(3,family(i)) * rot2 * radpl(family(i))**2
          r_col_norm = r_col_norm + Mpl(family(i)) * norm2(xbpl(:,family(i)) - xcom(:))
@@ -130,26 +129,34 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
 
       ! Calculate the triple product to get the plane of the fragment distribution
       delta_v(:) = v(:, 2) - v(:, 1)
-      delta_x(:) = x(:, 2) - x(:, 1)
-      call util_crossproduct(delta_v,delta_x,v_cross_x)
-      call util_crossproduct(v_cross_x,delta_v,tri_pro)
-      tri_pro_unit_vec(:) = tri_pro(:) / norm2(tri_pro(:))
+      delta_r(:) = x(:, 2) - x(:, 1)
+      ! Compute orbital angular momentum of pre-impact system. This will be the normal vector to the collision fragment plane
+      Ltot = L_spin(:,1) + L_spin(:,2)
+      do j = 1, 2
+         xc(:) = x(:, j) - xcom(:)
+         vc(:) = v(:, j) - vcom(:)
+         call utiL_crossproduct(xc(:), vc(:), x_cross_v(:))
+         Ltot(:) = Ltot(:) + mass(j) * x_cross_v(:)
+      end do
+      call util_crossproduct(Ltot,delta_v,v_plane_unit_vec)
+      v_plane_unit_vec(:) = v_plane_unit_vec(:) / norm2(v_plane_unit_vec(:))
       v_col_norm = norm2(delta_v(:))               ! pre-collision velocity magnitude
-      v_col_unit_vec(:) = delta_v(:) / v_col_norm  ! unit vector of collision velocity 
-      r_col_norm = r_col_norm / mtot / nfrag
+      v_col_unit_vec(:) = delta_v(:) / v_col_norm 
+      r_col_unit_vec(:) = delta_r(:) / norm2(delta_r(:)) ! unit vector of collision distance
+      r_col_norm = r_col_norm / mtot / nfrag 
       do i = 1, nfrag
          ! Place the fragments on the collision plane at a distance proportional to mass wrt the collisional barycenter
          ! This gets updated later after the new potential energy is calculated
          r_frag_norm = r_col_norm * mtot / m_frag(i)
 
          x_frag(:,i) =  r_frag_norm * ((cos(phase_ang + theta * i)) * v_col_unit_vec(:)  + &
-                                       (sin(phase_ang + theta * i)) * tri_pro_unit_vec(:)) 
+                                       (sin(phase_ang + theta * i)) * v_plane_unit_vec(:)) 
                         
          ! Apply a simple mass weighting first to ensure that the velocity follows the barycenter
          ! This gets updated later after the new potential and kinetic energy is calcualted
-         v_frag_norm = v_col_norm * mtot / m_frag(i)   
+         v_frag_norm = v_col_norm * sqrt(mtot / m_frag(i))
          v_frag(:,i) =  v_frag_norm * ((cos(phase_ang + theta * i)) * v_col_unit_vec(:) + &
-                                       (sin(phase_ang + theta * i)) * tri_pro_unit_vec(:)) 
+                                       (sin(phase_ang + theta * i)) * v_plane_unit_vec(:)) 
       end do
       ! Adjust fragment positionx so that their center of mass follows the original pre-impact trajectory
       call symba_frag_adjust (xcom, vcom, x, v, mass, radius, L_spin, Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag)
@@ -192,17 +199,18 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       write(*,   "(' ----------------------------------------------------')")
       write(*,100) ' T_res       |',KE_residual / abs(Esys)
 
-
       A = 0.0_DP
       B = 0.0_DP
+      C = 2 * (KE_spin_after + U_after - f_anelastic * Etot_before) 
 
       do i = 1, nfrag
          A = A + m_frag(i) * dot_product(v_frag(:,i), v_frag(:,i))
          B = B + m_frag(i) * dot_product(v_frag(:,i), vcom(:))
+         C = C + m_frag(i) * dot_product(vcom(:), vcom(:))
       end do
 
-      if ((B + A)**2 - 2 * A * KE_residual > 0.0_DP) then
-         f_corrected = (- B + sqrt((B + A)**2 - 2 * A * KE_residual)) / A
+      if ((B**2 - A * C) > 0.0_DP) then
+         f_corrected = (- B + sqrt(B**2 - A * C)) / A
       else
          f_corrected = 0.0_DP
       end if
