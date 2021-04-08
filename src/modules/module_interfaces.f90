@@ -1100,16 +1100,6 @@ MODULE module_interfaces
                LOGICAL(LGT), INTENT(IN)                      :: ldiscard, ldiscard_tp 
           END SUBROUTINE symba_rearray
 
-          subroutine symba_rearray_pl(npl, symba_plA, nmergeadd, mergeadd_list, discard_plA)
-            use swiftest_globals
-            USE swiftest_data_structures
-            use module_symba
-            implicit none
-            integer(I4B), intent(inout)             :: npl,  nmergeadd 
-            type(symba_pl), intent(inout)           :: symba_plA
-            type(swiftest_pl), intent(inout)        :: discard_plA
-            type(symba_merger), intent(inout)       :: mergeadd_list 
-         end subroutine symba_rearray_pl
      END INTERFACE  
 
 

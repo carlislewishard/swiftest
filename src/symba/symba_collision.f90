@@ -222,21 +222,6 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
             end do
          end if
       end do
-      !call symba_rearray_pl(npl, symba_plA, nmergeadd, mergeadd_list, discard_plA)
-      !nmergeadd = 0
-
-      !if (allocated(mergeadd_list%name)) then
-      !   mergeadd_list%name(:) = 0
-      !   mergeadd_list%index_ps(:) = 0
-      !   mergeadd_list%status(:) = -1
-      !   mergeadd_list%ncomp(:) = 0
-      !   mergeadd_list%xh(:,:) = 0
-      !   mergeadd_list%vh(:,:) = 0
-      !   mergeadd_list%mass(:) = 0
-      !   mergeadd_list%radius(:) = 0
-      !   mergeadd_list%IP(:,:) = 0
-      !   mergeadd_list%rot(:,:) = 0
-      !end if
       deallocate(array_index1_child, array_index2_child, name1, name2)
    end do
 
