@@ -43,22 +43,22 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       npl = size(status(:))
       !****************************************************************k*
       ! Find the total system energy for reporting (testing only)
-      !Esys = 0.0_DP
-      !do i = 1, npl
-      !   if (status(i) == INACTIVE) cycle
-      !   v2 = dot_product(vbpl(:,i), vbpl(:,i))
-      !   rot2 = dot_product(rotpl(:,i), rotpl(:,i))
-      !   Esys = Esys + 0.5_DP * Mpl(i) * (v2 + Ippl(3,i) * radpl(i)**2 * rot2)
-      !end do
-      !do i = 1, npl - 1
-      !   if (status(i) == INACTIVE) cycle
-      !   do j = i + 1, npl
-      !      if (status(j) == INACTIVE) cycle
-      !      dx(:) = xbpl(:, j) - xbpl(:, i) 
-      !      rmag = norm2(dx(:)) 
-      !      if (rmag > tiny(rmag)) Esys = Esys - Mpl(i) * Mpl(j) / rmag 
-      !   end do
-      !end do
+      Esys = 0.0_DP
+      do i = 1, npl
+         if (status(i) == INACTIVE) cycle
+         v2 = dot_product(vbpl(:,i), vbpl(:,i))
+         rot2 = dot_product(rotpl(:,i), rotpl(:,i))
+         Esys = Esys + 0.5_DP * Mpl(i) * (v2 + Ippl(3,i) * radpl(i)**2 * rot2)
+      end do
+      do i = 1, npl - 1
+         if (status(i) == INACTIVE) cycle
+         do j = i + 1, npl
+            if (status(j) == INACTIVE) cycle
+            dx(:) = xbpl(:, j) - xbpl(:, i) 
+            rmag = norm2(dx(:)) 
+            if (rmag > tiny(rmag)) Esys = Esys - Mpl(i) * Mpl(j) / rmag 
+         end do
+      end do
       !****************************************************************k*
 
       ! Find the center of mass of the collisional system
@@ -188,18 +188,18 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       ! Adjust the fragment velocities so that they have the their total energy reduced by an amount set by the anelastic parameter
       ! Make sure we don't end up with negative energy (bound system). If so, we'll adjust the radius so that the potential energy
       ! takes up the negative part
-      f_anelastic = 0.999_DP ! TODO: Should this be set by the user or kept as a constant?
+      f_anelastic = 0.9999999_DP ! TODO: Should this be set by the user or kept as a constant?
       KE_residual = KE_spin_after + U_after - U_before - f_anelastic * (KE_before + KE_spin_before) 
 100 format (A14,5(ES9.2,1X,:))
-      !write(*,   "('              Energy normalized by |Esystem_original|')")
-      !write(*,   "('             |    T_orb    T_spin         T         U      Etot')")
-      !write(*,   "(' ------------------------------------------------------------------')")
-      !write(*,100) ' original    |',KE_before / abs(Esys), KE_spin_before / abs(Esys),(KE_before + KE_spin_before) / abs(Esys), U_before / abs(Esys),Etot_before/abs(Esys)
-      !write(*,100) ' first pass  |',KE_after / abs(Esys), KE_spin_after / abs(Esys), (KE_after + KE_spin_after) / abs(Esys), U_after / abs(Esys), Etot_after / abs(Esys)
-      !write(*,   "(' ------------------------------------------------------------------')")
-      !write(*,100) ' change      |',(KE_after - KE_before) / abs(Esys), (KE_spin_after - KE_spin_before)/ abs(Esys), (KE_after + KE_spin_after - KE_before - KE_spin_before)/ abs(Esys), (U_after - U_before) / abs(Esys), (Etot_after-Etot_before) / abs(Esys)
-      !write(*,   "(' ------------------------------------------------------------------')")
-      !write(*,100) ' T_res       |',KE_residual / abs(Esys)
+      write(*,   "('              Energy normalized by |Esystem_original|')")
+      write(*,   "('             |    T_orb    T_spin         T         U      Etot')")
+      write(*,   "(' ------------------------------------------------------------------')")
+      write(*,100) ' original    |',KE_before / abs(Esys), KE_spin_before / abs(Esys),(KE_before + KE_spin_before) / abs(Esys), U_before / abs(Esys),Etot_before/abs(Esys)
+      write(*,100) ' first pass  |',KE_after / abs(Esys), KE_spin_after / abs(Esys), (KE_after + KE_spin_after) / abs(Esys), U_after / abs(Esys), Etot_after / abs(Esys)
+      write(*,   "(' ------------------------------------------------------------------')")
+      write(*,100) ' change      |',(KE_after - KE_before) / abs(Esys), (KE_spin_after - KE_spin_before)/ abs(Esys), (KE_after + KE_spin_after - KE_before - KE_spin_before)/ abs(Esys), (U_after - U_before) / abs(Esys), (Etot_after-Etot_before) / abs(Esys)
+      write(*,   "(' ------------------------------------------------------------------')")
+      write(*,100) ' T_res       |',KE_residual / abs(Esys)
 
       A = 0.0_DP
       B = 0.0_DP
@@ -228,18 +228,18 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
 
       ! REMOVE THE FOLLOWING AFTER TESTING
       ! Calculate the new energy of the system of fragments
-      !KE_after = 0.0_DP
-      !do i = 1, nfrag
-      !   KE_after = KE_after + 0.5_DP * m_frag(i) * dot_product(v_frag(:,i), v_frag(:,i))
-      !end do
-      !Etot_after = KE_after + KE_spin_after + U_after
-      !write(*,100) 'f_corrected: ',f_corrected
-      !write(*,   "(' ------------------------------------------------------------------')")
-      !write(*,100) ' final       |',KE_after / abs(Esys), KE_spin_after / abs(Esys), (KE_after + KE_spin_after) / abs(Esys), U_after / abs(Esys), Etot_after / abs(Esys)
-      !write(*,   "(' ------------------------------------------------------------------')")
-      !write(*,100) ' change      |',(KE_after - KE_before) / abs(Esys), (KE_spin_after - KE_spin_before)/ abs(Esys), (KE_after + KE_spin_after - KE_before - KE_spin_before)/ abs(Esys), (U_after - U_before) / abs(Esys), (Etot_after-Etot_before) / abs(Esys)
-      !write(*,   "(' ------------------------------------------------------------------')")
-      !write(*,*)   
+      KE_after = 0.0_DP
+      do i = 1, nfrag
+         KE_after = KE_after + 0.5_DP * m_frag(i) * dot_product(v_frag(:,i), v_frag(:,i))
+      end do
+      Etot_after = KE_after + KE_spin_after + U_after
+      write(*,100) 'f_corrected: ',f_corrected
+      write(*,   "(' ------------------------------------------------------------------')")
+      write(*,100) ' final       |',KE_after / abs(Esys), KE_spin_after / abs(Esys), (KE_after + KE_spin_after) / abs(Esys), U_after / abs(Esys), Etot_after / abs(Esys)
+      write(*,   "(' ------------------------------------------------------------------')")
+      write(*,100) ' change      |',(KE_after - KE_before) / abs(Esys), (KE_spin_after - KE_spin_before)/ abs(Esys), (KE_after + KE_spin_after - KE_before - KE_spin_before)/ abs(Esys), (U_after - U_before) / abs(Esys), (Etot_after-Etot_before) / abs(Esys)
+      write(*,   "(' ------------------------------------------------------------------')")
+      write(*,*)   
 
       deallocate(family, non_family)
    end associate
