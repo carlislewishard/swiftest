@@ -141,15 +141,22 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
 
 ! Internal functions
 contains
-   function calc_Qrd_pstar(mtarg,mp,alpha) result(ans)
+   function calc_Qrd_pstar(mtarg,mp,alpha) result(Qrd_pstar)
       !! author: Jennifer L.L. Pouplin and Carlisle A. Wishard
       !!
-      !! Calculates []
+      !! Calculates the corrected Q* for oblique impacts. See Eq. (15) of LS12.
+      !!       Reference:
+      !!       Leinhardt, Z.M., Stewart, S.T., 2012. Collisions between Gravity-dominated Bodies. I. Outcome Regimes and Scaling 
+      !!          Laws 745, 79. https://doi.org/10.1088/0004-637X/745/1/79
       !! 
       implicit none
+      ! Arguments
       real(DP),intent(in) :: mtarg, mp, alpha
-      real(DP)      :: Qrd_star1, mu_alpha, mu, Qrd_star, Qrd_pstar
-      real(DP)      :: ans
+      ! Result
+      real(DP)      :: Qrd_pstar
+      ! Internals
+      real(DP)      :: Qrd_star1, mu_alpha, mu, Qrd_star
+
       ! calc mu, mu_alpha
       mu = (mtarg * mp) / (mtarg + mp)  ! [kg]
       mu_alpha = (mtarg * alpha * mp) / (mtarg + alpha * mp)  ! [kg]
@@ -159,20 +166,23 @@ contains
       Qrd_star = Qrd_star1 * (((mp / mtarg + 1.0_DP)**2) / (4 * mp / mtarg))**(2.0_DP / (3.0_DP * MU_BAR) - 1.0_DP)  !(eq 23)
       ! calc Qrd_pstar, v_pstar
       Qrd_pstar = ((mu / mu_alpha)**(2.0_DP - 3.0_DP * MU_BAR / 2.0_DP)) * Qrd_star  ! (eq 15)
-      
-      ans = Qrd_pstar
+
       return
    end function calc_Qrd_pstar
 
-   function calc_Qrd_rev(mp,mtarg,mint,den1,den2, vimp) result(ans)
+   function calc_Qrd_rev(mp,mtarg,mint,den1,den2, vimp) result(mslr)
       !! author: Jennifer L.L. Pouplin and Carlisle A. Wishard
       !!
-      !! Calculates []
+      !! Calculates mass of second largest fragment.
       !! 
       implicit none
+      ! Arguments
       real(DP),intent(in) :: mp, mtarg, mint, den1, den2, vimp
-      real(DP) :: ans, mtot_rev, mu_rev, gamma_rev, Qrd_star1, Qrd_star, mu_alpha_rev
-      real(DP) :: Qrd_pstar, rC1, Qr_rev, Qrd_pstar_rev, mslr, Qr_supercat_rev
+      ! Result
+      real(DP) :: mslr
+      ! Internals
+      real(DP) :: mtot_rev, mu_rev, gamma_rev, Qrd_star1, Qrd_star, mu_alpha_rev
+      real(DP) :: Qrd_pstar, rC1, Qr_rev, Qrd_pstar_rev, Qr_supercat_rev
 
       ! calc mtlr, rC1, mu, gammalr
       mtot_rev =  mint + mp
@@ -199,7 +209,6 @@ contains
       end if 
 
       if ( mslr > mp ) mslr = mp !check conservation of mass
-      ans = mslr
 
       return
    end function calc_Qrd_rev
