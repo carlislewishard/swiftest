@@ -51,7 +51,7 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
    Vimp = norm2(vb2(:) - vb1(:))
    b = calc_b(xh2, vb2, xh1, vb1)
    l = (rad1 + rad2) * (1 - b)
-   egy = norm2(vb1)**2 / 2.0_DP - GC * Mcb / norm2(xh1)
+   egy = 0.5_DP * dot_product(vb1, vb1) - GC * Mcb / norm2(xh1)
    a1 = - GC * Mcb / 2.0_DP / egy
    Mtot = m1 + m2 
    mu = (m1 * m2) / Mtot
