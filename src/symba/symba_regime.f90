@@ -5,7 +5,9 @@ subroutine symba_regime(mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, d
    !! Current version requires all values to be converted to SI units prior to calling the function
    !!       Reference:
    !!       Leinhardt, Z.M., Stewart, S.T., 2012. Collisions between Gravity-dominated Bodies. I. Outcome Regimes and Scaling 
-   !!        Laws 745, 79. https://doi.org/10.1088/0004-637X/745/1/79
+   !!          Laws 745, 79. https://doi.org/10.1088/0004-637X/745/1/79
+   !!       Rufu, R., Aharonson, O., 2019. Impact Dynamics of Moons Within a Planetary Potential. J. Geophys. Res. Planets 124, 
+   !!          1008–1019. https://doi.org/10.1029/2018JE005798
    !!
    use swiftest
    use module_symba
@@ -32,7 +34,7 @@ subroutine symba_regime(mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, d
    real(DP), parameter   :: C3 = 1.86_DP !LS12 constants
    real(DP), parameter   :: C4 = 1.08_DP !LS12 constants
    real(DP), parameter   :: C5 = 2.5_DP !LS12 constants
-   real(DP), parameter   :: CRUFU = 2.0_DP - 3 * 0.36_DP ! central potential variable from Rufu et al. 2019
+   real(DP), parameter   :: CRUFU = 2.0_DP - 3 * MU_BAR ! central potential variable from Rufu and Aharonson (2019)
 ! Internals
    real(DP)           :: a1, alpha, aint, b, bcrit, e, fgamma, l, lint, mu, phi, theta
    real(DP)           :: qr, qrd_pstar, qr_erosion, qr_supercat
@@ -45,8 +47,8 @@ subroutine symba_regime(mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, d
    vimp = norm2(vb2(:) - vb1(:))
    b = calc_b(xh2, vb2, xh1, vb1)
    l = (rad1 + rad2) * (1 - b)
-   e = (norm2(vb1)**2) / 2.0_DP - gc * mcenter / norm2(xh1)
-   a1 = - gc * mcenter / 2.0_DP / e
+   e = (norm2(vb1)**2) / 2.0_DP - GC * mcenter / norm2(xh1)
+   a1 = - GC * mcenter / 2.0_DP / e
    mtot = m1 + m2 
    mu = (m1 * m2) / mtot
    if (l < 2 * rad2) then
@@ -62,12 +64,12 @@ subroutine symba_regime(mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, d
    end if 
    rp = (3 * (m1 / den1 + alpha * m2 / den2) / (4 * PI))**(1.0_DP/3.0_DP) ! (mustill et al. 2019)
    !calculate vescp
-   vescp = sqrt(2 * gc * (mtot) / (rp)) !mustill et al. 2018 eq 6 
+   vescp = sqrt(2 * GC * (mtot) / (rp)) !mustill et al. 2018 eq 6 
    !calculate rhill
    rhill = a1 * (m1 / 3.0_DP / (mcenter + m1))**(1.0_DP/3.0_DP)
    !calculate vhill
    if ((rad2 + rad1) < rhill) then 
-     vhill = sqrt(2 * gc * m1 * ((rhill**2 - rhill * (rad1 + rad2)) / &
+     vhill = sqrt(2 * GC * m1 * ((rhill**2 - rhill * (rad1 + rad2)) / &
      (rhill**2 - 0.5_DP * (rad1 + rad2)**2)) / (rad1 + rad2))
    else
      vhill = vescp
@@ -152,7 +154,7 @@ contains
       mu = (mtarg * mp) / (mtarg + mp)  ! [kg]
       mu_alpha = (mtarg * alpha * mp) / (mtarg + alpha * mp)  ! [kg]
       ! calc qrd_star1
-      qrd_star1 = (C_STAR * 4 * PI * DENSITY1 * gc * rp**2) / 5.0_DP
+      qrd_star1 = (C_STAR * 4 * PI * DENSITY1 * GC * rp**2) / 5.0_DP
       ! calc qrd_star
       qrd_star = qrd_star1 * (((mp / mtarg + 1.0_DP)**2) / (4 * mp / mtarg))**(2.0_DP / (3.0_DP * MU_BAR) - 1.0_DP)  !(eq 23)
       ! calc qrd_pstar, v_pstar
@@ -181,7 +183,7 @@ contains
       !calc qr_rev
       qr_rev = mu_rev * (vimp**2) / (2 * mtot_rev)
       ! calc qrd_star1, v_star1
-      qrd_star1 = (C_STAR * 4 * PI * mtot_rev * gc ) / rC1 / 5.0_DP
+      qrd_star1 = (C_STAR * 4 * PI * mtot_rev * GC ) / rC1 / 5.0_DP
       ! calc qrd_pstar_rev
       qrd_star = qrd_star1 * (((gamma_rev + 1.0_DP)**2) / (4 * gamma_rev)) ** (2.0_DP / (3.0_DP * MU_BAR) - 1.0_DP) !(eq 52)
       qrd_pstar = qrd_star * ((mu_rev / mu_alpha_rev)**(2.0_DP - 3.0_DP * MU_BAR / 2.0_DP))
