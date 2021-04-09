@@ -31,11 +31,11 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
    real(DP), parameter   :: C_STAR = 1.8_DP !3.0 #3.0# #5#1.8 #1.8 #measure of dissipation of energy within the target (chambers frag.f90)
    real(DP), parameter   :: MU_BAR = 0.37_DP !0.385#0.37#0.3333# 3.978 # 1/3 material parameter for hydrodynamic planet-size bodies (LS12)
    real(DP), parameter   :: BETA = 2.85_DP !slope of sfd for remnants from LS12 2.85
-   real(DP), parameter   :: C1 = 2.43_DP !LS12 constants
-   real(DP), parameter   :: C2 = -0.0408_DP !LS12 constants
-   real(DP), parameter   :: C3 = 1.86_DP !LS12 constants
-   real(DP), parameter   :: C4 = 1.08_DP !LS12 constants
-   real(DP), parameter   :: C5 = 2.5_DP !LS12 constants
+   real(DP), parameter   :: C1 = 2.43_DP !SL12 constants (see equation 15)
+   real(DP), parameter   :: C2 = -0.0408_DP !SL12 constants (see equation 15)
+   real(DP), parameter   :: C3 = 1.86_DP !SL12 constants (see equation 15)
+   real(DP), parameter   :: C4 = 1.08_DP !SL12 constants (see equation 15)
+   real(DP), parameter   :: C5 = 2.5_DP !SL12 constants (see equation 15)
    real(DP), parameter   :: CRUFU = 2.0_DP - 3 * MU_BAR ! central potential variable from Rufu and Aharonson (2019)
    real(DP), parameter   :: SUPERCAT_QRATIO = 1.8_DP ! See Section 4.1 of LS12
 ! Internals
@@ -91,7 +91,7 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
    !calculate vcr
    fgamma = (m1 - m2) / mtot
    theta = 1.0_DP - b
-   vcr = vescp * (C1 * fgamma * theta**C5 + C2 * fgamma + C3 * theta**C5 + C4)
+   vcr = vescp * (C1 * fgamma**2 * theta**C5 + C2 * fgamma**2 + C3 * theta**C5 + C4) ! See SL12 equation 15
    bcrit = rad1 / (rad1 + rad2)
 
    if ((m1 < mtiny).or.(m2 < mtiny)) then 
