@@ -3,14 +3,16 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
    !!
    !! Determine the collisional regime of two colliding bodies. 
    !! Current version requires all values to be converted to SI units prior to calling the function
-   !!       Reference:
+   !!       References:
+   !!       Kokubo, E., Genda, H., 2010. Formation of Terrestrial Planets from Protoplanets Under a Realistic Accretion 
+   !!          Condition. ApJL 714, L21. https://doi.org/10.1088/2041-8205/714/1/L21
    !!       Leinhardt, Z.M., Stewart, S.T., 2012. Collisions between Gravity-dominated Bodies. I. Outcome Regimes and Scaling 
    !!          Laws 745, 79. https://doi.org/10.1088/0004-637X/745/1/79
    !!       Mustill, A.J., Davies, M.B., Johansen, A., 2018. The dynamical evolution of transiting planetary systems including 
    !!          a realistic collision prescription. Mon Not R Astron Soc 478, 2896–2908. https://doi.org/10.1093/mnras/sty1273
    !!       Rufu, R., Aharonson, O., 2019. Impact Dynamics of Moons Within a Planetary Potential. J. Geophys. Res. Planets 124, 
    !!          1008–1019. https://doi.org/10.1029/2018JE005798
-   !!      Stewart, S.T., Leinhardt, Z.M., 2012. Collisions between Gravity-dominated Bodies. II. The Diversity of Impact 
+   !!       Stewart, S.T., Leinhardt, Z.M., 2012. Collisions between Gravity-dominated Bodies. II. The Diversity of Impact 
    !!          Outcomes during the End Stage of Planet Formation. ApJ 751, 32. https://doi.org/10.1088/0004-637X/751/1/32
    !!
    use swiftest
@@ -32,11 +34,10 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
    real(DP), parameter   :: DENSITY1 = 1000.0_DP !standard density parameter from LS12 [kg/m3]
    real(DP), parameter   :: MU_BAR = 0.37_DP !0.385#0.37#0.3333# 3.978 # 1/3 material parameter for hydrodynamic planet-size bodies (LS12)
    real(DP), parameter   :: BETA = 2.85_DP !slope of sfd for remnants from LS12 2.85
-   real(DP), parameter   :: C1 = 2.43_DP !SL12 constants (see equation 15)
-   real(DP), parameter   :: C2 = -0.0408_DP !SL12 constants (see equation 15)
-   real(DP), parameter   :: C3 = 1.86_DP !SL12 constants (see equation 15)
-   real(DP), parameter   :: C4 = 1.08_DP !SL12 constants (see equation 15)
-   real(DP), parameter   :: C5 = 2.5_DP !SL12 constants (see equation 15)
+   real(DP), parameter   :: C1 = 2.43_DP  !! Kokubo & Genda (2010) eq. (3)
+   real(DP), parameter   :: C2 = -0.0408_DP !! Kokubo & Genda (2010) eq. (3)
+   real(DP), parameter   :: C3 = 1.86_DP !! Kokubo & Genda (2010) eq. (3)
+   real(DP), parameter   :: C4 = 1.08_DP !! Kokubo & Genda (2010) eq. (3)
    real(DP), parameter   :: CRUFU = 2.0_DP - 3 * MU_BAR ! central potential variable from Rufu and Aharonson (2019)
    real(DP), parameter   :: SUPERCAT_QRATIO = 1.8_DP ! See Section 4.1 of LS12
 ! Internals
@@ -93,7 +94,7 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
    !calculate Vhr
    zeta = (m1 - m2) / Mtot
    theta = 1.0_DP - b
-   Vhr = Vescp * (C1 * zeta**2 * theta**C5 + C2 * zeta**2 + C3 * theta**C5 + C4) ! See SL12 equation 15
+   Vhr = Vescp * (C1 * zeta**2 * theta**(2.5_DP) + C2 * zeta**2 + C3 * theta**(2.5_DP) + C4) ! Kokubo & Genda (2010) eq. (3)
    bcrit = rad1 / (rad1 + rad2)
 
    if ((m1 < mtiny).or.(m2 < mtiny)) then 
