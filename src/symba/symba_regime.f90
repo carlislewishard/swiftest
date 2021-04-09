@@ -1,4 +1,4 @@
-subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2, regime, Mlr, Mslr, mtiny)
+subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2, regime, Mlr, Mslr, mtiny, Qresidual)
    !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
    !! Determine the collisional regime of two colliding bodies. 
@@ -28,6 +28,7 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
    real(DP), intent(out)          :: Mlr, Mslr
    real(DP), intent(in)           :: Mcb, m1, m2, rad1, rad2, den1, den2, mtiny 
    real(DP), dimension(:), intent(in)   :: xh1, xh2, vb1, vb2
+   real(DP), intent(out)          :: Qresidual !! The residual energy after the collision 
 ! Constants
    integer(I4B), parameter :: N1 = 1  !number of objects with mass equal to the largest remnant from LS12
    integer(I4B), parameter :: N2 = 2  !number of objects with mass larger than second largest remnant from LS12
@@ -107,33 +108,40 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
          regime = COLLRESOLVE_REGIME_MERGE !perfect merging regime
          Mlr = Mtot
          Mslr = 0.0_DP
+         Qresidual = 0.0_DP
       else if (Vimp < Verosion) then 
          if (b < bcrit) then
             regime = COLLRESOLVE_REGIME_MERGE !partial accretion regime"
             Mlr = Mtot
             Mslr = 0.0_DP
+            Qresidual = 0.0_DP
          else if ((b > bcrit) .and. (Vimp < Vhr)) then
             regime = COLLRESOLVE_REGIME_MERGE ! graze and merge
             Mlr = Mtot
             Mslr = 0.0_DP
+            Qresidual = 0.0_DP
          else
             Mlr = m1
             Mslr = calc_Qrd_rev(m2, m1, Mint, den1, den2, Vimp, c_star)
             regime = COLLRESOLVE_REGIME_HIT_AND_RUN !hit and run
+            Qresidual = Qr
          end if 
       else if (Vimp > Verosion .and. Vimp < Vsupercat) then
          if (m2 < 0.001_DP * m1) then 
             regime = COLLRESOLVE_REGIME_MERGE !cratering regime"
             Mlr = Mtot
             Mslr = 0.0_DP
+            Qresidual = 0.0_DP
          else 
             Mslr = Mtot * (3.0_DP - BETA) * (1.0_DP - N1 * Mlr / Mtot) / (N2 * BETA)  ! LS12 eq (37)
             regime = COLLRESOLVE_REGIME_DISRUPTION !disruption
+            Qresidual = Qr - Qr_erosion
          end if 
       else if (Vimp > Vsupercat) then 
          Mlr = Mtot * 0.1_DP * (Qr / (Qrd_pstar * SUPERCAT_QRATIO))**(-1.5_DP)   !LS12 eq (44)
          Mslr = Mtot * (3.0_DP - BETA) * (1.0_DP - N1 * Mlr / Mtot) / (N2 * BETA)  !LS12 eq (37)
          regime = COLLRESOLVE_REGIME_SUPERCATASTROPHIC ! supercatastrophic
+         Qresidual = Qr - Qr_supercat
       else 
          write(*,*) "Error no regime found in symba_regime"
       end if 

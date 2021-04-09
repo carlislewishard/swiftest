@@ -38,7 +38,7 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
    real(DP), dimension(NDIM)               :: xc, vc, xcom, vcom, xchild, vchild, xcrossv
    real(DP)                                :: mtiny_si
    integer(I4B), dimension(:), allocatable :: array_index1_child, array_index2_child, name1, name2
-   real(DP)                                :: mlr, mslr, msys, msys_new
+   real(DP)                                :: mlr, mslr, msys, msys_new, Qresidual
 
 
    ! First determine the collisional regime for each colliding pair
@@ -174,12 +174,13 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
 
          !! Use the positions and velocities of the parents from indside the step (at collision) to calculate the collisional regime
          call symba_regime(Mcb_si, mass_si(jtarg), mass_si(jproj), radius_si(jtarg), radius_si(jproj), x1_si(:), x2_si(:),& 
-               v1_si(:), v2_si(:), density_si(jtarg), density_si(jproj), regime, mlr, mslr, mtiny_si)
+               v1_si(:), v2_si(:), density_si(jtarg), density_si(jproj), regime, mlr, mslr, mtiny_si, Qresidual)
 
          mass_res(1) = min(max(mlr, 0.0_DP), mtot)
          mass_res(2) = min(max(mslr, 0.0_DP), mtot)
          mass_res(3) = min(max(mtot - mlr - mslr, 0.0_DP), mtot)
          mass_res(:) = (mass_res(:) / MU2KG) * GU
+         Qresidual = Qresidual * (GU / MU2KG) * (TU2S / DU2M)**2
       else !! When user has *not* enabled FRAGMENTATION, do every collision as a pure merger.
          regime = COLLRESOLVE_REGIME_MERGE
       end if
