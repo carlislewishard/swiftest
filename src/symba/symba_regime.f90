@@ -1,4 +1,4 @@
-subroutine symba_regime(mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2, regime, mlr, mslr, mtiny)
+subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2, regime, mlr, mslr, mtiny)
    !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
    !! Determine the collisional regime of two colliding bodies. 
@@ -20,7 +20,7 @@ subroutine symba_regime(mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, d
 ! Arguments
    integer(I4B), intent(out)         :: regime
    real(DP), intent(out)          :: mlr, mslr
-   real(DP), intent(in)           :: mcenter, m1, m2, rad1, rad2, den1, den2, mtiny 
+   real(DP), intent(in)           :: Mcb, m1, m2, rad1, rad2, den1, den2, mtiny 
    real(DP), dimension(:), intent(in)   :: xh1, xh2, vb1, vb2
 ! Constants
    integer(I4B), parameter :: N1 = 1  !number of objects with mass equal to the largest remnant from LS12
@@ -47,8 +47,8 @@ subroutine symba_regime(mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, d
    vimp = norm2(vb2(:) - vb1(:))
    b = calc_b(xh2, vb2, xh1, vb1)
    l = (rad1 + rad2) * (1 - b)
-   e = (norm2(vb1)**2) / 2.0_DP - GC * mcenter / norm2(xh1)
-   a1 = - GC * mcenter / 2.0_DP / e
+   e = (norm2(vb1)**2) / 2.0_DP - GC * Mcb / norm2(xh1)
+   a1 = - GC * Mcb / 2.0_DP / e
    mtot = m1 + m2 
    mu = (m1 * m2) / mtot
    if (l < 2 * rad2) then
@@ -64,9 +64,9 @@ subroutine symba_regime(mcenter, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, d
    end if 
    rp = (3 * (m1 / den1 + alpha * m2 / den2) / (4 * PI))**(1.0_DP/3.0_DP) ! (mustill et al. 2019)
    !calculate vescp
-   vescp = sqrt(2 * GC * (mtot) / (rp)) !mustill et al. 2018 eq 6 
+   vescp = sqrt(2 * GC * mtot / rp) !Mustill et al. 2018 eq 6 
    !calculate rhill
-   rhill = a1 * (m1 / 3.0_DP / (mcenter + m1))**(1.0_DP/3.0_DP)
+   rhill = a1 * (m1 / 3.0_DP / (Mcb + m1))**(1.0_DP/3.0_DP)
    !calculate vhill
    if ((rad2 + rad1) < rhill) then 
      vhill = sqrt(2 * GC * m1 * ((rhill**2 - rhill * (rad1 + rad2)) / &
