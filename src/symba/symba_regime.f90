@@ -222,35 +222,25 @@ function calc_QRD_rev(Mp,Mtarg,mint,den1,den2, vimp) result(ans)
    return
 end function calc_QRD_rev
 
-function calc_b(proj_pos, proj_vel, targ_pos, targ_vel) result(ans)
-  implicit none
-  real(DP), intent(in), dimension(:) :: proj_pos, proj_vel, targ_pos, targ_vel
-  real(DP)                           :: angle, ans 
-  real(DP), dimension(NDIM)          :: imp_vel, distance         
+function calc_b(proj_pos, proj_vel, targ_pos, targ_vel) result(sintheta)
+   !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
+   !!
+   !! Calculates the impact factor b = sin(theta), where theta is the angle between the relative velocity
+   !! and distance vectors of the target and projectile bodies. See Fig. 2 of Leinhardt and Stewart (2012)
+   !! 
+   implicit none
+   !! Arguments
+   real(DP), dimension(:), intent(in) :: proj_pos, proj_vel, targ_pos, targ_vel
+   !! Result
+   real(DP)                           :: sintheta
+   !! Internals
+   real(DP), dimension(NDIM)          :: imp_vel, distance, x_cross_v         
 
-    imp_vel = proj_vel - targ_vel
-    distance = proj_pos - targ_pos
-    angle = acos(dot_product(imp_vel, distance) / norm2(imp_vel) / norm2(distance))      
-    ans = sin(angle)
-  return 
+   imp_vel(:) = proj_vel(:) - targ_vel(:)
+   distance(:) = proj_pos(:) - targ_pos(:)
+   call util_crossproduct(distance, imp_vel, x_cross_v)
+   sintheta = norm2(x_cross_v(:)) / norm2(distance(:)) / norm2(imp_vel(:))
+   return 
 end function calc_b
 
-END SUBROUTINE symba_regime
-!**********************************************************************************************************************************
-!
-!  Author(s)   : C.Wishard and J.Pouplin
-!
-!  Revision Control System (RCS) Information
-!
-!  Source File : $RCSfile$
-!  Full Path   : $Source$
-!  Revision    : $Revision$
-!  Date        : $Date$
-!  Programmer  : $Author$
-!  Locked By   : $Locker$
-!  State       : $State$
-!
-!  Modification History:
-!
-!  $Log$
-!**********************************************************************************************************************************
+end subroutine symba_regime
