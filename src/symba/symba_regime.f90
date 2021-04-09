@@ -6,6 +6,8 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
    !!       Reference:
    !!       Leinhardt, Z.M., Stewart, S.T., 2012. Collisions between Gravity-dominated Bodies. I. Outcome Regimes and Scaling 
    !!          Laws 745, 79. https://doi.org/10.1088/0004-637X/745/1/79
+   !!       Mustill, A.J., Davies, M.B., Johansen, A., 2018. The dynamical evolution of transiting planetary systems including 
+   !!          a realistic collision prescription. Mon Not R Astron Soc 478, 2896–2908. https://doi.org/10.1093/mnras/sty1273
    !!       Rufu, R., Aharonson, O., 2019. Impact Dynamics of Moons Within a Planetary Potential. J. Geophys. Res. Planets 124, 
    !!          1008–1019. https://doi.org/10.1029/2018JE005798
    !!
@@ -35,6 +37,7 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
    real(DP), parameter   :: C4 = 1.08_DP !LS12 constants
    real(DP), parameter   :: C5 = 2.5_DP !LS12 constants
    real(DP), parameter   :: CRUFU = 2.0_DP - 3 * MU_BAR ! central potential variable from Rufu and Aharonson (2019)
+   real(DP), parameter   :: SUPERCAT_QRATIO = 1.8_DP ! See Section 4.1 of LS12
 ! Internals
    real(DP)           :: a1, alpha, aint, b, bcrit, egy, fgamma, l, lint, mu, phi, theta
    real(DP)           :: Qr, Qrd_pstar, Qr_erosion, Qr_supercat
@@ -54,7 +57,7 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
    if (l < 2 * rad2) then
       !calculate mint
       phi = 2 * acos((l - rad2) / rad2)
-      aint = (rad2**2) * (PI - (phi - sin(phi)) / 2.0_DP)
+      aint = rad2**2 * (PI - (phi - sin(phi)) / 2.0_DP)
       lint = 2 * sqrt(rad2**2 - (rad2 - l / 2.0_DP) ** 2) 
       mint = aint * lint  ![kg]
       alpha = (l**2) * (3 * rad2 - l) / (4 * (rad2**3))
@@ -62,7 +65,7 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
       alpha = 1.0_DP
       mint = m2
    end if 
-   rp = (3 * (m1 / den1 + alpha * m2 / den2) / (4 * PI))**(1.0_DP/3.0_DP) ! (mustill et al. 2019)
+   rp = (3 * (m1 / den1 + alpha * m2 / den2) / (4 * PI))**(1.0_DP/3.0_DP) ! (Mustill et al. 2019)
    !calculate vescp
    vescp = sqrt(2 * GC * mtot / rp) !Mustill et al. 2018 eq 6 
    !calculate rhill
@@ -81,9 +84,9 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
    verosion = (2 * Qr_erosion * mtot / mu)** (1.0_DP / 2.0_DP)
    Qr = mu*(vimp**2) / mtot / 2.0_DP
    !calculate mass largest remnant mlr 
-   mlr = (1.0_DP - Qr / Qrd_pstar / 2.0_DP) * mtot  ! [kg] #(eq 5)
+   mlr = (1.0_DP - Qr / Qrd_pstar / 2.0_DP) * mtot  ! [kg] # LS12 eq (5)
    !calculate vsupercat
-   Qr_supercat = 1.8_DP * Qrd_pstar
+   Qr_supercat = SUPERCAT_QRATIO * Qrd_pstar ! See LS12 Section 4.1 
    vsupercat = sqrt(2 * Qr_supercat * mtot / mu)
    !calculate vcr
    fgamma = (m1 - m2) / mtot
@@ -116,17 +119,17 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
             regime = COLLRESOLVE_REGIME_HIT_AND_RUN !hit and run
          end if 
       else if (vimp > verosion .and. vimp < vsupercat) then
-         if ((m2 < 0.001_DP * m1)) then 
+         if (m2 < 0.001_DP * m1) then 
             regime = COLLRESOLVE_REGIME_MERGE !cratering regime"
             mlr = mtot
             mslr = 0.0_DP
          else 
-            mslr = (mtot * ((3.0_DP - BETA) * (1.0_DP - (N1 * mlr / mtot)))) / (N2 * BETA)  ! (eq 37)
+            mslr = mtot * (3.0_DP - BETA) * (1.0_DP - N1 * mlr / mtot) / (N2 * BETA)  ! LS12 eq (37)
             regime = COLLRESOLVE_REGIME_DISRUPTION !disruption
          end if 
       else if (vimp > vsupercat) then 
-         mlr = mtot * (0.1_DP * ((Qr / (Qrd_pstar * 1.8_DP))**(-1.5_DP)))   !eq (44)
-         mslr = mtot * (3.0_DP - BETA) * (1.0_DP - N1 * mlr / mtot) / (N2 * BETA)  ! (eq 37)
+         mlr = mtot * 0.1_DP * (Qr / (Qrd_pstar * SUPERCAT_QRATIO))**(-1.5_DP)   !LS12 eq (44)
+         mslr = mtot * (3.0_DP - BETA) * (1.0_DP - N1 * mlr / mtot) / (N2 * BETA)  !LS12 eq (37)
          regime = COLLRESOLVE_REGIME_SUPERCATASTROPHIC ! supercatastrophic
       else 
          write(*,*) "Error no regime found in symba_regime"
@@ -186,7 +189,7 @@ contains
 
       ! calc mtlr, rC1, mu, gammalr
       mtot_rev =  mint + mp
-      rC1 = (3 * (mint / den1 + mp / den2) / (4 * PI))**(1.0_DP/3.0_DP) ! [m] mustill et al 2018
+      rC1 = (3 * (mint / den1 + mp / den2) / (4 * PI))**(1.0_DP/3.0_DP) ! [m] Mustill et al 2018
       mu_rev = (mint * mp) / mtot_rev ! [kg] eq 49 LS12
       mu_alpha_rev = (mtarg * alpha * mp) / (mtarg + alpha * mp)
       gamma_rev = mint / mp ! eq 50 LS12
