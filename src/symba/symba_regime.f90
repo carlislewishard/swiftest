@@ -65,7 +65,7 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
       alpha = 1.0_DP
       mint = m2
    end if 
-   rp = (3 * (m1 / den1 + alpha * m2 / den2) / (4 * PI))**(1.0_DP/3.0_DP) ! (Mustill et al. 2019)
+   rp = (3 * (m1 / den1 + alpha * m2 / den2) / (4 * PI))**(1.0_DP/3.0_DP) ! (Mustill et al. 2018)
    !calculate vescp
    vescp = sqrt(2 * GC * mtot / rp) !Mustill et al. 2018 eq 6 
    !calculate rhill
