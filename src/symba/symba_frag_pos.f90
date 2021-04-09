@@ -188,7 +188,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       ! Adjust the fragment velocities so that they have the their total energy reduced by an amount set by the anelastic parameter
       ! Make sure we don't end up with negative energy (bound system). If so, we'll adjust the radius so that the potential energy
       ! takes up the negative part
-      f_anelastic = 1.000_DP ! TODO: Should this be set by the user or kept as a constant?
+      f_anelastic = 0.99_DP ! TODO: Should this be set by the user or kept as a constant?
       KE_residual = KE_spin_after + U_after - U_before - f_anelastic * (KE_before + KE_spin_before) 
 100 format (A14,5(ES9.2,1X,:))
       !write(*,   "('              Energy normalized by |Esystem_original|')")
