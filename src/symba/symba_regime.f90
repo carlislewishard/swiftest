@@ -36,7 +36,7 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
    real(DP), parameter   :: C5 = 2.5_DP !LS12 constants
    real(DP), parameter   :: CRUFU = 2.0_DP - 3 * MU_BAR ! central potential variable from Rufu and Aharonson (2019)
 ! Internals
-   real(DP)           :: a1, alpha, aint, b, bcrit, e, fgamma, l, lint, mu, phi, theta
+   real(DP)           :: a1, alpha, aint, b, bcrit, egy, fgamma, l, lint, mu, phi, theta
    real(DP)           :: Qr, Qrd_pstar, Qr_erosion, Qr_supercat
    real(DP)           :: vcr, verosion, vescp, vhill, vimp, vsupercat
    real(DP)           :: mint, mtot
@@ -47,8 +47,8 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
    vimp = norm2(vb2(:) - vb1(:))
    b = calc_b(xh2, vb2, xh1, vb1)
    l = (rad1 + rad2) * (1 - b)
-   e = (norm2(vb1)**2) / 2.0_DP - GC * Mcb / norm2(xh1)
-   a1 = - GC * Mcb / 2.0_DP / e
+   egy = norm2(vb1)**2 / 2.0_DP - GC * Mcb / norm2(xh1)
+   a1 = - GC * Mcb / 2.0_DP / egy
    mtot = m1 + m2 
    mu = (m1 * m2) / mtot
    if (l < 2 * rad2) then
@@ -78,7 +78,7 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
    Qrd_pstar = calc_Qrd_pstar(m1, m2, alpha) * (vhill / vescp)**CRUFU !rufu et al. eq (3)
    !calculate verosion
    Qr_erosion = 2 * (1.0_DP - m1 / mtot) * Qrd_pstar
-   verosion = (2* Qr_erosion * mtot / mu)** (1.0_DP / 2.0_DP)
+   verosion = (2 * Qr_erosion * mtot / mu)** (1.0_DP / 2.0_DP)
    Qr = mu*(vimp**2) / mtot / 2.0_DP
    !calculate mass largest remnant mlr 
    mlr = (1.0_DP - Qr / Qrd_pstar / 2.0_DP) * mtot  ! [kg] #(eq 5)
@@ -92,44 +92,44 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
    bcrit = rad1 / (rad1 + rad2)
 
    if ((m1 < mtiny).or.(m2 < mtiny)) then 
-     regime = collresolve_regime_merge !perfect merging regime
+     regime = COLLRESOLVE_REGIME_MERGE !perfect merging regime
      mlr = mtot
      mslr = 0.0_DP
      write(*,*) "FORCE MERGE"
    else 
       if( vimp < vescp) then
-         regime = collresolve_regime_merge !perfect merging regime
+         regime = COLLRESOLVE_REGIME_MERGE !perfect merging regime
          mlr = mtot
          mslr = 0.0_DP
       else if (vimp < verosion) then 
          if (b < bcrit) then
-            regime = collresolve_regime_merge !partial accretion regime"
+            regime = COLLRESOLVE_REGIME_MERGE !partial accretion regime"
             mlr = mtot
             mslr = 0.0_DP
          else if ((b > bcrit) .and. (vimp < vcr)) then
-            regime = collresolve_regime_merge ! graze and merge
+            regime = COLLRESOLVE_REGIME_MERGE ! graze and merge
             mlr = mtot
             mslr = 0.0_DP
          else
             mlr = m1
             mslr = calc_Qrd_rev(m2,m1,mint,den1,den2,vimp)
-            regime = collresolve_regime_hit_and_run !hit and run
+            regime = COLLRESOLVE_REGIME_HIT_AND_RUN !hit and run
          end if 
       else if (vimp > verosion .and. vimp < vsupercat) then
          if ((m2 < 0.001_DP * m1)) then 
-            regime = collresolve_regime_merge !cratering regime"
+            regime = COLLRESOLVE_REGIME_MERGE !cratering regime"
             mlr = mtot
             mslr = 0.0_DP
          else 
             mslr = (mtot * ((3.0_DP - BETA) * (1.0_DP - (N1 * mlr / mtot)))) / (N2 * BETA)  ! (eq 37)
-            regime = collresolve_regime_disruption !disruption
+            regime = COLLRESOLVE_REGIME_DISRUPTION !disruption
          end if 
       else if (vimp > vsupercat) then 
          mlr = mtot * (0.1_DP * ((Qr / (Qrd_pstar * 1.8_DP))**(-1.5_DP)))   !eq (44)
          mslr = mtot * (3.0_DP - BETA) * (1.0_DP - N1 * mlr / mtot) / (N2 * BETA)  ! (eq 37)
-         regime = collresolve_regime_supercatastrophic ! supercatastrophic
+         regime = COLLRESOLVE_REGIME_SUPERCATASTROPHIC ! supercatastrophic
       else 
-         write(*,*) "error no regime found in symba_regime"
+         write(*,*) "Error no regime found in symba_regime"
       end if 
    end if 
    mresidual = mtot - mlr - mslr
