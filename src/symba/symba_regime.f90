@@ -37,7 +37,7 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
    real(DP), parameter   :: CRUFU = 2.0_DP - 3 * MU_BAR ! central potential variable from Rufu and Aharonson (2019)
 ! Internals
    real(DP)           :: a1, alpha, aint, b, bcrit, e, fgamma, l, lint, mu, phi, theta
-   real(DP)           :: qr, qrd_pstar, qr_erosion, qr_supercat
+   real(DP)           :: Qr, Qrd_pstar, Qr_erosion, Qr_supercat
    real(DP)           :: vcr, verosion, vescp, vhill, vimp, vsupercat
    real(DP)           :: mint, mtot
    real(DP)           :: rp, rhill 
@@ -74,17 +74,17 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
    else
      vhill = vescp
    end if 
-   !calculate qr_pstar
-   qrd_pstar = calc_qrd_pstar(m1, m2, alpha) * (vhill / vescp)**CRUFU !rufu et al. eq (3)
+   !calculate Qr_pstar
+   Qrd_pstar = calc_Qrd_pstar(m1, m2, alpha) * (vhill / vescp)**CRUFU !rufu et al. eq (3)
    !calculate verosion
-   qr_erosion = 2 * (1.0_DP - m1 / mtot) * qrd_pstar
-   verosion = (2* qr_erosion * mtot / mu)** (1.0_DP / 2.0_DP)
-   qr = mu*(vimp**2) / mtot / 2.0_DP
+   Qr_erosion = 2 * (1.0_DP - m1 / mtot) * Qrd_pstar
+   verosion = (2* Qr_erosion * mtot / mu)** (1.0_DP / 2.0_DP)
+   Qr = mu*(vimp**2) / mtot / 2.0_DP
    !calculate mass largest remnant mlr 
-   mlr = (1.0_DP - qr / qrd_pstar / 2.0_DP) * mtot  ! [kg] #(eq 5)
+   mlr = (1.0_DP - Qr / Qrd_pstar / 2.0_DP) * mtot  ! [kg] #(eq 5)
    !calculate vsupercat
-   qr_supercat = 1.8_DP * qrd_pstar
-   vsupercat = sqrt(2 * qr_supercat * mtot / mu)
+   Qr_supercat = 1.8_DP * Qrd_pstar
+   vsupercat = sqrt(2 * Qr_supercat * mtot / mu)
    !calculate vcr
    fgamma = (m1 - m2) / mtot
    theta = 1.0_DP - b
@@ -112,7 +112,7 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
             mslr = 0.0_DP
          else
             mlr = m1
-            mslr = calc_qrd_rev(m2,m1,mint,den1,den2,vimp)
+            mslr = calc_Qrd_rev(m2,m1,mint,den1,den2,vimp)
             regime = collresolve_regime_hit_and_run !hit and run
          end if 
       else if (vimp > verosion .and. vimp < vsupercat) then
@@ -125,7 +125,7 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
             regime = collresolve_regime_disruption !disruption
          end if 
       else if (vimp > vsupercat) then 
-         mlr = mtot * (0.1_DP * ((qr / (qrd_pstar * 1.8_DP))**(-1.5_DP)))   !eq (44)
+         mlr = mtot * (0.1_DP * ((Qr / (Qrd_pstar * 1.8_DP))**(-1.5_DP)))   !eq (44)
          mslr = mtot * (3.0_DP - BETA) * (1.0_DP - N1 * mlr / mtot) / (N2 * BETA)  ! (eq 37)
          regime = collresolve_regime_supercatastrophic ! supercatastrophic
       else 
@@ -141,38 +141,38 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
 
 ! Internal functions
 contains
-   function calc_qrd_pstar(mtarg,mp,alpha) result(ans)
+   function calc_Qrd_pstar(mtarg,mp,alpha) result(ans)
       !! author: Jennifer L.L. Pouplin and Carlisle A. Wishard
       !!
       !! Calculates []
       !! 
       implicit none
       real(DP),intent(in) :: mtarg, mp, alpha
-      real(DP)      :: qrd_star1, mu_alpha, mu, qrd_star, qrd_pstar
+      real(DP)      :: Qrd_star1, mu_alpha, mu, Qrd_star, Qrd_pstar
       real(DP)      :: ans
       ! calc mu, mu_alpha
       mu = (mtarg * mp) / (mtarg + mp)  ! [kg]
       mu_alpha = (mtarg * alpha * mp) / (mtarg + alpha * mp)  ! [kg]
-      ! calc qrd_star1
-      qrd_star1 = (C_STAR * 4 * PI * DENSITY1 * GC * rp**2) / 5.0_DP
-      ! calc qrd_star
-      qrd_star = qrd_star1 * (((mp / mtarg + 1.0_DP)**2) / (4 * mp / mtarg))**(2.0_DP / (3.0_DP * MU_BAR) - 1.0_DP)  !(eq 23)
-      ! calc qrd_pstar, v_pstar
-      qrd_pstar = ((mu / mu_alpha)**(2.0_DP - 3.0_DP * MU_BAR / 2.0_DP)) * qrd_star  ! (eq 15)
+      ! calc Qrd_star1
+      Qrd_star1 = (C_STAR * 4 * PI * DENSITY1 * GC * rp**2) / 5.0_DP
+      ! calc Qrd_star
+      Qrd_star = Qrd_star1 * (((mp / mtarg + 1.0_DP)**2) / (4 * mp / mtarg))**(2.0_DP / (3.0_DP * MU_BAR) - 1.0_DP)  !(eq 23)
+      ! calc Qrd_pstar, v_pstar
+      Qrd_pstar = ((mu / mu_alpha)**(2.0_DP - 3.0_DP * MU_BAR / 2.0_DP)) * Qrd_star  ! (eq 15)
       
-      ans = qrd_pstar
+      ans = Qrd_pstar
       return
-   end function calc_qrd_pstar
+   end function calc_Qrd_pstar
 
-   function calc_qrd_rev(mp,mtarg,mint,den1,den2, vimp) result(ans)
+   function calc_Qrd_rev(mp,mtarg,mint,den1,den2, vimp) result(ans)
       !! author: Jennifer L.L. Pouplin and Carlisle A. Wishard
       !!
       !! Calculates []
       !! 
       implicit none
       real(DP),intent(in) :: mp, mtarg, mint, den1, den2, vimp
-      real(DP) :: ans, mtot_rev, mu_rev, gamma_rev, qrd_star1, qrd_star, mu_alpha_rev
-      real(DP) :: qrd_pstar, rC1, qr_rev, qrd_pstar_rev, mslr, qr_supercat_rev
+      real(DP) :: ans, mtot_rev, mu_rev, gamma_rev, Qrd_star1, Qrd_star, mu_alpha_rev
+      real(DP) :: Qrd_pstar, rC1, Qr_rev, Qrd_pstar_rev, mslr, Qr_supercat_rev
 
       ! calc mtlr, rC1, mu, gammalr
       mtot_rev =  mint + mp
@@ -180,29 +180,29 @@ contains
       mu_rev = (mint * mp) / mtot_rev ! [kg] eq 49 LS12
       mu_alpha_rev = (mtarg * alpha * mp) / (mtarg + alpha * mp)
       gamma_rev = mint / mp ! eq 50 LS12
-      !calc qr_rev
-      qr_rev = mu_rev * (vimp**2) / (2 * mtot_rev)
-      ! calc qrd_star1, v_star1
-      qrd_star1 = (C_STAR * 4 * PI * mtot_rev * GC ) / rC1 / 5.0_DP
-      ! calc qrd_pstar_rev
-      qrd_star = qrd_star1 * (((gamma_rev + 1.0_DP)**2) / (4 * gamma_rev)) ** (2.0_DP / (3.0_DP * MU_BAR) - 1.0_DP) !(eq 52)
-      qrd_pstar = qrd_star * ((mu_rev / mu_alpha_rev)**(2.0_DP - 3.0_DP * MU_BAR / 2.0_DP))
-      qrd_pstar_rev = qrd_pstar * (vhill / vescp)**CRUFU !rufu et al. eq (3)
-      !calc qr_supercat_rev
-      qr_supercat_rev = 1.8_DP * qrd_pstar_rev 
-      if (qr_rev > qr_supercat_rev ) then 
-         mslr = mtot_rev * (0.1_DP * ((qr_rev / (qrd_pstar_rev * 1.8_DP))**(-1.5_DP)))   !eq (44)
-      else if ( qr_rev < qrd_pstar_rev ) then 
+      !calc Qr_rev
+      Qr_rev = mu_rev * (vimp**2) / (2 * mtot_rev)
+      ! calc Qrd_star1, v_star1
+      Qrd_star1 = (C_STAR * 4 * PI * mtot_rev * GC ) / rC1 / 5.0_DP
+      ! calc Qrd_pstar_rev
+      Qrd_star = Qrd_star1 * (((gamma_rev + 1.0_DP)**2) / (4 * gamma_rev)) ** (2.0_DP / (3.0_DP * MU_BAR) - 1.0_DP) !(eq 52)
+      Qrd_pstar = Qrd_star * ((mu_rev / mu_alpha_rev)**(2.0_DP - 3.0_DP * MU_BAR / 2.0_DP))
+      Qrd_pstar_rev = Qrd_pstar * (vhill / vescp)**CRUFU !rufu et al. eq (3)
+      !calc Qr_supercat_rev
+      Qr_supercat_rev = 1.8_DP * Qrd_pstar_rev 
+      if (Qr_rev > Qr_supercat_rev ) then 
+         mslr = mtot_rev * (0.1_DP * ((Qr_rev / (Qrd_pstar_rev * 1.8_DP))**(-1.5_DP)))   !eq (44)
+      else if ( Qr_rev < Qrd_pstar_rev ) then 
          mslr = mp 
       else 
-         mslr = (1.0_DP - qr_rev / qrd_pstar_rev / 2.0_DP) * (mtot_rev)  ! [kg] #(eq 5)
+         mslr = (1.0_DP - Qr_rev / Qrd_pstar_rev / 2.0_DP) * (mtot_rev)  ! [kg] #(eq 5)
       end if 
 
       if ( mslr > mp ) mslr = mp !check conservation of mass
       ans = mslr
 
       return
-   end function calc_qrd_rev
+   end function calc_Qrd_rev
 
 function calc_b(proj_pos, proj_vel, targ_pos, targ_vel) result(sintheta)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
