@@ -75,7 +75,7 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
      vhill = vescp
    end if 
    !calculate Qr_pstar
-   Qrd_pstar = calc_Qrd_pstar(m1, m2, alpha) * (vhill / vescp)**CRUFU !rufu et al. eq (3)
+   Qrd_pstar = calc_Qrd_pstar(m1, m2, alpha) * (vhill / vescp)**CRUFU !Rufu and Aharaonson eq (3)
    !calculate verosion
    Qr_erosion = 2 * (1.0_DP - m1 / mtot) * Qrd_pstar
    verosion = (2 * Qr_erosion * mtot / mu)** (1.0_DP / 2.0_DP)
@@ -187,7 +187,7 @@ contains
       ! calc Qrd_pstar_rev
       Qrd_star = Qrd_star1 * (((gamma_rev + 1.0_DP)**2) / (4 * gamma_rev)) ** (2.0_DP / (3.0_DP * MU_BAR) - 1.0_DP) !(eq 52)
       Qrd_pstar = Qrd_star * ((mu_rev / mu_alpha_rev)**(2.0_DP - 3.0_DP * MU_BAR / 2.0_DP))
-      Qrd_pstar_rev = Qrd_pstar * (vhill / vescp)**CRUFU !rufu et al. eq (3)
+      Qrd_pstar_rev = Qrd_pstar * (vhill / vescp)**CRUFU !Rufu and Aharaonson eq (3)
       !calc Qr_supercat_rev
       Qr_supercat_rev = 1.8_DP * Qrd_pstar_rev 
       if (Qr_rev > Qr_supercat_rev ) then 
