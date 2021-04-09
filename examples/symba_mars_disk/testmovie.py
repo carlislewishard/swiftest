@@ -7,8 +7,8 @@ import subprocess
 radscale = 20
 RMars = 3389500.0
 xmin = 1.0
-xmax = 6.0
-ymin = 1e-4
+xmax = 10.0
+ymin = 1e-6
 ymax = 1.0
 
 class AnimatedScatter(object):
