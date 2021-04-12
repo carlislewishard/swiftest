@@ -263,7 +263,7 @@ contains
       real(DP), parameter  :: loR   = 1.0e3_DP ! Lower bound of inteRpolation size (m)
       real(DP), parameter  :: hiR   = 1.0e7_DP ! Upper bound of inteRpolation size (m)
       real(DP), parameter  :: loval = 5.0_DP   ! Value of C* at lower bound
-      real(DP), parameter  :: hival = 1.8_DP   ! Value of C* at upper bound
+      real(DP), parameter  :: hival = 1.9_DP   ! Value of C* at upper bound
 
       if (Rc1 < loR) then
          c_star = loval
