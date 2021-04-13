@@ -1618,7 +1618,7 @@ END INTERFACE
       END INTERFACE
 
      INTERFACE
-         SUBROUTINE symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2, regime, Mlr, Mslr, mtiny, Qresidual)
+         SUBROUTINE symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2, regime, Mlr, Mslr, mtiny, Qloss)
           USE swiftest_globals
           USE module_symba
           USE swiftest_data_structures
@@ -1629,7 +1629,7 @@ END INTERFACE
           INTEGER(I4B), INTENT(OUT)              :: regime
           REAL(DP), INTENT(INOUT)                :: Mcb, Mlr, Mslr, m1, m2, rad1, rad2, den1, den2, mtiny
           REAL(DP), DIMENSION(:), INTENT(IN)     :: xh1, xh2, vb1, vb2
-          real(DP), intent(out)                  :: Qresidual
+          real(DP), intent(out)                  :: Qloss
          END SUBROUTINE symba_regime
      END INTERFACE
 
