@@ -189,7 +189,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       ! Adjust the fragment velocities so that they have the their total energy reduced by an amount set by the anelastic parameter
       ! Make sure we don't end up with negative energy (bound system). If so, we'll adjust the radius so that the potential energy
       ! takes up the negative part
-      
+
       !f_anelastic = 0.9999999_DP ! TODO: Should this be set by the user or kept as a constant?
       !KE_residual = KE_spin_after + U_after - U_before - f_anelastic * (KE_before + KE_spin_before) 
 
@@ -241,7 +241,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
          KE_after = KE_after + 0.5_DP * m_frag(i) * dot_product(v_frag(:,i), v_frag(:,i))
       end do
       Etot_after = KE_after + KE_spin_after + U_after
-      write(*,100) 'f_corrected: ',f_corrected
+      write(*,100) 'f_corrected  |',f_corrected
       write(*,   "(' ------------------------------------------------------------------')")
       write(*,100) ' final       |',KE_after / abs(Esys), KE_spin_after / abs(Esys), (KE_after + KE_spin_after) / abs(Esys), U_after / abs(Esys), Etot_after / abs(Esys)
       write(*,   "(' ------------------------------------------------------------------')")
