@@ -1,5 +1,5 @@
 subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, &
-                           Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag, lmerge)
+                           Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag, lmerge, Qloss)
    !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
    !! Places the collision fragments on a circle oriented with a plane defined
@@ -14,6 +14,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
 
    type(symba_pl), intent(inout)             :: symba_plA
    integer(I4B), dimension(:), intent(in)    :: idx_parents
+   real(DP), intent(in)                      :: Qloss
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
    real(DP), dimension(:), intent(in)        :: mass, radius, m_frag, rad_frag
    real(DP), dimension(:,:), intent(in)      :: Ip_frag
@@ -200,6 +201,9 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       write(*,100) ' change      |',(KE_after - KE_before) / abs(Esys), (KE_spin_after - KE_spin_before)/ abs(Esys), (KE_after + KE_spin_after - KE_before - KE_spin_before)/ abs(Esys), (U_after - U_before) / abs(Esys), (Etot_after-Etot_before) / abs(Esys)
       write(*,   "(' ------------------------------------------------------------------')")
       write(*,100) ' T_res       |',KE_residual / abs(Esys)
+      write(*,   "(' ------------------------------------------------------------------')")
+      write(*,100) ' Q_loss      |',Qloss / abs(Esys)
+      write(*,   "(' ------------------------------------------------------------------')")
 
       A = 0.0_DP
       B = 0.0_DP

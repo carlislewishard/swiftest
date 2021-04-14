@@ -1,5 +1,5 @@
 subroutine symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, &
-                                        mass_res, param)
+                                        mass_res, param, Qloss)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
    !! Create the fragments resulting from a non-catastrophic disruption collision
@@ -18,6 +18,7 @@ subroutine symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_lis
    real(DP), dimension(:),   intent(in)      :: mass, radius, xbs, vbs, mass_res
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
    type(user_input_parameters),intent(inout) :: param
+   real(DP), intent(inout)                   :: Qloss
 
    integer(I4B)                            :: i,  istart, nfrag
    real(DP)                                :: mtot, avg_dens
@@ -68,7 +69,7 @@ subroutine symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_lis
 
    ! Put the fragments on the circle surrounding the center of mass of the system
    call symba_frag_pos(symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, &
-                        Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag, lmerge)
+                        Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag, lmerge, Qloss)
 
    if (lmerge) then
       write(*,*) 'Should have been a merge instead.'

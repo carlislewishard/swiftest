@@ -714,7 +714,7 @@ MODULE module_interfaces
 
      INTERFACE
          SUBROUTINE symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, &
-                                                 mass_res, param)
+                                                 mass_res, param, Qloss)
          USE swiftest_globals
          USE swiftest_data_structures
          USE module_symba
@@ -726,24 +726,26 @@ MODULE module_interfaces
          real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
          type(user_input_parameters),intent(inout) :: param
          integer(I4B), dimension(2), intent(inout) :: idx_parents
+         real(DP), intent(in)                      :: Qloss
          END SUBROUTINE symba_casedisruption
      END INTERFACE
 
      INTERFACE
           SUBROUTINE symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list, name, x, v, mass, radius, Lspin, Ip, xbs, vbs, &
-            mass_res, param)
+            mass_res, param, Qloss)
             USE swiftest_globals
             USE swiftest_data_structures
             USE module_symba
             IMPLICIT NONE
-            integer(I4B), intent(inout)             :: nmergeadd
-            type(symba_merger), intent(inout)       :: mergeadd_list
-            type(symba_pl), intent(inout)           :: symba_pla
-            integer(I4B), dimension(:), intent(in)  :: name
-            real(DP), dimension(:), intent(in)      :: mass, radius, xbs, vbs, mass_res
-            real(DP), dimension(:,:), intent(in)    :: x, v, Lspin, Ip
+            integer(I4B), intent(inout)               :: nmergeadd
+            type(symba_merger), intent(inout)         :: mergeadd_list
+            type(symba_pl), intent(inout)             :: symba_pla
+            integer(I4B), dimension(:), intent(in)    :: name
+            real(DP), dimension(:), intent(in)        :: mass, radius, xbs, vbs, mass_res
+            real(DP), dimension(:,:), intent(in)      :: x, v, Lspin, Ip
             type(user_input_parameters),intent(inout) :: param
             integer(I4B), dimension(2), intent(inout) :: idx_parents
+            real(DP), intent(in)                      :: Qloss
           END SUBROUTINE symba_casehitandrun
      END INTERFACE
 
@@ -765,18 +767,19 @@ MODULE module_interfaces
 
      INTERFACE
          SUBROUTINE symba_casesupercatastrophic (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, Lspin, Ip, xbs, vbs, &
-                                                 mass_res, param)
+                                                 mass_res, param, Qloss)
          USE swiftest_globals
          USE swiftest_data_structures
          USE module_symba
          IMPLICIT NONE
-         integer(I4B), intent(inout)             :: nmergeadd
-         type(symba_merger), intent(inout)       :: mergeadd_list
-         type(symba_pl), intent(inout)           :: symba_pla
-         real(DP), dimension(:), intent(in)      :: mass, radius, xbs, vbs, mass_res
-         real(DP), dimension(:,:), intent(in)    :: x, v, Lspin, Ip
+         integer(I4B), intent(inout)               :: nmergeadd
+         type(symba_merger), intent(inout)         :: mergeadd_list
+         type(symba_pl), intent(inout)             :: symba_pla
+         real(DP), dimension(:), intent(in)        :: mass, radius, xbs, vbs, mass_res
+         real(DP), dimension(:,:), intent(in)      :: x, v, Lspin, Ip
          type(user_input_parameters),intent(inout) :: param
          integer(I4B), dimension(2), intent(inout) :: idx_parents
+         real(DP), intent(in)                      :: Qloss
          END SUBROUTINE symba_casesupercatastrophic
      END INTERFACE
 
@@ -934,13 +937,14 @@ MODULE module_interfaces
 
      INTERFACE
          subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, &
-                                    Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag, lmerge)
+                                    Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag, lmerge, Qloss)
             use swiftest_globals
             USE swiftest_data_structures
             USE module_symba
             implicit none
             type(symba_pl), intent(inout)             :: symba_plA
             integer(I4B), dimension(:), intent(in)    :: idx_parents
+            real(DP), intent(in)                      :: Qloss
             real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
             real(DP), dimension(:), intent(in)        :: mass, radius, m_frag, rad_frag
             real(DP), dimension(:,:), intent(in)      :: Ip_frag

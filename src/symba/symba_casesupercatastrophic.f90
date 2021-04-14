@@ -1,5 +1,5 @@
 subroutine symba_casesupercatastrophic (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, &
-                                        xbs, vbs, mass_res, param)
+                                        xbs, vbs, mass_res, param, Qloss)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
    !! Create the fragments resulting from a supercatastrophic collision
@@ -18,6 +18,7 @@ subroutine symba_casesupercatastrophic (symba_plA, idx_parents, nmergeadd, merge
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
    type(user_input_parameters),intent(inout) :: param
    integer(I4B), dimension(2), intent(inout) :: idx_parents
+   real(DP), intent(inout)                   :: Qloss
 
    integer(I4B)                            :: i, nfrag
    real(DP)                                :: mtot, avg_dens, min_frag_mass
@@ -65,7 +66,7 @@ subroutine symba_casesupercatastrophic (symba_plA, idx_parents, nmergeadd, merge
 
    ! Put the fragments on the circle surrounding the center of mass of the system
    call symba_frag_pos(symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, &
-                        Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag, lmerge)
+                        Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag, lmerge, Qloss)
 
    if (lmerge) then
       write(*,*) 'Should have been a merge instead.'
