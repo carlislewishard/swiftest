@@ -241,7 +241,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
          KE_after = KE_after + 0.5_DP * m_frag(i) * dot_product(v_frag(:,i), v_frag(:,i))
       end do
       Etot_after = KE_after + KE_spin_after + U_after
-      write(*,100) 'f_corrected  |',f_corrected
+      write(*,100) ' f_corrected |',f_corrected
       write(*,   "(' ------------------------------------------------------------------')")
       write(*,100) ' final       |',KE_after / abs(Esys), KE_spin_after / abs(Esys), (KE_after + KE_spin_after) / abs(Esys), U_after / abs(Esys), Etot_after / abs(Esys)
       write(*,   "(' ------------------------------------------------------------------')")
