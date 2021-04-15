@@ -48,6 +48,7 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
    real(DP)           :: Mint, Mtot
    real(DP)           :: Rp, rhill 
    real(DP)           :: Mresidual
+   real(DP)           :: U_binding
 
 ! Executable code
    Vimp = norm2(vb2(:) - vb1(:))
@@ -98,6 +99,7 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
    Vhr = Vescp * (C1 * zeta**2 * theta**(2.5_DP) + C2 * zeta**2 + C3 * theta**(2.5_DP) + C4) ! Kokubo & Genda (2010) eq. (3)
    bcrit = rad1 / (rad1 + rad2)
    Qloss = 0.0_DP
+   U_binding = (3.0_DP * Mtot) / (5.0_DP * Rp) ! LS12 eq. 27
 
    if ((m1 < mtiny).or.(m2 < mtiny)) then 
      regime = COLLRESOLVE_REGIME_MERGE !perfect merging regime
@@ -125,7 +127,7 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
             Mlr = m1
             Mslr = calc_Qrd_rev(m2, m1, Mint, den1, den2, Vimp, c_star)
             regime = COLLRESOLVE_REGIME_HIT_AND_RUN !hit and run
-            Qloss = Qr
+            Qloss = (c_star + 1.0_DP) * U_binding ! Qr 
          end if 
       else if (Vimp > Verosion .and. Vimp < Vsupercat) then
          if (m2 < 0.001_DP * m1) then 
@@ -136,13 +138,13 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
          else 
             Mslr = Mtot * (3.0_DP - BETA) * (1.0_DP - N1 * Mlr / Mtot) / (N2 * BETA)  ! LS12 eq (37)
             regime = COLLRESOLVE_REGIME_DISRUPTION !disruption
-            Qloss = Qr - Qr_erosion
+            Qloss = (c_star + 1.0_DP) * U_binding ! Qr - Qr_erosion
          end if 
       else if (Vimp > Vsupercat) then 
          Mlr = Mtot * 0.1_DP * (Qr / (Qrd_pstar * SUPERCAT_QRATIO))**(-1.5_DP)   !LS12 eq (44)
          Mslr = Mtot * (3.0_DP - BETA) * (1.0_DP - N1 * Mlr / Mtot) / (N2 * BETA)  !LS12 eq (37)
          regime = COLLRESOLVE_REGIME_SUPERCATASTROPHIC ! supercatastrophic
-         Qloss = Qr - Qr_supercat
+         Qloss = (c_star + 1.0_DP) * U_binding ! Qr - Qr_supercat
       else 
          write(*,*) "Error no regime found in symba_regime"
       end if 
