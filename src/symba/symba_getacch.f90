@@ -64,10 +64,10 @@ SUBROUTINE symba_getacch(lextra_force, t, npl, nplm, symba_plA, j2rp2, j4rp4, np
      ahm(:,:) = 0.0_DP
      symba_plA%helio%ah(:,:) = 0.0_DP
 
-     !$omp parallel do schedule(static) default(private) &
-     !$omp shared(nplm, npl, symba_plA) &
-     !$omp reduction(+:ahp) &
-     !$omp reduction(-:ahm)
+     !!$omp parallel do schedule(static) default(private) &
+     !!$omp shared(nplm, npl, symba_plA) &
+     !!$omp reduction(+:ahp) &
+     !!$omp reduction(-:ahm)
      DO i = 2, nplm
           DO j = i + 1, npl
                !IF ((.NOT. symba_plA%lcollision(i)) .OR. (.NOT. symba_plA%lcollision(j)) .OR. &
@@ -86,7 +86,7 @@ SUBROUTINE symba_getacch(lextra_force, t, npl, nplm, symba_plA, j2rp2, j4rp4, np
                !END IF
           END DO
      END DO
-     !$omp end parallel do
+     !!$omp end parallel do
      symba_plA%helio%ah(:,1:npl) = ahp(:, :) + ahm(:,:)
 
      DO i = 1, nplplenc

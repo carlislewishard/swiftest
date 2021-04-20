@@ -634,7 +634,7 @@ MODULE module_interfaces
 
      INTERFACE
           SUBROUTINE orbel_scget(angle, sx, cx)
-            !$omp declare simd(orbel_scget)
+            !!$omp declare simd(orbel_scget)
                USE swiftest_globals
                IMPLICIT NONE
                REAL(DP), INTENT(IN)  :: angle

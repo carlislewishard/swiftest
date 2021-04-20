@@ -94,15 +94,15 @@ subroutine symba_step(t, dt, param, npl, ntp,symba_plA, symba_tpA,       &
    nplm = count(symba_plA%helio%swiftest%mass(1:npl) >= param%mtiny)
 
    do i = 2, nplm
-      !$omp parallel do schedule(static) default(private) &
-      !$omp shared(i, npl, nplm, symba_plA, param, dt, irec, plplenc_list, nplplenc)
+      !!$omp parallel do schedule(static) default(private) &
+      !!$omp shared(i, npl, nplm, symba_plA, param, dt, irec, plplenc_list, nplplenc)
       do j = i + 1, npl
             xr(:) = symba_plA%helio%swiftest%xh(:,j) - symba_plA%helio%swiftest%xh(:,i)
             vr(:) = symba_plA%helio%swiftest%vh(:,j) - symba_plA%helio%swiftest%vh(:,i)
             call symba_chk(xr(:), vr(:), symba_plA%helio%swiftest%rhill(i), &
                   symba_plA%helio%swiftest%rhill(j), dt, irec, lencounter, lvdotr)
             if (lencounter) then
-               !$omp critical
+               !!$omp critical
                nplplenc = nplplenc + 1
                call symba_plplenc_size_check(plplenc_list, nplplenc)
                plplenc_list%status(nplplenc) = ACTIVE
@@ -118,10 +118,10 @@ subroutine symba_step(t, dt, param, npl, ntp,symba_plA, symba_tpA,       &
                end if
                symba_plA%nplenc(i) = symba_plA%nplenc(i) + 1
                symba_plA%nplenc(j) = symba_plA%nplenc(j) + 1
-               !$omp end critical
+               !!$omp end critical
             end if
          end do
-      !$omp end parallel do
+      !!$omp end parallel do
          do j = 1, ntp
             xr(:) = symba_tpA%helio%swiftest%xh(:,j) - symba_plA%helio%swiftest%xh(:,i)
             vr(:) = symba_tpA%helio%swiftest%vh(:,j) - symba_plA%helio%swiftest%vh(:,i)

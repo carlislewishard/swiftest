@@ -38,14 +38,14 @@ subroutine symba_discard_conserve_mtm(swiftest_plA, ipl, lescape)
    Lcb(:) = Mcb * Lcb(:) 
 
    ! Add planet mass to central body accumulator
-   if (.not.lescape) then
+   if (lescape) then
+      swiftest_plA%Mescape = swiftest_plA%Mescape + mass
+   else
       swiftest_plA%dMcb = swiftest_plA%dMcb + mass
 
       ! Update mass of central body to be consistent with its total mass
       Mcb = swiftest_plA%Mcb_initial + swiftest_plA%dMcb
       swiftest_plA%mass(1) = Mcb
-   else
-      swiftest_plA%Mescape = swiftest_plA%Mescape + mass
    end if
    
    ! Add planet angular momentum to central body accumulator

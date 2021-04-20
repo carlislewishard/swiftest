@@ -51,13 +51,13 @@ SUBROUTINE util_dist_eucl_pltp(planets, test_particles, num_pltp_comparisons, k_
      
 ! Executable code
 
-!$omp parallel do default(none) schedule(static) &
-!$omp shared (num_pltp_comparisons, test_particles, planets, outvar, k_pltp) &
-!$omp private (k)
+!!$omp parallel do default(none) schedule(static) &
+!!$omp shared (num_pltp_comparisons, test_particles, planets, outvar, k_pltp) &
+!!$omp private (k)
      do k = 1,num_pltp_comparisons
           outvar(:,k) = test_particles(:,k_pltp(2,k)) - planets(:,k_pltp(1,k))
      enddo
-!$omp end parallel do
+!!$omp end parallel do
      RETURN
 
 END SUBROUTINE util_dist_eucl_pltp

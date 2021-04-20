@@ -34,31 +34,6 @@ subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, r
    ldiscard_cb = .false.
    lescape = .false.
 
-   !******************* TESTING *************************
- !  ke0 = 0.0_DP
- !  pe0 = 0.0_DP
- !  rote0 = 0.0_DP
- !  do i = 1, npl
- !     x(:) = swiftest_plA%xb(:, i)
- !     v(:) = swiftest_plA%vb(:, i)
- !     rot(:) = swiftest_plA%rot(:, i)
- !     Ip = swiftest_plA%Ip(3, i)
- !     mass = swiftest_plA%mass(i)
- !     rad = swiftest_plA%radius(i)
- !     v2 = dot_product(v(:), v(:))
- !     rot2 = dot_product(rot(:), rot(:))
- !     ke0 = ke0 + 0.5_DP * mass * v2 
- !     rote0 = rote0 + 0.5_DP * mass * Ip * rad**2 * rot2
- !  end do
-  ! do i = 1, npl - 1
-  !    do j = i + 1, npl
-  !       dx(:) = swiftest_plA%xb(:, j) - swiftest_plA%xb(:, i) 
-  !       rmag = norm2(dx(:)) 
-  !       if (rmag > tiny(rmag)) pe0 = pe0 - swiftest_plA%mass(i) * swiftest_plA%mass(j) / rmag 
-  !    end do
-  ! end do
-   !!****************************************************
-
    do i = 2, npl
       if (swiftest_plA%status(i) == ACTIVE) then
          ldiscard_this = .false.
@@ -99,62 +74,6 @@ subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, r
       call coord_b2h(npl, swiftest_plA)
       if (ntp > 0) call coord_b2h_tp(ntp, swiftest_tpA, swiftest_plA)
    end if
-   !if (ldiscard_cb) then
-!
-!
-!      !******************* TESTING *************************
-!      ke1 = 0.0_DP
-!      pe1 = 0.0_DP
-!      rote1 = 0.0_DP
-!      do i = 1, npl
-!         if (swiftest_plA%status(i)  == DISCARDED_RMIN) cycle
-!         x(:) = swiftest_plA%xb(:, i)
-!         v(:) = swiftest_plA%vb(:, i)
-!         rot(:) = swiftest_plA%rot(:, i)
-!         Ip = swiftest_plA%Ip(3, i)
-!         mass = swiftest_plA%mass(i)
-!         rad = swiftest_plA%radius(i)
-!         v2 = dot_product(v(:), v(:))
-!         rot2 = dot_product(rot(:), rot(:))
-!         ke1 = ke1 + 0.5_DP * mass * v2 
-!         rote1 = rote1 + 0.5_DP * mass * Ip * rad**2 * rot2
-!      end do
-!      do i = 1, npl - 1
-!         if (swiftest_plA%status(i)  == DISCARDED_RMIN) cycle
-!         do j = i + 1, npl
-!            if (swiftest_plA%status(j)  == DISCARDED_RMIN) cycle
-!            dx(:) = swiftest_plA%xb(:, j) - swiftest_plA%xb(:, i) 
-!            rmag = norm2(dx(:)) 
-!            if (rmag > tiny(rmag)) pe1 = pe1 - swiftest_plA%mass(i) * swiftest_plA%mass(j) / rmag 
-!         end do
-!      end do
-   !****************************************************
-   !   write(*,*) 'Before loss: '
-   !   write(*,*) 'KE   : ', ke0
-   !   write(*,*) 'ROTE : ', rote0
-   !   write(*,*) 'PE   : ', pe0
-   !   write(*,*) 'Etot : ', ke0+rote0+pe0
-!
-!      write(*,*) 'After loss: '
-!      write(*,*) 'KE   : ', ke1
-!      write(*,*) 'ROTE : ', rote1
-!      write(*,*) 'PE   : ', pe1
-!      write(*,*) 'Etot : ', ke1+rote1+pe1
-!
-!      write(*,*) 'Difference (after - before): '
-!      write(*,*) 'KE   : ', ke1 - ke0
-!      write(*,*) 'ROTE : ', rote1 - rote0
-!      write(*,*) 'PE   : ', pe1 - pe0
-!      write(*,*) 'Etot : ', ke1+rote1+pe1 - (ke0+rote0+pe0)
-!
-!      write(*,*) 'Ratio (before / after): '
-!      write(*,*) 'KE   : ', ke0 / ke1
-!      write(*,*) 'ROTE : ', rote0 / rote1
-!      write(*,*) 'PE   : ', pe0 / pe1
-!      write(*,*) 'Etot : ', (ke0+rote0+pe0) / (ke1+rote1+pe1)
-!      read(*,*)
-!   end if
-   !****************************************************
 
 
    return

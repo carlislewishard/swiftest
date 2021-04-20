@@ -63,9 +63,9 @@ SUBROUTINE util_dist_index_plpl(npl, nplm, num_comparisons, k_plpl)
 
      ! brute force the index creation
 
-!$omp parallel do default(none) schedule(dynamic) &
-!$omp shared (k_plpl, npl, nplm) &
-!$omp private (i, j, counter)
+!!$omp parallel do default(none) schedule(dynamic) &
+!!$omp shared (k_plpl, npl, nplm) &
+!!$omp private (i, j, counter)
      do i = 2,nplm
           counter = (i - 2) * npl - i*(i-1)/2 + 2
           do j = i+1,npl
@@ -74,7 +74,7 @@ SUBROUTINE util_dist_index_plpl(npl, nplm, num_comparisons, k_plpl)
                counter = counter + 1
           enddo
      enddo
-!$omp end parallel do
+!!$omp end parallel do
 
      RETURN
 

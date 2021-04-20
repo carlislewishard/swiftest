@@ -45,9 +45,9 @@ SUBROUTINE symba_helio_drift(irec, npl, symba_plA, dt)
 
 ! Executable code
      mu = symba_plA%helio%swiftest%mass(1)
-!$omp parallel do default(none) &
-!$omp shared (symba_plA, npl, mu, dt, irec) &
-!$omp private (i, iflag)
+!!$omp parallel do default(none) &
+!!$omp shared (symba_plA, npl, mu, dt, irec) &
+!!$omp private (i, iflag)
      DO i = 2, npl
           IF ((symba_plA%levelg(i) == irec) .AND. (symba_plA%helio%swiftest%status(i) == ACTIVE)) THEN
                CALL drift_one(mu, symba_plA%helio%swiftest%xh(:,i), symba_plA%helio%swiftest%vb(:,i), dt, iflag)
@@ -61,7 +61,7 @@ SUBROUTINE symba_helio_drift(irec, npl, symba_plA, dt)
                END IF
           END IF
      END DO
-!$omp end parallel do
+!!$omp end parallel do
 
      RETURN
 

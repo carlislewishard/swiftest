@@ -78,10 +78,10 @@ SUBROUTINE symba_getacch_eucl(lextra_force, t, npl, symba_plA, j2rp2, j4rp4, npl
 ! For now, we will keep it in the serial operation, so we can easily compare
 ! it to the older swifter versions
 
-     !$omp parallel do default(private) schedule(static) &
-     !$omp shared (num_plpl_comparisons, k_plpl, symba_plA) &
-     !$omp reduction(+:ahp) &
-     !$omp reduction(-:ahm)
+     !!$omp parallel do default(private) schedule(static) &
+     !!$omp shared (num_plpl_comparisons, k_plpl, symba_plA) &
+     !!$omp reduction(+:ahp) &
+     !!$omp reduction(-:ahm)
      DO k = 1, num_plpl_comparisons
           i = k_plpl(1,k)
           j = k_plpl(2,k)
@@ -101,7 +101,7 @@ SUBROUTINE symba_getacch_eucl(lextra_force, t, npl, symba_plA, j2rp2, j4rp4, npl
                end if
           !ENDIF
      END DO
-     !$omp end parallel do
+     !!$omp end parallel do
      symba_plA%helio%ah(:,1:npl) = ahp(:, :) + ahm(:,:)
 
       DO i = 1, nplplenc

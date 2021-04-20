@@ -47,9 +47,9 @@ SUBROUTINE util_dist_index_pltp(nplm, ntp, num_comparisons, k_pltp)
 
      allocate(k_pltp(2, num_comparisons))
 
-! !$omp parallel do schedule(static) default(none) &
-! !$omp shared(k_pltp, nplm, ntp) &
-! !$omp private(i, j, counter)
+! !!$omp parallel do schedule(static) default(none) &
+! !!$omp shared(k_pltp, nplm, ntp) &
+! !!$omp private(i, j, counter)
 !      do i = 2,nplm
 !           counter = (i-2) * ntp + 1
 !           do j = 1,ntp
@@ -58,7 +58,7 @@ SUBROUTINE util_dist_index_pltp(nplm, ntp, num_comparisons, k_pltp)
 !                counter = counter + 1
 !           enddo
 !      enddo
-! !$omp end parallel do
+! !!$omp end parallel do
 
      np = 500
 

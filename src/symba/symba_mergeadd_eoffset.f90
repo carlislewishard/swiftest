@@ -26,7 +26,7 @@ function symba_mergeadd_eoffset(npl, symba_plA, mergeadd_list, mergesub_list, ad
    vbs(:) = symba_plA%helio%swiftest%vb(:, 1)
 
    ! Remove the KE of the subtracted bodies
-   !$omp simd private(x,v,v2,mass) reduction(-:ke)
+   !!$omp simd private(x,v,v2,mass) reduction(-:ke)
    do i = subi, subf 
       x(:) = mergesub_list%xh(:, i)
       v(:) = mergesub_list%vh(:, i) + vbs(:)

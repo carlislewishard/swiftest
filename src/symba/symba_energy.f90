@@ -22,7 +22,11 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msys)
    integer(I4B)              :: i, j
    real(DP)                  :: rmag, v2, rot2, oblpot
    real(DP), dimension(NDIM) :: h, dx
-   real(DP), dimension(npl)  :: irh
+   real(DP), dimension(npl)  :: irh, kepl
+   real(DP), dimension(NDIM, npl) :: Lpl 
+   real(DP), dimension(npl,npl) :: pepl
+   !real(DP), dimension(:), allocatable :: peplflat
+
 
 
 ! executable code
@@ -38,18 +42,16 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msys)
          if (status(i) /= ACTIVE) cycle
          v2 = dot_product(vb(:,i), vb(:,i))
          rot2 = dot_product(rot(:,i), rot(:,i))
-         h(1) = xb(2,i) * vb(3,i) - xb(3,i) * vb(2,i)
-         h(2) = xb(3,i) * vb(1,i) - xb(1,i) * vb(3,i)
-         h(3) = xb(1,i) * vb(2,i) - xb(2,i) * vb(1,i)
+         call util_crossproduct(xb(:,i), vb(:,i), h)
 
          ! Angular momentum from orbit and spin
-         Ltot(:) = Ltot(:) + mass(i) * (h(:) + Ip(3,i) * radius(i)**2 * rot(:,i))
+         Lpl(:, i) = mass(i) * (Ip(3,i) * radius(i)**2 * rot(:,i) + h(:))
 
          ! Kinetic energy from orbit and spin
-         ke = ke + 0.5_DP * mass(i) * (v2 + Ip(3,i) * radius(i)**2 * rot2)
+         kepl(i) = 0.5_DP * mass(i) * (Ip(3,i) * radius(i)**2 * rot2 + v2)
       end do
 
-      pe = 0.0_DP
+      pepl(:,:) = 0.0_DP
       !!$omp parallel do default(private) &
       !!$omp shared (xb, mass, npl) &
       !!$omp reduction (-:pe)
@@ -59,10 +61,13 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msys)
             if (status(j) /= ACTIVE) cycle
             dx(:) = xb(:, j) - xb(:, i) 
             rmag = norm2(dx(:)) 
-            if (rmag > tiny(rmag)) pe = pe - mass(i) * mass(j) / rmag 
+            if (rmag > tiny(rmag)) pepl(i,j) = - mass(i) * mass(j) / rmag 
          end do
       end do
       !!$omp end parallel do
+      pe = sum(pack(pepl(:,:), abs(pepl(:,:)) > tiny(pe)))
+      ke = sum(kepl(:))
+      Ltot(:) =  sum(Lpl(:,:), dim=2)
 
       if (j2rp2 /= 0.0_DP) then
          !!$omp simd private(rmag)

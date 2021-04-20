@@ -76,9 +76,9 @@ SUBROUTINE symba_getacch_tp_eucl(lextra_force, t, npl, ntp, symba_plA, symba_tpA
      ! CALL util_dist_eucl_pltp(symba_plA%helio%swiftest%xh, symba_tpA%helio%swiftest%xh, &
      !      num_pltp_comparisons, k_pltp, dist_pltp_array)
 
-!$omp parallel do default(shared) schedule(static) &
-!$omp shared(num_pltp_comparisons, symba_plA, symba_tpA, k_pltp) &
-!$omp reduction(-:ah)
+!!$omp parallel do default(shared) schedule(static) &
+!!$omp shared(num_pltp_comparisons, symba_plA, symba_tpA, k_pltp) &
+!!$omp reduction(-:ah)
      do k = 1,num_pltp_comparisons
           j = k_pltp(2,k)
           IF (symba_tpA%helio%swiftest%status(j) == ACTIVE) THEN
@@ -89,13 +89,13 @@ SUBROUTINE symba_getacch_tp_eucl(lextra_force, t, npl, ntp, symba_plA, symba_tpA
                ah(:,j) = ah(:,j) - fac*dx(:)
           endif
      enddo
-!$omp end parallel do
+!!$omp end parallel do
 
      symba_tpA%helio%ah(:,1:ntp) = ah(:,1:ntp)
 
-     !!$OMP PARALLEL DO SCHEDULE (STATIC) DEFAULT(NONE) &
-     !!$OMP PRIVATE(i,swifter_plP,helio_tpP,dx,r2,fac) &
-     !!$OMP SHARED(pltpenc_list,npltpenc)
+     !!$omp PARALLEL DO SCHEDULE (STATIC) DEFAULT(NONE) &
+     !!$omp PRIVATE(i,swifter_plP,helio_tpP,dx,r2,fac) &
+     !!$omp SHARED(pltpenc_list,npltpenc)
      DO i = 1, npltpenc
           index_pl = pltpenc_list%indexpl(i)
           index_tp = pltpenc_list%indextp(i)
@@ -106,7 +106,7 @@ SUBROUTINE symba_getacch_tp_eucl(lextra_force, t, npl, ntp, symba_plA, symba_tpA
                symba_tpA%helio%ah(:,index_tp) = symba_tpA%helio%ah(:,index_tp) + fac*dx(:)
           END IF
      END DO
-     !!$OMP END PARALLEL DO
+     !!$omp END PARALLEL DO
 
      IF (j2rp2 /= 0.0_DP) THEN
          if (npl > 0) then

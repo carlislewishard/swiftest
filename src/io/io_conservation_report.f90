@@ -38,8 +38,8 @@ contains
       else
          call symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, Eorbit, Ltot_now, Mtot_now)
       end if
-      Mtot_now = Mtot_now + swiftest_plA%Mescape
-      Ltot_now(:) = Ltot_now(:) + swiftest_plA%Lescape(:)
+      Mtot_now = swiftest_plA%Mescape + Mtot_now
+      Ltot_now(:) = swiftest_plA%Lescape(:) + Ltot_now(:)
       if (lfirst) then
          Eorbit_orig = Eorbit
          Mtot_orig = Mtot_now

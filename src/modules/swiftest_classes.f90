@@ -758,7 +758,7 @@ module swiftest_classes
    
    interface
       module pure subroutine orbel_scget(angle, sx, cx)
-         !$omp declare simd (orbel_scget) uniform(angle)
+         !!$omp declare simd (orbel_scget) uniform(angle)
          implicit none
          real(DP), intent(in)  :: angle
          real(DP), intent(out) :: sx, cx

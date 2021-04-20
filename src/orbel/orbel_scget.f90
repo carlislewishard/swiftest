@@ -27,7 +27,7 @@
 !
 !**********************************************************************************************************************************
 pure SUBROUTINE orbel_scget(angle, sx, cx)
-    !$omp declare simd(orbel_scget)
+    !!$omp declare simd(orbel_scget)
 
 ! Modules
      USE swiftest
