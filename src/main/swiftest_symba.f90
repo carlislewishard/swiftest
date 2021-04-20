@@ -173,12 +173,8 @@ program swiftest_symba
                plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list)
       end if
       if (param%lenergy) then
-         !if(num_plpl_comparisons > param%eucl_threshold) then
-            call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, &
+         call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, &
                   ke_before, pe_before, Eorbit_before, Ltot, msys)
-         !else
-         !   call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke_before, pe_before, Eorbit_before, Ltot, msys)
-         !end if
       end if
       ldiscard = .false. 
       ldiscard_tp = .false.
@@ -191,29 +187,19 @@ program swiftest_symba
          call symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
             discard_tpA, ldiscard, ldiscard_tp)
 
-         if (ldiscard .or. ldiscard_tp .or. lfrag_add) then
-            call io_discard_write_symba(t, mtiny, npl, nsppl, nsptp, nmergesub, symba_plA, &
-               discard_plA, discard_tpA, mergeadd_list, mergesub_list, discard_file, param%lbig_discard) 
-            nmergeadd = 0
-            nmergesub = 0
-            nsppl = 0
-            nsptp = 0
-            deallocate(k_plpl)
-            nplm = count(symba_plA%helio%swiftest%mass(1:npl) > mtiny)
-            CALL util_dist_index_plpl(npl, nplm, num_plpl_comparisons, k_plpl)
-            if (ntp > 0) then
-                 deallocate(k_pltp)
-                 call util_dist_index_pltp(nplm, ntp, num_pltp_comparisons, k_pltp)          
-            end if 
-         end if
+         call io_discard_write_symba(t, mtiny, npl, nsppl, nsptp, nmergesub, symba_plA, &
+            discard_plA, discard_tpA, mergeadd_list, mergesub_list, discard_file, param%lbig_discard) 
+         nmergeadd = 0
+         nmergesub = 0
+         nsppl = 0
+         nsptp = 0
+         nplm = count(symba_plA%helio%swiftest%mass(1:npl) > mtiny)
+         CALL util_dist_index_plpl(npl, nplm, num_plpl_comparisons, k_plpl)
+         if (ntp > 0) call util_dist_index_pltp(nplm, ntp, num_pltp_comparisons, k_pltp)          
 
          if (param%lenergy) then
-            !if(num_plpl_comparisons > param%eucl_threshold) then
-               call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, &
+            call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, &
                   ke_after, pe_after, Eorbit_after, Ltot, msys)
-            !else
-            !   call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke_after, pe_after, Eorbit_after, Ltot, msys)
-            !end if
             Ecollision = Eorbit_before - Eorbit_after    ! Energy change resulting in this collisional event Total running energy offset from collision in this step
             if ((Ecollision /= Ecollision) .or. (abs(Ecollision) > huge(Ecollision))) then 
                write(*,*) 'Error encountered in collisional energy calculation!'

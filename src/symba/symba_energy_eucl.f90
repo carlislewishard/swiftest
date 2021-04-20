@@ -63,7 +63,7 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
       pe = 0.0_DP
       !$omp simd reduction(-:pe)
       do i = 2, npl
-         pe = pe - mass(1) * mass(i) / norm2(xh(:, i))
+         if (status(i) == ACTIVE) pe = pe - mass(1) * mass(i) / norm2(xh(:, i))
       end do
 
       ! Do the potential energy between pairs of massive bodies
@@ -74,7 +74,9 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
          i = k_plpl(1, k)
          j = k_plpl(2, k)
          rmag = norm2(xb(:, j) - xb(:, i)) 
-         if (rmag > tiny(rmag)) pepl(k) = -mass(i) * mass(j) / rmag 
+         if (rmag > tiny(rmag) .and. (status(i) == ACTIVE) .and. (status(j) == ACTIVE)) then
+            pepl(k) = -mass(i) * mass(j) / rmag 
+         end if
       end do
       !$omp end parallel do
 

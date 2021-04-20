@@ -47,6 +47,7 @@ SUBROUTINE util_dist_index_plpl(npl, nplm, num_comparisons, k_plpl)
 ! Executable code
      num_comparisons = ((npl8 - 1_I8B) * (npl8 - 2_I8B) / 2_I8B) - & ! number of entries in a strict lower triangle, nplm x npl, minus first column
                        ((npl8 - nplm8 - 1_I8B) * ((npl8 - nplm8 - 1_I8B) + 1_I8B) / 2_I8B)
+     if (allocated(k_plpl)) deallocate(k_plpl) 
      allocate(k_plpl(2, num_comparisons))
      ! this is a 'fancier' code, but so far i think it runs slower
      ! so leaving it in, but commenting it out
@@ -63,18 +64,18 @@ SUBROUTINE util_dist_index_plpl(npl, nplm, num_comparisons, k_plpl)
 
      ! brute force the index creation
 
-!!$omp parallel do default(none) schedule(dynamic) &
-!!$omp shared (k_plpl, npl, nplm) &
-!!$omp private (i, j, counter)
+   !$omp parallel do default(none) schedule(dynamic) &
+   !$omp shared (k_plpl, npl, nplm) &
+   !$omp private (i, j, counter)
      do i = 2,nplm
-          counter = (i - 2) * npl - i*(i-1)/2 + 2
+          counter = (i - 2) * npl - i * (i - 1) / 2 + 2
           do j = i+1,npl
                k_plpl(1,counter) = i
                k_plpl(2,counter) = j
                counter = counter + 1
           enddo
      enddo
-!!$omp end parallel do
+   !$omp end parallel do
 
      RETURN
 
