@@ -188,7 +188,6 @@ program swiftest_symba
             qmin_alo, qmin_ahi, param%lrhill_present, ldiscard_tp)
       call symba_collision(t, npl, symba_plA, nplplenc, plplenc_list, ldiscard, mergeadd_list, nmergeadd, discard_plA, param)
       if (ldiscard .or. ldiscard_tp .or. lfrag_add) then
-         write(*,*) 'A discard has happened'
          call symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
             discard_tpA, ldiscard, ldiscard_tp)
 
