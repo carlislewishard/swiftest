@@ -32,12 +32,12 @@ contains
             write(egyiu,egyheader)
          end if
       end if
-      if(num_plpl_comparisons > param%eucl_threshold) then
+      !if(num_plpl_comparisons > param%eucl_threshold) then
          call symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, &
             Eorbit, Ltot_now, Mtot_now)
-      else
-         call symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, Eorbit, Ltot_now, Mtot_now)
-      end if
+      !else
+      !   call symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, Eorbit, Ltot_now, Mtot_now)
+      !end if
       Mtot_now = swiftest_plA%Mescape + Mtot_now
       Ltot_now(:) = swiftest_plA%Lescape(:) + Ltot_now(:)
       if (lfirst) then

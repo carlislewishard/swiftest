@@ -32,14 +32,13 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msys)
 
    associate(xb => swiftest_plA%xb, vb => swiftest_plA%vb, mass => swiftest_plA%mass, radius => swiftest_plA%radius, &
              Ip => swiftest_plA%Ip, rot => swiftest_plA%rot, xh => swiftest_plA%xh, status => swiftest_plA%status)
-      Ltot = 0.0_DP
-      ke = 0.0_DP
-      !!$omp simd private(v2,rot2,h) reduction(+:ke,Ltot)
+      Lpl(:,:) = 0.0_DP
+      kepl(:) = 0.0_DP
       do i = 1, npl
          if (status(i) /= ACTIVE) cycle
          v2 = dot_product(vb(:,i), vb(:,i))
          rot2 = dot_product(rot(:,i), rot(:,i))
-         call util_crossproduct(xb(:,i), vb(:,i), h(:))
+         call util_crossproduct(xb(:,i), vb(:,i), h)
 
          ! Angular momentum from orbit and spin
          Lpl(:, i) = mass(i) * (Ip(3,i) * radius(i)**2 * rot(:,i) + h(:))
@@ -49,9 +48,6 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msys)
       end do
 
       pepl(:,:) = 0.0_DP
-      !!$omp parallel do default(private) &
-      !!$omp shared (xb, mass, npl) &
-      !!$omp reduction (-:pe)
       do i = 1, npl - 1
          if (status(i) /= ACTIVE) cycle
          do j = i + 1, npl
@@ -61,13 +57,11 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msys)
             if (rmag > tiny(rmag)) pepl(i,j) = - mass(i) * mass(j) / rmag 
          end do
       end do
-      !!$omp end parallel do
       pe = sum(pack(pepl(:,:), abs(pepl(:,:)) > tiny(pe)))
       ke = sum(kepl(:))
       Ltot(:) =  sum(Lpl(:,:), dim=2)
 
       if (j2rp2 /= 0.0_DP) then
-         !!$omp simd private(rmag)
          do i = 2, npl
             if (status(i) /= ACTIVE) cycle
             rmag = norm2(xh(:,i))

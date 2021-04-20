@@ -173,12 +173,12 @@ program swiftest_symba
                plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list)
       end if
       if (param%lenergy) then
-         if(num_plpl_comparisons > param%eucl_threshold) then
+         !if(num_plpl_comparisons > param%eucl_threshold) then
             call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, &
                   ke_before, pe_before, Eorbit_before, Ltot, msys)
-         else
-            call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke_before, pe_before, Eorbit_before, Ltot, msys)
-         end if
+         !else
+         !   call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke_before, pe_before, Eorbit_before, Ltot, msys)
+         !end if
       end if
       ldiscard = .false. 
       ldiscard_tp = .false.
@@ -208,12 +208,12 @@ program swiftest_symba
          end if
 
          if (param%lenergy) then
-            if(num_plpl_comparisons > param%eucl_threshold) then
+            !if(num_plpl_comparisons > param%eucl_threshold) then
                call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, &
                   ke_after, pe_after, Eorbit_after, Ltot, msys)
-            else
-               call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke_after, pe_after, Eorbit_after, Ltot, msys)
-            end if
+            !else
+            !   call symba_energy(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, ke_after, pe_after, Eorbit_after, Ltot, msys)
+            !end if
             Ecollision = Eorbit_before - Eorbit_after    ! Energy change resulting in this collisional event Total running energy offset from collision in this step
             if ((Ecollision /= Ecollision) .or. (abs(Ecollision) > huge(Ecollision))) then 
                write(*,*) 'Error encountered in collisional energy calculation!'

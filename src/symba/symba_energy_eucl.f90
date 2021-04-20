@@ -7,7 +7,7 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
    !!  
    !! Adapted from Martin Duncan's Swift routine anal_energy.f
    use swiftest
-   use module_interfaces, except_this_one => symba_energy_eucl
+   use module_interfaces, EXCEPT_THIS_ONE => symba_energy_eucl
    implicit none
 
 ! arguments
@@ -21,73 +21,77 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
 
 ! internals
    integer(I4B)              :: i, j
-   real(DP)                  :: mass, rmag, v2, oblpot, Mcb, rad, Ip, rot2
-   real(DP), dimension(NDIM) :: h, x, v, xbcb, rot
-   real(DP), dimension(npl)  :: irh
    integer(I8B)              :: k
+   real(DP)                  :: rmag, v2, rot2, oblpot
+   real(DP), dimension(NDIM) :: h
+   real(DP), dimension(npl)  :: irh, kepl
+   real(DP), dimension(NDIM, npl) :: Lpl 
+   real(DP), dimension(num_plpl_comparisons) :: pepl 
 
 ! executable code
 
    call coord_h2b(npl, swiftest_plA, msys)
    Ltot = 0.0_DP
    ke = 0.0_DP
+   associate(xb => swiftest_plA%xb, vb => swiftest_plA%vb, mass => swiftest_plA%mass, radius => swiftest_plA%radius, &
+      Ip => swiftest_plA%Ip, rot => swiftest_plA%rot, xh => swiftest_plA%xh, status => swiftest_plA%status)
+      kepl(:) = 0.0_DP
+      Lpl(:,:) = 0.0_DP
+      !$omp simd private(v2, rot2, h)
+      do i = 1, npl
+         if (status(i) /= ACTIVE) cycle
+         v2 = dot_product(vb(:,i), vb(:,i))
+         rot2 = dot_product(rot(:,i), rot(:,i))
+         h(1) = xb(2,i) * vb(3,i) - xb(3,i) * vb(2,i)
+         h(2) = xb(3,i) * vb(1,i) - xb(1,i) * vb(3,i)
+         h(3) = xb(1,i) * vb(2,i) - xb(2,i) * vb(1,i)
 
-   !!$omp simd private(x,v,v2,mass,h,rot,Ip,rad,rot2) reduction(+:ke,Ltot)
-   do i = 1, npl 
-      x(:) = swiftest_plA%xb(:, i)
-      v(:) = swiftest_plA%vb(:, i)
-      rot(:) = swiftest_plA%rot(:, i)
-      Ip = swiftest_plA%Ip(3, i)
-      mass = swiftest_plA%mass(i)
-      rad = swiftest_plA%radius(i)
-      v2 = dot_product(v(:), v(:))
-      rot2 = dot_product(rot(:), rot(:))
-      h(1) = mass * (x(2) * v(3) - x(3) * v(2))
-      h(2) = mass * (x(3) * v(1) - x(1) * v(3))
-      h(3) = mass * (x(1) * v(2) - x(2) * v(1))
+         ! Angular momentum from orbit and spin
+         Lpl(1, i) = Ip(3,i) * radius(i)**2 * rot(1,i) + h(1)
+         Lpl(2, i) = Ip(3,i) * radius(i)**2 * rot(2,i) + h(2)
+         Lpl(3, i) = Ip(3,i) * radius(i)**2 * rot(3,i) + h(3)
+         Lpl(:,i) = mass(i) * Lpl(:,i)
 
-      ! Angular momentum from orbit and spin
-      Ltot(:) = Ltot(:) + h(:) + mass * Ip * rot(:) * rad**2
-
-      ! Kinetic energy from orbit and spin
-      ke = ke + (0.5_DP * mass * v2) + (0.5_DP * Ip * mass * rad**2 * rot2)
-   end do
-
-   ! Do the central body potential energy component first
-   xbcb(:) = swiftest_plA%xb(:, 1) 
-   Mcb = swiftest_plA%mass(1) 
-   pe = 0.0_DP
-   !!$omp simd private(rmag) reduction(-:pe)
-   do i = 2, npl
-      rmag = norm2(swiftest_plA%xb(:, i) - xbcb(:))
-      pe = pe - Mcb * swiftest_plA%mass(i) / rmag 
-   end do
-
-   ! Do the potential energy between pairs of massive bodies
-   !!$omp parallel do default(private) schedule(static) &
-   !!$omp shared(num_plpl_comparisons, k_plpl, swiftest_plA) &
-   !!$omp reduction(-:pe)
-   do k = 1, num_plpl_comparisons
-       i = k_plpl(1, k)
-       j = k_plpl(2, k)
-       rmag = norm2(swiftest_plA%xb(:, j) - swiftest_plA%xb(:, i)) 
-       if (rmag > tiny(rmag)) pe = pe - swiftest_plA%mass(i) * swiftest_plA%mass(j) / rmag 
-   end do
-   !!$omp end parallel do
-
-   ! Potential energy from the oblateness term
-   if (j2rp2 /= 0.0_DP) then
-      !!$omp simd private(rmag)
-      do i = 2, npl
-         rmag = norm2(swiftest_plA%xh(:,i))
-         irh(i) = 1.0_DP / rmag
+         ! Kinetic energy from orbit and spin
+         kepl(i) = 0.5_DP * mass(i) * (Ip(3,i) * radius(i)**2 * rot2 + v2)
       end do
-      call obl_pot(npl, swiftest_plA, j2rp2, j4rp4, swiftest_plA%xh(:,:), irh, oblpot)
-      pe = pe + oblpot
-   end if
 
-   te = ke + pe
+      ke = sum(kepl(:))
+      Ltot(:) =  sum(Lpl(:,:), dim=2)
 
+      ! Do the central body potential energy component first
+      pe = 0.0_DP
+      !$omp simd reduction(-:pe)
+      do i = 2, npl
+         pe = pe - mass(1) * mass(i) / norm2(xh(:, i))
+      end do
+
+      ! Do the potential energy between pairs of massive bodies
+      pepl(:) = 0.0_DP
+      !$omp parallel do default(private) schedule(auto) &
+      !$omp shared(num_plpl_comparisons, k_plpl, swiftest_plA, pepl)
+      do k = 1, num_plpl_comparisons
+         i = k_plpl(1, k)
+         j = k_plpl(2, k)
+         rmag = norm2(xb(:, j) - xb(:, i)) 
+         if (rmag > tiny(rmag)) pepl(k) = -mass(i) * mass(j) / rmag 
+      end do
+      !$omp end parallel do
+
+      pe = pe + sum(pepl(:))
+
+      ! Potential energy from the oblateness term
+      if (j2rp2 /= 0.0_DP) then
+         !$omp simd 
+         do i = 2, npl
+            irh(i) = 1.0_DP / norm2(xh(:,i))
+         end do
+         call obl_pot(npl, swiftest_plA, j2rp2, j4rp4, swiftest_plA%xh(:,:), irh, oblpot)
+         pe = pe + oblpot
+      end if
+
+      te = ke + pe
+   end associate
    return
 
 end subroutine symba_energy_eucl
