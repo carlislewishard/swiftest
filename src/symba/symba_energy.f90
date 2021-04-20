@@ -42,7 +42,7 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msys)
          if (status(i) /= ACTIVE) cycle
          v2 = dot_product(vb(:,i), vb(:,i))
          rot2 = dot_product(rot(:,i), rot(:,i))
-         call util_crossproduct(xb(:,i), vb(:,i), h)
+         call util_crossproduct(xb(:,i), vb(:,i), h(:))
 
          ! Angular momentum from orbit and spin
          Lpl(:, i) = mass(i) * (Ip(3,i) * radius(i)**2 * rot(:,i) + h(:))

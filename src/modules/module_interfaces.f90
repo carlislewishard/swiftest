@@ -1481,7 +1481,7 @@ END INTERFACE
 
 
      INTERFACE 
-          SUBROUTINE util_crossproduct(ar1, ar2, ans)
+          pure SUBROUTINE util_crossproduct(ar1, ar2, ans)
                USE swiftest_globals
                IMPLICIT NONE
                real(DP),dimension(:),intent(in)  :: ar1,ar2

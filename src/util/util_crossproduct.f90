@@ -12,7 +12,7 @@
 !  Invocation  : CALL util_crossproduct(symba_plA, npl)
 !
 !**********************************************************************************************************************************
-SUBROUTINE util_crossproduct(ar1, ar2, ans)
+pure SUBROUTINE util_crossproduct(ar1, ar2, ans)
 
 ! Modules
      USE swiftest_globals
