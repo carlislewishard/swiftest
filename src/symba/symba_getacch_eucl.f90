@@ -1,164 +1,132 @@
-!**********************************************************************************************************************************
-!
-!  Unit Name   : symba_getacch
-!  Unit Type   : subroutine
-!  Project     : Swiftest
-!  Package     : symba
-!  Language    : Fortran 90/95
-!
-!  Description : Compute heliocentric accelerations of planets
-!
-!  Input
-!    Arguments : lextra_force : logical flag indicating whether to include user-supplied accelerations
-!                t            : time
-!                npl          : number of planets
-!                symba_pl1P   : pointer to head of SyMBA planet structure linked-list
-!                j2rp2        : J2 * R**2 for the Sun
-!                j4rp4        : J4 * R**4 for the Sun
-!                nplplenc     : number of planet-planet encounters
-!                plplenc_list : array of planet-test particle encounter structures
-!    Terminal  : none
-!    File      : none
-!
-!  Output
-!    Arguments : symba_pl1P   : pointer to head of SyMBA planet structure linked-list
-!    Terminal  : none
-!    File      : none
-!
-!  Invocation  : CALL symba_getacch(lextra_force, t, npl, symba_pl1P, j2rp2, j4rp4, nplplenc, plplenc_list)
-!
-!  Notes       : Adapted from Hal Levison's Swift routine symba5_getacch.f
-!
-!                Accelerations in an encounter are not included here
-!
-!**********************************************************************************************************************************
-SUBROUTINE symba_getacch_eucl(lextra_force, t, npl, symba_plA, j2rp2, j4rp4, nplplenc, plplenc_list, &
-     num_plpl_comparisons, k_plpl)
+subroutine symba_getacch_eucl(lextra_force, t, npl, symba_plA, j2rp2, j4rp4, nplplenc, plplenc_list, &
+   num_plpl_comparisons, k_plpl)
+   !! author: Jake Elliott and David A. Minton
+   !!
+   !! Compute heliocentric accelerations of planets using flattened Euclidean loop.
+   !!Accelerations in an encounter are not included here 
+   !!  
+   !! Adapted from David E. Kaufmann Swifter routine symba_getacch.f90
+   !! Adapted from Hal Levison's Swift routine symba5_getacch.f
 
-! Modules
-     USE swiftest
-     USE swiftest_globals
-     USE swiftest_data_structures
-     USE module_helio
-     USE module_symba
-     USE module_interfaces, EXCEPT_THIS_ONE => symba_getacch_eucl
-     USE omp_lib
-     IMPLICIT NONE
+! modules
+   use swiftest
+   use swiftest_globals
+   use swiftest_data_structures
+   use module_helio
+   use module_symba
+   use module_interfaces, except_this_one => symba_getacch_eucl
+   use omp_lib
+   implicit none
 
-! Arguments
-     LOGICAL(LGT), INTENT(IN)                      :: lextra_force
-     INTEGER(I4B), INTENT(IN)                      :: npl, nplplenc
-     INTEGER(I8B), intent(in)                      :: num_plpl_comparisons
-     REAL(DP), INTENT(IN)                          :: t, j2rp2, j4rp4
-     TYPE(symba_pl), INTENT(INOUT)                 :: symba_plA
-     TYPE(symba_plplenc), INTENT(INOUT)            :: plplenc_list
-     INTEGER(I4B), DIMENSION(:,:), INTENT(IN) :: k_plpl
+! arguments
+   logical(lgt), intent(in)              :: lextra_force
+   integer(I4B), intent(in)              :: npl, nplplenc
+   integer(i8b), intent(in)              :: num_plpl_comparisons
+   real(DP), intent(in)                :: t, j2rp2, j4rp4
+   type(symba_pl), intent(inout)           :: symba_plA
+   type(symba_plplenc), intent(inout)        :: plplenc_list
+   integer(I4B), dimension(:,:), intent(in) :: k_plpl
 
 
-! Internals
-     LOGICAL(LGT), SAVE                           :: lmalloc = .TRUE.
-     INTEGER(I8B)                                 :: i, j, index_i, index_j, k
-     REAL(DP)                                     :: rji2, irij3, faci, facj, r2, rlim2
-     REAL(DP), DIMENSION(NDIM)                    :: dx
-     REAL(DP), DIMENSION(NDIM, npl)               :: ahp, ahm
-     REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE    :: irh
-     REAL(DP), DIMENSION(:, :), ALLOCATABLE, SAVE :: xh, aobl
-     ! REAL(DP), ALLOCATABLE, DIMENSION(:,:) :: dist_plpl_array
+! internals
+   logical(lgt), save                 :: lmalloc = .true.
+   integer(i8b)                     :: i, j, index_i, index_j, k
+   real(DP)                       :: rji2, irij3, faci, facj, r2, rlim2
+   !real(DP), dimension(NDIM)            :: dx
+   real(DP), dimension(npl)         :: ahpx, ahpy, ahpz, ahmx, ahmy, ahmz
+   real(DP), dimension(:), allocatable, save    :: irh
+   real(DP), dimension(:, :), allocatable, save :: xh, aobl
+   real(DP)                       :: dx, dy, dz
+   ! real(DP), allocatable, dimension(:,:) :: dist_plpl_array
 
 
-!Executable code
+!executable code
  
-     ahp(:,:) = 0.0_DP
-     ahm(:,:) = 0.0_DP
-     symba_plA%helio%ah(:,:) = 0.0_DP
-     
-     ! CALL util_dist_eucl_plpl(symba_plA%helio%swiftest%xh, num_plpl_comparisons, k_plpl, dist_plpl_array) ! does not care about mtiny
+   ahpx(:) = 0.0_DP
+   ahpy(:) = 0.0_DP
+   ahpz(:) = 0.0_DP
+   ahmx(:) = 0.0_DP
+   ahmy(:) = 0.0_DP
+   ahmz(:) = 0.0_DP
+   symba_plA%helio%ah(:,:) = 0.0_DP
+   
+   ! call util_dist_eucl_plpl(symba_plA%helio%swiftest%xh, num_plpl_comparisons, k_plpl, dist_plpl_array) ! does not care about mtiny
 
-! There is floating point arithmetic round off error in this loop
-! For now, we will keep it in the serial operation, so we can easily compare
+! there is floating point arithmetic round off error in this loop
+! for now, we will keep it in the serial operation, so we can easily compare
 ! it to the older swifter versions
 
-     !!$omp parallel do default(private) schedule(static) &
-     !!$omp shared (num_plpl_comparisons, k_plpl, symba_plA) &
-     !!$omp reduction(+:ahp) &
-     !!$omp reduction(-:ahm)
-     DO k = 1, num_plpl_comparisons
-          i = k_plpl(1,k)
-          j = k_plpl(2,k)
-          
-          !IF ((.NOT. symba_plA%lcollision(i) .OR. (.NOT. symba_plA%lcollision(j)) .OR. &
-          !     (symba_plA%index_parent(i) /= symba_plA%index_parent(j)))) THEN
-               dx(:) = symba_plA%helio%swiftest%xh(:,j) - symba_plA%helio%swiftest%xh(:,i)
-               rlim2 = (symba_plA%helio%swiftest%radius(i) + symba_plA%helio%swiftest%radius(j))**2
-               rji2 = DOT_PRODUCT(dx(:), dx(:))
-               if (rji2 > rlim2) then !If false, we likely have recent fragments with coincident positions. 
-                                      !  so ignore in this step and let the merge code deal with it in the nex
-                  irij3 = 1.0_DP/(rji2*SQRT(rji2))
-                  faci = symba_plA%helio%swiftest%mass(i)*irij3
-                  facj = symba_plA%helio%swiftest%mass(j)*irij3
-                  ahp(:,i) = ahp(:,i) + facj * dx(:)
-                  ahm(:,j) = ahm(:,j) - faci * dx(:)
-               end if
-          !ENDIF
-     END DO
-     !!$omp end parallel do
-     symba_plA%helio%ah(:,1:npl) = ahp(:, :) + ahm(:,:)
+   !$omp parallel do default(private) schedule(auto) &
+   !$omp shared (num_plpl_comparisons, k_plpl, symba_plA) &
+   !$omp reduction(+:ahpx, ahpy, ahpz) &
+   !$omp reduction(-:ahmx, ahmy, ahmz)
+   do k = 1, num_plpl_comparisons
+      i = k_plpl(1,k)
+      j = k_plpl(2,k)
+      
+      dx = symba_plA%helio%swiftest%xh(1,j) - symba_plA%helio%swiftest%xh(1,i)
+      dy = symba_plA%helio%swiftest%xh(2,j) - symba_plA%helio%swiftest%xh(2,i)
+      dz = symba_plA%helio%swiftest%xh(3,j) - symba_plA%helio%swiftest%xh(3,i)
+      rlim2 = (symba_plA%helio%swiftest%radius(i) + symba_plA%helio%swiftest%radius(j))**2
+      rji2 = dx**2 + dy**2 + dz**2
+      if (rji2 > rlim2) then !if false, we likely have recent fragments with coincident positions. 
+         !  so ignore in this step and let the merge code deal with it in the nex
+         irij3 = 1.0_DP / (rji2 * sqrt(rji2))
+         faci = symba_plA%helio%swiftest%mass(i) * irij3
+         facj = symba_plA%helio%swiftest%mass(j) * irij3
+         ahpx(i) = ahpx(i) + facj * dx
+         ahpy(i) = ahpy(i) + facj * dy
+         ahpz(i) = ahpz(i) + facj * dz
+         ahmx(j) = ahmx(j) - faci * dx
+         ahmy(j) = ahmy(j) - faci * dy
+         ahmz(j) = ahmz(j) - faci * dz
+      end if
+   end do
+   !$omp end parallel do
+   symba_plA%helio%ah(1,1:npl) = ahpx(:) + ahmx(:)
+   symba_plA%helio%ah(2,1:npl) = ahpy(:) + ahmy(:)
+   symba_plA%helio%ah(3,1:npl) = ahpz(:) + ahmz(:)
 
-      DO i = 1, nplplenc
-         index_i = plplenc_list%index1(i)
-         index_j = plplenc_list%index2(i)
-         !IF ((.NOT. symba_plA%lcollision(index_i)) .OR. (.NOT. symba_plA%lcollision(index_j))  &
-         !      .OR. (symba_plA%index_parent(index_i) /= symba_plA%index_parent(index_j))) THEN !need to update parent/children
-           dx(:) = symba_plA%helio%swiftest%xh(:,index_j) - symba_plA%helio%swiftest%xh(:,index_i)
-           rlim2 = (symba_plA%helio%swiftest%radius(index_i) + symba_plA%helio%swiftest%radius(index_j))**2
-           rji2 = DOT_PRODUCT(dx(:), dx(:))
-           if (rji2 > rlim2) then !If false, we likely have recent fragments with coincident positions. 
-                                  !  so ignore in this step and let the merge code deal with it in the next
-              irij3 = 1.0_DP / (rji2 * SQRT(rji2))
-              faci = symba_plA%helio%swiftest%mass(index_i) * irij3
-              facj = symba_plA%helio%swiftest%mass(index_j) * irij3
-              symba_plA%helio%ah(:, index_i) = symba_plA%helio%ah(:, index_i) - facj * dx(:)
-              symba_plA%helio%ah(:, index_j) = symba_plA%helio%ah(:, index_j) + faci * dx(:)
-           end if
-         !END IF
-      END DO
+    do i = 1, nplplenc
+       index_i = plplenc_list%index1(i)
+       index_j = plplenc_list%index2(i)
+       dx = symba_plA%helio%swiftest%xh(1,index_j) - symba_plA%helio%swiftest%xh(1,index_i)
+       dy = symba_plA%helio%swiftest%xh(2,index_j) - symba_plA%helio%swiftest%xh(2,index_i)
+       dz = symba_plA%helio%swiftest%xh(3,index_j) - symba_plA%helio%swiftest%xh(3,index_i)
+       rlim2 = (symba_plA%helio%swiftest%radius(index_i) + symba_plA%helio%swiftest%radius(index_j))**2
+       rji2 = dx**2 + dy**2 + dz**2
+       if (rji2 > rlim2) then !if false, we likely have recent fragments with coincident positions. 
+                      !  so ignore in this step and let the merge code deal with it in the next
+          irij3 = 1.0_DP / (rji2 * sqrt(rji2))
+          faci = symba_plA%helio%swiftest%mass(index_i) * irij3
+          facj = symba_plA%helio%swiftest%mass(index_j) * irij3
+          symba_plA%helio%ah(1, index_i) = symba_plA%helio%ah(1, index_i) - facj * dx
+          symba_plA%helio%ah(2, index_i) = symba_plA%helio%ah(2, index_i) - facj * dy
+          symba_plA%helio%ah(3, index_i) = symba_plA%helio%ah(3, index_i) - facj * dz
+          symba_plA%helio%ah(1, index_j) = symba_plA%helio%ah(1, index_j) + faci * dx
+          symba_plA%helio%ah(2, index_j) = symba_plA%helio%ah(2, index_j) + faci * dy
+          symba_plA%helio%ah(3, index_j) = symba_plA%helio%ah(3, index_j) + faci * dz
+       end if
+    end do
 
-     IF (j2rp2 /= 0.0_DP) THEN
-          IF (lmalloc) THEN
-               ALLOCATE(xh(NDIM, npl), aobl(NDIM, npl), irh(npl))
-               lmalloc = .FALSE.
-          END IF
-          DO i = 2, npl
-               
-               r2 = DOT_PRODUCT(symba_plA%helio%swiftest%xh(:,i), symba_plA%helio%swiftest%xh(:,i))
-               irh(i) = 1.0_DP/SQRT(r2)
-          END DO
-          CALL obl_acc(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, symba_plA%helio%swiftest%xh(:,:), irh, aobl)
-          DO i = 2, npl
-               symba_plA%helio%ah(:,i) = symba_plA%helio%ah(:,i) + aobl(:, i) - aobl(:, 1)
-          END DO
-     END IF
+   if (j2rp2 /= 0.0_DP) then
+      if (lmalloc) then
+         allocate(xh(NDIM, npl), aobl(NDIM, npl), irh(npl))
+         lmalloc = .false.
+      end if
+      do i = 2, npl
+         
+         r2 = dot_product(symba_plA%helio%swiftest%xh(:,i), symba_plA%helio%swiftest%xh(:,i))
+         irh(i) = 1.0_DP/sqrt(r2)
+      end do
+      call obl_acc(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, symba_plA%helio%swiftest%xh(:,:), irh, aobl)
+      do i = 2, npl
+         symba_plA%helio%ah(:,i) = symba_plA%helio%ah(:,i) + aobl(:, i) - aobl(:, 1)
+      end do
+   end if
 
-     IF (lextra_force) CALL symba_user_getacch(t, npl, symba_plA)
+   if (lextra_force) call symba_user_getacch(t, npl, symba_plA)
 
-     RETURN
+   return
 
-END SUBROUTINE symba_getacch_eucl
-!**********************************************************************************************************************************
-!
-!  Author(s)   : David E. Kaufmann
-!
-!  Revision Control System (RCS) Information
-!
-!  Source File : $RCSfile$
-!  Full Path   : $Source$
-!  Revision    : $Revision$
-!  Date        : $Date$
-!  Programmer  : $Author$
-!  Locked By   : $Locker$
-!  State       : $State$
-!
-!  Modification History:
-!
-!  $Log$
-!**********************************************************************************************************************************
+end subroutine symba_getacch_eucl
