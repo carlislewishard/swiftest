@@ -16,14 +16,11 @@ subroutine coord_b2h(npl, swiftest_plA)
 
 ! Internals
    integer(I4B)          :: i
-   real(DP), dimension(NDIM) :: xtmp, vtmp
 
 ! Executable code
-   xtmp(:) = swiftest_plA%xb(:,1)
-   vtmp(:) = swiftest_plA%vb(:,1)
-   do i = 1, npl
-      swiftest_plA%xh(:,i) = swiftest_plA%xb(:,i) - xtmp(:)
-      swiftest_plA%vh(:,i) = swiftest_plA%vb(:,i) - vtmp(:)
+   do i = 1, NDIM
+      swiftest_plA%xh(i,1:npl) = swiftest_plA%xb(i,1:npl) - swiftest_plA%xb(i,1)
+      swiftest_plA%vh(i,1:npl) = swiftest_plA%vb(i,1:npl) - swiftest_plA%vb(i,1)
    end do
 
    return

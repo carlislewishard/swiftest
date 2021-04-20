@@ -25,9 +25,6 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msys)
    real(DP), dimension(npl)  :: irh, kepl
    real(DP), dimension(NDIM, npl) :: Lpl 
    real(DP), dimension(npl,npl) :: pepl
-   !real(DP), dimension(:), allocatable :: peplflat
-
-
 
 ! executable code
 

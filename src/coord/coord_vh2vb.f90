@@ -1,83 +1,48 @@
-!**********************************************************************************************************************************
-!
-!  Unit Name   : coord_vh2vb
-!  Unit Type   : subroutine
-!  Project     : Swiftest
-!  Package     : coord
-!  Language    : Fortran 90/95
-!
-!  Description : Convert from heliocentric to barycentric coordinates, planet velocities only
-!
-!  Input
-!    Arguments : npl          : number of planets
-!                swifter_pl1P : pointer to head of Swifter planet structure linked-list
-!    Terminal  : none
-!    File      : none
-!
-!  Output
-!    Arguments : swifter_pl1P : pointer to head of Swifter planet structure linked-list
-!                msys         : total system mass
-!    Terminal  : none
-!    File      : none
-!
-!  Invocation  : CALL coord_vh2vb(npl, swifter_pl1P, msys)
-!
-!  Notes       : Adapted from Hal Levison's Swift routine coord_vh2b.f
-!
-!**********************************************************************************************************************************
-SUBROUTINE coord_vh2vb(npl, swiftest_plA, msys)
+subroutine coord_vh2vb(npl, swiftest_plA, msys)
+   !! author: David A. Minton
+   !!
+   !! Convert from heliocentric to barycentric coordinates, planet velocities only
+   !!  
+   !! Adapted from David E. Kaufmann Swifter routine coord_vh2vb.f90
+   !! Adapted from Martin Duncan and Hal Levison's Swift routine coord_vh2b.f
+   use swiftest
+   use module_symba
+   use module_interfaces, EXCEPT_THIS_ONE => coord_vh2vb
+   implicit none
 
-! Modules
-     USE swiftest
-     USE module_symba
-     USE module_interfaces, EXCEPT_THIS_ONE => coord_vh2vb
-     IMPLICIT NONE
+! arguments
+   integer(I4B), intent(in)     :: npl
+   real(DP), intent(out)        :: msys
+   type(swiftest_pl), intent(inout) :: swiftest_plA
 
-! Arguments
-     INTEGER(I4B), INTENT(IN)         :: npl
-     REAL(DP), INTENT(OUT)            :: msys
-     TYPE(swiftest_pl), INTENT(INOUT) :: swiftest_plA
+! internals
+   integer(I4B)          :: i
+   real(DP), dimension(NDIM) :: vtmp
 
-! Internals
-     INTEGER(I4B)              :: i
-     REAL(DP), DIMENSION(NDIM) :: vtmp
+! executable code
 
-! Executable code
-     vtmp(:) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
-     msys = swiftest_plA%mass(1)
-
-! EDIT FOR PARALLELIZATION
-
-     DO i = 2, npl
+   if (any(swiftest_plA%status(2:npl) /= ACTIVE)) then
+      vtmp(:) = 0.0_DP
+      do i = 2, npl
          if (swiftest_plA%status(i) /= ACTIVE) cycle
-          msys = msys + swiftest_plA%mass(i)
-          vtmp(:) = vtmp(:) + swiftest_plA%mass(i)*swiftest_plA%vh(:,i)
-     END DO
-     swiftest_plA%vb(:,1) = -vtmp(:)/msys
-     vtmp(:) = swiftest_plA%vb(:,1)
-     DO i = 2, npl
+         vtmp(:) = vtmp(:) + swiftest_plA%mass(i)*swiftest_plA%vh(:,i)
+      end do
+      msys = swiftest_plA%dMcb + sum(swiftest_plA%mass(2:npl), swiftest_plA%status(2:npl) == ACTIVE) + swiftest_plA%Mcb_initial
+      swiftest_plA%vb(:,1) = -vtmp(:)  /msys
+      vtmp(:) = swiftest_plA%vb(:,1)
+      do i = 2, npl
          if (swiftest_plA%status(i) /= ACTIVE) cycle
-          swiftest_plA%vb(:,i) = swiftest_plA%vh(:,i) + vtmp(:)
-     END DO
+         swiftest_plA%vb(:,i) = swiftest_plA%vh(:,i) + vtmp(:)
+      end do
+   else
+      vtmp(:) = matmul(swiftest_plA%vh(:,2:npl), swiftest_plA%mass(2:npl))
+      msys = swiftest_plA%dMcb + sum(swiftest_plA%mass(2:npl)) + swiftest_plA%Mcb_initial
+      swiftest_plA%vb(:,1) = -vtmp(:) / msys    
+      do i = 1, NDIM
+         swiftest_plA%vb(i,2:npl) = swiftest_plA%vh(i,2:npl) + swiftest_plA%vb(i,1)
+      end do 
+   end if
 
-     RETURN
+   return
 
-END SUBROUTINE coord_vh2vb
-!**********************************************************************************************************************************
-!
-!  Author(s)   : David E. Kaufmann (Checked by Jennifer Pouplin & Carlisle Wishard)
-!
-!  Revision Control System (RCS) Information
-!
-!  Source File : $RCSfile$
-!  Full Path   : $Source$
-!  Revision    : $Revision$
-!  Date        : $Date$
-!  Programmer  : $Author$
-!  Locked By   : $Locker$
-!  State       : $State$
-!
-!  Modification History:
-!
-!  $Log$
-!**********************************************************************************************************************************
+end subroutine coord_vh2vb

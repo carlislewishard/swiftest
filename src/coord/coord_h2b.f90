@@ -1,81 +1,55 @@
-!**********************************************************************************************************************************
-!
-!  Unit Name   : coord_h2b
-!  Unit Type   : subroutine
-!  Project     : Swiftest
-!  Package     : coord
-!  Language    : Fortran 90/95
-!
-!  Description : Convert from heliocentric to barycentric coordinates, planets only
-!
-!  Input
-!    Arguments : npl          : number of planets
-!                swiftest_pl1P : pointer to head of Swifter planet structure linked-list
-!    Terminal  : none
-!    File      : none
-!
-!  Output
-!    Arguments : swiftest_pl1P : pointer to head of Swifter planet structure linked-list
-!                msys         : total system mass
-!    Terminal  : none
-!    File      : none
-!
-!  Invocation  : CALL coord_h2b(npl, swiftest_pl1P, msys)
-!
-!  Notes       : Adapted from Martin Duncan and Hal Levison's Swift routine coord_h2b.f
-!
-!**********************************************************************************************************************************
-SUBROUTINE coord_h2b(npl, swiftest_plA, msys)
+subroutine coord_h2b(npl, swiftest_plA, msys)
+   !! author: David A. Minton
+   !!
+   !! Convert from heliocentric to barycentric coordinates, planets only
+   !!  
+   !! Adapted from David E. Kaufmann Swifter routine coord_h2b.f90
+   !! Adapted from Martin Duncan and Hal Levison's Swift routine coord_h2b.f
+   use swiftest
+   use module_interfaces, except_this_one => coord_h2b
+   implicit none
 
-! Modules
-     USE swiftest
-     USE module_interfaces, EXCEPT_THIS_ONE => coord_h2b
-     IMPLICIT NONE
+! arguments
+   integer(I4B), intent(in)  :: npl
+   real(DP), intent(out)   :: msys
+   type(swiftest_pl),intent(inout) :: swiftest_plA
 
-! Arguments
-     INTEGER(I4B), INTENT(IN)  :: npl
-     REAL(DP), INTENT(OUT)     :: msys
-     TYPE(swiftest_pl),INTENT(INOUT) :: swiftest_plA
+! internals
+   integer(I4B)          :: i
+   real(DP), dimension(NDIM) :: xtmp, vtmp
 
-! Internals
-     INTEGER(I4B)              :: i
-     REAL(DP), DIMENSION(NDIM) :: xtmp, vtmp
-
-! Executable code
-     xtmp(:) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
-     vtmp(:) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
-     DO i = 2, npl
+! executable code
+   if (any(swiftest_plA%status(2:npl) /= ACTIVE)) then
+      xtmp(:) = 0.0_DP
+      vtmp(:) = 0.0_DP
+      do i = 2, npl
+         if (swiftest_plA%status(i) /= ACTIVE) cycle
          xtmp(:) = xtmp(:) + swiftest_plA%mass(i)*swiftest_plA%xh(:,i)
          vtmp(:) = vtmp(:) + swiftest_plA%mass(i)*swiftest_plA%vh(:,i)
-     END DO
-     msys = swiftest_plA%dMcb + sum(swiftest_plA%mass(2:npl), swiftest_plA%status(2:npl) /= INACTIVE) + swiftest_plA%Mcb_initial
-     swiftest_plA%xb(:,1) = -xtmp(:) / msys                                  
-     swiftest_plA%vb(:,1) = -vtmp(:) / msys                                  
-     xtmp(:) = swiftest_plA%xb(:,1)
-     vtmp(:) = swiftest_plA%vb(:,1)
-     DO i = 2, npl
-        swiftest_plA%xb(:,i) = swiftest_plA%xh(:,i) + xtmp(:)
-        swiftest_plA%vb(:,i) = swiftest_plA%vh(:,i) + vtmp(:)
-     END DO
+      end do
+      msys = swiftest_plA%dMcb + sum(swiftest_plA%mass(2:npl), swiftest_plA%status(2:npl) == ACTIVE) + swiftest_plA%Mcb_initial
+      swiftest_plA%xb(:,1) = -xtmp(:) / msys                      
+      swiftest_plA%vb(:,1) = -vtmp(:) / msys                      
+      xtmp(:) = swiftest_plA%xb(:,1)
+      vtmp(:) = swiftest_plA%vb(:,1)
+      do i = 2, npl
+         if (swiftest_plA%status(i) /= ACTIVE) cycle
+         swiftest_plA%xb(:,i) = swiftest_plA%xh(:,i) + xtmp(:)
+         swiftest_plA%vb(:,i) = swiftest_plA%vh(:,i) + vtmp(:)
+      end do
+   else
+      xtmp(:) = matmul(swiftest_plA%xh(:,2:npl), swiftest_plA%mass(2:npl))
+      vtmp(:) = matmul(swiftest_plA%vh(:,2:npl), swiftest_plA%mass(2:npl))
+      msys = swiftest_plA%dMcb + sum(swiftest_plA%mass(2:npl)) + swiftest_plA%Mcb_initial
+      swiftest_plA%xb(:,1) = -xtmp(:) / msys                      
+      swiftest_plA%vb(:,1) = -vtmp(:) / msys    
+      do i = 1, NDIM
+         swiftest_plA%xb(i,2:npl) = swiftest_plA%xh(i,2:npl) + swiftest_plA%xb(i,1)
+         swiftest_plA%vb(i,2:npl) = swiftest_plA%vh(i,2:npl) + swiftest_plA%vb(i,1)
+      end do
 
-     RETURN
+   end if
 
-END SUBROUTINE coord_h2b
-!**********************************************************************************************************************************
-!
-!  Author(s)   : David E. Kaufmann
-!
-!  Revision Control System (RCS) Information
-!
-!  Source File : $RCSfile$
-!  Full Path   : $Source$
-!  Revision    : $Revision$
-!  Date        : $Date$
-!  Programmer  : $Author$
-!  Locked By   : $Locker$
-!  State       : $State$
-!
-!  Modification History:
-!
-!  $Log$
-!**********************************************************************************************************************************
+   return
+
+end subroutine coord_h2b
