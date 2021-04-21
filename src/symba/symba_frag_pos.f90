@@ -113,7 +113,8 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
          !! Calculate the orbital and rotational kinetic energy between the two bodies 
          KE_before = KE_before + 0.5_DP * Mpl(family(i)) * v2 
          KE_spin_before = KE_spin_before + 0.5_DP * Mpl(family(i)) * Ippl(3,family(i)) * rot2 * radpl(family(i))**2
-         r_col_norm = r_col_norm + radpl(family(i)) !Mpl(family(i)) * norm2(xbpl(:,family(i)) - xcom(:))
+         r_col_norm = r_col_norm + 0.5_DP * Mpl(family(i)) * norm2(xbpl(:,family(i)) - xcom(:))
+
       end do
 
       Etot_before = KE_before + KE_spin_before + U_before
