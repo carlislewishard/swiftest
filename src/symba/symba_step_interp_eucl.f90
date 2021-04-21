@@ -52,7 +52,7 @@
 !**********************************************************************************************************************************
 SUBROUTINE symba_step_interp_eucl(t, npl, nplm, ntp, symba_plA, symba_tpA,&
    dt, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list,&
-    mergesub_list, param, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
+    mergesub_list, param)
 
 ! Modules
      USE swiftest
@@ -73,9 +73,6 @@ SUBROUTINE symba_step_interp_eucl(t, npl, nplm, ntp, symba_plA, symba_tpA,&
      TYPE(symba_pltpenc), INTENT(INOUT)               :: pltpenc_list
      TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
      type(user_input_parameters), intent(inout)       :: param
-     INTEGER(I8B), INTENT(IN)                         :: num_plpl_comparisons, num_pltp_comparisons
-     INTEGER(I4B), DIMENSION(:,:),INTENT(IN) :: k_plpl 
-     INTEGER(I4B), DIMENSION(:,:),INTENT(IN) :: k_pltp
 
 ! Internals
      INTEGER(I4B)                                 :: i, irec
@@ -98,10 +95,9 @@ SUBROUTINE symba_step_interp_eucl(t, npl, nplm, ntp, symba_plA, symba_tpA,&
           END DO
      END IF
 
-     CALL symba_getacch_eucl(param%lextra_force, t, npl, symba_plA, param%j2rp2, param%j4rp4, nplplenc, plplenc_list, &
-          num_plpl_comparisons, k_plpl)
+     CALL symba_getacch_eucl(param%lextra_force, t, npl, symba_plA, param%j2rp2, param%j4rp4, nplplenc, plplenc_list)
      IF (ntp > 0) CALL symba_getacch_tp_eucl(param%lextra_force, t, npl, ntp, symba_plA, symba_tpA, xbeg, param%j2rp2,&
-          param%j4rp4, npltpenc, pltpenc_list, num_pltp_comparisons, k_pltp)
+          param%j4rp4, npltpenc, pltpenc_list)
 
      CALL helio_kickvb(npl, symba_plA%helio, dth)
      IF (ntp > 0) CALL helio_kickvb_tp(ntp, symba_tpA%helio, dth)
@@ -119,10 +115,9 @@ SUBROUTINE symba_step_interp_eucl(t, npl, nplm, ntp, symba_plA, symba_tpA,&
                xend(:, i) = symba_plA%helio%swiftest%xh(:,i)
           END DO
      END IF
-     CALL symba_getacch_eucl(param%lextra_force, t+dt, npl, symba_plA, param%j2rp2, param%j4rp4, nplplenc, plplenc_list, &
-          num_plpl_comparisons, k_plpl)
+     CALL symba_getacch_eucl(param%lextra_force, t+dt, npl, symba_plA, param%j2rp2, param%j4rp4, nplplenc, plplenc_list)
      IF (ntp > 0) CALL symba_getacch_tp_eucl(param%lextra_force, t+dt, npl, ntp, symba_plA, symba_tpA, xend, &
-          param%j2rp2,param%j4rp4, npltpenc, pltpenc_list, num_pltp_comparisons, k_pltp)
+          param%j2rp2,param%j4rp4, npltpenc, pltpenc_list)
      CALL helio_kickvb(npl, symba_plA%helio, dth)
      IF (ntp > 0) CALL helio_kickvb_tp(ntp, symba_tpA%helio, dth)
      CALL coord_vb2vh(npl, symba_plA%helio%swiftest)

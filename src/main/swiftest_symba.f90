@@ -57,8 +57,6 @@ program swiftest_symba
    real(DP)                      :: start, finish
    integer(I8B)                  :: clock_count, count_rate, count_max
    integer(I4B)                  :: ierr
-   integer(I4B), dimension(:,:), allocatable :: k_plpl, k_pltp
-   integer(I8B)                  :: num_plpl_comparisons, num_pltp_comparisons
    integer(I4B), parameter       :: EGYDUMP = 88
 
 ! Executable code
@@ -149,32 +147,30 @@ program swiftest_symba
 
    300 format(10(1x, e23.16, :))
    nplm = count(symba_plA%helio%swiftest%mass>mtiny)
-   CALL util_dist_index_plpl(npl, nplm, num_plpl_comparisons, k_plpl)
-   CALL util_dist_index_pltp(nplm, ntp, num_pltp_comparisons, k_pltp)
+   CALL util_dist_index_plpl(npl, nplm, symba_plA)
+   !CALL util_dist_index_pltp(nplm, ntp, symba_tpA)
 
    ! Save initial mass and angular momentum of the central body
    symba_plA%helio%swiftest%Mcb_initial = symba_plA%helio%swiftest%mass(1)
    symba_plA%helio%swiftest%Lcb_initial(:) = symba_plA%helio%swiftest%Ip(3,1) * symba_plA%helio%swiftest%mass(1) * &
                                              symba_plA%helio%swiftest%radius(1)**2 * symba_plA%helio%swiftest%rot(:,1)
 
-   if (param%lenergy) call io_conservation_report(t, symba_plA%helio%swiftest, npl, j2rp2, j4rp4, k_plpl, &
-                                                  num_plpl_comparisons, param, lterminal=.false.) 
+   if (param%lenergy) call io_conservation_report(t, symba_plA, npl, j2rp2, j4rp4, param, lterminal=.false.) 
    write(*, *) " *************** Main Loop *************** "
 
    call system_clock(clock_count, count_rate, count_max)
    start = clock_count / (count_rate * 1.0_DP)
    do while ((t < tstop) .and. ((ntp0 == 0) .or. (ntp > 0)))
-      if(num_plpl_comparisons > param%eucl_threshold) then
-         call symba_step_eucl(t, dt, param,npl,ntp,symba_plA, symba_tpa,nplplenc, npltpenc,&
-               plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, &
-               num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
+      if(symba_plA%num_plpl_comparisons > param%eucl_threshold) then
+         call symba_step_eucl(t, dt, param,npl,ntp,symba_plA, symba_tpA, nplplenc, npltpenc,&
+               plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list)
+              
       else
          call symba_step(t, dt, param,npl,ntp,symba_plA, symba_tpA, nplplenc, npltpenc,&
                plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list)
       end if
       if (param%lenergy) then
-         call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, &
-                  ke_before, pe_before, Eorbit_before, Ltot, msys)
+         call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_before, pe_before, Eorbit_before, Ltot, msys)
       end if
       ldiscard = .false. 
       ldiscard_tp = .false.
@@ -194,12 +190,11 @@ program swiftest_symba
          nsppl = 0
          nsptp = 0
          nplm = count(symba_plA%helio%swiftest%mass(1:npl) > mtiny)
-         CALL util_dist_index_plpl(npl, nplm, num_plpl_comparisons, k_plpl)
-         if (ntp > 0) call util_dist_index_pltp(nplm, ntp, num_pltp_comparisons, k_pltp)          
+         CALL util_dist_index_plpl(npl, nplm, symba_plA)
+         !if (ntp > 0) call util_dist_index_pltp(nplm, ntp, symba_plA, symba_tpA)
 
          if (param%lenergy) then
-            call symba_energy_eucl(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, &
-                  ke_after, pe_after, Eorbit_after, Ltot, msys)
+            call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_after, pe_after, Eorbit_after, Ltot, msys)
             Ecollision = Eorbit_before - Eorbit_after    ! Energy change resulting in this collisional event Total running energy offset from collision in this step
             if ((Ecollision /= Ecollision) .or. (abs(Ecollision) > huge(Ecollision))) then 
                write(*,*) 'Error encountered in collisional energy calculation!'
@@ -246,8 +241,7 @@ program swiftest_symba
       if (istep_dump > 0) then
          idump = idump - 1
          if (idump == 0) then
-            if (param%lenergy) call io_conservation_report(t, symba_plA%helio%swiftest, npl, j2rp2, j4rp4, k_plpl, &
-                                                           num_plpl_comparisons, param, lterminal=.true.) 
+            if (param%lenergy) call io_conservation_report(t, symba_plA, npl, j2rp2, j4rp4, param, lterminal=.true.) 
             tfrac = (t - t0) / (tstop - t0)
             write(*, 200) t, tfrac, npl, ntp
 200         format(" Time = ", es12.5, "; fraction done = ", f5.3, "; number of active pl, tp = ", i7, ", ", i7)
@@ -316,8 +310,6 @@ program swiftest_symba
 
    end do
 
-   !if (param%lenergy) call io_conservation_report(t, symba_plA%helio%swiftest, npl, j2rp2, j4rp4, k_plpl, &
-   !                                               num_plpl_comparisons, param, lterminal=.true.) 
    call param%dump_to_file(t)
    call io_dump_pl(npl, symba_plA%helio%swiftest, param)
    call io_dump_tp(ntp, symba_tpA%helio%swiftest)

@@ -1265,28 +1265,25 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-         SUBROUTINE symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, te, Ltot, msys)
+         SUBROUTINE symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msys)
                USE swiftest_globals
                USE swiftest_data_structures
+               use module_symba
                IMPLICIT NONE
-               integer(I4B), intent(in)                 :: npl
-               real(DP), intent(in)                     :: j2rp2, j4rp4
-               integer(I4B), dimension(:,:), intent(in) :: k_plpl
-               integer(I8B), intent(in)                 :: num_plpl_comparisons
-               real(DP), intent(out)                    :: ke, pe, te, msys
-               real(DP), dimension(:), intent(out)      :: Ltot
-               type(swiftest_pl), intent(inout)         :: swiftest_plA
+               integer(I4B), intent(in)              :: npl
+               type(symba_pl), intent(inout)         :: symba_plA
+               real(DP), intent(in)                  :: j2rp2, j4rp4
+               real(DP), intent(out)                 :: ke, pe, te, msys
+               real(DP), dimension(:), intent(out)   :: Ltot
          END SUBROUTINE symba_energy_eucl
      END INTERFACE
 
      INTERFACE 
-          SUBROUTINE symba_chk_eucl(num_plpl_comparisons, k_plpl, symba_plA, dt, plpl_encounters, lvdotr, nplplenc)
+          SUBROUTINE symba_chk_eucl(symba_plA, dt, plpl_encounters, lvdotr, nplplenc)
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_symba
                IMPLICIT NONE
-               INTEGER(I8B), INTENT(IN)                               :: num_plpl_comparisons
-               INTEGER(I4B), DIMENSION(:,:), INTENT(IN)               :: k_plpl
                TYPE(symba_pl), INTENT(IN)                             :: symba_plA
                REAL(DP), INTENT(IN)                                   :: dt
                INTEGER(I8B), DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: plpl_encounters
@@ -1296,55 +1293,48 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE 
-          SUBROUTINE symba_chk_eucl_pltp(num_encounters, k_pltp, symba_plA, symba_tpA, dt, lencounter, lvdotr, npltpenc)
+          SUBROUTINE symba_chk_eucl_pltp(symba_plA, symba_tpA, dt, lencounter, lvdotr, npltpenc)
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_symba
                IMPLICIT NONE
                TYPE(symba_pl), INTENT(IN)                    :: symba_plA
                TYPE(symba_tp), INTENT(IN)                    :: symba_tpA
-               LOGICAL(LGT), DIMENSION(:), INTENT(OUT) :: lencounter, lvdotr
-               INTEGER(I8B), INTENT(IN)           :: num_encounters
-               INTEGER(I4B), DIMENSION(:,:),INTENT(IN)   :: k_pltp
                REAL(DP), INTENT(IN)               :: dt
+               LOGICAL(LGT), DIMENSION(:), INTENT(OUT) :: lencounter, lvdotr
                INTEGER(I4B), INTENT(INOUT)        :: npltpenc
           END SUBROUTINE symba_chk_eucl_pltp
      END INTERFACE
 
 
      INTERFACE
-          SUBROUTINE symba_getacch_eucl(lextra_force, t, npl, symba_plA, j2rp2, j4rp4, nplplenc, &
-               plplenc_list, num_plpl_comparisons, k_plpl)
+          SUBROUTINE symba_getacch_eucl(lextra_force, t, npl, symba_plA, j2rp2, j4rp4, nplplenc, plplenc_list)
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_symba
                IMPLICIT NONE
                LOGICAL(LGT), INTENT(IN)                      :: lextra_force
                INTEGER(I4B), INTENT(IN)                      :: npl, nplplenc
-               INTEGER(I8B), INTENT(IN)                      :: num_plpl_comparisons
                REAL(DP), INTENT(IN)                          :: t, j2rp2, j4rp4
                TYPE(symba_pl), INTENT(INOUT)                 :: symba_plA
                TYPE(symba_plplenc), INTENT(IN)               :: plplenc_list
-               INTEGER(I4B), DIMENSION(:,:),INTENT(IN)       :: k_plpl
           END SUBROUTINE symba_getacch_eucl
      END INTERFACE
 
      INTERFACE
           SUBROUTINE symba_getacch_tp_eucl(lextra_force, t, npl, ntp, symba_plA, symba_tpA, &
-               xh, j2rp2, j4rp4, npltpenc, pltpenc_list, num_pltp_comparisons, k_pltp)
+               xh, j2rp2, j4rp4, npltpenc, pltpenc_list)
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_symba
                IMPLICIT NONE
                LOGICAL(LGT), INTENT(IN)                      :: lextra_force
                INTEGER(I4B), INTENT(IN)                      :: npl, ntp, npltpenc
-               INTEGER(I8B), intent(in)                      :: num_pltp_comparisons
                REAL(DP), INTENT(IN)                          :: t, j2rp2, j4rp4
                REAL(DP), DIMENSION(:, :), INTENT(IN)         :: xh
                TYPE(symba_pl), INTENT(INOUT)                 :: symba_plA
                TYPE(symba_tp), INTENT(INOUT)                 :: symba_tpA
                TYPE(symba_pltpenc), INTENT(IN)               :: pltpenc_list
-               INTEGER(I4B), DIMENSION(:,:), INTENT(IN) :: k_pltp
           END SUBROUTINE symba_getacch_tp_eucl
      END INTERFACE
 
@@ -1352,7 +1342,7 @@ MODULE module_interfaces
      INTERFACE
           SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,  &
             nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, &
-            mergeadd_list, mergesub_list, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
+            mergeadd_list, mergesub_list)
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_helio
@@ -1368,9 +1358,6 @@ MODULE module_interfaces
                TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
                TYPE(symba_pltpenc), INTENT(INOUT)               :: pltpenc_list
                TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
-               INTEGER(I8B), INTENT(IN)                         :: num_plpl_comparisons, num_pltp_comparisons
-               INTEGER(I4B), DIMENSION(:,:),INTENT(IN)          :: k_plpl
-               INTEGER(I4B), DIMENSION(:,:),INTENT(IN)          :: k_pltp
           END SUBROUTINE symba_step_eucl
      END INTERFACE
 
@@ -1378,7 +1365,7 @@ MODULE module_interfaces
      INTERFACE
          SUBROUTINE symba_step_interp_eucl(t, npl, nplm, ntp, symba_plA, symba_tpA,&
             dt, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd, nmergesub, &
-            mergeadd_list, mergesub_list, param, num_plpl_comparisons, k_plpl, num_pltp_comparisons, k_pltp)
+            mergeadd_list, mergesub_list, param)
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_symba
@@ -1393,9 +1380,6 @@ MODULE module_interfaces
                TYPE(symba_pltpenc), INTENT(INOUT)         :: pltpenc_list
                TYPE(symba_merger), INTENT(INOUT)          :: mergeadd_list, mergesub_list
                type(user_input_parameters), intent(inout) :: param
-               INTEGER(I8B), INTENT(IN)                   :: num_plpl_comparisons, num_pltp_comparisons
-               INTEGER(I4B), DIMENSION(:,:), INTENT(IN)   :: k_plpl
-               INTEGER(I4B), DIMENSION(:,:), INTENT(IN)   :: k_pltp
           END SUBROUTINE symba_step_interp_eucl
      END INTERFACE
 
@@ -1433,49 +1417,49 @@ MODULE module_interfaces
 
 
       INTERFACE
-         SUBROUTINE util_dist_index_plpl(npl, nplm, num_comparisons, k_plpl)
+         SUBROUTINE util_dist_index_plpl(npl, nplm, symba_plA)
             USE swiftest_globals
             USE swiftest_data_structures
+            use module_symba
             IMPLICIT NONE
             INTEGER(I4B), INTENT(IN)  :: npl, nplm
-            INTEGER(I4B), DIMENSION(:,:),ALLOCATABLE,INTENT(OUT) :: k_plpl
-            INTEGER(I8B), INTENT(OUT) :: num_comparisons
+            type(symba_pl), intent(inout) :: symba_plA
          END SUBROUTINE
       END INTERFACE
 
    INTERFACE
-     SUBROUTINE util_dist_index_pltp(nplm, ntp, num_comparisons, k_pltp)
+     SUBROUTINE util_dist_index_pltp(nplm, ntp, symba_tpA)
           USE swiftest_globals
           USE swiftest_data_structures
+          use module_symba
           IMPLICIT NONE
           INTEGER(I4B), INTENT(IN)  :: nplm, ntp
-          INTEGER(I4B), DIMENSION(:,:),ALLOCATABLE,INTENT(OUT) :: k_pltp
-          INTEGER(I8B), INTENT(OUT) :: num_comparisons
+          type(symba_tp), intent(inout) :: symba_tpA
      END SUBROUTINE util_dist_index_pltp
    END INTERFACE
 
 INTERFACE
-     SUBROUTINE util_dist_eucl_plpl(invar, num_comparisons, k_plpl, outvar)
+     SUBROUTINE util_dist_eucl_plpl(invar, outvar, symba_plA)
           USE swiftest_globals
           USE swiftest_data_structures
+          use module_symba
           IMPLICIT NONE
-          INTEGER(I4B), DIMENSION(:,:),INTENT(IN) :: k_plpl
-          INTEGER(I8B), INTENT(IN) :: num_comparisons
           REAL(DP),DIMENSION(:,:),INTENT(IN) :: invar
           REAL(DP), DIMENSION(:,:),INTENT(INOUT) :: outvar
+          type(symba_pl), intent(inout) :: symba_plA
      END SUBROUTINE util_dist_eucl_plpl
 END INTERFACE
 
 INTERFACE
-     SUBROUTINE util_dist_eucl_pltp(planets, test_particles, num_pltp_comparisons, k_pltp, outvar)
+     SUBROUTINE util_dist_eucl_pltp(planets, test_particles, outvar, symba_tpA)
           USE swiftest_globals
           USE swiftest_data_structures
+          use module_symba
           IMPLICIT NONE
-          INTEGER(I4B), DIMENSION(:,:),INTENT(IN) :: k_pltp
-          INTEGER(I8B), INTENT(IN) :: num_pltp_comparisons
           REAL(DP),DIMENSION(:,:),INTENT(IN) :: planets
           REAL(DP),DIMENSION(:,:),INTENT(IN) :: test_particles
           REAL(DP), DIMENSION(:,:),INTENT(INOUT) :: outvar
+          type(symba_tp), intent(inout) :: symba_tpA
      END SUBROUTINE
 END INTERFACE
 

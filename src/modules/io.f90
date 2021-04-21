@@ -36,15 +36,14 @@ module io
          character(*), intent(in) :: out_type      !! Output file format type (REAL4, REAL8 - see swiftest module for symbolic name definitions)
       end subroutine io_write_hdr      
       
-      module subroutine io_conservation_report(t, swiftest_plA, npl, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, param, lterminal)
-         real(DP), intent(in)                           :: t                     !! Current time of simulation
-         type(swiftest_pl),            intent(inout)    :: swiftest_plA          !! Swiftest planet data structure
-         integer(I4B),                 intent(in)       :: npl                   !! Number of massive bodies
-         real(DP),                     intent(in)       :: j2rp2, j4rp4          !! Central body oblateness terms
-         integer(I4B), dimension(:,:), intent(in)       :: k_plpl                !! eucl method encounter array 
-         integer(I8B),                 intent(in)       :: num_plpl_comparisons  !! Number of pl-pl encounters 
-         type(user_input_parameters),  intent(in)       :: param                 !! Input colleciton of user-defined parameters
-         logical,                      intent(in)       :: lterminal             !! Indicates whether to output information to the terminal screen
+      module subroutine io_conservation_report(t, symba_plA, npl, j2rp2, j4rp4, param, lterminal)
+         use module_symba
+         real(DP), intent(in)                        :: t                     !! Current time of simulation
+         type(symba_pl),            intent(inout)    :: symba_plA          !! Swiftest planet data structure
+         integer(I4B),                 intent(in)    :: npl                   !! Number of massive bodies
+         real(DP),                     intent(in)    :: j2rp2, j4rp4          !! Central body oblateness terms
+         type(user_input_parameters),  intent(in)    :: param                 !! Input colleciton of user-defined parameters
+         logical,                      intent(in)    :: lterminal             !! Indicates whether to output information to the terminal screen
       end subroutine io_conservation_report
          
    end interface

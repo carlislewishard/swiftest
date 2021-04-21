@@ -36,8 +36,7 @@
 !                Accelerations in an encounter are not included here
 !
 !**********************************************************************************************************************************
-SUBROUTINE symba_getacch_tp_eucl(lextra_force, t, npl, ntp, symba_plA, symba_tpA, xh, j2rp2, j4rp4,&
-     npltpenc, pltpenc_list, num_pltp_comparisons, k_pltp)
+SUBROUTINE symba_getacch_tp_eucl(lextra_force, t, npl, ntp, symba_plA, symba_tpA, xh, j2rp2, j4rp4, npltpenc, pltpenc_list)
 
 ! Modules
      USE swiftest
@@ -52,13 +51,11 @@ SUBROUTINE symba_getacch_tp_eucl(lextra_force, t, npl, ntp, symba_plA, symba_tpA
 ! Arguments
      LOGICAL(LGT), INTENT(IN)                      :: lextra_force
      INTEGER(I4B), INTENT(IN)                      :: npl, ntp, npltpenc
-     INTEGER(I8B), intent(in)                      :: num_pltp_comparisons
      REAL(DP), INTENT(IN)                          :: t, j2rp2, j4rp4
      REAL(DP), DIMENSION(:, :), INTENT(IN)         :: xh
      TYPE(symba_pl), INTENT(INOUT)                 :: symba_plA
      TYPE(symba_tp), INTENT(INOUT)                 :: symba_tpA
      TYPE(symba_pltpenc), INTENT(IN)               :: pltpenc_list
-     INTEGER(I4B), DIMENSION(:,:), INTENT(IN)      :: k_pltp
 
 
 ! Internals
@@ -79,11 +76,11 @@ SUBROUTINE symba_getacch_tp_eucl(lextra_force, t, npl, ntp, symba_plA, symba_tpA
 !!$omp parallel do default(shared) schedule(static) &
 !!$omp shared(num_pltp_comparisons, symba_plA, symba_tpA, k_pltp) &
 !!$omp reduction(-:ah)
-     do k = 1,num_pltp_comparisons
-          j = k_pltp(2,k)
+     do k = 1,symba_tpA%num_pltp_comparisons
+          j = symba_tpA%k_pltp(2,k)
           IF (symba_tpA%helio%swiftest%status(j) == ACTIVE) THEN
-               i = k_pltp(1,k)
-               dx(:) = symba_tpA%helio%swiftest%xh(:,k_pltp(2,k)) - symba_plA%helio%swiftest%xh(:,k_pltp(1,k))
+               i = symba_tpA%k_pltp(1,k)
+               dx(:) = symba_tpA%helio%swiftest%xh(:,symba_tpA%k_pltp(2,k)) - symba_plA%helio%swiftest%xh(:,symba_tpA%k_pltp(1,k))
                r2 = DOT_PRODUCT(dx(:), dx(:))
                fac = symba_PlA%helio%swiftest%mass(i)/(r2*SQRT(r2))
                ah(:,j) = ah(:,j) - fac*dx(:)

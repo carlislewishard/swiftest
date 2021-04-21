@@ -32,14 +32,9 @@ contains
             write(egyiu,egyheader)
          end if
       end if
-      !if(num_plpl_comparisons > param%eucl_threshold) then
-         call symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, &
-            Eorbit, Ltot_now, Mtot_now)
-      !else
-      !   call symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, Eorbit, Ltot_now, Mtot_now)
-      !end if
-      Mtot_now = swiftest_plA%Mescape + Mtot_now
-      Ltot_now(:) = swiftest_plA%Lescape(:) + Ltot_now(:)
+      call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke, pe, Eorbit, Ltot_now, Mtot_now)
+      Mtot_now = symba_plA%helio%swiftest%Mescape + Mtot_now
+      Ltot_now(:) = symba_plA%helio%swiftest%Lescape(:) + Ltot_now(:)
       if (lfirst) then
          Eorbit_orig = Eorbit
          Mtot_orig = Mtot_now
@@ -48,14 +43,14 @@ contains
          lfirst = .false.
       end if
 
-      write(egyiu,egyfmt) t, Eorbit, swiftest_plA%Ecollisions, Ltot_now, Mtot_now
+      write(egyiu,egyfmt) t, Eorbit, symba_plA%helio%swiftest%Ecollisions, Ltot_now, Mtot_now
       flush(egyiu)
       if (.not.lfirst .and. lterminal) then 
          Lmag_now = norm2(Ltot_now)
          Lerror = (Lmag_now - Lmag_orig) / Lmag_orig
          Eorbit_error = (Eorbit - Eorbit_orig) / abs(Eorbit_orig)
-         Ecoll_error = -swiftest_plA%Ecollisions / abs(Eorbit_orig)
-         Etotal_error = (Eorbit - (Eorbit_orig - swiftest_plA%Ecollisions)) / abs(Eorbit_orig)
+         Ecoll_error = -symba_plA%helio%swiftest%Ecollisions / abs(Eorbit_orig)
+         Etotal_error = (Eorbit - (Eorbit_orig - symba_plA%helio%swiftest%Ecollisions)) / abs(Eorbit_orig)
          Merror = (Mtot_now - Mtot_orig) / Mtot_orig
          write(*, egytermfmt) Lerror, Ecoll_error, Etotal_error, Merror
       end if

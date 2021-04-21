@@ -394,7 +394,7 @@ module swiftest_classes
       real(DP),     dimension(:,:), allocatable :: rot                    !! Body rotation vector in inertial coordinate frame (units rad / TU)
       real(DP),     dimension(:),   allocatable :: k2                     !! Tidal Love number
       real(DP),     dimension(:),   allocatable :: Q                      !! Tidal quality factor
-      integer(I8B)                              :: num_comparisons        !! Number of pl-pl Euclidean distance comparisons
+      integer(I8B)                              :: num_plpl_comparisons        !! Number of pl-pl Euclidean distance comparisons
       integer(I4B), dimension(:,:), allocatable :: k_eucl     !! Index array that converts i, j array indices into k index for use in 
                                                               !!  the Euclidean distance matrix
       real(DP),     dimension(:),   allocatable :: irij3      !! 1.0_DP / (rji2 * sqrt(rji2)) where rji2 is the square of the Euclidean distance

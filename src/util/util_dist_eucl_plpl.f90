@@ -26,7 +26,7 @@
 !  Notes       : 
 !
 !**********************************************************************************************************************************
-SUBROUTINE util_dist_eucl_plpl(invar, num_comparisons, k_plpl, outvar)
+SUBROUTINE util_dist_eucl_plpl(invar, outvar, symba_plA)
 
 ! Modules
      USE swiftest
@@ -38,10 +38,9 @@ SUBROUTINE util_dist_eucl_plpl(invar, num_comparisons, k_plpl, outvar)
      IMPLICIT NONE
 
 ! Arguments
-     INTEGER(I4B), DIMENSION(:,:),INTENT(IN) :: k_plpl
-     INTEGER(I8B), INTENT(IN) :: num_comparisons
      REAL(DP),DIMENSION(:,:),INTENT(IN) :: invar
      REAL(DP), DIMENSION(:,:),INTENT(INOUT) :: outvar
+     type(symba_pl), intent(inout) :: symba_plA
 
 ! Internals
      INTEGER(I8B) :: k
@@ -50,8 +49,8 @@ SUBROUTINE util_dist_eucl_plpl(invar, num_comparisons, k_plpl, outvar)
 
    !!$omp parallel do schedule(auto) default(private) &
    !!$omp shared (outvar, invar, num_comparisons, k_plpl)
-   do k = 1,num_comparisons
-      outvar(:,k) = invar(:,k_plpl(2,k)) - invar(:,k_plpl(1,k))
+   do k = 1,symba_plA%num_plpl_comparisons
+      outvar(:,k) = invar(:,symba_plA%k_plpl(2,k)) - invar(:,symba_plA%k_plpl(1,k))
    end do
    !!$omp end parallel do
 

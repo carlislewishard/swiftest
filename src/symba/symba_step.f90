@@ -87,10 +87,10 @@ subroutine symba_step(t, dt, param, npl, ntp,symba_plA, symba_tpA,       &
      logical, save             :: lfirst = .true.
 
 ! Executable code
-   irec = 0
    call symba_step_reset(npl, symba_plA, symba_tpA, plplenc_list, pltpenc_list, mergeadd_list, mergesub_list)
    nplplenc = 0
    npltpenc = 0
+   irec = 0
    nplm = count(symba_plA%helio%swiftest%mass(1:npl) >= param%mtiny)
 
    do i = 2, nplm

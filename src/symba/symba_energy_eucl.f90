@@ -1,4 +1,4 @@
-subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_comparisons, ke, pe, te, Ltot, msys)
+subroutine symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msys)
    !! author: David A. Minton
    !!
    !! Compute total system angular momentum vector and kinetic, potential and total system energy
@@ -7,17 +7,16 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
    !!  
    !! Adapted from Martin Duncan's Swift routine anal_energy.f
    use swiftest
+   use module_symba
    use module_interfaces, EXCEPT_THIS_ONE => symba_energy_eucl
    implicit none
 
 ! arguments
    integer(I4B), intent(in)                 :: npl
    real(DP), intent(in)                     :: j2rp2, j4rp4
-   integer(I4B), dimension(:,:), intent(in) :: k_plpl
-   integer(I8B), intent(in)                 :: num_plpl_comparisons
    real(DP), intent(out)                    :: ke, pe, te, msys
    real(DP), dimension(:), intent(out)      :: Ltot
-   type(swiftest_pl), intent(inout)         :: swiftest_plA
+   type(symba_pl), intent(inout)         :: symba_plA
 
 ! internals
    integer(I4B)              :: i, j
@@ -25,16 +24,16 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
    real(DP)                  :: rmag, v2, rot2, oblpot, hx, hy, hz
    real(DP), dimension(npl)  :: irh, kepl
    real(DP), dimension(npl) :: Lplx, Lply, Lplz
-   real(DP), dimension(num_plpl_comparisons) :: pepl 
-   logical, dimension(num_plpl_comparisons) :: lstatpl
+   real(DP), dimension(symba_plA%num_plpl_comparisons) :: pepl 
+   logical, dimension(symba_plA%num_plpl_comparisons) :: lstatpl
 
 ! executable code
 
-   call coord_h2b(npl, swiftest_plA, msys)
+   call coord_h2b(npl, symba_plA%helio%swiftest, msys)
    Ltot = 0.0_DP
    ke = 0.0_DP
-   associate(xb => swiftest_plA%xb, vb => swiftest_plA%vb, mass => swiftest_plA%mass, radius => swiftest_plA%radius, &
-      Ip => swiftest_plA%Ip, rot => swiftest_plA%rot, xh => swiftest_plA%xh, status => swiftest_plA%status)
+   associate(xb => symba_plA%helio%swiftest%xb, vb => symba_plA%helio%swiftest%vb, mass => symba_plA%helio%swiftest%mass, radius => symba_plA%helio%swiftest%radius, &
+      Ip => symba_plA%helio%swiftest%Ip, rot => symba_plA%helio%swiftest%rot, xh => symba_plA%helio%swiftest%xh, status => symba_plA%helio%swiftest%status)
       kepl(:) = 0.0_DP
       Lplx(:) = 0.0_DP
       Lply(:) = 0.0_DP
@@ -70,8 +69,8 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
 
       ! Do the potential energy between pairs of massive bodies
       pepl(:) = 0.0_DP
-      do k = 1, num_plpl_comparisons
-         associate(i => k_plpl(1, k), j=> k_plpl(2, k))
+      do k = 1, symba_plA%num_plpl_comparisons
+         associate(i => symba_plA%k_plpl(1, k), j=> symba_plA%k_plpl(2, k))
             pepl(k) = -mass(i) * mass(j) / norm2(xb(:, j) - xb(:, i)) 
             lstatpl(k) = (status(i) == ACTIVE) .and. (status(j) == ACTIVE)
          end associate
@@ -85,7 +84,7 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
          do i = 2, npl
             irh(i) = 1.0_DP / norm2(xh(:,i))
          end do
-         call obl_pot(npl, swiftest_plA, j2rp2, j4rp4, swiftest_plA%xh(:,:), irh, oblpot)
+         call obl_pot(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, symba_plA%helio%swiftest%xh(:,:), irh, oblpot)
          pe = pe + oblpot
       end if
 

@@ -25,28 +25,28 @@
 !  Notes       : 
 !
 !**********************************************************************************************************************************
-SUBROUTINE util_dist_index_pltp(nplm, ntp, num_comparisons, k_pltp)
+SUBROUTINE util_dist_index_pltp(nplm, ntp, symba_tpA)
 
 ! Modules
      USE swiftest
      USE swiftest_globals
      USE swiftest_data_structures
+     use module_symba
      USE module_interfaces, EXCEPT_THIS_ONE => util_dist_index_pltp
      IMPLICIT NONE
 
 ! Arguments
      INTEGER(I4B), INTENT(IN)  :: nplm, ntp
-     INTEGER(I4B), DIMENSION(:,:),ALLOCATABLE,INTENT(OUT) :: k_pltp
-     INTEGER(I8B), INTENT(OUT) :: num_comparisons
+     type(symba_tp), intent(inout) :: symba_tpA
 
 ! Internals
      INTEGER(I8B)              :: i,j,ii,jj,np,counter,ii_end,jj_end
 
 ! Executable code
-     num_comparisons = (int(nplm, kind = I8B) - 1_I8B) * int(ntp, kind = I8B) ! number of entries in our distance array
+     symba_tpA%num_pltp_comparisons = (int(nplm, kind = I8B) - 1_I8B) * int(ntp, kind = I8B) ! number of entries in our distance array
 
-     if (allocated(k_pltp)) deallocate(k_pltp)
-     allocate(k_pltp(2, num_comparisons))
+     if (allocated(symba_tpA%k_pltp)) deallocate(symba_tpA%k_pltp)
+     allocate(symba_tpA%k_pltp(2, symba_tpA%num_pltp_comparisons))
 
 ! !!$omp parallel do schedule(static) default(none) &
 ! !!$omp shared(k_pltp, nplm, ntp) &
@@ -71,8 +71,8 @@ SUBROUTINE util_dist_index_pltp(nplm, ntp, num_comparisons, k_pltp)
             jj_end = min(j+np-1, ntp)
                do ii = i, ii_end
                     do jj = j, jj_end
-                         k_pltp(1,counter) = ii
-                         k_pltp(2,counter) = jj
+                         symba_tpA%k_pltp(1,counter) = ii
+                         symba_tpA%k_pltp(2,counter) = jj
                          counter = counter + 1
                     enddo
                enddo

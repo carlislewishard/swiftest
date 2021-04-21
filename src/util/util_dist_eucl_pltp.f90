@@ -29,7 +29,7 @@
 ! !  Notes       : 
 ! !
 ! !**********************************************************************************************************************************
-SUBROUTINE util_dist_eucl_pltp(planets, test_particles, num_pltp_comparisons, k_pltp, outvar)
+SUBROUTINE util_dist_eucl_pltp(planets, test_particles, outvar, symba_tpA)
 
 ! Modules
      USE swiftest
@@ -40,11 +40,10 @@ SUBROUTINE util_dist_eucl_pltp(planets, test_particles, num_pltp_comparisons, k_
      IMPLICIT NONE
 
 ! Arguments
-     INTEGER(I4B), DIMENSION(:,:),INTENT(IN) :: k_pltp
-     INTEGER(I8B), INTENT(IN) :: num_pltp_comparisons
      REAL(DP),DIMENSION(:,:),INTENT(IN) :: planets
      REAL(DP),DIMENSION(:,:),INTENT(IN) :: test_particles
      REAL(DP), DIMENSION(:,:),INTENT(INOUT) :: outvar
+     type(symba_tp), intent(inout) :: symba_tpA
 
 ! Internals
      INTEGER(I8B)              :: k
@@ -54,8 +53,8 @@ SUBROUTINE util_dist_eucl_pltp(planets, test_particles, num_pltp_comparisons, k_
 !!$omp parallel do default(none) schedule(static) &
 !!$omp shared (num_pltp_comparisons, test_particles, planets, outvar, k_pltp) &
 !!$omp private (k)
-     do k = 1,num_pltp_comparisons
-          outvar(:,k) = test_particles(:,k_pltp(2,k)) - planets(:,k_pltp(1,k))
+     do k = 1,symba_tpA%num_pltp_comparisons
+          outvar(:,k) = test_particles(:,symba_tpA%k_pltp(2,k)) - planets(:,symba_tpA%k_pltp(1,k))
      enddo
 !!$omp end parallel do
      RETURN
