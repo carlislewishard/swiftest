@@ -70,16 +70,12 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
 
       ! Do the potential energy between pairs of massive bodies
       pepl(:) = 0.0_DP
-      !!$omp parallel do default(private) schedule(auto)&
-      !!$omp shared(pepl, lstatpl) &
-      !!$omp firstprivate(k_plpl, mass, xb, status)
       do k = 1, num_plpl_comparisons
          associate(i => k_plpl(1, k), j=> k_plpl(2, k))
             pepl(k) = -mass(i) * mass(j) / norm2(xb(:, j) - xb(:, i)) 
             lstatpl(k) = (status(i) == ACTIVE) .and. (status(j) == ACTIVE)
          end associate
       end do
-      !!$omp end parallel do
 
       pe = pe + sum(pepl(:), lstatpl(:))
 

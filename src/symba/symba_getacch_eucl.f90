@@ -14,7 +14,7 @@ subroutine symba_getacch_eucl(lextra_force, t, npl, symba_plA, j2rp2, j4rp4, npl
    use swiftest_data_structures
    use module_helio
    use module_symba
-   use module_interfaces, except_this_one => symba_getacch_eucl
+   use module_interfaces, EXCEPT_THIS_ONE => symba_getacch_eucl
    use omp_lib
    implicit none
 
@@ -39,7 +39,6 @@ subroutine symba_getacch_eucl(lextra_force, t, npl, symba_plA, j2rp2, j4rp4, npl
    real(DP)                       :: dx, dy, dz
    ! real(DP), allocatable, dimension(:,:) :: dist_plpl_array
 
-
 !executable code
  
    ahpx(:) = 0.0_DP
@@ -48,7 +47,6 @@ subroutine symba_getacch_eucl(lextra_force, t, npl, symba_plA, j2rp2, j4rp4, npl
    ahmx(:) = 0.0_DP
    ahmy(:) = 0.0_DP
    ahmz(:) = 0.0_DP
-   symba_plA%helio%ah(:,:) = 0.0_DP
    
    ! call util_dist_eucl_plpl(symba_plA%helio%swiftest%xh, num_plpl_comparisons, k_plpl, dist_plpl_array) ! does not care about mtiny
 
@@ -57,30 +55,29 @@ subroutine symba_getacch_eucl(lextra_force, t, npl, symba_plA, j2rp2, j4rp4, npl
 ! it to the older swifter versions
 
    !$omp parallel do default(private) schedule(auto) &
-   !$omp shared (num_plpl_comparisons, k_plpl, symba_plA) &
+   !$omp firstprivate(num_plpl_comparisons, k_plpl, symba_plA) &
    !$omp reduction(+:ahpx, ahpy, ahpz) &
    !$omp reduction(-:ahmx, ahmy, ahmz)
    do k = 1, num_plpl_comparisons
-      i = k_plpl(1,k)
-      j = k_plpl(2,k)
-      
-      dx = symba_plA%helio%swiftest%xh(1,j) - symba_plA%helio%swiftest%xh(1,i)
-      dy = symba_plA%helio%swiftest%xh(2,j) - symba_plA%helio%swiftest%xh(2,i)
-      dz = symba_plA%helio%swiftest%xh(3,j) - symba_plA%helio%swiftest%xh(3,i)
-      rlim2 = (symba_plA%helio%swiftest%radius(i) + symba_plA%helio%swiftest%radius(j))**2
-      rji2 = dx**2 + dy**2 + dz**2
-      if (rji2 > rlim2) then !if false, we likely have recent fragments with coincident positions. 
-         !  so ignore in this step and let the merge code deal with it in the nex
-         irij3 = 1.0_DP / (rji2 * sqrt(rji2))
-         faci = symba_plA%helio%swiftest%mass(i) * irij3
-         facj = symba_plA%helio%swiftest%mass(j) * irij3
-         ahpx(i) = ahpx(i) + facj * dx
-         ahpy(i) = ahpy(i) + facj * dy
-         ahpz(i) = ahpz(i) + facj * dz
-         ahmx(j) = ahmx(j) - faci * dx
-         ahmy(j) = ahmy(j) - faci * dy
-         ahmz(j) = ahmz(j) - faci * dz
-      end if
+      associate(i => k_plpl(1, k), j=> k_plpl(2, k))
+         dx = symba_plA%helio%swiftest%xh(1,j) - symba_plA%helio%swiftest%xh(1,i)
+         dy = symba_plA%helio%swiftest%xh(2,j) - symba_plA%helio%swiftest%xh(2,i)
+         dz = symba_plA%helio%swiftest%xh(3,j) - symba_plA%helio%swiftest%xh(3,i)
+         rlim2 = (symba_plA%helio%swiftest%radius(i) + symba_plA%helio%swiftest%radius(j))**2
+         rji2 = dx**2 + dy**2 + dz**2
+         if (rji2 > rlim2) then !if false, we likely have recent fragments with coincident positions. 
+            !  so ignore in this step and let the merge code deal with it in the nex
+            irij3 = 1.0_DP / (rji2 * sqrt(rji2))
+            faci = symba_plA%helio%swiftest%mass(i) * irij3
+            facj = symba_plA%helio%swiftest%mass(j) * irij3
+            ahpx(i) = ahpx(i) + facj * dx
+            ahpy(i) = ahpy(i) + facj * dy
+            ahpz(i) = ahpz(i) + facj * dz
+            ahmx(j) = ahmx(j) - faci * dx
+            ahmy(j) = ahmy(j) - faci * dy
+            ahmz(j) = ahmz(j) - faci * dz
+         end if
+      end associate
    end do
    !$omp end parallel do
    symba_plA%helio%ah(1,1:npl) = ahpx(:) + ahmx(:)
