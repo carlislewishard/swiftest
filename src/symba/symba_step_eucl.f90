@@ -86,40 +86,39 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      LOGICAL(LGT)              :: lencounter
      INTEGER(I4B)              :: irec, nplm, ipl, ipl1, ipl2
      INTEGER(I8B)              :: i, k, counter
-     INTEGER(I8B), DIMENSION(:), ALLOCATABLE :: plpl_encounters
      INTEGER(I8B), DIMENSION(:), ALLOCATABLE :: pltp_encounters_indices
      LOGICAL, SAVE             :: lfirst = .true.
      
      LOGICAL(LGT), ALLOCATABLE, DIMENSION(:) :: pltp_lencounters
      LOGICAL(lgt), ALLOCATABLE, DIMENSION(:) :: plpl_lvdotr, pltp_lvdotr
+     integer(I8B), allocatable, dimension(:) :: k_encounter
      
 ! Executable code
-
      call symba_step_reset(npl, symba_plA, symba_tpA, plplenc_list, pltpenc_list, mergeadd_list, mergesub_list)
      nplplenc = 0
      npltpenc = 0
      irec = 0
-     nplm = count(symba_plA%helio%swiftest%mass(1:npl) >= param%mtiny)
 
 ! ALL THIS NEEDS TO BE CHANGED TO THE TREE SEARCH FUNCTION FOR ENCOUNTERS
 
-     CALL symba_chk_eucl(symba_plA, dt, plpl_encounters, plpl_lvdotr, nplplenc)
+     CALL symba_chk_eucl(symba_plA, dt, plpl_lvdotr, nplplenc)
 
      if (nplplenc > 0) then
+        k_encounter = pack((/ (i, i=1, symba_plA%num_plpl_comparisons) /), symba_plA%l_plpl_encounter)
         call symba_plplenc_deallocate(plplenc_list)
         call symba_plplenc_allocate(plplenc_list, nplplenc) 
 
           do k = 1, nplplenc
             do i = 1, 2
-               ipl = symba_plA%k_plpl(i, plpl_encounters(k)) 
-               symba_plA%nplenc(ipl) = symba_plA%nplenc(symba_plA%k_plpl(i, plpl_encounters(k))) + 1 ! number of particles that planet "i" has close encountered
+               ipl = symba_plA%k_plpl(i, k_encounter(k)) 
+               symba_plA%nplenc(ipl) = symba_plA%nplenc(symba_plA%k_plpl(i, k_encounter(k))) + 1 ! number of particles that planet "i" has close encountered
             end do
 
             plplenc_list%status(k) = ACTIVE ! you are in an encounter
             plplenc_list%lvdotr(k) = plpl_lvdotr(k)! flag of relative accelerations to say if there will be a close encounter in next timestep 
             plplenc_list%level(k)  = irec ! recursion level
-            ipl1 = symba_plA%k_plpl(1, plpl_encounters(k))
-            ipl2 = symba_plA%k_plpl(2, plpl_encounters(k)) 
+            ipl1 = symba_plA%k_plpl(1, k_encounter(k))
+            ipl2 = symba_plA%k_plpl(2, k_encounter(k)) 
             if (symba_plA%helio%swiftest%mass(ipl1) >= symba_plA%helio%swiftest%mass(ipl2)) then 
                plplenc_list%index1(k) = ipl1 
                plplenc_list%index2(k) = ipl2
@@ -128,7 +127,7 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
                plplenc_list%index2(k) = ipl1
             end if
           end do
-          deallocate(plpl_encounters, plpl_lvdotr)
+          deallocate(k_encounter, plpl_lvdotr)
      endif
      
      if(ntp>0)then
@@ -170,7 +169,6 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      
 ! END OF THINGS THAT NEED TO BE CHANGED IN THE TREE
 
-     nplm = count(symba_plA%helio%swiftest%mass > param%mtiny)
      ! flag to see if there was an encounter
      lencounter = ((nplplenc > 0) .OR. (npltpenc > 0))
 

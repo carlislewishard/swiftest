@@ -1279,17 +1279,16 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE 
-          SUBROUTINE symba_chk_eucl(symba_plA, dt, plpl_encounters, lvdotr, nplplenc)
-               USE swiftest_globals
-               USE swiftest_data_structures
-               USE module_symba
+          subroutine symba_chk_eucl(symba_plA, dt, lvdotr, nplplenc)
+               use swiftest_globals
+               use swiftest_data_structures
+               use module_symba
                IMPLICIT NONE
-               TYPE(symba_pl), INTENT(IN)                             :: symba_plA
-               REAL(DP), INTENT(IN)                                   :: dt
-               INTEGER(I8B), DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: plpl_encounters
-               LOGICAL(LGT), DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: lvdotr
-               INTEGER(I4B), INTENT(OUT)                              :: nplplenc
-          END SUBROUTINE symba_chk_eucl
+               type(symba_pl), intent(inout)                          :: symba_plA
+               real(DP), intent(in)                                   :: dt
+               logical(LGT), dimension(:), allocatable, intent(inout) :: lvdotr
+               integer(I4B), intent(out)                              :: nplplenc
+          end subroutine symba_chk_eucl
      END INTERFACE
 
      INTERFACE 

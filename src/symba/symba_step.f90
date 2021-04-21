@@ -91,7 +91,6 @@ subroutine symba_step(t, dt, param, npl, ntp,symba_plA, symba_tpA,       &
    nplplenc = 0
    npltpenc = 0
    irec = 0
-   nplm = count(symba_plA%helio%swiftest%mass(1:npl) >= param%mtiny)
 
    do i = 2, nplm
       !!$omp parallel do schedule(auto) default(private) &

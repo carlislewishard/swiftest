@@ -33,6 +33,7 @@ subroutine symba_step_reset(npl, symba_plA, symba_tpA, plplenc_list, pltpenc_lis
    symba_tpA%nplenc(:) = 0 
    symba_tpA%levelg(:) = 0
    symba_tpA%levelm(:) = 0
+   symba_plA%l_plpl_encounter = .false.
 
    !************************
    ! Placeholder for when the data structures get re-done

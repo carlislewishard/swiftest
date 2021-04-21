@@ -54,6 +54,7 @@ MODULE module_symba
                                        ! mergers in a single step
       integer(I4B), dimension(:,:), allocatable :: k_plpl
       integer(I8B)                  ::  num_plpl_comparisons
+      logical, dimension(:), allocatable  :: l_plpl_encounter
    end type symba_pl
 
    type symba_tp

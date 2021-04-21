@@ -1,4 +1,4 @@
-subroutine symba_chk_eucl(symba_plA, dt, plpl_encounters, lvdotr, nplplenc)
+subroutine symba_chk_eucl(symba_plA, dt, lvdotr, nplplenc)
    !! author: Jakob R. Elliott and David A. Minton
    !!
    !! Check for an encounter using the flatten pl-pl data structures
@@ -16,15 +16,14 @@ subroutine symba_chk_eucl(symba_plA, dt, plpl_encounters, lvdotr, nplplenc)
    implicit none
 
 ! arguments
-   type(symba_pl), intent(in)               :: symba_plA
+   type(symba_pl), intent(inout)       :: symba_plA
    real(DP), intent(in)                :: dt
-   integer(I8B), dimension(:), allocatable, intent(inout) :: plpl_encounters
+
    logical(lgt), dimension(:), allocatable, intent(inout) :: lvdotr
    integer(I4B), intent(out)              :: nplplenc
 
 ! internals
    logical, dimension(:), allocatable :: loc_lvdotr, ltmp
-   integer(I8B), dimension(:), allocatable :: indnum, itmp
    ! logical(lgt) :: iflag lvdotr_flag
    real(DP)   :: rcrit, r2crit, vdotr, r2, v2, tmin, r2min, term2, rcritmax, r2critmax
    integer(I4B) :: i, j, npl
@@ -39,7 +38,6 @@ subroutine symba_chk_eucl(symba_plA, dt, plpl_encounters, lvdotr, nplplenc)
       npl = size(symba_plA%helio%swiftest%mass)
 
       allocate(loc_lvdotr(npl))
-      allocate(indnum(npl))
 
       term2 = rhscale*rshell**0
 
@@ -56,19 +54,14 @@ subroutine symba_chk_eucl(symba_plA, dt, plpl_encounters, lvdotr, nplplenc)
                vr(:) = vh(:, jk) - vh(:, ik)
                vdotr = dot_product(vr(:), xr(:))
                if (r2 < r2crit) then
-                  !!$omp critical
                   nplplenc = nplplenc + 1
                   if (nplplenc > size(loc_lvdotr)) then ! Expand array
                      allocate(ltmp(nplplenc * 2))
-                     allocate(itmp(nplplenc * 2))
                      ltmp(1:nplplenc-1) = loc_lvdotr(1:nplplenc-1)
-                     itmp(1:nplplenc-1) = indnum(1:nplplenc-1)
                      call move_alloc(ltmp, loc_lvdotr)
-                     call move_alloc(itmp, indnum)
                   end if
                   loc_lvdotr(nplplenc) = (vdotr < 0.0_DP)
-                  indnum(nplplenc) = k
-                  !!$omp end critical
+                  symba_plA%l_plpl_encounter(k) = .true.
                else
                   if (vdotr < 0.0_DP) then
                      v2 = dot_product(vr(:), vr(:))
@@ -80,19 +73,14 @@ subroutine symba_chk_eucl(symba_plA, dt, plpl_encounters, lvdotr, nplplenc)
                      end if
                      r2min = min(r2min, r2)
                      if (r2min <= r2crit) then
-                        !!$omp critical
                         nplplenc = nplplenc + 1
                         if (nplplenc > size(loc_lvdotr)) then ! Expand array
                            allocate(ltmp(nplplenc * 2))
-                           allocate(itmp(nplplenc * 2))
                            ltmp(1:nplplenc-1) = loc_lvdotr(1:nplplenc-1)
-                           itmp(1:nplplenc-1) = indnum(1:nplplenc-1)
                            call move_alloc(ltmp, loc_lvdotr)
-                           call move_alloc(itmp, indnum)
                         end if
                         loc_lvdotr(nplplenc) = (vdotr < 0.0_DP)
-                        indnum(nplplenc) = k
-                        !!$omp end critical
+                        symba_plA%l_plpl_encounter(k) = .true.
                      end if
                   end if
                end if
@@ -101,13 +89,10 @@ subroutine symba_chk_eucl(symba_plA, dt, plpl_encounters, lvdotr, nplplenc)
       end do
       !!$omp end parallel do
       if (nplplenc > 0) then
-         allocate(plpl_encounters(nplplenc))
          allocate(lvdotr(nplplenc))
-         plpl_encounters(1:nplplenc) = indnum(1:nplplenc)
          lvdotr(1:nplplenc) = loc_lvdotr(1:nplplenc)
       end if
       deallocate(loc_lvdotr)
-      deallocate(indnum)
    end associate
    return
 

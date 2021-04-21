@@ -25,6 +25,8 @@ subroutine util_dist_index_plpl(npl, nplm, symba_plA)
                ((npl8 - nplm8 - 1_I8B) * ((npl8 - nplm8 - 1_I8B) + 1_I8B) / 2_I8B)
    if (allocated(symba_plA%k_plpl)) deallocate(symba_plA%k_plpl) 
    allocate(symba_plA%k_plpl(2, symba_plA%num_plpl_comparisons))
+   if (allocated(symba_plA%l_plpl_encounter)) deallocate(symba_plA%l_plpl_encounter) 
+   allocate(symba_plA%l_plpl_encounter(symba_plA%num_plpl_comparisons))
    ! this is a 'fancier' code, but so far i think it runs slower
    ! so leaving it in, but commenting it out
    ! i think it's because of the 'mod' call, but i haven't profiled it yet

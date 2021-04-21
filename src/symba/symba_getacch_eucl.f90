@@ -31,17 +31,13 @@ subroutine symba_getacch_eucl(lextra_force, t, npl, symba_plA, j2rp2, j4rp4, npl
    real(DP), dimension(npl)                     :: irh
    real(DP), dimension(:, :), allocatable, save :: aobl
    real(DP)                                     :: dx, dy, dz
-   integer(I4B), pointer                        :: ik, jk
-   real(DP), dimension(:,:), pointer            :: ah
 !executable code
  
    associate(ah => symba_plA%helio%ah, xh => symba_plA%helio%swiftest%xh, &
               mass => symba_plA%helio%swiftest%mass, radius => symba_plA%helio%swiftest%radius)
       ah(:,:) = 0.0_DP
-      !!$omp parallel do default(private) schedule(auto) &
-      !!$omp firstprivate(num_plpl_comparisons, k_plpl, xh, mass, ik, jk) &
-      !!$omp reduction(+:ah)
       do k = 1, symba_plA%num_plpl_comparisons
+         if (symba_plA%l_plpl_encounter(k)) cycle
          associate(ik => symba_plA%k_plpl(1, k), jk => symba_plA%k_plpl(2, k))
             dx = xh(1, jk) - xh(1, ik)
             dy = xh(2, jk) - xh(2, ik)
@@ -58,28 +54,6 @@ subroutine symba_getacch_eucl(lextra_force, t, npl, symba_plA, j2rp2, j4rp4, npl
                ah(1, jk) = ah(1, jk) - faci * dx
                ah(2, jk) = ah(2, jk) - faci * dy
                ah(3, jk) = ah(3, jk) - faci * dz
-            end if
-         end associate
-      end do
-      !!$omp end parallel do
-
-      do k = 1, nplplenc
-         associate(ik => plplenc_list%index1(k), jk => plplenc_list%index2(k))
-            dx = xh(1, jk) - xh(1, ik)
-            dy = xh(2, jk) - xh(2, ik)
-            dz = xh(3, jk) - xh(3, ik)
-            rji2 = dx**2 + dy**2 + dz**2
-            rlim2 = (radius(ik) + radius(jk))**2
-            if (rji2 > rlim2) then
-               irij3 = 1.0_DP / (rji2 * sqrt(rji2))
-               faci = mass(ik) * irij3
-               facj = mass(jk) * irij3
-               ah(1, ik) = ah(1, ik) - facj * dx
-               ah(2, ik) = ah(2, ik) - facj * dy
-               ah(3, ik) = ah(3, ik) - facj * dz
-               ah(1, jk) = ah(1, jk) + faci * dx
-               ah(2, jk) = ah(2, jk) + faci * dy
-               ah(3, jk) = ah(3, jk) + faci * dz
             end if
          end associate
       end do
