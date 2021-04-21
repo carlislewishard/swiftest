@@ -52,7 +52,7 @@ subroutine symba_getacch_eucl(lextra_force, t, npl, symba_plA, j2rp2, j4rp4, npl
    associate(ah => symba_plA%helio%ah, xh => symba_plA%helio%swiftest%xh, &
               mass => symba_plA%helio%swiftest%mass, radius => symba_plA%helio%swiftest%radius)
       !$omp parallel do default(private) schedule(auto) &
-      !$omp firstprivate(num_plpl_comparisons, k_plpl, symba_plA, xh, mass, radius) &
+      !$omp firstprivate(num_plpl_comparisons, k_plpl, xh, mass, radius) &
       !$omp reduction(+:ahpx, ahpy, ahpz) &
       !$omp reduction(-:ahmx, ahmy, ahmz)
       do k = 1, num_plpl_comparisons
