@@ -22,11 +22,11 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
 ! internals
    integer(I4B)              :: i, j
    integer(I8B)              :: k
-   real(DP)                  :: rmag, v2, rot2, oblpot
-   real(DP), dimension(NDIM) :: h
+   real(DP)                  :: rmag, v2, rot2, oblpot, hx, hy, hz
    real(DP), dimension(npl)  :: irh, kepl
-   real(DP), dimension(NDIM, npl) :: Lpl 
+   real(DP), dimension(npl) :: Lplx, Lply, Lplz
    real(DP), dimension(num_plpl_comparisons) :: pepl 
+   logical, dimension(num_plpl_comparisons) :: lstatpl
 
 ! executable code
 
@@ -36,28 +36,30 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
    associate(xb => swiftest_plA%xb, vb => swiftest_plA%vb, mass => swiftest_plA%mass, radius => swiftest_plA%radius, &
       Ip => swiftest_plA%Ip, rot => swiftest_plA%rot, xh => swiftest_plA%xh, status => swiftest_plA%status)
       kepl(:) = 0.0_DP
-      Lpl(:,:) = 0.0_DP
-      !$omp simd private(v2, rot2, h)
+      Lplx(:) = 0.0_DP
+      Lply(:) = 0.0_DP
+      Lplz(:) = 0.0_DP
+      !$omp simd private(v2, rot2, hx, hy, hz)
       do i = 1, npl
-         if (status(i) /= ACTIVE) cycle
          v2 = dot_product(vb(:,i), vb(:,i))
          rot2 = dot_product(rot(:,i), rot(:,i))
-         h(1) = xb(2,i) * vb(3,i) - xb(3,i) * vb(2,i)
-         h(2) = xb(3,i) * vb(1,i) - xb(1,i) * vb(3,i)
-         h(3) = xb(1,i) * vb(2,i) - xb(2,i) * vb(1,i)
+         hx = xb(2,i) * vb(3,i) - xb(3,i) * vb(2,i)
+         hy = xb(3,i) * vb(1,i) - xb(1,i) * vb(3,i)
+         hz = xb(1,i) * vb(2,i) - xb(2,i) * vb(1,i)
 
          ! Angular momentum from orbit and spin
-         Lpl(1, i) = Ip(3,i) * radius(i)**2 * rot(1,i) + h(1)
-         Lpl(2, i) = Ip(3,i) * radius(i)**2 * rot(2,i) + h(2)
-         Lpl(3, i) = Ip(3,i) * radius(i)**2 * rot(3,i) + h(3)
-         Lpl(:,i) = mass(i) * Lpl(:,i)
+         Lplx(i) = mass(i) * (Ip(3,i) * radius(i)**2 * rot(1,i) + hx)
+         Lply(i) = mass(i) * (Ip(3,i) * radius(i)**2 * rot(2,i) + hy)
+         Lplz(i) = mass(i) * (Ip(3,i) * radius(i)**2 * rot(3,i) + hz)
 
          ! Kinetic energy from orbit and spin
-         kepl(i) = 0.5_DP * mass(i) * (Ip(3,i) * radius(i)**2 * rot2 + v2)
+         kepl(i) = mass(i) * (Ip(3,i) * radius(i)**2 * rot2 + v2)
       end do
 
-      ke = sum(kepl(:))
-      Ltot(:) =  sum(Lpl(:,:), dim=2)
+      ke = 0.5_DP * sum(kepl(1:npl), status(1:npl) == ACTIVE)
+      Ltot(1) = sum(Lplx(1:npl), status(1:npl) == ACTIVE) 
+      Ltot(2) = sum(Lply(1:npl), status(1:npl) == ACTIVE) 
+      Ltot(3) = sum(Lplz(1:npl), status(1:npl) == ACTIVE) 
 
       ! Do the central body potential energy component first
       pe = 0.0_DP
@@ -68,19 +70,18 @@ subroutine symba_energy_eucl(npl, swiftest_plA, j2rp2, j4rp4, k_plpl, num_plpl_c
 
       ! Do the potential energy between pairs of massive bodies
       pepl(:) = 0.0_DP
-      !$omp parallel do default(private) schedule(auto) &
-      !$omp shared(num_plpl_comparisons, k_plpl, swiftest_plA, pepl)
+      !!$omp parallel do default(private) schedule(auto)&
+      !!$omp shared(pepl, lstatpl) &
+      !!$omp firstprivate(k_plpl, mass, xb, status)
       do k = 1, num_plpl_comparisons
-         i = k_plpl(1, k)
-         j = k_plpl(2, k)
-         rmag = norm2(xb(:, j) - xb(:, i)) 
-         if (rmag > tiny(rmag) .and. (status(i) == ACTIVE) .and. (status(j) == ACTIVE)) then
-            pepl(k) = -mass(i) * mass(j) / rmag 
-         end if
+         associate(i => k_plpl(1, k), j=> k_plpl(2, k))
+            pepl(k) = -mass(i) * mass(j) / norm2(xb(:, j) - xb(:, i)) 
+            lstatpl(k) = (status(i) == ACTIVE) .and. (status(j) == ACTIVE)
+         end associate
       end do
-      !$omp end parallel do
+      !!$omp end parallel do
 
-      pe = pe + sum(pepl(:))
+      pe = pe + sum(pepl(:), lstatpl(:))
 
       ! Potential energy from the oblateness term
       if (j2rp2 /= 0.0_DP) then
