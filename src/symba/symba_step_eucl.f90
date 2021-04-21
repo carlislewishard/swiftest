@@ -117,7 +117,6 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
                ipl = k_plpl(i, plpl_encounters(k)) 
                symba_plA%nplenc(ipl) = symba_plA%nplenc(k_plpl(i, plpl_encounters(k))) + 1 ! number of particles that planet "i" has close encountered
             end do
-            
 
             plplenc_list%status(k) = ACTIVE ! you are in an encounter
             plplenc_list%lvdotr(k) = plpl_lvdotr(k)! flag of relative accelerations to say if there will be a close encounter in next timestep 
@@ -141,10 +140,6 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
          pltp_lencounters = .false.
          pltp_lvdotr = .false.
 
-          ! CALL util_dist_eucl_pltp(symba_plA%helio%swiftest%xh, symba_tpA%helio%swiftest%xh, &
-          !      num_pltp_comparisons, k_pltp, dist_pltp_array)
-          ! CALL util_dist_eucl_pltp(symba_plA%helio%swiftest%vh, symba_tpA%helio%swiftest%vh, &
-          !      num_pltp_comparisons, k_pltp, vel_pltp_array)
           CALL symba_chk_eucl_pltp(num_pltp_comparisons, k_pltp, symba_plA, symba_tpA, dt, pltp_lencounters, pltp_lvdotr, npltpenc)
      
           ! npltpenc = count(pltp_encounters > 0)

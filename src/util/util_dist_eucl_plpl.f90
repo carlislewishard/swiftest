@@ -48,12 +48,12 @@ SUBROUTINE util_dist_eucl_plpl(invar, num_comparisons, k_plpl, outvar)
      
 ! Executable code
 
-   !$omp parallel do schedule(auto) default(private) &
-   !$omp shared (outvar, invar, num_comparisons, k_plpl)
+   !!$omp parallel do schedule(auto) default(private) &
+   !!$omp shared (outvar, invar, num_comparisons, k_plpl)
    do k = 1,num_comparisons
       outvar(:,k) = invar(:,k_plpl(2,k)) - invar(:,k_plpl(1,k))
    end do
-   !$omp end parallel do
+   !!$omp end parallel do
 
      RETURN
 
