@@ -24,7 +24,7 @@ subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
    integer(I4B)                           :: i, nkpl, nktp, ntot
    logical, dimension(:), allocatable     :: discard_l_pl 
    logical, dimension(ntp)                :: discard_l_tp
-   real(DP)                               :: msys_old, msys_new
+   real(DP)                               :: msys
 
 ! executable code
    if (ldiscard) then 
@@ -82,8 +82,6 @@ subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
          symba_plA%helio%swiftest%rot(i,nkpl+1:npl) = mergeadd_list%rot(i,1:nmergeadd)
       end do
 
-      call util_hills(npl, symba_plA%helio%swiftest)
-
       npl = count(symba_plA%helio%swiftest%status(1:npl) == ACTIVE)
       ntot= size(symba_plA%helio%swiftest%status(:))
       if (ntot > npl) then
@@ -93,6 +91,10 @@ subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
       end if
 
       symba_plA%helio%swiftest%nbody = npl
+      
+      call coord_h2b(npl, symba_plA%helio%swiftest, msys)
+      
+      call util_hills(npl, symba_plA%helio%swiftest)
 
       !call symba_reorder_pl(npl, symba_plA)
    end if 
