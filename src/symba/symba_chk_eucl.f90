@@ -91,6 +91,12 @@ subroutine symba_chk_eucl(symba_plA, dt, lvdotr, nplplenc)
       if (nplplenc > 0) then
          allocate(lvdotr(nplplenc))
          lvdotr(1:nplplenc) = loc_lvdotr(1:nplplenc)
+         if (allocated(symba_plA%k_encounter)) deallocate(symba_plA%k_encounter)
+         allocate(symba_plA%k_encounter(nplplenc))
+         if (allocated(symba_plA%k_non_encounter)) deallocate(symba_plA%k_non_encounter)
+         allocate(symba_plA%k_non_encounter(symba_plA%num_plpl_comparisons - nplplenc))
+         symba_plA%k_encounter = pack((/ (i, i=1, symba_plA%num_plpl_comparisons) /), symba_plA%l_plpl_encounter)
+         symba_plA%k_non_encounter = pack((/ (i, i=1, symba_plA%num_plpl_comparisons) /), .not.symba_plA%l_plpl_encounter)
       end if
       deallocate(loc_lvdotr)
    end associate

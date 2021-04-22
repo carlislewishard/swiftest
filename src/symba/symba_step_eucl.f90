@@ -91,7 +91,6 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      
      LOGICAL(LGT), ALLOCATABLE, DIMENSION(:) :: pltp_lencounters
      LOGICAL(lgt), ALLOCATABLE, DIMENSION(:) :: plpl_lvdotr, pltp_lvdotr
-     integer(I8B), allocatable, dimension(:) :: k_encounter
      
 ! Executable code
      call symba_step_reset(npl, symba_plA, symba_tpA, plplenc_list, pltpenc_list, mergeadd_list, mergesub_list)
@@ -104,21 +103,21 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      CALL symba_chk_eucl(symba_plA, dt, plpl_lvdotr, nplplenc)
 
      if (nplplenc > 0) then
-        k_encounter = pack((/ (i, i=1, symba_plA%num_plpl_comparisons) /), symba_plA%l_plpl_encounter)
+        
         call symba_plplenc_deallocate(plplenc_list)
         call symba_plplenc_allocate(plplenc_list, nplplenc) 
 
           do k = 1, nplplenc
             do i = 1, 2
-               ipl = symba_plA%k_plpl(i, k_encounter(k)) 
-               symba_plA%nplenc(ipl) = symba_plA%nplenc(symba_plA%k_plpl(i, k_encounter(k))) + 1 ! number of particles that planet "i" has close encountered
+               ipl = symba_plA%k_plpl(i, symba_plA%k_encounter(k)) 
+               symba_plA%nplenc(ipl) = symba_plA%nplenc(symba_plA%k_plpl(i, symba_plA%k_encounter(k))) + 1 ! number of particles that planet "i" has close encountered
             end do
 
             plplenc_list%status(k) = ACTIVE ! you are in an encounter
             plplenc_list%lvdotr(k) = plpl_lvdotr(k)! flag of relative accelerations to say if there will be a close encounter in next timestep 
             plplenc_list%level(k)  = irec ! recursion level
-            ipl1 = symba_plA%k_plpl(1, k_encounter(k))
-            ipl2 = symba_plA%k_plpl(2, k_encounter(k)) 
+            ipl1 = symba_plA%k_plpl(1, symba_plA%k_encounter(k))
+            ipl2 = symba_plA%k_plpl(2, symba_plA%k_encounter(k)) 
             if (symba_plA%helio%swiftest%mass(ipl1) >= symba_plA%helio%swiftest%mass(ipl2)) then 
                plplenc_list%index1(k) = ipl1 
                plplenc_list%index2(k) = ipl2
@@ -127,7 +126,7 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
                plplenc_list%index2(k) = ipl1
             end if
           end do
-          deallocate(k_encounter, plpl_lvdotr)
+          deallocate(plpl_lvdotr)
      endif
      
      if(ntp>0)then

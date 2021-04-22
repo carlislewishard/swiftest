@@ -53,6 +53,7 @@ MODULE module_symba
       type(symba_kinship), dimension(:), allocatable :: kin  ! Array of merger relationship structures that can account for multiple pairwise 
                                        ! mergers in a single step
       integer(I4B), dimension(:,:), allocatable :: k_plpl
+      integer(I8B), dimension(:), allocatable :: k_encounter, k_non_encounter
       integer(I8B)                  ::  num_plpl_comparisons
       logical, dimension(:), allocatable  :: l_plpl_encounter
    end type symba_pl

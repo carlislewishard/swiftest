@@ -26,18 +26,19 @@ subroutine symba_getacch_eucl(lextra_force, t, npl, symba_plA, j2rp2, j4rp4, npl
 
 
 ! internals
-   integer(I8B)                                 :: i, j, k
+   integer(I8B)                                 :: i, j, k, kn
    real(DP)                                     :: rji2, irij3, faci, facj, r2, rlim2
    real(DP), dimension(npl)                     :: irh
    real(DP), dimension(:, :), allocatable, save :: aobl
    real(DP)                                     :: dx, dy, dz
+   integer(I8B), dimension(:), allocatable      :: ik, jk
 !executable code
  
    associate(ah => symba_plA%helio%ah, xh => symba_plA%helio%swiftest%xh, &
               mass => symba_plA%helio%swiftest%mass, radius => symba_plA%helio%swiftest%radius)
       ah(:,:) = 0.0_DP
-      do k = 1, symba_plA%num_plpl_comparisons
-         if (symba_plA%l_plpl_encounter(k)) cycle
+      do kn = 1, size(symba_plA%k_non_encounter(:))
+         associate(k => symba_plA%k_non_encounter(kn))
          associate(ik => symba_plA%k_plpl(1, k), jk => symba_plA%k_plpl(2, k))
             dx = xh(1, jk) - xh(1, ik)
             dy = xh(2, jk) - xh(2, ik)
@@ -55,6 +56,7 @@ subroutine symba_getacch_eucl(lextra_force, t, npl, symba_plA, j2rp2, j4rp4, npl
                ah(2, jk) = ah(2, jk) - faci * dy
                ah(3, jk) = ah(3, jk) - faci * dz
             end if
+         end associate
          end associate
       end do
 
