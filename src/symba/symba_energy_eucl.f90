@@ -22,7 +22,7 @@ subroutine symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msy
    integer(I4B)              :: i, j
    integer(I8B)              :: k
    real(DP)                  :: rmag, v2, rot2, oblpot, hx, hy, hz
-   real(DP), dimension(npl)  :: irh, kepl
+   real(DP), dimension(npl)  :: irh, kepl, pecb
    real(DP), dimension(npl) :: Lplx, Lply, Lplz
    real(DP), dimension(symba_plA%num_plpl_comparisons) :: pepl 
    logical, dimension(symba_plA%num_plpl_comparisons) :: lstatpl
@@ -61,22 +61,22 @@ subroutine symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msy
       Ltot(3) = sum(Lplz(1:npl), status(1:npl) == ACTIVE) 
 
       ! Do the central body potential energy component first
-      pe = 0.0_DP
-      !$omp simd reduction(-:pe)
+      !$omp simd 
       do i = 2, npl
-         if (status(i) == ACTIVE) pe = pe - mass(1) * mass(i) / norm2(xh(:, i))
-      end do
-
-      ! Do the potential energy between pairs of massive bodies
-      pepl(:) = 0.0_DP
-      do k = 1, symba_plA%num_plpl_comparisons
-         associate(i => symba_plA%k_plpl(1, k), j=> symba_plA%k_plpl(2, k))
-            pepl(k) = -mass(i) * mass(j) / norm2(xb(:, j) - xb(:, i)) 
-            lstatpl(k) = (status(i) == ACTIVE) .and. (status(j) == ACTIVE)
+         associate(px => xh(1,i), py => xh(2,i), pz => xh(3,i))
+            pecb(i) = - mass(1) * mass(i) / sqrt(px**2 + py**2 + pz**2)
          end associate
       end do
 
-      pe = pe + sum(pepl(:), lstatpl(:))
+      ! Do the potential energy between pairs of massive bodies
+      do k = 1, symba_plA%num_plpl_comparisons
+         associate(ik => symba_plA%k_plpl(1, k), jk => symba_plA%k_plpl(2, k))
+            pepl(k) = -mass(ik) * mass(jk) / norm2(xb(:, jk) - xb(:, ik)) 
+            lstatpl(k) = (status(ik) == ACTIVE) .and. (status(jk) == ACTIVE)
+         end associate
+      end do
+
+      pe = sum(pecb(2:npl), status(2:npl) == ACTIVE) + sum(pepl(:), lstatpl(:))
 
       ! Potential energy from the oblateness term
       if (j2rp2 /= 0.0_DP) then

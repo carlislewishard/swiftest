@@ -798,8 +798,7 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE symba_collision(t, npl, symba_plA, nplplenc, plplenc_list, ldiscard, mergeadd_list, nmergeadd, &
-                                     discard_plA, param)
+          SUBROUTINE symba_collision(t, npl, symba_plA, nplplenc, plplenc_list, ldiscard, mergeadd_list, nmergeadd, param)
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_helio
@@ -808,11 +807,10 @@ MODULE module_interfaces
                real(DP), intent(in)                      :: t
                integer(I4B), intent(inout)               :: npl
                integer(I4B), intent(inout)               :: nplplenc, nmergeadd
-               type(symba_pl)                            :: symba_pla
+               type(symba_pl)                            :: symba_plA
                type(symba_plplenc), intent(inout)        :: plplenc_list
                type(symba_merger), intent(inout)         :: mergeadd_list
                logical, intent(inout)                    :: ldiscard
-               type(swiftest_pl), intent(inout)          :: discard_plA
                type(user_input_parameters),intent(inout) :: param
           END SUBROUTINE symba_collision
      END INTERFACE

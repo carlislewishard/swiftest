@@ -34,6 +34,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
    integer(I4B), parameter                 :: SHIFTMAX = 9
    integer(I4B), dimension(:), allocatable :: family, non_family
    real(DP)                                :: Esys, rmag
+   logical, dimension(:), allocatable      :: lfamily
 
 
    associate(nchild1 => symba_plA%kin(idx_parents(1))%nchild, nchild2 => symba_plA%kin(idx_parents(2))%nchild, &
@@ -76,14 +77,16 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       ! Make the list of family members (bodies involved in the collision)
       fam_size = 2 + nchild1 + nchild2
       allocate(family(fam_size))
+      allocate(lfamily(fam_size))
       family(1) = idx_parents(1)
       family(2) = idx_parents(2)
       istart = 2 + nchild1
 
       if (nchild1 > 0) family(3:istart) = symba_plA%kin(idx_parents(1))%child(1:nchild1)
       if (nchild2 > 0) family(istart+1:istart+1+nchild2) = symba_plA%kin(idx_parents(2))%child(1:nchild2)
-      fam_size = count(status(family(:)) == ACTIVE)
-      family(:) = pack(family(:), status(family(:)) == ACTIVE)
+      lfamily(:) = (status(family(:)) == ACTIVE) .or. (status(family(:)) == COLLISION) 
+      fam_size = count(lfamily(:))
+      family(:) = pack(family(:), lfamily(:))
 
       ! Make the list of non-family members (bodies not involved in the collision)
       non_fam_size = count(status(:) /= INACTIVE) - fam_size

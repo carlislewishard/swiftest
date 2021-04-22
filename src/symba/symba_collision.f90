@@ -1,5 +1,4 @@
-subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard, mergeadd_list, nmergeadd, &
-                            discard_plA, param)
+subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard, mergeadd_list, nmergeadd, param)
    !! author: Jennifer L.L. Pouplin, Carlisle A. wishard, and David A. Minton
    !!
    !! Check for merger between planets in SyMBA. If the user has turned on the FRAGMENTATION feature, it will call the 
@@ -21,7 +20,6 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
    type(symba_plplenc), intent(inout)        :: plplenc_list
    type(symba_merger), intent(inout)         :: mergeadd_list
    logical, intent(inout)                    :: ldiscard
-   type(swiftest_pl), intent(inout)          :: discard_plA
    type(user_input_parameters),intent(inout) :: param
 
    integer(I4B), parameter                 :: NRES = 3   !! Number of collisional product results
@@ -59,6 +57,7 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
       idx(2) = plplenc_list%index2(index_enc)
 
       if (any(symba_plA%helio%swiftest%status(idx(:)) /= ACTIVE)) cycle ! One of these two bodies is already gone
+      symba_plA%helio%swiftest%status(idx(:)) = COLLISION
 
       ! Index values for the parents of this particle pair
       idx_parent(:) = symba_plA%kin(idx(:))%parent
@@ -186,23 +185,20 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
       end if
 
       write(*, *) "Collision detected at time t = ",t
+      status = COLLISION
       ! Set the appropriate flags for each of the discard types
       !! Use the positions and velocities of the parents and their children after the step is complete to generate the fragments
       select case (regime)
       case (COLLRESOLVE_REGIME_DISRUPTION)
          write(*, '("Disruption between particles ",20(I6,",",:))') name1(:), name2(:) 
-         status = DISRUPTION
          call symba_casedisruption(symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, mass_res, param, Qloss)
       case (COLLRESOLVE_REGIME_SUPERCATASTROPHIC)
          write(*, '("Supercatastrophic disruption between particles ",20(I6,",",:))') name1(:), name2(:) 
-         status = SUPERCATASTROPHIC
          call symba_casesupercatastrophic(symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, mass_res, param, Qloss)
       case (COLLRESOLVE_REGIME_HIT_AND_RUN)
          write(*, '("Hit and run between particles ",20(I6,",",:))') name1(:), name2(:) 
-         status = HIT_AND_RUN
          call symba_casehitandrun(symba_plA, idx_parent, nmergeadd, mergeadd_list, name, x, v, mass, radius, L_spin, Ip, xbs, vbs, mass_res, param, Qloss)
       case (COLLRESOLVE_REGIME_MERGE, COLLRESOLVE_REGIME_GRAZE_AND_MERGE)
-         status = MERGED
          write(*, '("Merging particles ",20(I6,",",:))') name1(:), name2(:) 
          call symba_casemerge(symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, param)
       case default 

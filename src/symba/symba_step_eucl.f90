@@ -97,6 +97,7 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      nplplenc = 0
      npltpenc = 0
      irec = 0
+     nplm = count(symba_plA%helio%swiftest%mass(1:npl) > param%mtiny)
 
 ! ALL THIS NEEDS TO BE CHANGED TO THE TREE SEARCH FUNCTION FOR ENCOUNTERS
 

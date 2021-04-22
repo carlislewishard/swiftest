@@ -25,9 +25,23 @@ subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
    logical, dimension(:), allocatable     :: discard_l_pl 
    logical, dimension(ntp)                :: discard_l_tp
    real(DP)                               :: msys
+   logical                                :: lescape
 
 ! executable code
    if (ldiscard) then 
+
+      ! Deal with the central body/system discards if there are any
+      do i = 1, npl
+         if ((symba_plA%helio%swiftest%status(i) == DISCARDED_RMIN) .or. (symba_plA%helio%swiftest%status(i) == DISCARDED_PERI)) then
+            lescape = .false.
+         else if ((symba_plA%helio%swiftest%status(i) == DISCARDED_RMAX) .or. (symba_plA%helio%swiftest%status(i) == DISCARDED_RMAXU)) then
+            lescape = .true.
+         else 
+            cycle
+         end if
+         call symba_discard_conserve_mtm(symba_plA%helio%swiftest, i, lescape)
+      end do
+
       nsppl = 0
       nkpl = count(symba_plA%helio%swiftest%status(:) == ACTIVE)
       nsppl = npl - nkpl
@@ -46,7 +60,7 @@ subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
          discard_plA%vh(i,:)  = pack(symba_plA%helio%swiftest%vh(i,1:npl),  discard_l_pl)
          discard_plA%xb(i,:)  = pack(symba_plA%helio%swiftest%xb(i,1:npl),  discard_l_pl)
          discard_plA%vb(i,:)  = pack(symba_plA%helio%swiftest%vb(i,1:npl),  discard_l_pl)
-         discard_plA%ip(i,:)  = pack(symba_plA%helio%swiftest%ip(i,1:npl),  discard_l_pl)
+         discard_plA%Ip(i,:)  = pack(symba_plA%helio%swiftest%Ip(i,1:npl),  discard_l_pl)
          discard_plA%rot(i,:) = pack(symba_plA%helio%swiftest%rot(i,1:npl), discard_l_pl)
       end do
 
@@ -62,7 +76,7 @@ subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
             symba_plA%helio%swiftest%vh(i,1:nkpl)  = pack(symba_plA%helio%swiftest%vh(i,1:npl),  .not. discard_l_pl)
             symba_plA%helio%swiftest%xb(i,1:nkpl)  = pack(symba_plA%helio%swiftest%xb(i,1:npl),  .not. discard_l_pl)
             symba_plA%helio%swiftest%vb(i,1:nkpl)  = pack(symba_plA%helio%swiftest%vb(i,1:npl),  .not. discard_l_pl)
-            symba_plA%helio%swiftest%ip(i,1:nkpl)  = pack(symba_plA%helio%swiftest%ip(i,1:npl),  .not. discard_l_pl)
+            symba_plA%helio%swiftest%Ip(i,1:nkpl)  = pack(symba_plA%helio%swiftest%Ip(i,1:npl),  .not. discard_l_pl)
             symba_plA%helio%swiftest%rot(i,1:nkpl) = pack(symba_plA%helio%swiftest%rot(i,1:npl), .not. discard_l_pl)
          end do
       end if
@@ -78,7 +92,7 @@ subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
       do i = 1, NDIM
          symba_plA%helio%swiftest%xh(i,nkpl+1:npl)  = mergeadd_list%xh(i,1:nmergeadd)
          symba_plA%helio%swiftest%vh(i,nkpl+1:npl)  = mergeadd_list%vh(i,1:nmergeadd)
-         symba_plA%helio%swiftest%ip(i,nkpl+1:npl)  = mergeadd_list%ip(i,1:nmergeadd)
+         symba_plA%helio%swiftest%Ip(i,nkpl+1:npl)  = mergeadd_list%Ip(i,1:nmergeadd)
          symba_plA%helio%swiftest%rot(i,nkpl+1:npl) = mergeadd_list%rot(i,1:nmergeadd)
       end do
 
@@ -135,6 +149,8 @@ subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
       end do
       ntp = nktp
       symba_tpA%helio%swiftest%nbody = ntp
+
+      call coord_b2h_tp(ntp, symba_tpA%helio%swiftest, symba_plA%helio%swiftest)
    end if 
 
 end subroutine symba_rearray

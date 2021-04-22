@@ -3,7 +3,7 @@ program swiftest_symba
    !!
    !! Driver program for the Symplectic Massive Body Algorithm
    !!
-   !! Adapted from Swifter by David E. Kaufmanna swiftert_symba.f90
+   !! Adapted from Swifter by David E. Kaufmanna swifter_symba.f90
    !! Adapted from Hal Levison and Martin Duncan's Swift program swift_symba5.f
    !! Reference: Duncan, M. J., Levison, H. F. & Lee, M. H. 1998. Astron. J., 116, 2067.
    use swiftest
@@ -131,6 +131,7 @@ program swiftest_symba
    ! reorder by mass 
    call symba_reorder_pl(npl, symba_plA)
    call util_valid(npl, ntp, symba_plA%helio%swiftest, symba_tpA%helio%swiftest)
+   call util_hills(npl, symba_plA%helio%swiftest)
    ntp0 = ntp
    t = t0
    tbase = t0
@@ -161,27 +162,53 @@ program swiftest_symba
    call system_clock(clock_count, count_rate, count_max)
    start = clock_count / (count_rate * 1.0_DP)
    do while ((t < tstop) .and. ((ntp0 == 0) .or. (ntp > 0)))
-      if(symba_plA%num_plpl_comparisons > param%eucl_threshold) then
+      !if(symba_plA%num_plpl_comparisons > param%eucl_threshold) then
          call symba_step_eucl(t, dt, param,npl,ntp,symba_plA, symba_tpA, nplplenc, npltpenc,&
                plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list)
               
-      else
-         call symba_step(t, dt, param,npl,ntp,symba_plA, symba_tpA, nplplenc, npltpenc,&
-               plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list)
-      end if
-      if (param%lenergy) then
-         call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_before, pe_before, Eorbit_before, Ltot, msys)
-      end if
+      !else
+      !   call symba_step(t, dt, param,npl,ntp,symba_plA, symba_tpA, nplplenc, npltpenc,&
+      !         plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list)
+      !end if
       ldiscard = .false. 
       ldiscard_tp = .false.
-      lfrag_add = .false.
       call symba_discard_pl(t, npl, ntp, symba_plA, symba_tpA, rmin, rmax, rmaxu, qmin, qmin_coord, qmin_alo, qmin_ahi, ldiscard)
       call symba_discard_tp(t, npl, ntp, symba_plA, symba_tpA, dt, rmin, rmax, rmaxu, qmin, qmin_coord, &    
             qmin_alo, qmin_ahi, param%lrhill_present, ldiscard_tp)
-      call symba_collision(t, npl, symba_plA, nplplenc, plplenc_list, ldiscard, mergeadd_list, nmergeadd, discard_plA, param)
-      if (ldiscard .or. ldiscard_tp .or. lfrag_add) then
+
+      ! These next two blocks should be streamlined/improved but right now we treat discards separately from collisions so it has to be this way
+      if (ldiscard) then
+         if (param%lenergy) call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_before, pe_before, Eorbit_before, Ltot, msys)
          call symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
             discard_tpA, ldiscard, ldiscard_tp)
+         call io_discard_write_symba(t, mtiny, npl, nsppl, nsptp, nmergesub, symba_plA, &
+            discard_plA, discard_tpA, mergeadd_list, mergesub_list, discard_file, param%lbig_discard) 
+         nmergeadd = 0
+         nmergesub = 0
+         nsppl = 0
+         nsptp = 0
+         nplm = count(symba_plA%helio%swiftest%mass(1:npl) > mtiny)
+
+         CALL util_dist_index_plpl(npl, nplm, symba_plA)
+
+         if (param%lenergy)  then
+            call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_after, pe_after, Eorbit_after, Ltot, msys)
+            Ecollision = Eorbit_before - Eorbit_after    ! Energy change resulting in this collisional event Total running energy offset from collision in this step
+            symba_plA%helio%swiftest%Ecollisions = symba_plA%helio%swiftest%Ecollisions + Ecollision
+         end if
+         !if (ntp > 0) call util_dist_index_pltp(nplm, ntp, symba_plA, symba_tpA)
+      end if
+
+      if (param%lenergy .and. any(plplenc_list%status(1:nplplenc) == COLLISION)) then
+         call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_before, pe_before, Eorbit_before, Ltot, msys)
+      end if
+
+      lfrag_add = .false.
+
+      call symba_collision(t, npl, symba_plA, nplplenc, plplenc_list, lfrag_add, mergeadd_list, nmergeadd, param)
+      if (lfrag_add) then
+         call symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
+            discard_tpA, lfrag_add, ldiscard_tp)
 
          call io_discard_write_symba(t, mtiny, npl, nsppl, nsptp, nmergesub, symba_plA, &
             discard_plA, discard_tpA, mergeadd_list, mergesub_list, discard_file, param%lbig_discard) 
@@ -191,36 +218,13 @@ program swiftest_symba
          nsptp = 0
          nplm = count(symba_plA%helio%swiftest%mass(1:npl) > mtiny)
          CALL util_dist_index_plpl(npl, nplm, symba_plA)
-         !if (ntp > 0) call util_dist_index_pltp(nplm, ntp, symba_plA, symba_tpA)
 
          if (param%lenergy) then
             call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_after, pe_after, Eorbit_after, Ltot, msys)
             Ecollision = Eorbit_before - Eorbit_after    ! Energy change resulting in this collisional event Total running energy offset from collision in this step
-            if ((Ecollision /= Ecollision) .or. (abs(Ecollision) > huge(Ecollision))) then 
-               write(*,*) 'Error encountered in collisional energy calculation!'
-               write(*,*) 'Eorbit_before: ', Eorbit_before
-               write(*,*) 'Eorbit_after : ', Eorbit_after
-               write(*,*) 'KE after     : ', ke
-               write(*,*) 'PE after     : ', pe
-               write(*,*) 'Ltot after   : ', Ltot
-               ! TEMPORARY DIAGNOSTIC OUTPUT. Worth formalizing?
-               open(unit = EGYDUMP, file = "energy_failure_particle_dump.dat",status="replace", iostat=ierr)
-               if (ierr /= 0) then
-                  do i = 1, npl
-                     write(EGYDUMP, *) 'Particle ',symba_plA%helio%swiftest%name(i)
-                     write(EGYDUMP, *) '    mass ',symba_plA%helio%swiftest%mass(i)
-                     write(EGYDUMP, *) '  radius ',symba_plA%helio%swiftest%radius(i)
-                     write(EGYDUMP, *) '      Ip ',symba_plA%helio%swiftest%Ip(:, i)
-                     write(EGYDUMP, *) '      xb ',symba_plA%helio%swiftest%xb(:, i)
-                     write(EGYDUMP, *) '      vb ',symba_plA%helio%swiftest%vb(:, i)
-                     write(EGYDUMP, *) '     rot ',symba_plA%helio%swiftest%rot(:, i)
-                  end do
-               end if
-               close(EGYDUMP)
-               call util_exit(FAILURE)
-            end if
             symba_plA%helio%swiftest%Ecollisions = symba_plA%helio%swiftest%Ecollisions + Ecollision
          end if
+         !if (ntp > 0) call util_dist_index_pltp(nplm, ntp, symba_plA, symba_tpA)
       end if
 
       iloop = iloop + 1

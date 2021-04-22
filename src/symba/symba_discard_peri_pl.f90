@@ -50,7 +50,6 @@ subroutine symba_discard_peri_pl(t, npl, symba_plA, msys, qmin, qmin_alo, qmin_a
 
 ! internals
    logical(LGT), save      :: lfirst = .true.
-   logical               :: ldiscard_cb, lescape
    integer(I4B)          :: i
 
 
@@ -60,30 +59,19 @@ subroutine symba_discard_peri_pl(t, npl, symba_plA, msys, qmin, qmin_alo, qmin_a
       lfirst = .false.
    else
       call symba_peri(lfirst, npl, symba_plA, msys, qmin_coord)
-      ldiscard_cb = .false.
       do i = 2, npl
          if (symba_plA%helio%swiftest%status(i) == ACTIVE) then
             if ((symba_plA%isperi(i) == 0) .and. (symba_plA%nplenc(i)== 0)) then
                if ((symba_plA%atp(i) >= qmin_alo) .and. (symba_plA%atp(i) <= qmin_ahi) &
                 .and. (symba_plA%peri(i) <= qmin)) then
                   ldiscard = .true.
-                  ldiscard_cb = .true.
-                  lescape = .true.
                   symba_plA%helio%swiftest%status(i) = DISCARDED_PERI
                   write(*, *) "Particle ", symba_plA%helio%swiftest%name(i), &
                    " perihelion distance too small at t = ", t
-                     call symba_discard_conserve_mtm(symba_plA%helio%swiftest, i, lescape)
                end if
             end if
          end if
       end do
-   end if
-
-   if (ldiscard_cb) then
-      ! Because the central body has changed position, we need to adjust the heliocentric position and velocities of everything
-
-      call coord_b2h(npl, symba_plA%helio%swiftest)
-      !if (ntp > 0) call coord_b2h_tp(ntp, symba_tpA%helio%swiftest, symba_plA%helio%swiftest)
    end if
 
    return
