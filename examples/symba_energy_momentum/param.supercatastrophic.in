@@ -38,3 +38,4 @@ DU2M           1.0
 !DU2M           1.49598e11
 ENERGY         yes
 ROTATION       yes
+EUCL_THRESHOLD 1
