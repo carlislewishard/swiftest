@@ -21,12 +21,10 @@ subroutine util_dist_index_plpl(npl, nplm, symba_plA)
    npl8 = int(npl, kind = I8B)
    nplm8 = int(nplm, kind = I8B)
 ! executable code
-   symba_plA%num_plpl_comparisons = ((npl8 - 1_I8B) * (npl8 - 2_I8B) / 2_I8B) - & ! number of entries in a strict lower triangle, nplm x npl, minus first column
+   symba_plA%helio%swiftest%num_plpl_comparisons = ((npl8 - 1_I8B) * (npl8 - 2_I8B) / 2_I8B) - & ! number of entries in a strict lower triangle, nplm x npl, minus first column
                ((npl8 - nplm8 - 1_I8B) * ((npl8 - nplm8 - 1_I8B) + 1_I8B) / 2_I8B)
-   if (allocated(symba_plA%k_plpl)) deallocate(symba_plA%k_plpl) 
-   allocate(symba_plA%k_plpl(2, symba_plA%num_plpl_comparisons))
-   if (allocated(symba_plA%l_plpl_encounter)) deallocate(symba_plA%l_plpl_encounter) 
-   allocate(symba_plA%l_plpl_encounter(symba_plA%num_plpl_comparisons))
+   if (allocated(symba_plA%helio%swiftest%k_plpl)) deallocate(symba_plA%helio%swiftest%k_plpl) 
+   allocate(symba_plA%helio%swiftest%k_plpl(2, symba_plA%helio%swiftest%num_plpl_comparisons))
    ! this is a 'fancier' code, but so far i think it runs slower
    ! so leaving it in, but commenting it out
    ! i think it's because of the 'mod' call, but i haven't profiled it yet
@@ -45,8 +43,8 @@ subroutine util_dist_index_plpl(npl, nplm, symba_plA)
    do i = 2,nplm
       counter = (i - 2) * npl - i * (i - 1) / 2 + 2
       do j = i+1,npl
-         symba_plA%k_plpl(1, counter) = i
-         symba_plA%k_plpl(2, counter) = j
+         symba_plA%helio%swiftest%k_plpl(1, counter) = i
+         symba_plA%helio%swiftest%k_plpl(2, counter) = j
          counter = counter + 1
       enddo
    enddo

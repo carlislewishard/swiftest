@@ -19,6 +19,8 @@ module swiftest_data_structures
       real(DP),     dimension(:,:),   allocatable :: vh     !! Heliocentric velocity
       real(DP),     dimension(:,:),   allocatable :: xb     !! Barycentric position
       real(DP),     dimension(:,:),   allocatable :: vb     !! Barycentric velocity
+      integer(I4B), dimension(:,:),   allocatable :: k_pltp
+      integer(I8B)                                ::  num_pltp_comparisons
    contains
       procedure :: alloc => swiftest_tp_allocate
       procedure :: dealloc => swiftest_tp_deallocate
@@ -38,6 +40,8 @@ module swiftest_data_structures
       real(DP),     dimension(NDIM)               :: Lescape = (/0.0_DP, 0.0_DP, 0.0_DP/)!! Angular momentum of bodies that escaped the system (used for bookeeping)
       real(DP)                                    :: Mescape = 0.0_DP !! Mass of bodies that escaped the system (used for bookeeping)
       real(DP)                                    :: Ecollisions = 0.0_DP !! Energy lost from system due to collisions
+      integer(I4B), dimension(:,:), allocatable   :: k_plpl
+      integer(I8B)                                :: num_plpl_comparisons
    contains
       procedure :: alloc => swiftest_pl_allocate
       procedure :: dealloc => swiftest_pl_deallocate

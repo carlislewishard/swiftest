@@ -24,8 +24,8 @@ subroutine symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msy
    real(DP)                  :: rmag, v2, rot2, oblpot, hx, hy, hz
    real(DP), dimension(npl)  :: irh, kepl, pecb
    real(DP), dimension(npl) :: Lplx, Lply, Lplz
-   real(DP), dimension(symba_plA%num_plpl_comparisons) :: pepl 
-   logical, dimension(symba_plA%num_plpl_comparisons) :: lstatpl
+   real(DP), dimension(symba_plA%helio%swiftest%num_plpl_comparisons) :: pepl 
+   logical, dimension(symba_plA%helio%swiftest%num_plpl_comparisons) :: lstatpl
 
 ! executable code
 
@@ -69,8 +69,8 @@ subroutine symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msy
       end do
 
       ! Do the potential energy between pairs of massive bodies
-      do k = 1, symba_plA%num_plpl_comparisons
-         associate(ik => symba_plA%k_plpl(1, k), jk => symba_plA%k_plpl(2, k))
+      do k = 1, symba_plA%helio%swiftest%num_plpl_comparisons
+         associate(ik => symba_plA%helio%swiftest%k_plpl(1, k), jk => symba_plA%helio%swiftest%k_plpl(2, k))
             pepl(k) = -mass(ik) * mass(jk) / norm2(xb(:, jk) - xb(:, ik)) 
             lstatpl(k) = (status(ik) == ACTIVE) .and. (status(jk) == ACTIVE)
          end associate

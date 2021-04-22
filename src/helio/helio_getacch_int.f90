@@ -39,21 +39,47 @@ SUBROUTINE helio_getacch_int(npl, helio_plA)
 ! Internals
      INTEGER(I4B)              :: i, j
      REAL(DP)                  :: rji2, irij3, faci, facj
-     REAL(DP), DIMENSION(NDIM) :: dx
+     !REAL(DP), DIMENSION(NDIM) :: dx
+     integer(I8B)              :: k
+     real(DP)                  :: dx, dy, dz
 
 
 ! Executable code
-     DO i = 2, npl - 1
-          DO j = i + 1, npl
-               dx(:) = helio_plA%swiftest%xh(:,j) - helio_plA%swiftest%xh(:,i)
-               rji2 = DOT_PRODUCT(dx(:), dx(:))
-               irij3 = 1.0_DP/(rji2*SQRT(rji2))
-               faci = helio_plA%swiftest%mass(i)*irij3
-               facj = helio_plA%swiftest%mass(j)*irij3
-               helio_plA%ahi(:,i) = helio_plA%ahi(:,i) + facj*dx(:)
-               helio_plA%ahi(:,i) = helio_plA%ahi(:,j) - faci*dx(:)
-          END DO
-     END DO
+     !DO i = 2, npl - 1
+     !     DO j = i + 1, npl
+     !          dx(:) = helio_plA%swiftest%xh(:,j) - helio_plA%swiftest%xh(:,i)
+     !          rji2 = DOT_PRODUCT(dx(:), dx(:))
+     !          irij3 = 1.0_DP/(rji2*SQRT(rji2))
+     !          faci = helio_plA%swiftest%mass(i)*irij3
+     !          facj = helio_plA%swiftest%mass(j)*irij3
+     !          helio_plA%ahi(:,i) = helio_plA%ahi(:,i) + facj*dx(:)
+     !          helio_plA%ahi(:,i) = helio_plA%ahi(:,j) - faci*dx(:)
+     !     END DO
+     !END DO
+
+
+     associate(ahi => helio_plA%ahi, xh => helio_plA%swiftest%xh, &
+               mass => helio_plA%swiftest%mass, radius => helio_plA%swiftest%radius, &
+               num_plpl_comparisons => helio_plA%swiftest%num_plpl_comparisons, &
+               k_plpl => helio_plA%swiftest%k_plpl)
+         do k = 1, num_plpl_comparisons
+            associate(ik => k_plpl(1, k), jk => k_plpl(2, k))
+               dx = xh(1, jk) - xh(1, ik)
+               dy = xh(2, jk) - xh(2, ik)
+               dz = xh(3, jk) - xh(3, ik)
+               rji2 = dx**2 + dy**2 + dz**2
+               irij3 = 1.0_DP / (rji2 * sqrt(rji2))
+               faci = mass(ik) * irij3
+               facj = mass(jk) * irij3
+               ahi(1, ik) = ahi(1, ik) + facj * dx
+               ahi(2, ik) = ahi(2, ik) + facj * dy
+               ahi(3, ik) = ahi(3, ik) + facj * dz
+               ahi(1, jk) = ahi(1, jk) - faci * dx
+               ahi(2, jk) = ahi(2, jk) - faci * dy
+               ahi(3, jk) = ahi(3, jk) - faci * dz
+            end associate
+         end do
+      end associate
 
      RETURN
 

@@ -53,8 +53,8 @@ SUBROUTINE util_dist_eucl_pltp(planets, test_particles, outvar, symba_tpA)
 !!$omp parallel do default(none) schedule(static) &
 !!$omp shared (num_pltp_comparisons, test_particles, planets, outvar, k_pltp) &
 !!$omp private (k)
-     do k = 1,symba_tpA%num_pltp_comparisons
-          outvar(:,k) = test_particles(:,symba_tpA%k_pltp(2,k)) - planets(:,symba_tpA%k_pltp(1,k))
+     do k = 1,symba_tpA%helio%swiftest%num_pltp_comparisons
+          outvar(:,k) = test_particles(:,symba_tpA%helio%swiftest%k_pltp(2,k)) - planets(:,symba_tpA%helio%swiftest%k_pltp(1,k))
      enddo
 !!$omp end parallel do
      RETURN

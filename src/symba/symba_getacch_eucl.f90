@@ -35,11 +35,15 @@ subroutine symba_getacch_eucl(lextra_force, t, npl, symba_plA, j2rp2, j4rp4, npl
 !executable code
  
    associate(ah => symba_plA%helio%ah, xh => symba_plA%helio%swiftest%xh, &
-              mass => symba_plA%helio%swiftest%mass, radius => symba_plA%helio%swiftest%radius)
+              mass => symba_plA%helio%swiftest%mass, radius => symba_plA%helio%swiftest%radius, &
+              num_plpl_comparisons => symba_plA%helio%swiftest%num_plpl_comparisons, &
+              k_plpl => symba_plA%helio%swiftest%k_plpl, lencounter => symba_plA%lencounter)
       ah(:,:) = 0.0_DP
-      do kn = 1, size(symba_plA%k_non_encounter(:))
-         associate(k => symba_plA%k_non_encounter(kn))
-         associate(ik => symba_plA%k_plpl(1, k), jk => symba_plA%k_plpl(2, k))
+      !!$omp parallel do default(private) schedule(auto) &
+      !!$omp shared(k_plpl, num_plpl_comparisons, xh, radius, mass) &
+      !!$omp reduction(+:ah)
+      do k = 1, num_plpl_comparisons
+         associate(ik => k_plpl(1, k), jk => k_plpl(2, k))
             dx = xh(1, jk) - xh(1, ik)
             dy = xh(2, jk) - xh(2, ik)
             dz = xh(3, jk) - xh(3, ik)
@@ -57,6 +61,28 @@ subroutine symba_getacch_eucl(lextra_force, t, npl, symba_plA, j2rp2, j4rp4, npl
                ah(3, jk) = ah(3, jk) - faci * dz
             end if
          end associate
+      end do
+      !!$omp end parallel do
+
+      ! Remove accelerations from encountering pairs
+      do k = 1, nplplenc
+         associate(ik => plplenc_list%index1(k), jk => plplenc_list%index2(k))
+            dx = xh(1, jk) - xh(1, ik)
+            dy = xh(2, jk) - xh(2, ik)
+            dz = xh(3, jk) - xh(3, ik)
+            rji2 = dx**2 + dy**2 + dz**2
+            rlim2 = (radius(ik) + radius(jk))**2
+            if (rji2 > rlim2) then
+               irij3 = 1.0_DP / (rji2 * sqrt(rji2))
+               faci = mass(ik) * irij3
+               facj = mass(jk) * irij3
+               ah(1, ik) = ah(1, ik) - facj * dx
+               ah(2, ik) = ah(2, ik) - facj * dy
+               ah(3, ik) = ah(3, ik) - facj * dz
+               ah(1, jk) = ah(1, jk) + faci * dx
+               ah(2, jk) = ah(2, jk) + faci * dy
+               ah(3, jk) = ah(3, jk) + faci * dz
+            end if
          end associate
       end do
 

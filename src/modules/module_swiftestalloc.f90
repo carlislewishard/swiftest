@@ -46,6 +46,7 @@ module module_swiftestalloc
       end if
 
       allocate(symba_plA%lcollision(n))
+      allocate(symba_plA%lencounter(n))
       allocate(symba_plA%nplenc(n))
       allocate(symba_plA%ntpenc(n))
       allocate(symba_plA%levelg(n))
@@ -56,6 +57,7 @@ module module_swiftestalloc
       allocate(symba_plA%atp(n))
 
       symba_plA%lcollision(:) = .false.
+      symba_plA%lencounter(:) = .false.
       symba_plA%nplenc(:) = 0
       symba_plA%ntpenc(:) = 0
       symba_plA%levelg(:) = 0
@@ -254,6 +256,7 @@ module module_swiftestalloc
       type(symba_pl), intent(inout)        :: symba_plA
 
       if (allocated(symba_plA%lcollision)) deallocate(symba_plA%lcollision)
+      if (allocated(symba_plA%lencounter)) deallocate(symba_plA%lencounter)
       if (allocated(symba_plA%nplenc)) deallocate(symba_plA%nplenc)
       if (allocated(symba_plA%ntpenc)) deallocate(symba_plA%ntpenc)
       if (allocated(symba_plA%levelg)) deallocate(symba_plA%levelg)

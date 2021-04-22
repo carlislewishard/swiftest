@@ -43,10 +43,10 @@ SUBROUTINE util_dist_index_pltp(nplm, ntp, symba_tpA)
      INTEGER(I8B)              :: i,j,ii,jj,np,counter,ii_end,jj_end
 
 ! Executable code
-     symba_tpA%num_pltp_comparisons = (int(nplm, kind = I8B) - 1_I8B) * int(ntp, kind = I8B) ! number of entries in our distance array
+     symba_tpA%helio%swiftest%num_pltp_comparisons = (int(nplm, kind = I8B) - 1_I8B) * int(ntp, kind = I8B) ! number of entries in our distance array
 
-     if (allocated(symba_tpA%k_pltp)) deallocate(symba_tpA%k_pltp)
-     allocate(symba_tpA%k_pltp(2, symba_tpA%num_pltp_comparisons))
+     if (allocated(symba_tpA%helio%swiftest%k_pltp)) deallocate(symba_tpA%helio%swiftest%k_pltp)
+     allocate(symba_tpA%helio%swiftest%k_pltp(2, symba_tpA%helio%swiftest%num_pltp_comparisons))
 
 ! !!$omp parallel do schedule(static) default(none) &
 ! !!$omp shared(k_pltp, nplm, ntp) &
@@ -71,8 +71,8 @@ SUBROUTINE util_dist_index_pltp(nplm, ntp, symba_tpA)
             jj_end = min(j+np-1, ntp)
                do ii = i, ii_end
                     do jj = j, jj_end
-                         symba_tpA%k_pltp(1,counter) = ii
-                         symba_tpA%k_pltp(2,counter) = jj
+                         symba_tpA%helio%swiftest%k_pltp(1,counter) = ii
+                         symba_tpA%helio%swiftest%k_pltp(2,counter) = jj
                          counter = counter + 1
                     enddo
                enddo

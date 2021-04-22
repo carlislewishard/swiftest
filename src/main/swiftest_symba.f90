@@ -162,7 +162,7 @@ program swiftest_symba
    call system_clock(clock_count, count_rate, count_max)
    start = clock_count / (count_rate * 1.0_DP)
    do while ((t < tstop) .and. ((ntp0 == 0) .or. (ntp > 0)))
-      !if(symba_plA%num_plpl_comparisons > param%eucl_threshold) then
+      !if(symba_plA%helio%swiftest%num_plpl_comparisons > param%eucl_threshold) then
          call symba_step_eucl(t, dt, param,npl,ntp,symba_plA, symba_tpA, nplplenc, npltpenc,&
                plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list)
               

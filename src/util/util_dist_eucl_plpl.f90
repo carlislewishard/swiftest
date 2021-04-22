@@ -49,8 +49,8 @@ SUBROUTINE util_dist_eucl_plpl(invar, outvar, symba_plA)
 
    !!$omp parallel do schedule(auto) default(private) &
    !!$omp shared (outvar, invar, num_comparisons, k_plpl)
-   do k = 1,symba_plA%num_plpl_comparisons
-      outvar(:,k) = invar(:,symba_plA%k_plpl(2,k)) - invar(:,symba_plA%k_plpl(1,k))
+   do k = 1,symba_plA%helio%swiftest%num_plpl_comparisons
+      outvar(:,k) = invar(:,symba_plA%helio%swiftest%k_plpl(2,k)) - invar(:,symba_plA%helio%swiftest%k_plpl(1,k))
    end do
    !!$omp end parallel do
 

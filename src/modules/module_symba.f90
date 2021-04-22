@@ -42,6 +42,7 @@ MODULE module_symba
 
    type symba_pl
       logical(LGT), dimension(:),   allocatable :: lcollision ! flag indicating whether body has merged with another this time step
+      logical(LGT), dimension(:),   allocatable :: lencounter! flag indicating whether body is part of an encounter this time step
       integer(I4B), dimension(:),   allocatable :: nplenc  ! number of encounters with other planets this time step
       integer(I4B), dimension(:),   allocatable :: ntpenc  ! number of encounters with test particles this time step
       integer(I4B), dimension(:),   allocatable :: levelg  ! level at which this body should be moved
@@ -52,10 +53,6 @@ MODULE module_symba
       type(helio_pl)                  :: helio   ! HELIO planet structure
       type(symba_kinship), dimension(:), allocatable :: kin  ! Array of merger relationship structures that can account for multiple pairwise 
                                        ! mergers in a single step
-      integer(I4B), dimension(:,:), allocatable :: k_plpl
-      integer(I8B), dimension(:), allocatable :: k_encounter, k_non_encounter
-      integer(I8B)                  ::  num_plpl_comparisons
-      logical, dimension(:), allocatable  :: l_plpl_encounter
    end type symba_pl
 
    type symba_tp
@@ -63,8 +60,6 @@ MODULE module_symba
       integer(I4B), dimension(:),   allocatable :: levelg  ! level at which this particle should be moved
       integer(I4B), dimension(:),   allocatable :: levelm  ! deepest encounter level achieved this time step
       type(helio_tp)                  :: helio   ! HELIO test particle structure
-      integer(I4B), dimension(:,:), allocatable :: k_pltp
-      integer(I8B)                  ::  num_pltp_comparisons
    end type symba_tp
 
    type symba_plplenc

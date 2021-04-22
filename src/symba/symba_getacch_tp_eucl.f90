@@ -76,11 +76,11 @@ SUBROUTINE symba_getacch_tp_eucl(lextra_force, t, npl, ntp, symba_plA, symba_tpA
 !!$omp parallel do default(shared) schedule(static) &
 !!$omp shared(num_pltp_comparisons, symba_plA, symba_tpA, k_pltp) &
 !!$omp reduction(-:ah)
-     do k = 1,symba_tpA%num_pltp_comparisons
-          j = symba_tpA%k_pltp(2,k)
+     do k = 1,symba_tpA%helio%swiftest%num_pltp_comparisons
+          j = symba_tpA%helio%swiftest%k_pltp(2,k)
           IF (symba_tpA%helio%swiftest%status(j) == ACTIVE) THEN
-               i = symba_tpA%k_pltp(1,k)
-               dx(:) = symba_tpA%helio%swiftest%xh(:,symba_tpA%k_pltp(2,k)) - symba_plA%helio%swiftest%xh(:,symba_tpA%k_pltp(1,k))
+               i = symba_tpA%helio%swiftest%k_pltp(1,k)
+               dx(:) = symba_tpA%helio%swiftest%xh(:,symba_tpA%helio%swiftest%k_pltp(2,k)) - symba_plA%helio%swiftest%xh(:,symba_tpA%helio%swiftest%k_pltp(1,k))
                r2 = DOT_PRODUCT(dx(:), dx(:))
                fac = symba_PlA%helio%swiftest%mass(i)/(r2*SQRT(r2))
                ah(:,j) = ah(:,j) - fac*dx(:)
