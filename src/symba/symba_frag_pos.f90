@@ -66,6 +66,12 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       mtot = sum(mass(:))
       xcom(:) = (mass(1) * x(:,1) + mass(2) * x(:,2)) / mtot
       vcom(:) = (mass(1) * v(:,1) + mass(2) * v(:,2)) / mtot 
+      
+      ! Relative position and velocity vectors of the two impacting "clouds" 
+      delta_r(:) = x(:, 2) - x(:, 1)
+      r_col_norm = norm2(delta_r(:))
+      delta_v(:) = v(:, 2) - v(:, 1)
+      v_col_norm = norm2(delta_v(:))               
 
       ! Make the list of family members (bodies involved in the collision)
       fam_size = 2 + nchild1 + nchild2
@@ -93,7 +99,6 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       KE_before = 0.0_DP
       KE_spin_before = 0.0_DP
 
-      r_col_norm = 0.0_DP
       do i = 1, fam_size
          ! Calculate the potential energy between family members
          do j = i + 1, fam_size
@@ -113,14 +118,12 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
          !! Calculate the orbital and rotational kinetic energy between the two bodies 
          KE_before = KE_before + 0.5_DP * Mpl(family(i)) * v2 
          KE_spin_before = KE_spin_before + 0.5_DP * Mpl(family(i)) * Ippl(3,family(i)) * rot2 * radpl(family(i))**2
-         r_col_norm = r_col_norm + Mpl(family(i)) * radpl(family(i))
       end do
 
       Etot_before = KE_before + KE_spin_before + U_before
 
-	      ! Now create the fragment distribution
-	      nfrag = size(x_frag, 2)
-      r_col_norm = r_col_norm / mtot / nfrag
+      ! Now create the fragment distribution
+      nfrag = size(x_frag, 2)
 
       ! Calculate the position of each fragment 
       ! Theta is a phase shift value that ensures that successive nearby collisions in a single step are rotated to avoid possible overlap
@@ -131,9 +134,6 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       thetashift = thetashift + 1
       IF (thetashift >= shiftmax) thetashift = 0
 
-      ! Calculate the triple product to get the plane of the fragment distribution
-      delta_v(:) = v(:, 2) - v(:, 1)
-      delta_r(:) = x(:, 2) - x(:, 1)
       ! Compute orbital angular momentum of pre-impact system. This will be the normal vector to the collision fragment plane
       Ltot = L_spin(:,1) + L_spin(:,2)
       do j = 1, 2
@@ -142,15 +142,22 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
          call utiL_crossproduct(xc(:), vc(:), x_cross_v(:))
          Ltot(:) = Ltot(:) + mass(j) * x_cross_v(:)
       end do
+
+      ! Calculate the triple product to get the plane of the fragment distribution
       call util_crossproduct(Ltot,delta_v,v_plane_unit_vec)
       v_plane_unit_vec(:) = v_plane_unit_vec(:) / norm2(v_plane_unit_vec(:))
-      v_col_norm = norm2(delta_v(:))               ! pre-collision velocity magnitude
+
       v_col_unit_vec(:) = delta_v(:) / v_col_norm 
       r_col_unit_vec(:) = delta_r(:) / norm2(delta_r(:)) ! unit vector of collision distance
+
+      ! Re-normalize position and velocity vectors by the fragment number so that for our initial guess we weight each
+      ! fragment position by the mass and assume equipartition of energy for the velocity
+      r_col_norm = r_col_norm / nfrag
+      v_col_norm = v_col_norm / sqrt(1.0_DP * nfrag)
       do i = 1, nfrag
          ! Place the fragments on the collision plane at a distance proportional to mass wrt the collisional barycenter
          ! This gets updated later after the new potential energy is calculated
-         r_frag_norm = r_col_norm * mtot / m_frag(i)
+         r_frag_norm = 2 * r_col_norm * mtot / m_frag(i)
 
          x_frag(:,i) =  r_frag_norm * ((cos(phase_ang + theta * i)) * v_col_unit_vec(:)  + &
                                        (sin(phase_ang + theta * i)) * v_plane_unit_vec(:)) 
