@@ -26,8 +26,8 @@ subroutine symba_chk_eucl(symba_plA, dt, lvdotr, nplplenc)
    logical, dimension(:), allocatable :: loc_lvdotr, ltmp
    ! logical(lgt) :: iflag lvdotr_flag
    real(DP)   :: rcrit, r2crit, vdotr, r2, v2, tmin, r2min, term2, rcritmax, r2critmax
-   integer(I4B) :: i, j, npl
-   integer(I8B) :: k
+   integer(I4B) :: j, npl
+   integer(I8B) :: k, i
    real(DP), dimension(NDIM):: xr, vr
 
 ! executable code

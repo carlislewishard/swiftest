@@ -109,8 +109,9 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
 
           do k = 1, nplplenc
             do i = 1, 2
-               ipl = symba_plA%k_plpl(i, symba_plA%k_encounter(k)) 
-               symba_plA%nplenc(ipl) = symba_plA%nplenc(symba_plA%k_plpl(i, symba_plA%k_encounter(k))) + 1 ! number of particles that planet "i" has close encountered
+               associate(ipl => symba_plA%k_plpl(i, symba_plA%k_encounter(k)))
+                  symba_plA%nplenc(ipl) = symba_plA%nplenc(ipl) + 1 ! number of particles that planet "i" has close encountered
+               end associate
             end do
 
             plplenc_list%status(k) = ACTIVE ! you are in an encounter
