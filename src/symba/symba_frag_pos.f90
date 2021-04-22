@@ -152,12 +152,13 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
 
       ! Re-normalize position and velocity vectors by the fragment number so that for our initial guess we weight each
       ! fragment position by the mass and assume equipartition of energy for the velocity
-      r_col_norm = r_col_norm / nfrag
+      r_col_norm = max(2 * r_col_norm, 2 * sum(radius(:))) / nfrag ! To ensure that the new fragments aren't overlapping we will pick an initial starting radius 
+                                                                   ! that is the bigger of: 2x the initial separation or 2x the mutual radius. 
       v_col_norm = v_col_norm / sqrt(1.0_DP * nfrag)
       do i = 1, nfrag
          ! Place the fragments on the collision plane at a distance proportional to mass wrt the collisional barycenter
          ! This gets updated later after the new potential energy is calculated
-         r_frag_norm = 2 * r_col_norm * mtot / m_frag(i)
+         r_frag_norm = r_col_norm * mtot / m_frag(i) 
 
          x_frag(:,i) =  r_frag_norm * ((cos(phase_ang + theta * i)) * v_col_unit_vec(:)  + &
                                        (sin(phase_ang + theta * i)) * v_plane_unit_vec(:)) 
