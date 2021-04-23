@@ -28,38 +28,21 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
    real(DP), dimension(NDIM)                  :: vbs
    integer(I4B), dimension(2)                 :: idx, name
    real(DP), dimension(2)                     :: radius, mass 
-   real(DP), dimension(NDIM, 2)               :: x, v
    real(DP)                                   :: r2, rlim, rlim2, vdotr, tcr2, dt2, a, e, q
    real(DP), dimension(NDIM)                  :: xr, vr
    logical                                    :: lcollision
    integer(I4B), dimension(:), allocatable    :: temp
-   real(DP)                                   :: m1, m2, mtot, vx1, vx2, vy1, vy2
-   real(DP), dimension(NDIM)                  :: xh1, xh2, vb1, vb2, vbcom, xhcom
+   real(DP)                                   :: mtot
 
-   ! recalculates vbs 
-   call coord_vb2vh(npl, symba_plA%helio%swiftest)
 
    ! The plplenc_list is populated such that the most massive of the two bodies is index1
    idx(1) = plplenc_list%index1(index_enc)
    idx(2) = plplenc_list%index2(index_enc)
 
-   m1 = symba_plA%helio%swiftest%mass(idx(1))         ! mass of larger parent
-   m2 = symba_plA%helio%swiftest%mass(idx(2))         ! mass of smaller parent
-   xh1(:) = symba_plA%helio%swiftest%xh(:,idx(1))     ! heliocentric position of larger parent at time collision is detected / deemed inevitable
-   xh2(:) = symba_plA%helio%swiftest%xh(:,idx(2))     ! heliocentric position of smaller parent at time collision is detected / deemed inevitable
-   vb1(:) = symba_plA%helio%swiftest%vb(:,idx(1))     ! barycentric velocity of larger parent at time collision is detected / deemed inevitable
-   vb2(:) = symba_plA%helio%swiftest%vb(:,idx(2))     ! barycentric velocity of smaller parent at time collision is detected / deemed inevitable
-
-   vbcom(:) = (m1 * vb1 + m2 * vb2) / (m1 + m2)
-   xhcom(:) = (m1 * xh1 + m2 * xh2) / (m1 + m2)
-   mtot = m1 + m2
-
    rlim = symba_plA%helio%swiftest%radius(idx(1)) + symba_plA%helio%swiftest%radius(idx(2))
    xr(:) = symba_plA%helio%swiftest%xh(:, idx(2)) - symba_plA%helio%swiftest%xh(:, idx(1))
    r2 = dot_product(xr(:), xr(:))
    rlim2 = rlim**2
-   vr(:) = symba_plA%helio%swiftest%vb(:, idx(2)) - symba_plA%helio%swiftest%vb(:, idx(1))
-   vdotr = dot_product(xr(:), vr(:))
 
    lcollision = .false.
    ! checks if bodies are actively colliding in this time step
@@ -67,10 +50,13 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
       lcollision = .true.
       ! if they are not actively colliding in  this time step, checks if they are going to collide next time step based on velocities and q
    else 
+      vr(:) = symba_plA%helio%swiftest%vb(:, idx(2)) - symba_plA%helio%swiftest%vb(:, idx(1))
+      vdotr = dot_product(xr(:), vr(:))
       if (plplenc_list%lvdotr(index_enc) .and. (vdotr > 0.0_DP)) then 
          tcr2 = r2 / dot_product(vr(:), vr(:))
          dt2 = dt**2
          if (tcr2 <= dt2) then
+            mtot = sum(symba_plA%helio%swiftest%mass(idx(:)))
             call orbel_xv2aeq(xr(:), vr(:), mtot, a, e, q)
             if (q < rlim) then 
                lcollision = .true.
@@ -81,12 +67,11 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
    end if
 
    if (lcollision) then
-
       plplenc_list%status(index_enc) = COLLISION
-      plplenc_list%xh1(:,index_enc) = xh1(:)
-      plplenc_list%vb1(:,index_enc) = vb1(:)
-      plplenc_list%xh2(:,index_enc) = xh2(:)
-      plplenc_list%vb2(:,index_enc) = vb2(:)
+      plplenc_list%xh1(:,index_enc) = symba_plA%helio%swiftest%xh(:,idx(1)) 
+      plplenc_list%vb1(:,index_enc) = symba_plA%helio%swiftest%vb(:,idx(1)) 
+      plplenc_list%xh2(:,index_enc) = symba_plA%helio%swiftest%xh(:,idx(2))
+      plplenc_list%vb2(:,index_enc) = symba_plA%helio%swiftest%vb(:,idx(2))   
       p1 = symba_plA%kin(idx(1))%parent
       p2 = symba_plA%kin(idx(2))%parent
       if (p1 == p2) return ! This is a collision between to children of a shared parent. We will ignore it.
@@ -141,17 +126,12 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
          end if
       end do
 
-   else ! Not going to collide, so flag this as a close encounter
-      if (param%encounter_file /= "") then
-         name(:)   = symba_plA%helio%swiftest%name(idx(:))
-         mass(:)   = symba_plA%helio%swiftest%mass(idx(:))
-         radius(:) = symba_plA%helio%swiftest%radius(idx(:))
-         vbs(:) = symba_plA%helio%swiftest%vb(:, 1)
-         do j = 1, 2
-            x(:, j)  = symba_plA%helio%swiftest%xh(:,idx(j)) 
-            v(:, j)  = symba_plA%helio%swiftest%vb(:,idx(j)) - vbs(:)
-         end do
-      end if
+   !else ! Not going to collide, so flag this as a close encounter
+      !if (param%encounter_file /= "") then
+      !   name(:)   = symba_plA%helio%swiftest%name(idx(:))
+      !   mass(:)   = symba_plA%helio%swiftest%mass(idx(:))
+      !   radius(:) = symba_plA%helio%swiftest%radius(idx(:))
+      !end if
    end if
 
 end subroutine symba_merge_pl
