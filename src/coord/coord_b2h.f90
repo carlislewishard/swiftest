@@ -22,7 +22,8 @@ subroutine coord_b2h(npl, swiftest_plA)
 
    associate(vbcb => swiftest_plA%vb(:,1), xbcb => swiftest_plA%xb(:,1), &
       vb => swiftest_plA%vb,        vh   => swiftest_plA%vh, &
-      xb => swiftest_plA%xb,        xh   => swiftest_plA%xh)
+      xb => swiftest_plA%xb,        xh   => swiftest_plA%xh, &
+      status => swiftest_plA%status)
 
       lstatus(2:npl) = status(2:npl) == ACTIVE
 
