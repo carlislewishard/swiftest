@@ -16,19 +16,14 @@ subroutine coord_b2h(npl, swiftest_plA)
 
 ! Internals
    integer(I4B)          :: i
-   logical, dimension(npl) :: lstatus
 
 ! Executable code
 
    associate(vbcb => swiftest_plA%vb(:,1), xbcb => swiftest_plA%xb(:,1), &
       vb => swiftest_plA%vb,        vh   => swiftest_plA%vh, &
-      xb => swiftest_plA%xb,        xh   => swiftest_plA%xh, &
-      status => swiftest_plA%status)
+      xb => swiftest_plA%xb,        xh   => swiftest_plA%xh)
 
-      lstatus(2:npl) = status(2:npl) == ACTIVE
-
-      do i = 1, npl
-         if (.not.lstatus(i)) cycle
+      do i = 2,npl 
          xh(:,i) = xb(:,i) - xbcb(:)
          vh(:,i) = vb(:,i) - vbcb(:)
       end do

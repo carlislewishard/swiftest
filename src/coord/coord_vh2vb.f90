@@ -37,8 +37,8 @@ subroutine coord_vh2vb(npl, swiftest_plA, msys)
       msys = dMcb + sum(mass(2:npl), lstatus(2:npl)) + Mcb_initial
       vbcb(:) = -vbcb(:) / msys
 
-      do i = 2, npl
-         if (.not.lstatus(i)) cycle
+
+      do i = 2,npl 
          vb(:,i) = vh(:,i) + vbcb(:)
       end do
 

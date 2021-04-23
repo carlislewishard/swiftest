@@ -32,8 +32,7 @@ subroutine coord_vb2vh(npl, swiftest_plA)
 
       vbcb(:) = vbcb(:) / Mcb
 
-      do i = 2, npl
-         if (.not.lstatus(i)) cycle
+      do i = 2,npl 
          vh(:,i) = vb(:,i) - vbcb(:)
       end do
 

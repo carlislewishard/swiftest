@@ -40,11 +40,12 @@ subroutine coord_h2b(npl, swiftest_plA, msys)
       xbcb(:) = -xbcb(:) / msys                      
       vbcb(:) = -vbcb(:) / msys    
 
-      do i = 2, npl
-         if (.not.lstatus(i)) cycle
+      do i = 2,npl 
          xb(:,i) = xh(:,i) + xbcb(:)
          vb(:,i) = vh(:,i) + vbcb(:)
       end do
+
+      status(1) = ACTIVE
 
    end associate
 
