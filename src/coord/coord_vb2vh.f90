@@ -15,13 +15,20 @@ subroutine coord_vb2vh(npl, swiftest_plA)
 
 ! internals
    integer(I4B)          :: i
+   !real(DP), dimension(NDIM) :: vtmp
 
 ! executable code
 
-   swiftest_plA%vb(:,1) = -matmul(swiftest_plA%vb(:,2:npl), swiftest_plA%mass(2:npl)) / swiftest_plA%mass(1)
-   do i = 1, NDIM
-      swiftest_plA%vh(i,2:npl) = swiftest_plA%vb(i,2:npl) - swiftest_plA%vb(i,1) 
-   end do
+   associate(vbcb => swiftest_plA%vb(:,1), vb => swiftest_plA%vb, mass => swiftest_plA%mass, vh => swiftest_plA%vh)
+      vbcb(:) = 0.0_DP
+      do i = 2, npl
+         vbcb(:) = vbcb(:) - mass(i) * vb(:,i)
+      end do
+      vbcb(:) = vbcb(:) / mass(1)
+      do i = 2, npl
+         vh(:,i) = vb(:,i) - vbcb(:)
+      end do
+   end associate
 
    return
 

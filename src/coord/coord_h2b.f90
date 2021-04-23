@@ -16,39 +16,29 @@ subroutine coord_h2b(npl, swiftest_plA, msys)
 
 ! internals
    integer(I4B)          :: i
-   real(DP), dimension(NDIM) :: xtmp, vtmp
 
 ! executable code
-   if (any(swiftest_plA%status(2:npl) /= ACTIVE)) then
-      xtmp(:) = 0.0_DP
-      vtmp(:) = 0.0_DP
+   associate(vbcb => swiftest_plA%vb(:,1), xbcb => swiftest_plA%xb(:,1), &
+             vb => swiftest_plA%vb,        vh   => swiftest_plA%vh, &
+             xb => swiftest_plA%xb,        xh   => swiftest_plA%xh, &
+             mass => swiftest_plA%mass, status => swiftest_plA%status, &
+             dMcb => swiftest_plA%dMcb, Mcb_initial => swiftest_plA%Mcb_initial)
+      xbcb(:) = 0.0_DP
+      vbcb(:) = 0.0_DP
       do i = 2, npl
-         if (swiftest_plA%status(i) /= ACTIVE) cycle
-         xtmp(:) = xtmp(:) + swiftest_plA%mass(i)*swiftest_plA%xh(:,i)
-         vtmp(:) = vtmp(:) + swiftest_plA%mass(i)*swiftest_plA%vh(:,i)
+         if (status(i) /= ACTIVE) cycle
+         xbcb(:) = xbcb(:) + mass(i)*xh(:,i)
+         vbcb(:) = vbcb(:) + mass(i)*vh(:,i)
       end do
-      msys = swiftest_plA%dMcb + sum(swiftest_plA%mass(2:npl), swiftest_plA%status(2:npl) == ACTIVE) + swiftest_plA%Mcb_initial
-      swiftest_plA%xb(:,1) = -xtmp(:) / msys                      
-      swiftest_plA%vb(:,1) = -vtmp(:) / msys                      
-      xtmp(:) = swiftest_plA%xb(:,1)
-      vtmp(:) = swiftest_plA%vb(:,1)
+      msys = dMcb + sum(mass(2:npl), status(2:npl) == ACTIVE) + Mcb_initial
+      xbcb(:) = -xbcb(:) / msys                      
+      vbcb(:) = -vbcb(:) / msys                      
       do i = 2, npl
-         if (swiftest_plA%status(i) /= ACTIVE) cycle
-         swiftest_plA%xb(:,i) = swiftest_plA%xh(:,i) + xtmp(:)
-         swiftest_plA%vb(:,i) = swiftest_plA%vh(:,i) + vtmp(:)
+         if (status(i) /= ACTIVE) cycle
+         xb(:,i) = xh(:,i) + xbcb(:)
+         vb(:,i) = vh(:,i) + vbcb(:)
       end do
-   else
-      xtmp(:) = matmul(swiftest_plA%xh(:,2:npl), swiftest_plA%mass(2:npl))
-      vtmp(:) = matmul(swiftest_plA%vh(:,2:npl), swiftest_plA%mass(2:npl))
-      msys = swiftest_plA%dMcb + sum(swiftest_plA%mass(2:npl)) + swiftest_plA%Mcb_initial
-      swiftest_plA%xb(:,1) = -xtmp(:) / msys                      
-      swiftest_plA%vb(:,1) = -vtmp(:) / msys    
-      do i = 1, NDIM
-         swiftest_plA%xb(i,2:npl) = swiftest_plA%xh(i,2:npl) + swiftest_plA%xb(i,1)
-         swiftest_plA%vb(i,2:npl) = swiftest_plA%vh(i,2:npl) + swiftest_plA%vb(i,1)
-      end do
-
-   end if
+   end associate
 
    return
 
