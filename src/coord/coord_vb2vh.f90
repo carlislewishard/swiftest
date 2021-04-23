@@ -15,19 +15,28 @@ subroutine coord_vb2vh(npl, swiftest_plA)
 
 ! internals
    integer(I4B)          :: i
-   !real(DP), dimension(NDIM) :: vtmp
+   logical, dimension(npl) :: lstatus
 
 ! executable code
 
-   associate(vbcb => swiftest_plA%vb(:,1), vb => swiftest_plA%vb, mass => swiftest_plA%mass, vh => swiftest_plA%vh)
+   associate(vbcb => swiftest_plA%vb(:,1),  Mcb => swiftest_plA%mass(1), &
+             vb   => swiftest_plA%vb,        vh => swiftest_plA%vh, &
+             mass => swiftest_plA%mass, status => swiftest_plA%status)
+
+      lstatus(2:npl) = status(2:npl) == ACTIVE
       vbcb(:) = 0.0_DP
       do i = 2, npl
+         if (.not.lstatus(i)) cycle
          vbcb(:) = vbcb(:) - mass(i) * vb(:,i)
       end do
-      vbcb(:) = vbcb(:) / mass(1)
+
+      vbcb(:) = vbcb(:) / Mcb
+
       do i = 2, npl
+         if (.not.lstatus(i)) cycle
          vh(:,i) = vb(:,i) - vbcb(:)
       end do
+
    end associate
 
    return

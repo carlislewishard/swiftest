@@ -17,31 +17,32 @@ subroutine coord_vh2vb(npl, swiftest_plA, msys)
 
 ! internals
    integer(I4B)          :: i
-   real(DP), dimension(NDIM) :: vtmp
+   logical, dimension(npl) :: lstatus
 
 ! executable code
 
-   if (any(swiftest_plA%status(2:npl) /= ACTIVE)) then
-      vtmp(:) = 0.0_DP
-      do i = 2, npl
-         if (swiftest_plA%status(i) /= ACTIVE) cycle
-         vtmp(:) = vtmp(:) + swiftest_plA%mass(i)*swiftest_plA%vh(:,i)
+   associate(vbcb => swiftest_plA%vb(:,1), &
+             vb   => swiftest_plA%vb,   vh => swiftest_plA%vh, &
+             mass => swiftest_plA%mass, status => swiftest_plA%status, &
+             dMcb => swiftest_plA%dMcb, Mcb_initial => swiftest_plA%Mcb_initial)
+
+      lstatus(2:npl) = status(2:npl) == ACTIVE
+
+      vbcb(:) = 0.0_DP
+      do i = 2,npl
+         if (.not.lstatus(i)) cycle
+         vbcb(:) = vbcb(:) + mass(i) * vh(:,i)
       end do
-      msys = swiftest_plA%dMcb + sum(swiftest_plA%mass(2:npl), swiftest_plA%status(2:npl) == ACTIVE) + swiftest_plA%Mcb_initial
-      swiftest_plA%vb(:,1) = -vtmp(:)  /msys
-      vtmp(:) = swiftest_plA%vb(:,1)
+
+      msys = dMcb + sum(mass(2:npl), lstatus(2:npl)) + Mcb_initial
+      vbcb(:) = -vbcb(:) / msys
+
       do i = 2, npl
-         if (swiftest_plA%status(i) /= ACTIVE) cycle
-         swiftest_plA%vb(:,i) = swiftest_plA%vh(:,i) + vtmp(:)
+         if (.not.lstatus(i)) cycle
+         vb(:,i) = vh(:,i) + vbcb(:)
       end do
-   else
-      vtmp(:) = matmul(swiftest_plA%vh(:,2:npl), swiftest_plA%mass(2:npl))
-      msys = swiftest_plA%dMcb + sum(swiftest_plA%mass(2:npl)) + swiftest_plA%Mcb_initial
-      swiftest_plA%vb(:,1) = -vtmp(:) / msys    
-      do i = 1, NDIM
-         swiftest_plA%vb(i,2:npl) = swiftest_plA%vh(i,2:npl) + swiftest_plA%vb(i,1)
-      end do 
-   end if
+
+   end associate
 
    return
 

@@ -16,12 +16,23 @@ subroutine coord_b2h(npl, swiftest_plA)
 
 ! Internals
    integer(I4B)          :: i
+   logical, dimension(npl) :: lstatus
 
 ! Executable code
-   do i = 1, NDIM
-      swiftest_plA%xh(i,1:npl) = swiftest_plA%xb(i,1:npl) - swiftest_plA%xb(i,1)
-      swiftest_plA%vh(i,1:npl) = swiftest_plA%vb(i,1:npl) - swiftest_plA%vb(i,1)
-   end do
+
+   associate(vbcb => swiftest_plA%vb(:,1), xbcb => swiftest_plA%xb(:,1), &
+      vb => swiftest_plA%vb,        vh   => swiftest_plA%vh, &
+      xb => swiftest_plA%xb,        xh   => swiftest_plA%xh)
+
+      lstatus(2:npl) = status(2:npl) == ACTIVE
+
+      do i = 1, npl
+         if (.not.lstatus(i)) cycle
+         xh(:,i) = xb(:,i) - xbcb(:)
+         vh(:,i) = vb(:,i) - vbcb(:)
+      end do
+
+   end associate
 
    return
 
