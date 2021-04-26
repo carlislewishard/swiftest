@@ -22,20 +22,20 @@ subroutine symba_reorder_pl(npl, symba_plA)
    allocate(sort_index(npl))
 
    ! sort by mass
-   call util_index(symba_plA%helio%swiftest%mass(1:npl), sort_index)
+   call util_index(symba_plA%helio%swiftest%mass(2:npl), sort_index(2:npl))
    !write(*,*) "************ REORDER ***************"
-   do i = 1, npl
-      symba_plA%helio%swiftest%name(i) = symba_plwkspA%helio%swiftest%name(sort_index(npl-i+1))
-      symba_plA%helio%swiftest%status(i) = symba_plwkspA%helio%swiftest%status(sort_index(npl-i+1))
-      symba_plA%helio%swiftest%mass(i) = symba_plwkspA%helio%swiftest%mass(sort_index(npl-i+1))
-      symba_plA%helio%swiftest%radius(i) = symba_plwkspA%helio%swiftest%radius(sort_index(npl-i+1))
-      symba_plA%helio%swiftest%xh(:,i) = symba_plwkspA%helio%swiftest%xh(:,sort_index(npl-i+1))
-      symba_plA%helio%swiftest%vh(:,i) = symba_plwkspA%helio%swiftest%vh(:,sort_index(npl-i+1))
-      symba_plA%helio%swiftest%xb(:,i) = symba_plwkspA%helio%swiftest%xb(:,sort_index(npl-i+1))
-      symba_plA%helio%swiftest%vb(:,i) = symba_plwkspA%helio%swiftest%vb(:,sort_index(npl-i+1))
-      symba_plA%helio%swiftest%rot(:,i) = symba_plwkspA%helio%swiftest%rot(:,sort_index(npl-i+1))
-      symba_plA%helio%swiftest%Ip(:,i) = symba_plwkspA%helio%swiftest%Ip(:,sort_index(npl-i+1))
-      symba_plA%helio%swiftest%rhill(i) = symba_plwkspA%helio%swiftest%rhill(sort_index(npl-i+1))
+   do i = 2, npl
+      symba_plA%helio%swiftest%name(i) = symba_plwkspA%helio%swiftest%name(sort_index(npl-i+2))
+      symba_plA%helio%swiftest%status(i) = symba_plwkspA%helio%swiftest%status(sort_index(npl-i+2))
+      symba_plA%helio%swiftest%mass(i) = symba_plwkspA%helio%swiftest%mass(sort_index(npl-i+2))
+      symba_plA%helio%swiftest%radius(i) = symba_plwkspA%helio%swiftest%radius(sort_index(npl-i+2))
+      symba_plA%helio%swiftest%xh(:,i) = symba_plwkspA%helio%swiftest%xh(:,sort_index(npl-i+2))
+      symba_plA%helio%swiftest%vh(:,i) = symba_plwkspA%helio%swiftest%vh(:,sort_index(npl-i+2))
+      symba_plA%helio%swiftest%xb(:,i) = symba_plwkspA%helio%swiftest%xb(:,sort_index(npl-i+2))
+      symba_plA%helio%swiftest%vb(:,i) = symba_plwkspA%helio%swiftest%vb(:,sort_index(npl-i+2))
+      symba_plA%helio%swiftest%rot(:,i) = symba_plwkspA%helio%swiftest%rot(:,sort_index(npl-i+2))
+      symba_plA%helio%swiftest%Ip(:,i) = symba_plwkspA%helio%swiftest%Ip(:,sort_index(npl-i+2))
+      symba_plA%helio%swiftest%rhill(i) = symba_plwkspA%helio%swiftest%rhill(sort_index(npl-i+2))
    end do
    
    narr = size(symba_plA%helio%swiftest%status(:))
