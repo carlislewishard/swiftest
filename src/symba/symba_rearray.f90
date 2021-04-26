@@ -110,7 +110,7 @@ subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
       
       call util_hills(npl, symba_plA%helio%swiftest)
 
-      !call symba_reorder_pl(npl, symba_plA)
+      if (nmergeadd > 0) call symba_reorder_pl(npl, symba_plA)
    end if 
 
    if (ldiscard_tp) then 
