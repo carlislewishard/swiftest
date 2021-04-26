@@ -147,6 +147,7 @@ program swiftest_symba
    end if
 
    300 format(10(1x, e23.16, :))
+
    nplm = count(symba_plA%helio%swiftest%mass>mtiny)
    CALL util_dist_index_plpl(npl, nplm, symba_plA)
    !CALL util_dist_index_pltp(nplm, ntp, symba_tpA)
@@ -175,8 +176,8 @@ program swiftest_symba
       ! These next two blocks should be streamlined/improved but right now we treat discards separately from collisions so it has to be this way
       if (ldiscard) then
          if (param%lenergy) call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_before, pe_before, Eorbit_before, Ltot, msys)
-         call symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
-            discard_tpA, ldiscard, ldiscard_tp)
+         call symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
+            discard_tpA, ldiscard, ldiscard_tp, mtiny)
          call io_discard_write_symba(t, mtiny, npl, nsppl, nsptp, nmergesub, symba_plA, &
             discard_plA, discard_tpA, mergeadd_list, mergesub_list, discard_file, param%lbig_discard) 
          nmergeadd = 0
@@ -184,8 +185,6 @@ program swiftest_symba
          nsppl = 0
          nsptp = 0
          nplm = count(symba_plA%helio%swiftest%mass(1:npl) > mtiny)
-
-         CALL util_dist_index_plpl(npl, nplm, symba_plA)
 
          if (param%lenergy)  then
             call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_after, pe_after, Eorbit_after, Ltot, msys)
@@ -203,8 +202,8 @@ program swiftest_symba
 
       call symba_collision(t, npl, symba_plA, nplplenc, plplenc_list, lfrag_add, mergeadd_list, nmergeadd, param)
       if (lfrag_add) then
-         call symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
-            discard_tpA, lfrag_add, ldiscard_tp)
+         call symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
+            discard_tpA, lfrag_add, ldiscard_tp, mtiny)
 
          call io_discard_write_symba(t, mtiny, npl, nsppl, nsptp, nmergesub, symba_plA, &
             discard_plA, discard_tpA, mergeadd_list, mergesub_list, discard_file, param%lbig_discard) 
@@ -212,9 +211,6 @@ program swiftest_symba
          nmergesub = 0
          nsppl = 0
          nsptp = 0
-         nplm = count(symba_plA%helio%swiftest%mass(1:npl) > mtiny)
-         CALL util_dist_index_plpl(npl, nplm, symba_plA)
-
          if (param%lenergy) then
             call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_after, pe_after, Eorbit_after, Ltot, msys)
             Ecollision = Eorbit_before - Eorbit_after    ! Energy change resulting in this collisional event Total running energy offset from collision in this step

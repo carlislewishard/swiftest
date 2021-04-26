@@ -1,5 +1,5 @@
-subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
-   discard_tpA, ldiscard, ldiscard_tp)
+subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA,&
+   discard_tpA, ldiscard, ldiscard_tp, mtiny)
    !! Author: the Purdue Swiftest Team -  David A. Minton, Carlisle A. Wishard, Jennifer L.L. Pouplin, and Jacob R. Elliott
    !!
    !! Clean up tp and pl arrays to remove discarded bodies and add new bodies
@@ -12,13 +12,15 @@ subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
    implicit none
 
 ! arguments
-   integer(I4B), intent(inout)             :: npl, ntp, nsppl, nsptp, nmergeadd 
+   integer(I4B), intent(inout)             :: npl, nplm, ntp, nsppl, nsptp, nmergeadd 
    type(symba_pl), intent(inout)           :: symba_plA
    type(symba_tp), intent(inout)           :: symba_tpA
    type(swiftest_tp), intent(inout)        :: discard_tpA
    type(swiftest_pl), intent(inout)        :: discard_plA
    type(symba_merger), intent(inout)       :: mergeadd_list 
    logical, intent(in)                     :: ldiscard, ldiscard_tp 
+   real(DP), intent(in)                    :: mtiny
+
 
 ! internals
    integer(I4B)                           :: i, nkpl, nktp, ntot
@@ -111,6 +113,10 @@ subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
       call util_hills(npl, symba_plA%helio%swiftest)
 
       if (nmergeadd > 0) call symba_reorder_pl(npl, symba_plA)
+
+      nplm = count(symba_plA%helio%swiftest%mass>mtiny)
+      CALL util_dist_index_plpl(npl, nplm, symba_plA)
+
    end if 
 
    if (ldiscard_tp) then 
@@ -149,7 +155,7 @@ subroutine symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd
       end do
       ntp = nktp
       symba_tpA%helio%swiftest%nbody = ntp
-
+      nplm = count(symba_plA%helio%swiftest%mass>mtiny)
       call coord_b2h_tp(ntp, symba_tpA%helio%swiftest, symba_plA%helio%swiftest)
    end if 
 

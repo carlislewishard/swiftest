@@ -1087,19 +1087,20 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE symba_rearray(npl, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
-                                   discard_tpA, ldiscard, ldiscard_tp)
+          SUBROUTINE symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
+                                   discard_tpA, ldiscard, ldiscard_tp, mtiny)
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_symba
                IMPLICIT NONE
-               INTEGER(I4B), INTENT(INOUT)                   :: npl, ntp, nsppl, nsptp, nmergeadd 
+               INTEGER(I4B), INTENT(INOUT)                   :: npl, nplm, ntp, nsppl, nsptp, nmergeadd 
                TYPE(symba_pl), INTENT(INOUT)                 :: symba_plA
                TYPE(symba_tp), INTENT(INOUT)                 :: symba_tpA
                TYPE(swiftest_tp), INTENT(INOUT)              :: discard_tpA
                TYPE(swiftest_pl), INTENT(INOUT)              :: discard_plA
                TYPE(symba_merger), INTENT(INOUT)             :: mergeadd_list 
                LOGICAL(LGT), INTENT(IN)                      :: ldiscard, ldiscard_tp 
+               real(DP), intent(in)                          :: mtiny
           END SUBROUTINE symba_rearray
 
      END INTERFACE  
