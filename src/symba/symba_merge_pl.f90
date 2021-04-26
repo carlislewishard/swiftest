@@ -117,8 +117,8 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
             nmergesub = nmergesub + 1
             mergesub_list%status(nmergesub) = MERGED
             mergesub_list%name(nmergesub) = symba_plA%helio%swiftest%name(idx(i)) 
-            mergesub_list%xh(:,nmergesub) = symba_plA%helio%swiftest%xh(:, idx(i)) 
-            mergesub_list%vh(:,nmergesub) = symba_plA%helio%swiftest%vh(:, idx(i)) 
+            mergesub_list%xb(:,nmergesub) = symba_plA%helio%swiftest%xb(:, idx(i)) 
+            mergesub_list%vb(:,nmergesub) = symba_plA%helio%swiftest%vb(:, idx(i)) 
             mergesub_list%mass(nmergesub) = symba_plA%helio%swiftest%mass(idx(i))
             mergesub_list%radius(nmergesub) = symba_plA%helio%swiftest%radius(idx(i))
             mergesub_list%nadded(nmergesub) = 1

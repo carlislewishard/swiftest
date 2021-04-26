@@ -128,10 +128,9 @@ module module_swiftestalloc
       allocate(merger_list%name(n))
       allocate(merger_list%index_ps(n))
       allocate(merger_list%status(n))
-      allocate(merger_list%ncomp(n))
       allocate(merger_list%nadded(n))
-      allocate(merger_list%xh(NDIM, n))
-      allocate(merger_list%vh(NDIM, n))
+      allocate(merger_list%xb(NDIM, n))
+      allocate(merger_list%vb(NDIM, n))
       allocate(merger_list%mass(n))
       allocate(merger_list%radius(n))
       allocate(merger_list%rot(NDIM,n))
@@ -142,10 +141,9 @@ module module_swiftestalloc
       merger_list%name(:) = 0
       merger_list%index_ps(:) = 1
       merger_list%status(:) = 0
-      merger_list%ncomp(:) = 0
       merger_list%nadded(:) = 0
-      merger_list%xh(:, :) = 0.0_DP
-      merger_list%vh(:, :) = 0.0_DP
+      merger_list%xb(:, :) = 0.0_DP
+      merger_list%vb(:, :) = 0.0_DP
       merger_list%mass(:) = 0.0_DP
       merger_list%radius(:) = 0.0_DP
       merger_list%IP(:, :) = 0.0_DP
@@ -298,10 +296,9 @@ module module_swiftestalloc
       if (allocated(merger_list%name)) deallocate(merger_list%name)
       if (allocated(merger_list%index_ps)) deallocate(merger_list%index_ps)
       if (allocated(merger_list%status)) deallocate(merger_list%status)
-      if (allocated(merger_list%ncomp)) deallocate(merger_list%ncomp)
       if (allocated(merger_list%nadded)) deallocate(merger_list%nadded)
-      if (allocated(merger_list%xh)) deallocate(merger_list%xh)
-      if (allocated(merger_list%vh)) deallocate(merger_list%vh)
+      if (allocated(merger_list%xb)) deallocate(merger_list%xb)
+      if (allocated(merger_list%vb)) deallocate(merger_list%vb)
       if (allocated(merger_list%mass)) deallocate(merger_list%mass)
       if (allocated(merger_list%radius)) deallocate(merger_list%radius)
       if (allocated(merger_list%rot)) deallocate(merger_list%rot)
@@ -397,10 +394,9 @@ module module_swiftestalloc
       merger_list_out%name(1:n) = merger_list_in%name(1:n)
       merger_list_out%index_ps(1:n) = merger_list_in%index_ps(1:n)
       merger_list_out%status(1:n) = merger_list_in%status(1:n)
-      merger_list_out%ncomp(1:n) = merger_list_in%ncomp(1:n)
       merger_list_out%nadded(1:n) = merger_list_in%nadded(1:n)
-      merger_list_out%xh(:, 1:n) = merger_list_in%xh(:, 1:n)
-      merger_list_out%vh(:, 1:n) = merger_list_in%vh(:, 1:n)
+      merger_list_out%xb(:, 1:n) = merger_list_in%xb(:, 1:n)
+      merger_list_out%vb(:, 1:n) = merger_list_in%vb(:, 1:n)
       merger_list_out%mass(1:n) = merger_list_in%mass(1:n)
       merger_list_out%radius(1:n) = merger_list_in%radius(1:n)
       merger_list_out%Ip(:, 1:n) = merger_list_in%Ip(:, 1:n)

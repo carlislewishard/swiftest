@@ -90,11 +90,10 @@ MODULE module_symba
       integer(I4B), dimension(:),   allocatable :: name   ! external identifier
       integer(I4B), dimension(:),   allocatable :: index_ps ! position of the particle
       integer(I4B), dimension(:),   allocatable :: status   ! status
-      integer(I4B), dimension(:),   allocatable :: ncomp    ! number of component bodies in this body aka number of parents
       integer(I4B), dimension(:),   allocatable :: nadded   ! number of resultant bodies from this collisional event aka 
                                         !      number of fragments
-      real(DP),   dimension(:,:),   allocatable :: xh     ! heliocentric position
-      real(DP),   dimension(:,:),   allocatable :: vh     ! heliocentric velocity
+      real(DP),   dimension(:,:),   allocatable :: xb     ! barycentric position
+      real(DP),   dimension(:,:),   allocatable :: vb     ! barycentric velocity
       real(DP),   dimension(:),   allocatable :: mass   ! mass
       real(DP),   dimension(:),   allocatable :: radius   ! radius
       real(DP),   dimension(:,:),   allocatable :: IP     ! moment of intertia

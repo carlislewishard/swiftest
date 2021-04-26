@@ -21,8 +21,8 @@ subroutine symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msy
 ! internals
    integer(I4B)              :: i, j
    integer(I8B)              :: k
-   real(DP)                  :: rmag, v2, rot2, oblpot, hx, hy, hz
-   real(DP), dimension(npl)  :: irh, kepl, pecb
+   real(DP)                  :: rmag, v2, rot2, oblpot, hx, hy, hz, kespin
+   real(DP), dimension(npl)  :: irh, kepl, kespinpl, pecb
    real(DP), dimension(npl) :: Lplx, Lply, Lplz
    real(DP), dimension(symba_plA%helio%swiftest%num_plpl_comparisons) :: pepl 
    logical, dimension(symba_plA%helio%swiftest%num_plpl_comparisons) :: lstatpl
@@ -40,7 +40,7 @@ subroutine symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msy
       Lply(:) = 0.0_DP
       Lplz(:) = 0.0_DP
       lstatus(1:npl) = status(1:npl) /= INACTIVE
-      !$omp simd private(v2, rot2, hx, hy, hz)
+      !!$omp simd private(v2, rot2, hx, hy, hz)
       do i = 1, npl
          v2 = dot_product(vb(:,i), vb(:,i))
          rot2 = dot_product(rot(:,i), rot(:,i))
@@ -54,10 +54,12 @@ subroutine symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msy
          Lplz(i) = mass(i) * (Ip(3,i) * radius(i)**2 * rot(3,i) + hz)
 
          ! Kinetic energy from orbit and spin
-         kepl(i) = mass(i) * (Ip(3,i) * radius(i)**2 * rot2 + v2)
+         kepl(i) = mass(i) * v2
+         kespinpl(i) = mass(i) * Ip(3,i) * radius(i)**2 * rot2
       end do
 
       ke = 0.5_DP * sum(kepl(1:npl), lstatus(:))
+      kespin = 0.5_DP * sum(kespinpl(1:npl), lstatus(:))
       Ltot(1) = sum(Lplx(1:npl), lstatus(1:npl)) 
       Ltot(2) = sum(Lply(1:npl), lstatus(1:npl)) 
       Ltot(3) = sum(Lplz(1:npl), lstatus(1:npl)) 
@@ -90,7 +92,7 @@ subroutine symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msy
          pe = pe + oblpot
       end if
 
-      te = ke + pe
+      te = ke + kespin + pe
    end associate
    return
 

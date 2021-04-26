@@ -281,9 +281,8 @@ program swiftest_symba
          mergeadd_list%name(:) = 0
          mergeadd_list%index_ps(:) = 0
          mergeadd_list%status(:) = 0
-         mergeadd_list%ncomp(:) = 0
-         mergeadd_list%xh(:,:) = 0
-         mergeadd_list%vh(:,:) = 0
+         mergeadd_list%xb(:,:) = 0
+         mergeadd_list%vb(:,:) = 0
          mergeadd_list%mass(:) = 0
          mergeadd_list%radius(:) = 0
          mergeadd_list%IP(:,:) = 0
@@ -294,9 +293,8 @@ program swiftest_symba
          mergesub_list%name(:) = 0
          mergesub_list%index_ps(:) = 0
          mergesub_list%status(:) = 0
-         mergesub_list%ncomp(:) = 0
-         mergesub_list%xh(:,:) = 0
-         mergesub_list%vh(:,:) = 0
+         mergesub_list%xb(:,:) = 0
+         mergesub_list%vb(:,:) = 0
          mergesub_list%mass(:) = 0
          mergesub_list%radius(:) = 0
          mergeadd_list%IP(:,:) = 0

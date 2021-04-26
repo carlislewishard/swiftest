@@ -75,9 +75,8 @@ subroutine symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x,
    param%plmaxname = max(param%plmaxname, param%tpmaxname) + 1
    mergeadd_list%name(nmergeadd) = param%plmaxname
    mergeadd_list%status(nmergeadd) = MERGED
-   mergeadd_list%ncomp(nmergeadd) = 2
-   mergeadd_list%xh(:,nmergeadd) = xcom(:) - xbs(:)
-   mergeadd_list%vh(:,nmergeadd) = vcom(:) - vbs(:)
+   mergeadd_list%xb(:,nmergeadd) = xcom(:)
+   mergeadd_list%vb(:,nmergeadd) = vcom(:)
    mergeadd_list%mass(nmergeadd) = mass_new
    mergeadd_list%radius(nmergeadd) = radius_new
    mergeadd_list%Ip(:,nmergeadd) = Ip_new(:)

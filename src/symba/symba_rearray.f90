@@ -26,7 +26,6 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
    integer(I4B)                           :: i, nkpl, nktp, ntot
    logical, dimension(:), allocatable     :: discard_l_pl 
    logical, dimension(ntp)                :: discard_l_tp
-   real(DP)                               :: msys
    logical                                :: lescape
 
 ! executable code
@@ -92,8 +91,8 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
       symba_plA%helio%swiftest%mass(nkpl+1:npl)   = mergeadd_list%mass(1:nmergeadd)
       symba_plA%helio%swiftest%radius(nkpl+1:npl) = mergeadd_list%radius(1:nmergeadd)
       do i = 1, NDIM
-         symba_plA%helio%swiftest%xh(i,nkpl+1:npl)  = mergeadd_list%xh(i,1:nmergeadd)
-         symba_plA%helio%swiftest%vh(i,nkpl+1:npl)  = mergeadd_list%vh(i,1:nmergeadd)
+         symba_plA%helio%swiftest%xb(i,nkpl+1:npl)  = mergeadd_list%xb(i,1:nmergeadd)
+         symba_plA%helio%swiftest%vb(i,nkpl+1:npl)  = mergeadd_list%vb(i,1:nmergeadd)
          symba_plA%helio%swiftest%Ip(i,nkpl+1:npl)  = mergeadd_list%Ip(i,1:nmergeadd)
          symba_plA%helio%swiftest%rot(i,nkpl+1:npl) = mergeadd_list%rot(i,1:nmergeadd)
       end do
@@ -108,7 +107,7 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
 
       symba_plA%helio%swiftest%nbody = npl
       
-      call coord_h2b(npl, symba_plA%helio%swiftest, msys)
+      call coord_b2h(npl, symba_plA%helio%swiftest)
       
       call util_hills(npl, symba_plA%helio%swiftest)
 

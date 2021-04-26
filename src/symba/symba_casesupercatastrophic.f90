@@ -79,9 +79,8 @@ subroutine symba_casesupercatastrophic (symba_plA, idx_parents, nmergeadd, merge
          param%plmaxname = max(param%plmaxname, param%tpmaxname) + 1
          mergeadd_list%name(nmergeadd) = param%plmaxname
          mergeadd_list%status(nmergeadd) = SUPERCATASTROPHIC
-         mergeadd_list%ncomp(nmergeadd) = 2
-         mergeadd_list%xh(:,nmergeadd) = x_frag(:, i) - xbs(:)
-         mergeadd_list%vh(:,nmergeadd) = v_frag(:, i) - vbs(:)
+         mergeadd_list%xb(:,nmergeadd) = x_frag(:, i) 
+         mergeadd_list%vb(:,nmergeadd) = v_frag(:, i)
          mergeadd_list%mass(nmergeadd) = m_frag(i)
          mergeadd_list%radius(nmergeadd) = rad_frag(i)
          mergeadd_list%Ip(:,nmergeadd) = Ip_frag(:, i)

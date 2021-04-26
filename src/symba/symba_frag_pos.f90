@@ -33,35 +33,20 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
    integer(I4B), save                      :: thetashift = 0
    integer(I4B), parameter                 :: SHIFTMAX = 9
    integer(I4B), dimension(:), allocatable :: family, non_family
-   real(DP)                                :: Esys, rmag
+   real(DP)                                :: rmag
    logical, dimension(:), allocatable      :: lfamily
-
-
+   real(DP), dimension(:,:), allocatable    :: xtmp, vtmp
+   logical, dimension(:), allocatable      :: lexclude
+   
    associate(nchild1 => symba_plA%kin(idx_parents(1))%nchild, nchild2 => symba_plA%kin(idx_parents(2))%nchild, &
              xhpl => symba_plA%helio%swiftest%xh, xbpl => symba_plA%helio%swiftest%xh, vbpl => symba_plA%helio%swiftest%vb, &
              Mpl => symba_plA%helio%swiftest%mass, Ippl => symba_plA%helio%swiftest%Ip, radpl => symba_plA%helio%swiftest%radius, &
-             rotpl => symba_plA%helio%swiftest%rot, status => symba_plA%helio%swiftest%status)
+             rotpl => symba_plA%helio%swiftest%rot, status => symba_plA%helio%swiftest%status, npl => symba_plA%helio%swiftest%nbody)
 
-      npl = size(status(:))
-      !****************************************************************k*
-      ! Find the total system energy for reporting (testing only)
-      Esys = 0.0_DP
-      do i = 1, npl
-         if (status(i) == INACTIVE) cycle
-         v2 = dot_product(vbpl(:,i), vbpl(:,i))
-         rot2 = dot_product(rotpl(:,i), rotpl(:,i))
-         Esys = Esys + 0.5_DP * Mpl(i) * (v2 + Ippl(3,i) * radpl(i)**2 * rot2)
-      end do
-      do i = 1, npl - 1
-         if (status(i) == INACTIVE) cycle
-         do j = i + 1, npl
-            if (status(j) == INACTIVE) cycle
-            dx(:) = xbpl(:, j) - xbpl(:, i) 
-            rmag = norm2(dx(:)) 
-            if (rmag > tiny(rmag)) Esys = Esys - Mpl(i) * Mpl(j) / rmag 
-         end do
-      end do
-      !****************************************************************k*
+      allocate(lexclude(npl))
+      lexclude(:) = status(1:npl) == INACTIVE
+      call symba_frag_pos_energy(npl, symba_plA, lexclude, KE_before, KE_spin_before, U_before)
+      Etot_before = KE_before + KE_spin_before + U_before
 
       ! Find the center of mass of the collisional system
       mtot = sum(mass(:))
@@ -93,37 +78,11 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       allocate(non_family(non_fam_size))
       i = 0
       do j = 1, npl
+         if (any(family(:) == j)) lexclude(j) = .true.
          if (any(family(:) == j) .or. (status(j) == INACTIVE)) cycle
          i = i + 1
          non_family(i) = j
       end do
-
-      U_before = 0.0_DP
-      KE_before = 0.0_DP
-      KE_spin_before = 0.0_DP
-
-      do i = 1, fam_size
-         ! Calculate the potential energy between family members
-         do j = i + 1, fam_size
-            U_before = U_before - Mpl(family(i)) * Mpl(family(j)) / norm2(xbpl(:,family(i)) - xbpl(:,family(j)))
-         end do
-         
-         ! Add the contribution due to non-family members
-         do j = 1, non_fam_size
-            U_before = U_before - Mpl(family(i)) * Mpl(non_family(j)) / norm2(xbpl(:,family(i)) - xbpl(:,non_family(j)))
-         end do
-
-         !! Calculate the orbital and spin kinetic energy
-         v2   = dot_product(vbpl(:,family(i)), vbpl(:,family(i)))
-         rot2 = dot_product(rotpl(:,family(i)), rotpl(:,family(i)))
-         call util_crossproduct(xbpl(:,family(i)), vbpl(:,family(i)), h(:))
-         
-         !! Calculate the orbital and rotational kinetic energy between the two bodies 
-         KE_before = KE_before + 0.5_DP * Mpl(family(i)) * v2 
-         KE_spin_before = KE_spin_before + 0.5_DP * Mpl(family(i)) * Ippl(3,family(i)) * rot2 * radpl(family(i))**2
-      end do
-
-      Etot_before = KE_before + KE_spin_before + U_before
 
       ! Now create the fragment distribution
       nfrag = size(x_frag, 2)
@@ -175,49 +134,34 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       ! Adjust fragment positionx so that their center of mass follows the original pre-impact trajectory
       call symba_frag_adjust (xcom, vcom, x, v, mass, radius, L_spin, Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag)
 
-      U_after = 0.0_DP
-      ! Calculate the new potential energy of the system 
+      allocate(xtmp, source=x_frag)
+      allocate(vtmp, source=v_frag)
       do i = 1, nfrag
-         ! Calculate the contribution of the potential energy between fragments
-         do j = i+1,nfrag
-            U_after = U_after - m_frag(i) * m_frag(j) / norm2(x_frag(:,i) - x_frag(:,j))
-         end do
-         ! Add the contribution due to non-family members
-         do j = 1, non_fam_size
-            U_after = U_after - m_frag(i) * Mpl(non_family(j)) / norm2(x_frag(:,i) + xcom(:) - xbpl(:,non_family(j)))
-         end do
+         xtmp(:,i) = xtmp(:,i) + xcom(:)
+         vtmp(:,i) = vtmp(:,i) + vcom(:)
       end do
-
-      ! Compute the current kinetic energy of the system so we can scale the velocity vectors to the correct value
-      KE_after = 0.0_DP
-      KE_spin_after = 0.0_DP
-      do i = 1, nfrag
-         KE_after = KE_after + 0.5_DP * m_frag(i) * dot_product(v_frag(:,i) + vcom(:), v_frag(:,i) + vcom(:))
-         KE_spin_after = KE_spin_after + 0.5_DP * m_frag(i) * rad_frag(i)**2 * Ip_frag(3,i) * dot_product(rot_frag(:,i), rot_frag(:,i))
-      end do
+      call symba_frag_pos_energy(npl, symba_plA, lexclude, KE_after, KE_spin_after, U_after, &
+         nfrag=nfrag, Ip_frag=Ip_frag, m_frag=m_frag, rad_frag=rad_frag, x_frag=xtmp, v_frag=vtmp, rot_frag=rot_frag)
       Etot_after = KE_after + KE_spin_after + U_after
 
       ! Adjust the fragment velocities so that they have the their total energy reduced by an amount set by the anelastic parameter
       ! Make sure we don't end up with negative energy (bound system). If so, we'll adjust the radius so that the potential energy
       ! takes up the negative part
 
-      !f_anelastic = 0.9999999_DP ! TODO: Should this be set by the user or kept as a constant?
-      !KE_residual = KE_spin_after + U_after - U_before - f_anelastic * (KE_before + KE_spin_before) 
-
-      KE_residual = KE_spin_after + U_after - U_before - KE_before - KE_spin_before + Qloss
+      KE_residual = KE_after - KE_before + KE_spin_after - KE_spin_before + U_after - U_before + Qloss
 
 100 format (A14,5(ES9.2,1X,:))
-      write(*,   "('              Energy normalized by |Esystem_original|')")
+      write(*,   "('              Energy normalized by |Etot_beforetem_original|')")
       write(*,   "('             |    T_orb    T_spin         T         U      Etot')")
       write(*,   "(' ------------------------------------------------------------------')")
-      write(*,100) ' original    |',KE_before / abs(Esys), KE_spin_before / abs(Esys),(KE_before + KE_spin_before) / abs(Esys), U_before / abs(Esys),Etot_before/abs(Esys)
-      write(*,100) ' first pass  |',KE_after / abs(Esys), KE_spin_after / abs(Esys), (KE_after + KE_spin_after) / abs(Esys), U_after / abs(Esys), Etot_after / abs(Esys)
+      write(*,100) ' original    |',KE_before / abs(Etot_before), KE_spin_before / abs(Etot_before),(KE_before + KE_spin_before) / abs(Etot_before), U_before / abs(Etot_before),Etot_before/abs(Etot_before)
+      write(*,100) ' first pass  |',KE_after / abs(Etot_before), KE_spin_after / abs(Etot_before), (KE_after + KE_spin_after) / abs(Etot_before), U_after / abs(Etot_before), Etot_after / abs(Etot_before)
       write(*,   "(' ------------------------------------------------------------------')")
-      write(*,100) ' change      |',(KE_after - KE_before) / abs(Esys), (KE_spin_after - KE_spin_before)/ abs(Esys), (KE_after + KE_spin_after - KE_before - KE_spin_before)/ abs(Esys), (U_after - U_before) / abs(Esys), (Etot_after-Etot_before) / abs(Esys)
+      write(*,100) ' change      |',(KE_after - KE_before) / abs(Etot_before), (KE_spin_after - KE_spin_before)/ abs(Etot_before), (KE_after + KE_spin_after - KE_before - KE_spin_before)/ abs(Etot_before), (U_after - U_before) / abs(Etot_before), (Etot_after-Etot_before) / abs(Etot_before)
       write(*,   "(' ------------------------------------------------------------------')")
-      write(*,100) ' T_res       |',KE_residual / abs(Esys)
+      write(*,100) ' T_res       |',KE_residual / abs(Etot_before)
       write(*,   "(' ------------------------------------------------------------------')")
-      write(*,100) ' Q_loss      |',Qloss / abs(Esys)
+      write(*,100) ' Q_loss      |',Qloss / abs(Etot_before)
       write(*,   "(' ------------------------------------------------------------------')")
 
       A = 0.0_DP
@@ -247,20 +191,84 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
 
       ! REMOVE THE FOLLOWING AFTER TESTING
       ! Calculate the new energy of the system of fragments
-      KE_after = 0.0_DP
-      do i = 1, nfrag
-         KE_after = KE_after + 0.5_DP * m_frag(i) * dot_product(v_frag(:,i), v_frag(:,i))
-      end do
+      call symba_frag_pos_energy(npl, symba_plA, lexclude, KE_after, KE_spin_after, U_after, &
+         nfrag=nfrag, Ip_frag=Ip_frag, m_frag=m_frag, rad_frag=rad_frag, x_frag=x_frag, v_frag=v_frag, rot_frag=rot_frag)
       Etot_after = KE_after + KE_spin_after + U_after
       write(*,100) ' f_corrected |',f_corrected
       write(*,   "(' ------------------------------------------------------------------')")
-      write(*,100) ' final       |',KE_after / abs(Esys), KE_spin_after / abs(Esys), (KE_after + KE_spin_after) / abs(Esys), U_after / abs(Esys), Etot_after / abs(Esys)
+      write(*,100) ' final       |',KE_after / abs(Etot_before), KE_spin_after / abs(Etot_before), (KE_after + KE_spin_after) / abs(Etot_before), U_after / abs(Etot_before), Etot_after / abs(Etot_before)
       write(*,   "(' ------------------------------------------------------------------')")
-      write(*,100) ' change      |',(KE_after - KE_before) / abs(Esys), (KE_spin_after - KE_spin_before)/ abs(Esys), (KE_after + KE_spin_after - KE_before - KE_spin_before)/ abs(Esys), (U_after - U_before) / abs(Esys), (Etot_after-Etot_before) / abs(Esys)
+      write(*,100) ' change      |',(KE_after - KE_before) / abs(Etot_before), (KE_spin_after - KE_spin_before)/ abs(Etot_before), (KE_after + KE_spin_after - KE_before - KE_spin_before)/ abs(Etot_before), (U_after - U_before) / abs(Etot_before), (Etot_after-Etot_before) / abs(Etot_before)
       write(*,   "(' ------------------------------------------------------------------')")
       write(*,*)   
 
       deallocate(family, non_family)
    end associate
    return 
+
+   contains
+
+   subroutine symba_frag_pos_energy(npl, symba_plA, lexclude, KE, KE_spin, U, nfrag, Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag)
+      implicit none
+      integer(I4B), intent(in) :: npl
+      type(symba_pl), intent(in) :: symba_plA
+      logical, dimension(:), intent(in) :: lexclude
+      real(DP), intent(out) :: KE, KE_spin, U
+      integer(I4B), intent(in), optional :: nfrag
+      real(DP), dimension(:), intent(in), optional :: m_frag, rad_frag
+      real(DP), dimension(:,:), intent(in), optional :: Ip_frag, x_frag, v_frag, rot_frag
+      integer(I4B) :: i
+      real(DP), dimension(NDIM) :: dx
+      real(DP) :: rmag
+
+      associate(xbpl => symba_plA%helio%swiftest%xh, vbpl => symba_plA%helio%swiftest%vb, &
+         Mpl => symba_plA%helio%swiftest%mass, Ippl => symba_plA%helio%swiftest%Ip, radpl => symba_plA%helio%swiftest%radius, &
+         rotpl => symba_plA%helio%swiftest%rot)
+         U = 0.0_DP
+         KE = 0.0_DP
+         KE_spin = 0.0_DP
+         do i = 1, npl
+            if (lexclude(i)) cycle
+            v2 = dot_product(vbpl(:,i), vbpl(:,i))
+            rot2 = dot_product(rotpl(:,i), rotpl(:,i))
+            KE = KE + Mpl(i) * v2 
+            KE_spin = KE_spin + Mpl(i) * Ippl(3,i) * radpl(i)**2 * rot2
+         end do
+
+         do i = 1, npl - 1
+            if (lexclude(i)) cycle
+            do j = i + 1, npl
+               if (lexclude(i)) cycle
+               dx(:) = xbpl(:, j) - xbpl(:, i) 
+               rmag = norm2(dx(:)) 
+               if (rmag > tiny(rmag)) U = U - Mpl(i) * Mpl(j) / rmag 
+            end do
+            if (present(nfrag)) then
+               do j = 1, nfrag
+                  dx(:) = x_frag(:, j) - xbpl(:, i) 
+                  rmag = norm2(dx(:)) 
+                  if (rmag > tiny(rmag)) U = U - Mpl(i) * m_frag(j) / rmag 
+               end do
+            end if
+         end do
+         if (present(nfrag)) then
+            do i = 1, nfrag
+               v2 = dot_product(v_frag(:,i), v_frag(:,i))
+               rot2 = dot_product(rot_frag(:,i), rot_frag(:,i))
+               KE = KE + m_frag(i) * v2 
+               KE_spin = KE_spin + m_frag(i) * Ip_frag(3,i) * rad_frag(i)**2 * rot2
+               do j = i + 1, nfrag
+                  dx(:) = x_frag(:, j) - x_frag(:, i) 
+                  rmag = norm2(dx(:)) 
+                  if (rmag > tiny(rmag)) U = U - m_frag(i) * m_frag(j) / rmag
+               end do
+            end do
+         end if
+
+         KE = 0.5_DP * KE
+         KE_spin = 0.5_DP * KE_spin
+      end associate
+
+      return
+   end subroutine symba_frag_pos_energy
 end subroutine symba_frag_pos

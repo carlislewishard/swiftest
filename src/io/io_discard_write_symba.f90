@@ -76,20 +76,20 @@ SUBROUTINE io_discard_write_symba(t, mtiny, npl, nsppl, nsptp, nmergesub, symba_
      DO i = 1, (nmergesub / 2)
           WRITE(LUN, 200) SUB, mergesub_list%name(i), mergesub_list%status(i)
  200      FORMAT(A, 2(1X, I8))
-          WRITE(LUN, 300) mergesub_list%xh(:,i)
+          WRITE(LUN, 300) mergesub_list%xb(:,i) - symba_plA%helio%swiftest%xb(:,1)
  300      FORMAT(3(E23.16, 1X))
-          WRITE(LUN, 300) mergesub_list%vh(:,i)
+          WRITE(LUN, 300) mergesub_list%vb(:,i) - symba_plA%helio%swiftest%vb(:,1)
           nadded = mergesub_list%nadded(i)
 
           WRITE(LUN, 200) SUB, mergesub_list%name(i + 1), mergesub_list%status(i + 1)
-          WRITE(LUN, 300) mergesub_list%xh(:,i + 1)
-          WRITE(LUN, 300) mergesub_list%vh(:,i + 1)
+          WRITE(LUN, 300) mergesub_list%xb(:,i + 1) - symba_plA%helio%swiftest%xb(:,1)
+          WRITE(LUN, 300) mergesub_list%vb(:,i + 1) - symba_plA%helio%swiftest%vb(:,1)
           WRITE(LUN, 500) mergesub_list%mass(i), mergesub_list%radius(i)
 
           DO index = 1, nadded
                WRITE(LUN, 200) ADD, mergeadd_list%name(index), mergeadd_list%status(index)
-               WRITE(LUN, 300) mergeadd_list%xh(:,index)
-               WRITE(LUN, 300) mergeadd_list%vh(:,index)
+               WRITE(LUN, 300) mergeadd_list%xb(:,index) - symba_plA%helio%swiftest%xb(:,1)
+               WRITE(LUN, 300) mergeadd_list%vb(:,index) - symba_plA%helio%swiftest%vb(:,1)
                WRITE(LUN, 500) mergeadd_list%mass(index), mergeadd_list%radius(index)
           END DO
      END DO
