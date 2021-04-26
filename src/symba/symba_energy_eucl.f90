@@ -39,7 +39,7 @@ subroutine symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msy
       Lplx(:) = 0.0_DP
       Lply(:) = 0.0_DP
       Lplz(:) = 0.0_DP
-      lstatus(1:npl) = lstatus(1:npl)
+      lstatus(1:npl) = status(1:npl) /= INACTIVE
       !$omp simd private(v2, rot2, hx, hy, hz)
       do i = 1, npl
          v2 = dot_product(vb(:,i), vb(:,i))
