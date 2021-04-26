@@ -54,7 +54,7 @@ program swiftest_symba
    type(symba_plplenc)           :: plplenc_list
    type(symba_pltpenc)           :: pltpenc_list
    type(symba_merger)            :: mergeadd_list, mergesub_list
-   real(DP)                      :: start, finish
+   real(DP)                      :: start, finish, deltawall, wallperstep
    integer(I8B)                  :: clock_count, count_rate, count_max
    integer(I4B)                  :: ierr
    integer(I4B), parameter       :: EGYDUMP = 88
@@ -161,6 +161,7 @@ program swiftest_symba
 
    call system_clock(clock_count, count_rate, count_max)
    start = clock_count / (count_rate * 1.0_DP)
+   finish = start
    do while ((t < tstop) .and. ((ntp0 == 0) .or. (ntp > 0)))
       call symba_step_eucl(t, dt, param,npl,ntp,symba_plA, symba_tpA, nplplenc, npltpenc,&
             plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list)
@@ -246,8 +247,10 @@ program swiftest_symba
 200         format(" Time = ", es12.5, "; fraction done = ", f5.3, "; number of active pl, tp = ", i7, ", ", i7)
 
             call system_clock(clock_count)
+            deltawall = clock_count / (count_rate * 1.0_DP) - finish
+            wallperstep = deltawall / istep_dump
             finish = clock_count / (count_rate * 1.0_DP)
-            write(*,*) "      Wall time (s): ", finish - start
+            write(*,*) "      Wall time (s): ", finish - start, "Wall time/step in this interval (s): ", wallperstep
 
             call param%dump_to_file(t)
             call io_dump_pl(npl, symba_plA%helio%swiftest, param)
