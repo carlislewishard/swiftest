@@ -14,7 +14,7 @@ subroutine symba_collision (t, npl, symba_plA, nplplenc, plplenc_list, ldiscard,
    implicit none
 
    real(DP), intent(in)                      :: t
-   integer(I4B), intent(inout)                  :: npl
+   integer(I4B), intent(inout)               :: npl
    integer(I4B), intent(inout)               :: nplplenc, nmergeadd
    type(symba_pl)                            :: symba_pla
    type(symba_plplenc), intent(inout)        :: plplenc_list

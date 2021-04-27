@@ -238,7 +238,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
          do i = 1, npl - 1
             if (lexclude(i)) cycle
             do j = i + 1, npl
-               if (lexclude(i)) cycle
+               if (lexclude(j)) cycle
                dx(:) = xbpl(:, j) - xbpl(:, i) 
                rmag = norm2(dx(:)) 
                if (rmag > tiny(rmag)) U = U - Mpl(i) * Mpl(j) / rmag 
