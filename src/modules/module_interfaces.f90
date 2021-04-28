@@ -922,18 +922,6 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-         subroutine symba_frag_adjust (xcom, vcom, x, v, mass, radius, L_spin, Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag)
-            use swiftest_globals
-            implicit none
-            real(DP), dimension(:),   intent(in)      :: xcom, vcom, mass, radius
-            real(DP), dimension(:,:), intent(in)      :: x, v, L_spin
-            real(DP), dimension(:), intent(in)        :: m_frag, rad_frag
-            real(DP), dimension(:,:), intent(in)      :: Ip_frag
-            real(DP), dimension(:,:), intent(out)     :: x_frag, v_frag, rot_frag
-         END SUBROUTINE symba_frag_adjust
-     END INTERFACE
-
-     INTERFACE
          subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, &
                                     Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag, lmerge, Qloss)
             use swiftest_globals
