@@ -19,8 +19,8 @@ subroutine symba_frag_adjust (xcom, vcom, x, v, mass, radius, L_spin, Ip_frag, m
    real(DP), dimension(NDIM, 2)            :: rot, Ip
    integer(I4B)                            :: i, j, nfrag
    real(DP)                                :: mtot
-   real(DP), dimension(NDIM)               :: xc, vc, x_cross_v
-   real(DP), dimension(NDIM)               :: L_orb_old, L_spin_old, L_spin_new, L_orb_new, L_spin_frag
+   real(DP), dimension(NDIM)               :: xc, vc, x_cross_v, v_phi_unit, h_unit, v_r_unit
+   real(DP), dimension(NDIM)               :: L_orb_old, L_spin_old, L_orb_new, L_spin_frag, L_residual, L_spin_new
    real(DP), dimension(NDIM)               :: mx_frag, mv_frag, COM_offset_x, COM_offset_v
 
    nfrag = size(m_frag)
@@ -34,6 +34,21 @@ subroutine symba_frag_adjust (xcom, vcom, x, v, mass, radius, L_spin, Ip_frag, m
       vc(:) = v(:, j) - vcom(:)
       call utiL_crossproduct(xc(:), vc(:), x_cross_v(:))
       L_orb_old(:) = L_orb_old(:) + mass(j) * x_cross_v(:)
+   end do
+
+   ! Divide up the pre-impact spin angular momentum equally between the various bodies by mass
+   L_spin_new(:) = L_spin_old(:)
+   do i = 1, nfrag
+      L_spin_frag(:) = L_spin_new(:) * m_frag(i) / mtot
+      rot_frag(:,i) = L_spin_frag(:) / (Ip_frag(3, i) * m_frag(i) * rad_frag(i)**2)
+   end do
+   
+   do i = 1, nfrag
+      L_residual(:) = L_orb_old(:) * m_frag(i) / mtot
+      h_unit(:) = L_orb_old(:) / norm2(L_orb_old(:))
+      v_r_unit(:) = x_frag(:,i) / norm2(x_frag(:,i))
+      call util_crossproduct(h_unit(:), v_r_unit(:), v_phi_unit(:))  ! make a unit vector in the tangential velocity direction
+      v_frag(:,i) = v_frag(:,i) + norm2(L_residual(:)) / m_frag(i) / norm2(x_frag(:,i)) * v_phi_unit(:) ! Distribute the angular momentum equally amongst the fragments
    end do
 
    ! Adjust the position and velocity of the fragments as needed to align them with the original trajectory center of mass
@@ -50,20 +65,6 @@ subroutine symba_frag_adjust (xcom, vcom, x, v, mass, radius, L_spin, Ip_frag, m
       v_frag(:, i) = v_frag(:, i) + COM_offset_v(:)
    end do
 
-   ! Calculate the spin angular momentum of the collisional system after collision through conservation of angular momentum
-   ! AKA whatever angular momentum is lost by the orbit, is picked up by the spin of all the fragments
-   L_orb_new(:) = 0.0_DP
-   do i = 1, nfrag
-      call utiL_crossproduct(x_frag(:, i), v_frag(:, i), x_cross_v(:))
-      L_orb_new(:) = L_orb_new(:) + m_frag(i) * x_cross_v(:)
-   end do
-
-   L_spin_new(:) = L_orb_old(:) + L_spin_old(:) - L_orb_new(:)
-   ! Now divide up the angular momentum equally between the various bodies by mass
-   do i = 1, nfrag
-      L_spin_frag(:) = L_spin_new(:) * m_frag(i) / mtot
-      rot_frag(:,i) = L_spin_frag(:) / (Ip_frag(3, i) * m_frag(i) * rad_frag(i)**2)
-   end do
 
    return 
 end subroutine symba_frag_adjust

@@ -23,10 +23,10 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
 
    real(DP), dimension(NDIM, 2)            :: rot
    integer(I4B)                            :: i, j, k, nfrag, fam_size, istart, non_fam_size, npl
-   real(DP), dimension(NDIM)               :: xc, vc, x_cross_v, delta_r, delta_v, xcom, vcom
+   real(DP), dimension(NDIM)               :: xc, vc, x_cross_v, delta_r, delta_v, xcom, vcom, v_phi_unit, v_r_unit
    real(DP)                                :: mtot, phase_ang, theta, v_frag_norm, r_frag_norm, v_col_norm, r_col_norm, KE_residual
    real(DP)                                :: f_anelastic, Etot_before, Etot_after, KE_before, U_before
-   real(DP)                                :: U_after, KE_spin_before, KE_spin_after, KE_after, KE_corrected, U_corrected, U_frag_after
+   real(DP)                                :: U_after, KE_spin_before, KE_spin_after, KE_after, KE_corrected, U_corrected, U_frag_after, KE_family
    real(DP), dimension(NDIM)               :: r_col_unit_vec, v_col_unit_vec, v_plane_unit_vec
    real(DP), dimension(NDIM)               :: Ltot, h, dx
    real(DP)                                :: rot2, v2, f_corrected, A, B, C
@@ -35,7 +35,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
    integer(I4B), dimension(:), allocatable :: family, non_family
    real(DP)                                :: rmag
    logical, dimension(:), allocatable      :: lfamily
-   real(DP), dimension(:,:), allocatable    :: xtmp, vtmp
+   real(DP), dimension(:,:), allocatable   :: xtmp, vtmp, v_phi, v_r
    logical, dimension(:), allocatable      :: lexclude
    
    associate(nchild1 => symba_plA%kin(idx_parents(1))%nchild, nchild2 => symba_plA%kin(idx_parents(2))%nchild, &
@@ -72,6 +72,11 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       lfamily(:) = (status(family(:)) == ACTIVE) .or. (status(family(:)) == COLLISION) 
       fam_size = count(lfamily(:))
       family(:) = pack(family(:), lfamily(:))
+      KE_family = 0.0_DP
+      do i = 1, fam_size
+         KE_family = KE_family + Mpl(family(i)) * dot_product(vbpl(:,family(i)), vbpl(:,family(i)))
+      end do
+      KE_family = 0.5_DP * KE_family
 
       ! Make the list of non-family members (bodies not involved in the collision)
       non_fam_size = count(status(:) /= INACTIVE) - fam_size
@@ -86,6 +91,8 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
 
       ! Now create the fragment distribution
       nfrag = size(x_frag, 2)
+      allocate(v_r(NDIM,nfrag))
+      allocate(v_phi(NDIM,nfrag))
 
       ! Calculate the position of each fragment 
       ! Theta is a phase shift value that ensures that successive nearby collisions in a single step are rotated to avoid possible overlap
@@ -148,10 +155,10 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       ! Make sure we don't end up with negative energy (bound system). If so, we'll adjust the radius so that the potential energy
       ! takes up the negative part
 
-      KE_residual = KE_after - KE_before + KE_spin_after - KE_spin_before + U_after - U_before + Qloss
+      KE_residual = KE_family + (KE_spin_before - KE_spin_after) + (U_before - U_after) - Qloss
 
 100 format (A14,5(ES9.2,1X,:))
-      write(*,   "('              Energy normalized by |Etot_beforetem_original|')")
+      write(*,   "('              Energy normalized by |Etot_before|')")
       write(*,   "('             |    T_orb    T_spin         T         U      Etot')")
       write(*,   "(' ------------------------------------------------------------------')")
       write(*,100) ' original    |',KE_before / abs(Etot_before), KE_spin_before / abs(Etot_before),(KE_before + KE_spin_before) / abs(Etot_before), U_before / abs(Etot_before),Etot_before/abs(Etot_before)
@@ -164,29 +171,33 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       write(*,100) ' Q_loss      |',Qloss / abs(Etot_before)
       write(*,   "(' ------------------------------------------------------------------')")
 
-      A = 0.0_DP
-      B = 0.0_DP
-      C = 2 * KE_residual
-
       do i = 1, nfrag
-         A = A + m_frag(i) * dot_product(v_frag(:,i), v_frag(:,i))
-         B = B + m_frag(i) * dot_product(v_frag(:,i), vcom(:))
-         C = C + m_frag(i) * dot_product(vcom(:), vcom(:))
+         v_r(:,i) = -dot_product(v_frag(:,i), x_frag(:,i)) * x_frag(:,i) / dot_product(x_frag(:,i), x_frag(:,i))
+         v_phi(:,i) = v_frag(:,i) - v_r(:,i) 
       end do
 
-      if ((B**2 - A * C) > 0.0_DP) then
-         f_corrected = (- B + sqrt(B**2 - A * C)) / A
+      A = 0.0_DP
+      B = 0.0_DP
+
+      do i = 1, nfrag
+         A = A + m_frag(i) * dot_product(v_r(:,i), v_r(:,i))
+         C = m_frag(i) * (dot_product(vcom(:), vcom(:)) + dot_product(v_phi(:,i), v_phi(:,i)))
+      end do
+      C = 2 * KE_residual - C
+
+      B = C / A
+      if (B > 0.0_DP) then
+         f_corrected = sqrt(B)
          lmerge = .false.
       else
          f_corrected = 0.0_DP
          lmerge = .true.
       end if
-      v_frag(:,:) =  f_corrected * v_frag(:,:) 
 
       ! Shift the fragments into the system barycenter frame
       do i = 1, nfrag
          x_frag(:,i) = x_frag(:, i) + xcom(:)
-         v_frag(:,i) = v_frag(:, i) + vcom(:)
+         v_frag(:,i) = f_corrected * v_r(:, i) + v_phi(:, i) + vcom(:)
       end do
 
       ! REMOVE THE FOLLOWING AFTER TESTING
