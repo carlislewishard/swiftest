@@ -127,8 +127,6 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       write(*,fmtlabel) ' change      |',(KE_after - KE_before) / abs(Etot_before), (KE_spin_after - KE_spin_before)/ abs(Etot_before), (KE_after + KE_spin_after - KE_before - KE_spin_before)/ abs(Etot_before), (U_after - U_before) / abs(Etot_before), (Etot_after-Etot_before) / abs(Etot_before)
       write(*,        "(' ------------------------------------------------------------------')")
       write(*,*)   
-
-      write(*,*) 'KE_after / KE_target: ', KE_after / KE_target 
       !****************************************************************************************************************
 
    end associate
