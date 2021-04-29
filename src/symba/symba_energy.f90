@@ -1,4 +1,4 @@
-subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke_orbit, ke_spin, pe, te, Ltot)
+subroutine symba_energy(npl, symba_plA, j2rp2, j4rp4, ke_orbit, ke_spin, pe, te, Ltot)
    !! author: David A. Minton
    !!
    !! Compute total system angular momentum vector, kinetic, potential and total 
@@ -8,6 +8,7 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke_orbit, ke_spin, pe, 
    !!  
    !! Adapted from Martin Duncan's Swift routine anal_energy.f
    use swiftest
+   use module_symba
    use module_interfaces, EXCEPT_THIS_ONE => symba_energy
    implicit none
 
@@ -16,7 +17,7 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke_orbit, ke_spin, pe, 
    real(DP), intent(in)             :: j2rp2, j4rp4
    real(DP), intent(out)            :: ke_orbit, ke_spin, pe, te
    real(DP), dimension(:), intent(out) :: Ltot
-   type(swiftest_pl), intent(inout)     :: swiftest_plA
+   type(symba_pl), intent(inout)     :: symba_plA
 
 ! internals
    integer(I4B)              :: i, j
@@ -28,8 +29,8 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke_orbit, ke_spin, pe, 
 
 ! executable code
 
-   associate(xb => swiftest_plA%xb, vb => swiftest_plA%vb, mass => swiftest_plA%mass, radius => swiftest_plA%radius, &
-             Ip => swiftest_plA%Ip, rot => swiftest_plA%rot, xh => swiftest_plA%xh, status => swiftest_plA%status)
+   associate(xb => symba_plA%helio%swiftest%xb, vb => symba_plA%helio%swiftest%vb, mass => symba_plA%helio%swiftest%mass, radius => symba_plA%helio%swiftest%radius, &
+             Ip => symba_plA%helio%swiftest%Ip, rot => symba_plA%helio%swiftest%rot, xh => symba_plA%helio%swiftest%xh, status => symba_plA%helio%swiftest%status)
       Lpl(:,:) = 0.0_DP
       kepl(:) = 0.0_DP
       do i = 1, npl
@@ -45,6 +46,8 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke_orbit, ke_spin, pe, 
          kepl(i) = mass(i) * v2
          kespinpl(i) = mass(i) * Ip(3,i) * radius(i)**2 * rot2 
       end do
+      ke_orbit = 0.5_DP * sum(kepl(:))
+      ke_spin  = 0.5_DP * sum(kespinpl(:))
 
       pepl(:,:) = 0.0_DP
       do i = 1, npl - 1
@@ -57,8 +60,6 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke_orbit, ke_spin, pe, 
          end do
       end do
       pe = sum(pack(pepl(:,:), abs(pepl(:,:)) > tiny(pe)))
-      ke_orbit = 0.5_DP * sum(kepl(:))
-      ke_spin  = 0.5_DP * sum(kespinpl(:))
       Ltot(:) =  sum(Lpl(:,:), dim=2)
 
       if (j2rp2 /= 0.0_DP) then
@@ -67,7 +68,7 @@ subroutine symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke_orbit, ke_spin, pe, 
             rmag = norm2(xh(:,i))
             irh(i) = 1.0_DP / rmag
          end do
-         call obl_pot(npl, swiftest_plA, j2rp2, j4rp4, xh(:,:), irh, oblpot)
+         call obl_pot(npl, symba_plA%helio%swiftest, j2rp2, j4rp4, xh(:,:), irh, oblpot)
          pe = pe + oblpot
       end if
    end associate

@@ -909,15 +909,16 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke_orbit, ke_spin, pe, te, Ltot)
+          SUBROUTINE symba_energy(npl, symba_plA, j2rp2, j4rp4, ke_orbit, ke_spin, pe, te, Ltot)
                USE swiftest_globals
+               use module_symba
                USE swiftest_data_structures
                IMPLICIT NONE
                INTEGER(I4B), INTENT(IN)            :: npl
                REAL(DP), INTENT(IN)                :: j2rp2, j4rp4
                REAL(DP), INTENT(OUT)               :: ke_orbit, ke_spin, pe, te
                REAL(DP), DIMENSION(:), INTENT(OUT) :: Ltot
-               TYPE(swiftest_pl), INTENT(INOUT)    :: swiftest_plA
+               TYPE(symba_pl), INTENT(INOUT)       :: symba_plA
           END SUBROUTINE symba_energy
      END INTERFACE
 
