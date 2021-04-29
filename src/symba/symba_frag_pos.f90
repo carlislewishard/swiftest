@@ -112,6 +112,8 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
      !                                    Etot_after / abs(Etot_before), &
      !                                    Ltot_after / Ltot_before
       write(*,        "(' ---------------------------------------------------------------------------')")
+      write(*,        "('  First pass to get angular momentum ')")
+      write(*,        "(' ---------------------------------------------------------------------------')")
       write(*,fmtlabel) ' change      |',(ke_after - ke_before) / abs(Etot_before), &
                                          (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
                                          (ke_after + ke_spin_after - ke_before - ke_spin_before)/ abs(Etot_before), &
@@ -119,20 +121,30 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
                                          (Etot_after - Etot_before) / abs(Etot_before), &
                                          (Ltot_after - Ltot_before) / Ltot_before
       write(*,        "(' ---------------------------------------------------------------------------')")
+      write(*,        "('  Second pass to get energy ')")
+      write(*,        "(' ---------------------------------------------------------------------------')")
       write(*,fmtlabel) ' Q_loss      |',-Qloss / abs(Etot_before)
       write(*,        "(' ---------------------------------------------------------------------------')")
 
       ! Set the "target" ke_after (the value of the orbital kinetic energy that the fragments ought to have)
       ke_target = ke_family + (ke_spin_before - ke_spin_after) + (pe_before - pe_after) - Qloss
       call symba_frag_pos_kinetic_energy(xcom, vcom, m_frag, x_frag, v_frag, ke_target, lmerge)
-    !  write(*,fmtlabel) ' T_frag targ |',ke_target / abs(Etot_before)
-    !  write(*,        "(' ---------------------------------------------------------------------------')")
+      write(*,        "(' ---------------------------------------------------------------------------')")
+      write(*,fmtlabel) ' T_frag targ |',ke_target / abs(Etot_before)
 
       ! Shift the fragments into the system barycenter frame
       do i = 1, nfrag
          xb_frag(:,i) = x_frag(:, i) + xcom(:)
          vb_frag(:,i) = v_frag(:, i) + vcom(:)
       end do
+
+      ke_family = 0.0_DP
+      do i = 1, nfrag
+         ke_family = ke_family + m_frag(i) * dot_product(vb_frag(:,i), vb_frag(:,i)) 
+      end do
+      ke_family = 0.5_DP * ke_family
+      write(*,fmtlabel) ' T_frag new  |',ke_family / abs(Etot_before)
+      write(*,        "(' ---------------------------------------------------------------------------')")
 
       ! REMOVE THE FOLLOWING AFTER TESTING
       !****************************************************************************************************************
@@ -143,12 +155,12 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
       Ltot_after = norm2(Ltot(:))
      
       write(*,        "(' ---------------------------------------------------------------------------')")
-      write(*,fmtlabel) ' final       |',ke_after / abs(Etot_before), &
-                                         ke_spin_after / abs(Etot_before), &
-                                         (ke_after + ke_spin_after) / abs(Etot_before), &
-                                         pe_after / abs(Etot_before), &
-                                         Etot_after / abs(Etot_before), &
-                                         Ltot_after / Ltot_before
+      !write(*,fmtlabel) ' final       |',ke_after / abs(Etot_before), &
+      !                                   ke_spin_after / abs(Etot_before), &
+      !                                   (ke_after + ke_spin_after) / abs(Etot_before), &
+      !                                   pe_after / abs(Etot_before), &
+      !                                   Etot_after / abs(Etot_before), &
+      !                                   Ltot_after / Ltot_before
       write(*,        "(' ---------------------------------------------------------------------------')")
       write(*,        "('             |    T_orb    T_spin         T         pe      Etot      Ltot')")
       write(*,        "(' ---------------------------------------------------------------------------')")
