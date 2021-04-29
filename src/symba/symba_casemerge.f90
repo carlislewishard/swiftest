@@ -21,7 +21,7 @@ subroutine symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x,
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
    type(user_input_parameters),intent(inout) :: param
 
-   integer(I4B)                            :: j
+   integer(I4B)                            :: j, mergename
    real(DP)                                :: mass_new, radius_new, volume_new
    real(DP), dimension(NDIM)               :: xcom, vcom, xc, vc, xcrossv
    real(DP), dimension(2)                  :: vol
@@ -30,7 +30,6 @@ subroutine symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x,
    integer(I4B), dimension(:), allocatable :: family
    integer(I4B)                            :: fam_size, istart
 
-  
    ! Make the list of family members (bodies involved in the collision)
    associate(nchild1 => symba_plA%kin(idx_parents(1))%nchild, nchild2 => symba_plA%kin(idx_parents(2))%nchild)
       fam_size = 2 + nchild1 + nchild2
@@ -42,6 +41,7 @@ subroutine symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x,
       if (nchild1 > 0) family(3:istart) = symba_plA%kin(idx_parents(1))%child(1:nchild1)
       if (nchild2 > 0) family(istart+1:istart+1+nchild2) = symba_plA%kin(idx_parents(2))%child(1:nchild2)
       mass_new = sum(symba_plA%helio%swiftest%mass(family(:)))
+      mergename = symba_plA%helio%swiftest%name(idx_parents(1))
    end associate
    ! Merged body is created at the barycenter of the original bodies
    xcom(:) = (mass(1) * x(:,1) + mass(2) * x(:,2)) / mass_new
@@ -72,8 +72,7 @@ subroutine symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x,
    ! Populate the list of new bodies
    call symba_merger_size_check(mergeadd_list, nmergeadd + 1)  
    nmergeadd = nmergeadd + 1
-   param%plmaxname = max(param%plmaxname, param%tpmaxname) + 1
-   mergeadd_list%name(nmergeadd) = param%plmaxname
+   mergeadd_list%name(nmergeadd) = mergename
    mergeadd_list%status(nmergeadd) = MERGED
    mergeadd_list%xb(:,nmergeadd) = xcom(:)
    mergeadd_list%vb(:,nmergeadd) = vcom(:)
