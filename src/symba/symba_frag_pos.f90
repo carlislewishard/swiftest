@@ -31,10 +31,12 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
    real(DP)                                :: pe_after, ke_spin_before, ke_spin_after, ke_after, ke_family, ke_target, ke_frag
    real(DP), dimension(NDIM)               :: h, dx
    integer(I4B), dimension(:), allocatable :: family
-   real(DP)                                :: rmag
+   real(DP)                                :: rmag, f_help
    logical, dimension(:), allocatable      :: lexclude
    character(len=*), parameter             :: fmtlabel = "(A14,10(ES9.2,1X,:))"
-   integer(I4B), parameter                 :: MAXITER = 1000
+   integer(I4B), parameter                 :: MAXITER = 100
+   real(DP), dimension(NDIM)               :: x_cross_v, v_phi_unit, h_unit, v_r_unit
+   real(DP), dimension(:,:), allocatable   :: v_r, v_phi
    
    associate(nchild1 => symba_plA%kin(idx_parents(1))%nchild, nchild2 => symba_plA%kin(idx_parents(2))%nchild, &
              xhpl => symba_plA%helio%swiftest%xh, xbpl => symba_plA%helio%swiftest%xh, vbpl => symba_plA%helio%swiftest%vb, &
@@ -43,6 +45,8 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
 
       allocate(x_frag, source=xb_frag)
       allocate(v_frag, source=vb_frag)
+      allocate(v_r, mold=v_frag)
+      allocate(v_phi, mold=v_frag)
 
       ! Find the center of mass of the collisional system
       mtot = sum(mass(:))
@@ -115,6 +119,7 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
       write(*,fmtlabel) ' Q_loss      |',-Qloss / abs(Etot_before)
       write(*,        "(' ---------------------------------------------------------------------------')")
 
+      f_help = 1._DP
       do j = 1, MAXITER
          ! Set the "target" ke_after (the value of the orbital kinetic energy that the fragments ought to have)
          ke_target = ke_family + (ke_spin_before - ke_spin_after) + (pe_before - pe_after) - Qloss
@@ -146,6 +151,8 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
             write(*,*) 'It took ',j,' iterations to get it right'
             exit ! Keep trying until we lose energy
          end if
+
+         if (j == maxiter) lmerge = .true.
       end do
 
       write(*,        "(' ---------------------------------------------------------------------------')")
