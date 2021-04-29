@@ -34,6 +34,7 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
    real(DP)                                :: rmag
    logical, dimension(:), allocatable      :: lexclude
    character(len=*), parameter             :: fmtlabel = "(A14,10(ES9.2,1X,:))"
+   integer(I4B), parameter                 :: MAXITER = 1000
    
    associate(nchild1 => symba_plA%kin(idx_parents(1))%nchild, nchild2 => symba_plA%kin(idx_parents(2))%nchild, &
              xhpl => symba_plA%helio%swiftest%xh, xbpl => symba_plA%helio%swiftest%xh, vbpl => symba_plA%helio%swiftest%vb, &
@@ -99,18 +100,6 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
       write(*,        "('              Energy normalized by |Etot_before|')")
       write(*,        "('             |    T_orb    T_spin         T         pe      Etot      Ltot')")
       write(*,        "(' ---------------------------------------------------------------------------')")
-     ! write(*,fmtlabel) ' original    |',ke_before / abs(Etot_before), &
-     !                                    ke_spin_before / abs(Etot_before), &
-     !                                    (ke_before + ke_spin_before) / abs(Etot_before), &
-     !                                    pe_before / abs(Etot_before), &
-     !                                    Etot_before / abs(Etot_before), &
-     !                                    Ltot_before / Ltot_before
-     ! write(*,fmtlabel) ' first pass  |',ke_after / abs(Etot_before), &
-     !                                    ke_spin_after / abs(Etot_before), &
-     !                                    (ke_after + ke_spin_after) / abs(Etot_before), &
-     !                                    pe_after / abs(Etot_before), &
-     !                                    Etot_after / abs(Etot_before), &
-     !                                    Ltot_after / Ltot_before
       write(*,        "(' ---------------------------------------------------------------------------')")
       write(*,        "('  First pass to get angular momentum ')")
       write(*,        "(' ---------------------------------------------------------------------------')")
@@ -126,12 +115,12 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
       write(*,fmtlabel) ' Q_loss      |',-Qloss / abs(Etot_before)
       write(*,        "(' ---------------------------------------------------------------------------')")
 
-      do j = 1, 100
+      do j = 1, MAXITER
          ! Set the "target" ke_after (the value of the orbital kinetic energy that the fragments ought to have)
          ke_target = ke_family + (ke_spin_before - ke_spin_after) + (pe_before - pe_after) - Qloss
          call symba_frag_pos_kinetic_energy(xcom, vcom, m_frag, x_frag, v_frag, ke_target, lmerge)
-         write(*,        "(' ---------------------------------------------------------------------------')")
-         write(*,fmtlabel) ' T_frag targ |',ke_target / abs(Etot_before)
+         !write(*,        "(' ---------------------------------------------------------------------------')")
+         !write(*,fmtlabel) ' T_frag targ |',ke_target / abs(Etot_before)
 
          ! Shift the fragments into the system barycenter frame
          do i = 1, nfrag
@@ -144,37 +133,32 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
             ke_frag = ke_frag + m_frag(i) * dot_product(vb_frag(:,i), vb_frag(:,i)) 
          end do
          ke_frag = 0.5_DP * ke_frag
-         write(*,fmtlabel) ' T_frag new  |',ke_frag / abs(Etot_before)
-         write(*,        "(' ---------------------------------------------------------------------------')")
+         !write(*,fmtlabel) ' T_frag new  |',ke_frag / abs(Etot_before)
+         !write(*,        "(' ---------------------------------------------------------------------------')")
 
-         ! REMOVE THE FOLLOWING AFTER TESTING
-         !****************************************************************************************************************
          ! Calculate the new energy of the system of fragments
          call symba_frag_pos_energy_calc(npl, symba_plA, lexclude, ke_after, ke_spin_after, pe_after, Ltot,&
                nfrag=nfrag, Ip_frag=Ip_frag, m_frag=m_frag, rad_frag=rad_frag, xb_frag=xb_frag, vb_frag=vb_frag, rot_frag=rot_frag)
          Etot_after = ke_after + ke_spin_after + pe_after
          Ltot_after = norm2(Ltot(:))
       
-         write(*,        "(' ---------------------------------------------------------------------------')")
-         !write(*,fmtlabel) ' final       |',ke_after / abs(Etot_before), &
-         !                                   ke_spin_after / abs(Etot_before), &
-         !                                   (ke_after + ke_spin_after) / abs(Etot_before), &
-         !                                   pe_after / abs(Etot_before), &
-         !                                   Etot_after / abs(Etot_before), &
-         !                                   Ltot_after / Ltot_before
-         write(*,        "(' ---------------------------------------------------------------------------')")
-         write(*,        "('             |    T_orb    T_spin         T         pe      Etot      Ltot')")
-         write(*,        "(' ---------------------------------------------------------------------------')")
-         write(*,fmtlabel) ' change      |',(ke_after - ke_before) / abs(Etot_before), &
-                                          (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
-                                          (ke_after + ke_spin_after - ke_before - ke_spin_before)/ abs(Etot_before), &
-                                          (pe_after - pe_before) / abs(Etot_before), &
-                                          (Etot_after - Etot_before) / abs(Etot_before), &
-                                          (Ltot_after - Ltot_before) / Ltot_before
-         write(*,        "(' ---------------------------------------------------------------------------')")
-         write(*,*)   
-         if ((Etot_after - Etot_before) / abs(Etot_before) <= 0._DP) exit
+         if ((Etot_after - Etot_before) / abs(Etot_before) <= 0._DP) then
+            write(*,*) 'It took ',j,' iterations to get it right'
+            exit ! Keep trying until we lose energy
+         end if
       end do
+
+      write(*,        "(' ---------------------------------------------------------------------------')")
+      write(*,        "('             |    T_orb    T_spin         T         pe      Etot      Ltot')")
+      write(*,        "(' ---------------------------------------------------------------------------')")
+      write(*,fmtlabel) ' change      |',(ke_after - ke_before) / abs(Etot_before), &
+                                       (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
+                                       (ke_after + ke_spin_after - ke_before - ke_spin_before)/ abs(Etot_before), &
+                                       (pe_after - pe_before) / abs(Etot_before), &
+                                       (Etot_after - Etot_before) / abs(Etot_before), &
+                                       (Ltot_after - Ltot_before) / Ltot_before
+      write(*,        "(' ---------------------------------------------------------------------------')")
+      write(*,*)   
       !****************************************************************************************************************
 
    end associate
@@ -203,6 +187,7 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
       real(DP), dimension(NDIM)               :: Ltot, xc, vc, x_cross_v, delta_r, delta_v
       real(DP), dimension(NDIM)               :: r_col_unit_vec, v_col_unit_vec, v_plane_unit_vec
       integer(I4B)                            :: i, nfrag
+
 
       ! Now create the fragment distribution
       nfrag = size(m_frag(:))
@@ -383,7 +368,7 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
 
       call symba_frag_pos_com_adjust(xcom, vcom, m_frag, x_frag, v_frag)
 
-      write(*,fmtlabel) ' f_corrected |',f_corrected
+      !write(*,fmtlabel) ' f_corrected |',f_corrected
 
       return
    end subroutine symba_frag_pos_kinetic_energy
