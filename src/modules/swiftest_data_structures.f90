@@ -132,7 +132,8 @@ module swiftest_data_structures
          if (allocated(self%vh)) deallocate(self%vh)
          if (allocated(self%xb)) deallocate(self%xb)
          if (allocated(self%vb)) deallocate(self%vb)
-      return
+         if (allocated(self%k_pltp)) deallocate(self%k_pltp)
+         return
       end subroutine swiftest_tp_deallocate
 
       subroutine swiftest_pl_deallocate(self)
@@ -146,7 +147,8 @@ module swiftest_data_structures
          if (allocated(self%rhill)) deallocate(self%rhill)
          if (allocated(self%Ip)) deallocate(self%Ip)
          if (allocated(self%rot)) deallocate(self%rot)
-      return
+         if (allocated(self%k_plpl)) deallocate(self%k_plpl)
+         return
       end subroutine swiftest_pl_deallocate
 
 
