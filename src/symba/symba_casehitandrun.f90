@@ -1,4 +1,4 @@
-subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list, name, x, v, mass, radius, L_spin, Ip, xbs, vbs, &
+subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list, name, x, v, mass, radius, L_spin, Ip,  &
                                         mass_res, param, Qloss)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
@@ -15,7 +15,7 @@ subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list
    type(symba_merger), intent(inout)         :: mergeadd_list
    type(symba_pl), intent(inout)             :: symba_pla
    integer(I4B), dimension(:), intent(in)    :: name
-   real(DP), dimension(:),   intent(in)      :: mass, radius, xbs, vbs, mass_res
+   real(DP), dimension(:),   intent(in)      :: mass, radius, mass_res
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
    type(user_input_parameters),intent(inout) :: param
    integer(I4B), dimension(2), intent(inout) :: idx_parents
@@ -44,6 +44,7 @@ subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list
    end if
 
    if (mass_res(2) > 0.9_DP * mass(jproj)) then ! Pure hit and run, so we'll just keep the two bodies untouched
+      write(*,*) 'Pure hit and run. No new fragments generated.'
       nfrag = 2
       allocate(m_frag, source = mass)
       allocate(name_frag, source = name)
@@ -102,6 +103,7 @@ subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list
             rot_frag(:,i) = L_spin(:, i) / (Ip_frag(3, i) * m_frag(i) * rad_frag(i)**2)
          end do
       else
+         write(*,'("Generating ",I2.0," fragments")') nfrag
          do i = 1, nfrag
             name_frag(i) = param%plmaxname + i 
          end do

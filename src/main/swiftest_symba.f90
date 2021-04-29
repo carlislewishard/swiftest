@@ -182,7 +182,7 @@ program swiftest_symba
 
          lfrag_add = .false.
 
-         call symba_collision(t, npl, symba_plA, nplplenc, plplenc_list, lfrag_add, mergeadd_list, nmergeadd, param)
+         call symba_collision(t, symba_plA, nplplenc, plplenc_list, lfrag_add, mergeadd_list, nmergeadd, param)
          if (lfrag_add) then
             call symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
                                discard_tpA, lfrag_add, ldiscard_tp, mtiny)

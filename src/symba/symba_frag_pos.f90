@@ -24,7 +24,7 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
    ! Internals
    real(DP), dimension(:,:), allocatable   :: x_frag, v_frag ! Fragment positions and velocities in the collision center of mass frame
    real(DP), dimension(NDIM, 2)            :: rot
-   integer(I4B)                            :: i, nfrag, fam_size, istart, npl
+   integer(I4B)                            :: i, nfrag, fam_size, istart
    real(DP), dimension(NDIM)               :: xcom, vcom, Ltot
    real(DP)                                :: mtot, Ltot_before, Ltot_after
    real(DP)                                :: Etot_before, Etot_after, ke_before, pe_before
@@ -33,12 +33,12 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
    integer(I4B), dimension(:), allocatable :: family
    real(DP)                                :: rmag
    logical, dimension(:), allocatable      :: lexclude
-   character(len=*), parameter             :: fmtlabel = "(A14,6(ES9.2,1X,:))"
+   character(len=*), parameter             :: fmtlabel = "(A14,10(ES9.2,1X,:))"
    
    associate(nchild1 => symba_plA%kin(idx_parents(1))%nchild, nchild2 => symba_plA%kin(idx_parents(2))%nchild, &
              xhpl => symba_plA%helio%swiftest%xh, xbpl => symba_plA%helio%swiftest%xh, vbpl => symba_plA%helio%swiftest%vb, &
              Mpl => symba_plA%helio%swiftest%mass, Ippl => symba_plA%helio%swiftest%Ip, radpl => symba_plA%helio%swiftest%radius, &
-             rotpl => symba_plA%helio%swiftest%rot, status => symba_plA%helio%swiftest%status, npl => symba_plA%helio%swiftest%nbody)
+             rotpl => symba_plA%helio%swiftest%rot, status => symba_plA%helio%swiftest%status, npl => symba_plA%helio%swiftest%nbody, name => symba_plA%helio%swiftest%name)
 
       allocate(x_frag, source=xb_frag)
       allocate(v_frag, source=vb_frag)
@@ -95,28 +95,29 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
       Etot_after = ke_after + ke_spin_after + pe_after
       Ltot_after = norm2(Ltot(:))
 
+      write(*,        "(' ---------------------------------------------------------------------------')")
       write(*,        "('              Energy normalized by |Etot_before|')")
-      write(*,        "('             |    T_orb    T_spin         T         pe      Etot      Ltot')")
-      write(*,        "(' ---------------------------------------------------------------------------')")
-      write(*,fmtlabel) ' original    |',ke_before / abs(Etot_before), &
-                                         ke_spin_before / abs(Etot_before), &
-                                         (ke_before + ke_spin_before) / abs(Etot_before), &
-                                         pe_before / abs(Etot_before), &
-                                         Etot_before / abs(Etot_before), &
-                                         Ltot_before / Ltot_before
-      write(*,fmtlabel) ' first pass  |',ke_after / abs(Etot_before), &
-                                         ke_spin_after / abs(Etot_before), &
-                                         (ke_after + ke_spin_after) / abs(Etot_before), &
-                                         pe_after / abs(Etot_before), &
-                                         Etot_after / abs(Etot_before), &
-                                         Ltot_after / Ltot_before
-      write(*,        "(' ---------------------------------------------------------------------------')")
-      write(*,fmtlabel) ' change      |',(ke_after - ke_before) / abs(Etot_before), &
-                                         (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
-                                         (ke_after + ke_spin_after - ke_before - ke_spin_before)/ abs(Etot_before), &
-                                         (pe_after - pe_before) / abs(Etot_before), &
-                                         (Etot_after - Etot_before) / abs(Etot_before), &
-                                         (Ltot_after - Ltot_before) / Ltot_before
+     ! write(*,        "('             |    T_orb    T_spin         T         pe      Etot      Ltot')")
+     ! write(*,        "(' ---------------------------------------------------------------------------')")
+     ! write(*,fmtlabel) ' original    |',ke_before / abs(Etot_before), &
+     !                                    ke_spin_before / abs(Etot_before), &
+     !                                    (ke_before + ke_spin_before) / abs(Etot_before), &
+     !                                    pe_before / abs(Etot_before), &
+     !                                    Etot_before / abs(Etot_before), &
+     !                                    Ltot_before / Ltot_before
+     ! write(*,fmtlabel) ' first pass  |',ke_after / abs(Etot_before), &
+     !                                    ke_spin_after / abs(Etot_before), &
+     !                                    (ke_after + ke_spin_after) / abs(Etot_before), &
+     !                                    pe_after / abs(Etot_before), &
+     !                                    Etot_after / abs(Etot_before), &
+     !                                    Ltot_after / Ltot_before
+     ! write(*,        "(' ---------------------------------------------------------------------------')")
+     ! write(*,fmtlabel) ' change      |',(ke_after - ke_before) / abs(Etot_before), &
+     !                                    (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
+     !                                    (ke_after + ke_spin_after - ke_before - ke_spin_before)/ abs(Etot_before), &
+     !                                    (pe_after - pe_before) / abs(Etot_before), &
+     !                                    (Etot_after - Etot_before) / abs(Etot_before), &
+     !                                    (Ltot_after - Ltot_before) / Ltot_before
       write(*,        "(' ---------------------------------------------------------------------------')")
       write(*,fmtlabel) ' Q_loss      |',-Qloss / abs(Etot_before)
       write(*,        "(' ---------------------------------------------------------------------------')")
@@ -124,8 +125,8 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
       ! Set the "target" ke_after (the value of the orbital kinetic energy that the fragments ought to have)
       ke_target = ke_family + (ke_spin_before - ke_spin_after) + (pe_before - pe_after) - Qloss
       call symba_frag_pos_kinetic_energy(xcom, vcom, m_frag, x_frag, v_frag, ke_target, lmerge)
-      write(*,fmtlabel) ' target      |',ke_target / abs(Etot_before)
-      write(*,        "(' ---------------------------------------------------------------------------')")
+    !  write(*,fmtlabel) ' T_frag targ |',ke_target / abs(Etot_before)
+    !  write(*,        "(' ---------------------------------------------------------------------------')")
 
       ! Shift the fragments into the system barycenter frame
       do i = 1, nfrag
@@ -136,29 +137,29 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
       ! REMOVE THE FOLLOWING AFTER TESTING
       !****************************************************************************************************************
       ! Calculate the new energy of the system of fragments
-      call symba_frag_pos_energy_calc(npl, symba_plA, lexclude, ke_after, ke_spin_after, pe_after, Ltot, &
-         nfrag=nfrag, Ip_frag=Ip_frag, m_frag=m_frag, rad_frag=rad_frag, xb_frag=xb_frag, vb_frag=vb_frag, rot_frag=rot_frag)
-      Etot_after = ke_after + ke_spin_after + pe_after
-      Ltot_after = norm2(Ltot(:))
+      !call symba_frag_pos_energy_calc(npl, symba_plA, lexclude, ke_after, ke_spin_after, pe_after, Ltot, &
+      !   nfrag=nfrag, Ip_frag=Ip_frag, m_frag=m_frag, rad_frag=rad_frag, xb_frag=xb_frag, vb_frag=vb_frag, rot_frag=rot_frag)
+      !Etot_after = ke_after + ke_spin_after + pe_after
+      !Ltot_after = norm2(Ltot(:))
      
-      write(*,        "(' ---------------------------------------------------------------------------')")
-      write(*,fmtlabel) ' final       |',ke_after / abs(Etot_before), &
-                                         ke_spin_after / abs(Etot_before), &
-                                         (ke_after + ke_spin_after) / abs(Etot_before), &
-                                         pe_after / abs(Etot_before), &
-                                         Etot_after / abs(Etot_before), &
-                                         Ltot_after / Ltot_before
-      write(*,        "(' ---------------------------------------------------------------------------')")
-      write(*,        "(' (final T_orb should be the same as target T_orb)')")
-      write(*,        "(' ---------------------------------------------------------------------------')")
-      write(*,fmtlabel) ' change      |',(ke_after - ke_before) / abs(Etot_before), &
-                                         (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
-                                         (ke_after + ke_spin_after - ke_before - ke_spin_before)/ abs(Etot_before), &
-                                         (pe_after - pe_before) / abs(Etot_before), &
-                                         (Etot_after - Etot_before) / abs(Etot_before), &
-                                         (Ltot_after - Ltot_before) / Ltot_before
-      write(*,        "(' ---------------------------------------------------------------------------')")
-      write(*,*)   
+      !write(*,        "(' ---------------------------------------------------------------------------')")
+      !write(*,fmtlabel) ' final       |',ke_after / abs(Etot_before), &
+      !                                   ke_spin_after / abs(Etot_before), &
+      !                                   (ke_after + ke_spin_after) / abs(Etot_before), &
+      !                                   pe_after / abs(Etot_before), &
+      !                                   Etot_after / abs(Etot_before), &
+      !                                   Ltot_after / Ltot_before
+      !write(*,        "(' ---------------------------------------------------------------------------')")
+      !write(*,        "('             |    T_orb    T_spin         T         pe      Etot      Ltot')")
+      !write(*,        "(' ---------------------------------------------------------------------------')")
+      !write(*,fmtlabel) ' change      |',(ke_after - ke_before) / abs(Etot_before), &
+      !                                   (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
+      !                                   (ke_after + ke_spin_after - ke_before - ke_spin_before)/ abs(Etot_before), &
+      !                                   (pe_after - pe_before) / abs(Etot_before), &
+      !                                   (Etot_after - Etot_before) / abs(Etot_before), &
+      !                                   (Ltot_after - Ltot_before) / Ltot_before
+      !write(*,        "(' ---------------------------------------------------------------------------')")
+      !write(*,*)   
       !****************************************************************************************************************
 
    end associate
@@ -414,64 +415,57 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
       use module_swiftestalloc
       implicit none
       ! Arguments
-      integer(I4B), intent(in) :: npl
+      integer(I4B), intent(inout) :: npl
       type(symba_pl), intent(inout) :: symba_plA
-      logical, dimension(:), intent(in) :: lexclude
+      logical, dimension(:), allocatable, intent(inout) :: lexclude
       real(DP), intent(out) :: ke_orbit, ke_spin, pe
       real(DP), dimension(:), intent(out)      :: Ltot
       integer(I4B), intent(in), optional :: nfrag
       real(DP), dimension(:), intent(in), optional :: m_frag, rad_frag
       real(DP), dimension(:,:), intent(in), optional :: Ip_frag, xb_frag, vb_frag, rot_frag
       ! Internals
-      integer(I4B) :: i, ntot, npl_loc, nplm
-      type(symba_pl) :: symba_pl_loc
+      integer(I4B) :: i, npl_old, nplm
+      logical, dimension(:), allocatable :: ltmp
       real(DP) :: te
 
       ! Because we're making a copy of symba_pl with the excludes/fragments appended, we need to deallocate the
       ! big k_plpl array and recreate it when we're done, otherwise we run the risk of blowing up the memory by
       ! allocating two of these ginormous arrays simulteouously. This is not particularly efficient, but as this
       ! subroutine should be called relatively infrequently, it shouldn't matter too much.
-      if (allocated(symba_plA%helio%swiftest%k_plpl)) deallocate(symba_plA%helio%swiftest%k_plpl) 
+      !if (allocated(symba_plA%helio%swiftest%k_plpl)) deallocate(symba_plA%helio%swiftest%k_plpl) 
 
       ! Build the internal planet list out of the non-excluded bodies and optionally with fragments appended. This
       ! will get passed to the energy calculation subroutine so that energy is computed exactly the same way is it
       ! is in the main program.
-      npl_loc = count(.not.lexclude(:))
-      ntot = npl_loc
-      if (present(nfrag)) ntot = npl_loc + nfrag
-      call symba_pl_allocate(symba_pl_loc, ntot)
-
-      symba_pl_loc%helio%swiftest%mass(1:npl_loc) = pack(symba_plA%helio%swiftest%mass(1:npl), .not.lexclude(:))
-      symba_pl_loc%helio%swiftest%radius(1:npl_loc) = pack(symba_plA%helio%swiftest%radius(1:npl), .not.lexclude(:))
-      do i = 1, NDIM
-         symba_pl_loc%helio%swiftest%xb(i,1:npl_loc) = pack(symba_plA%helio%swiftest%xb(i,1:npl), .not.lexclude(:))
-         symba_pl_loc%helio%swiftest%vb(i,1:npl_loc) = pack(symba_plA%helio%swiftest%vb(i,1:npl), .not.lexclude(:))
-         symba_pl_loc%helio%swiftest%rot(i,1:npl_loc) = pack(symba_plA%helio%swiftest%rot(i,1:npl), .not.lexclude(:))
-         symba_pl_loc%helio%swiftest%Ip(i,1:npl_loc) = pack(symba_plA%helio%swiftest%Ip(i,1:npl), .not.lexclude(:))
-      end do
+      where (lexclude(1:npl))
+         symba_plA%helio%swiftest%status(1:npl) = INACTIVE
+      end where
       if (present(nfrag)) then
-         symba_pl_loc%helio%swiftest%Ip(:,npl_loc+1:ntot) = Ip_frag(:,:)
-         symba_pl_loc%helio%swiftest%mass(npl_loc+1:ntot) = m_frag(:)
-         symba_pl_loc%helio%swiftest%radius(npl_loc+1:ntot) = m_frag(:)
-         symba_pl_loc%helio%swiftest%xb(:,npl_loc+1:ntot) =  xb_frag(:,:)
-         symba_pl_loc%helio%swiftest%vb(:,npl_loc+1:ntot) =  vb_frag(:,:)
-         symba_pl_loc%helio%swiftest%rot(:,npl_loc+1:ntot) = rot_frag(:,:)
+         npl_old = npl
+         npl = npl_old + nfrag
+         call util_resize_pl(symba_plA, npl, npl_old)
+         symba_plA%helio%swiftest%Ip(:,npl_old+1:npl) = Ip_frag(:,:)
+         symba_plA%helio%swiftest%mass(npl_old+1:npl) = m_frag(:)
+         symba_plA%helio%swiftest%radius(npl_old+1:npl) = m_frag(:)
+         symba_plA%helio%swiftest%xb(:,npl_old+1:npl) =  xb_frag(:,:)
+         symba_plA%helio%swiftest%vb(:,npl_old+1:npl) =  vb_frag(:,:)
+         symba_plA%helio%swiftest%rot(:,npl_old+1:npl) = rot_frag(:,:)
+         symba_plA%helio%swiftest%status(npl_old+1:npl) = COLLISION
+         call coord_b2h(npl, symba_plA%helio%swiftest)
+         allocate(ltmp(npl))
+         ltmp(1:npl_old) = lexclude(1:npl_old)
+         ltmp(npl_old+1:npl) = .false.
+         call move_alloc(ltmp, lexclude)
       end if
 
-      symba_pl_loc%helio%swiftest%status(:) = ACTIVE
-      
-      call coord_b2h(ntot, symba_pl_loc%helio%swiftest)
-
-      nplm = count(symba_pl_loc%helio%swiftest%mass > param%mtiny)
-      call util_dist_index_plpl(ntot, nplm, symba_pl_loc)
-
-      call symba_energy_eucl(ntot, symba_pl_loc, param%j2rp2, param%j4rp4, ke_orbit, ke_spin, pe, te, Ltot)
-
-      call symba_pl_deallocate(symba_pl_loc)
-      
-      ! Re-create the original k_plpl array now that our temporary copy is gone
       nplm = count(symba_plA%helio%swiftest%mass > param%mtiny)
       call util_dist_index_plpl(npl, nplm, symba_plA)
+      call symba_energy_eucl(npl, symba_plA, param%j2rp2, param%j4rp4, ke_orbit, ke_spin, pe, te, Ltot)
+
+      !call symba_pl_deallocate(symba_plA)
+      
+      ! Re-create the original k_plpl array now that our temporary copy is gone
+      !nplm = count(symba_plA%helio%swiftest%mass > param%mtiny)
 
       return
    end subroutine symba_frag_pos_energy_calc

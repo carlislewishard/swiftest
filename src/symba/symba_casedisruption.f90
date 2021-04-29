@@ -1,4 +1,4 @@
-subroutine symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, &
+subroutine symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, &
                                  mass_res, param, Qloss)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
@@ -16,7 +16,7 @@ subroutine symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_lis
    integer(I4B), dimension(2), intent(inout) :: idx_parents
    integer(I4B), intent(inout)               :: nmergeadd
    type(symba_merger), intent(inout)         :: mergeadd_list
-   real(DP), dimension(:),   intent(in)      :: mass, radius, xbs, vbs, mass_res
+   real(DP), dimension(:),   intent(in)      :: mass, radius, mass_res
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
    type(user_input_parameters),intent(inout) :: param
    real(DP), intent(inout)                   :: Qloss
@@ -74,9 +74,10 @@ subroutine symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_lis
 
    if (lmerge) then
       write(*,*) 'Should have been a merge instead.'
-      call symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, param)
+      call symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, param)
    else
       ! Populate the list of new bodies
+      write(*,'("Generating ",I2.0," fragments")') nfrag
       call symba_merger_size_check(mergeadd_list, nmergeadd + nfrag)  
       do i = 1, nfrag
          nmergeadd = nmergeadd + 1

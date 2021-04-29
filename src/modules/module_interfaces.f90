@@ -713,7 +713,7 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-         SUBROUTINE symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, &
+         SUBROUTINE symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, &
                                                  mass_res, param, Qloss)
          USE swiftest_globals
          USE swiftest_data_structures
@@ -722,7 +722,7 @@ MODULE module_interfaces
          integer(I4B), intent(inout)               :: nmergeadd
          type(symba_merger), intent(inout)         :: mergeadd_list
          type(symba_pl), intent(inout)             :: symba_pla
-         real(DP), dimension(:),   intent(in)      :: mass, radius, xbs, vbs, mass_res
+         real(DP), dimension(:),   intent(in)      :: mass, radius, mass_res
          real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
          type(user_input_parameters),intent(inout) :: param
          integer(I4B), dimension(2), intent(inout) :: idx_parents
@@ -731,7 +731,7 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list, name, x, v, mass, radius, Lspin, Ip, xbs, vbs, &
+          SUBROUTINE symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list, name, x, v, mass, radius, Lspin, Ip, &
             mass_res, param, Qloss)
             USE swiftest_globals
             USE swiftest_data_structures
@@ -741,7 +741,7 @@ MODULE module_interfaces
             type(symba_merger), intent(inout)         :: mergeadd_list
             type(symba_pl), intent(inout)             :: symba_pla
             integer(I4B), dimension(:), intent(in)    :: name
-            real(DP), dimension(:), intent(in)        :: mass, radius, xbs, vbs, mass_res
+            real(DP), dimension(:), intent(in)        :: mass, radius, mass_res
             real(DP), dimension(:,:), intent(in)      :: x, v, Lspin, Ip
             type(user_input_parameters),intent(inout) :: param
             integer(I4B), dimension(2), intent(inout) :: idx_parents
@@ -750,7 +750,7 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, Lspin, Ip, xbs, vbs, param)
+          SUBROUTINE symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, Lspin, Ip, param)
           USE swiftest_globals
           USE swiftest_data_structures
           USE module_symba
@@ -759,14 +759,14 @@ MODULE module_interfaces
           integer(I4B), dimension(2), intent(inout) :: idx_parents
           integer(I4B), intent(inout)             :: nmergeadd
           type(symba_merger), intent(inout)       :: mergeadd_list
-          real(DP), dimension(:), intent(in)      :: mass, radius, xbs, vbs
+          real(DP), dimension(:), intent(in)      :: mass, radius
           real(DP), dimension(:,:), intent(in)    :: x, v, Lspin, Ip
           type(user_input_parameters),intent(inout) :: param
           END SUBROUTINE symba_casemerge
      END INTERFACE
 
      INTERFACE
-         SUBROUTINE symba_casesupercatastrophic (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, Lspin, Ip, xbs, vbs, &
+         SUBROUTINE symba_casesupercatastrophic (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, Lspin, Ip, &
                                                  mass_res, param, Qloss)
          USE swiftest_globals
          USE swiftest_data_structures
@@ -775,7 +775,7 @@ MODULE module_interfaces
          integer(I4B), intent(inout)               :: nmergeadd
          type(symba_merger), intent(inout)         :: mergeadd_list
          type(symba_pl), intent(inout)             :: symba_pla
-         real(DP), dimension(:), intent(in)        :: mass, radius, xbs, vbs, mass_res
+         real(DP), dimension(:), intent(in)        :: mass, radius, mass_res
          real(DP), dimension(:,:), intent(in)      :: x, v, Lspin, Ip
          type(user_input_parameters),intent(inout) :: param
          integer(I4B), dimension(2), intent(inout) :: idx_parents
@@ -798,14 +798,13 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE symba_collision(t, npl, symba_plA, nplplenc, plplenc_list, ldiscard, mergeadd_list, nmergeadd, param)
+          SUBROUTINE symba_collision(t, symba_plA, nplplenc, plplenc_list, ldiscard, mergeadd_list, nmergeadd, param)
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_helio
                USE module_symba
                IMPLICIT NONE
                real(DP), intent(in)                      :: t
-               integer(I4B), intent(inout)               :: npl
                integer(I4B), intent(inout)               :: nplplenc, nmergeadd
                type(symba_pl)                            :: symba_plA
                type(symba_plplenc), intent(inout)        :: plplenc_list
