@@ -32,7 +32,6 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
    real(DP), dimension(NDIM)               :: h, dx
    integer(I4B), dimension(:), allocatable :: family
    real(DP)                                :: rmag
-   logical, dimension(:), allocatable      :: lfamily
    logical, dimension(:), allocatable      :: lexclude
    character(len=*), parameter             :: fmtlabel = "(A14,6(ES9.2,1X,:))"
    
@@ -43,35 +42,39 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
 
       allocate(x_frag, source=xb_frag)
       allocate(v_frag, source=vb_frag)
-      allocate(lexclude(npl))
-      lexclude(:) = status(1:npl) == INACTIVE
-      call symba_frag_pos_energy_calc(npl, symba_plA, lexclude, ke_before, ke_spin_before, pe_before, Ltot)
-      Ltot_before = norm2(Ltot(:))
-      Etot_before = ke_before + ke_spin_before + pe_before
 
       ! Find the center of mass of the collisional system
       mtot = sum(mass(:))
       xcom(:) = (mass(1) * x(:,1) + mass(2) * x(:,2)) / mtot
       vcom(:) = (mass(1) * v(:,1) + mass(2) * v(:,2)) / mtot 
 
-      ! Make the list of family members (bodies involved in the collision)
+      ! Make the list of family members (progenitor bodies involved in the collision)
       fam_size = 2 + nchild1 + nchild2
       allocate(family(fam_size))
-      allocate(lfamily(fam_size))
       family(1) = idx_parents(1)
       family(2) = idx_parents(2)
       istart = 2 + nchild1
 
+      ! Include any children of the progenitor bodies as part of the family
       if (nchild1 > 0) family(3:istart) = symba_plA%kin(idx_parents(1))%child(1:nchild1)
       if (nchild2 > 0) family(istart+1:istart+1+nchild2) = symba_plA%kin(idx_parents(2))%child(1:nchild2)
-      lfamily(:) = (status(family(:)) == ACTIVE) .or. (status(family(:)) == COLLISION) 
-      fam_size = count(lfamily(:))
-      family(:) = pack(family(:), lfamily(:))
+
+      allocate(lexclude(npl))
+      where (status(1:npl) == INACTIVE) ! Safety check in case one of the included bodies has been previously deactivated 
+         lexclude(1:npl) = .true.  
+      elsewhere
+         lexclude(1:npl) = .false. 
+      end where
+
+      call symba_frag_pos_energy_calc(npl, symba_plA, lexclude, ke_before, ke_spin_before, pe_before, Ltot)
+      Ltot_before = norm2(Ltot(:))
+      Etot_before = ke_before + ke_spin_before + pe_before
+
       ! We need the original kinetic energy of just the pre-impact family members in order to balance the energy later
       ke_family = 0.0_DP
       do i = 1, fam_size
-         ke_family = ke_family + Mpl(family(i)) * dot_product(vbpl(:,family(i)), vbpl(:,family(i))) ! 
-         lexclude(family(i)) = .true. ! Exclude pre-impact family members from subsequent energy calculations
+         ke_family = ke_family + Mpl(family(i)) * dot_product(vbpl(:,family(i)), vbpl(:,family(i))) !
+         lexclude(family(i)) = .true. ! For all subsequent energy calculations the pre-impact family members will be replaced by the fragments
       end do
       ke_family = 0.5_DP * ke_family
 
@@ -412,7 +415,7 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
       implicit none
       ! Arguments
       integer(I4B), intent(in) :: npl
-      type(symba_pl), intent(in) :: symba_plA
+      type(symba_pl), intent(inout) :: symba_plA
       logical, dimension(:), intent(in) :: lexclude
       real(DP), intent(out) :: ke_orbit, ke_spin, pe
       real(DP), dimension(:), intent(out)      :: Ltot
@@ -424,6 +427,15 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
       type(symba_pl) :: symba_pl_loc
       real(DP) :: te
 
+      ! Because we're making a copy of symba_pl with the excludes/fragments appended, we need to deallocate the
+      ! big k_plpl array and recreate it when we're done, otherwise we run the risk of blowing up the memory by
+      ! allocating two of these ginormous arrays simulteouously. This is not particularly efficient, but as this
+      ! subroutine should be called relatively infrequently, it shouldn't matter too much.
+      if (allocated(symba_plA%helio%swiftest%k_plpl)) deallocate(symba_plA%helio%swiftest%k_plpl) 
+
+      ! Build the internal planet list out of the non-excluded bodies and optionally with fragments appended. This
+      ! will get passed to the energy calculation subroutine so that energy is computed exactly the same way is it
+      ! is in the main program.
       npl_loc = count(.not.lexclude(:))
       ntot = npl_loc
       if (present(nfrag)) ntot = npl_loc + nfrag
@@ -456,6 +468,10 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
       call symba_energy_eucl(ntot, symba_pl_loc, param%j2rp2, param%j4rp4, ke_orbit, ke_spin, pe, te, Ltot)
 
       call symba_pl_deallocate(symba_pl_loc)
+      
+      ! Re-create the original k_plpl array now that our temporary copy is gone
+      nplm = count(symba_plA%helio%swiftest%mass > param%mtiny)
+      call util_dist_index_plpl(npl, nplm, symba_plA)
 
       return
    end subroutine symba_frag_pos_energy_calc
