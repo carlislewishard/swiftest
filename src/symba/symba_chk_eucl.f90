@@ -38,6 +38,7 @@ subroutine symba_chk_eucl(npl, irec, symba_plA, dt, plplenc_list, nplplenc)
       num_plpl_comparisons => symba_plA%helio%swiftest%num_plpl_comparisons, k_plpl => symba_plA%helio%swiftest%k_plpl)
 
       allocate(lencounter(num_plpl_comparisons), loc_lvdotr(num_plpl_comparisons))
+      lencounter(:) = .false.
 
       term2 = rhscale * (rshell**irec)
 
