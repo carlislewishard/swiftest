@@ -1,4 +1,4 @@
-subroutine symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, param)
+subroutine symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, param)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
    !! Merge planets.
@@ -17,7 +17,7 @@ subroutine symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x,
    integer(I4B), dimension(2), intent(inout) :: idx_parents
    integer(I4B), intent(inout)               :: nmergeadd
    type(symba_merger), intent(inout)         :: mergeadd_list
-   real(DP), dimension(:),   intent(in)      :: mass, radius, xbs, vbs
+   real(DP), dimension(:),   intent(in)      :: mass, radius
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
    type(user_input_parameters),intent(inout) :: param
 
