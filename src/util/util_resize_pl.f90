@@ -66,12 +66,9 @@ SUBROUTINE util_resize_pl(symba_plA, npl_new, npl_old)
           new_symba_plA%helio%swiftest%rot(1,1:npl_old) = symba_plA%helio%swiftest%rot(1,1:npl_old)
           new_symba_plA%helio%swiftest%rot(2,1:npl_old) = symba_plA%helio%swiftest%rot(2,1:npl_old)
           new_symba_plA%helio%swiftest%rot(3,1:npl_old) = symba_plA%helio%swiftest%rot(3,1:npl_old)
-          new_symba_plA%helio%swiftest%ip(1,1:npl_old) = symba_plA%helio%swiftest%ip(1,1:npl_old)
-          new_symba_plA%helio%swiftest%ip(2,1:npl_old) = symba_plA%helio%swiftest%ip(2,1:npl_old)
-          new_symba_plA%helio%swiftest%ip(3,1:npl_old) = symba_plA%helio%swiftest%ip(3,1:npl_old)
-          new_symba_plA%helio%ah(1,1:npl_old) = symba_plA%helio%ah(1,1:npl_old)
-          new_symba_plA%helio%ah(2,1:npl_old) = symba_plA%helio%ah(2,1:npl_old)
-          new_symba_plA%helio%ah(3,1:npl_old) = symba_plA%helio%ah(3,1:npl_old)
+          new_symba_plA%helio%swiftest%Ip(1,1:npl_old) = symba_plA%helio%swiftest%Ip(1,1:npl_old)
+          new_symba_plA%helio%swiftest%Ip(2,1:npl_old) = symba_plA%helio%swiftest%Ip(2,1:npl_old)
+          new_symba_plA%helio%swiftest%Ip(3,1:npl_old) = symba_plA%helio%swiftest%Ip(3,1:npl_old)
 
      END IF
 
@@ -99,12 +96,9 @@ SUBROUTINE util_resize_pl(symba_plA, npl_new, npl_old)
           new_symba_plA%helio%swiftest%rot(1,1:npl_new) = symba_plA%helio%swiftest%rot(1,1:npl_new)
           new_symba_plA%helio%swiftest%rot(2,1:npl_new) = symba_plA%helio%swiftest%rot(2,1:npl_new)
           new_symba_plA%helio%swiftest%rot(3,1:npl_new) = symba_plA%helio%swiftest%rot(3,1:npl_new)
-          new_symba_plA%helio%swiftest%ip(1,1:npl_new) = symba_plA%helio%swiftest%ip(1,1:npl_new)
-          new_symba_plA%helio%swiftest%ip(2,1:npl_new) = symba_plA%helio%swiftest%ip(2,1:npl_new)
-          new_symba_plA%helio%swiftest%ip(3,1:npl_new) = symba_plA%helio%swiftest%ip(3,1:npl_new)
-          new_symba_plA%helio%ah(1,1:npl_new) = symba_plA%helio%ah(1,1:npl_old)
-          new_symba_plA%helio%ah(2,1:npl_new) = symba_plA%helio%ah(2,1:npl_old)
-          new_symba_plA%helio%ah(3,1:npl_new) = symba_plA%helio%ah(3,1:npl_old)
+          new_symba_plA%helio%swiftest%Ip(1,1:npl_new) = symba_plA%helio%swiftest%Ip(1,1:npl_new)
+          new_symba_plA%helio%swiftest%Ip(2,1:npl_new) = symba_plA%helio%swiftest%Ip(2,1:npl_new)
+          new_symba_plA%helio%swiftest%Ip(3,1:npl_new) = symba_plA%helio%swiftest%Ip(3,1:npl_new)
 
      END IF
      CALL symba_pl_deallocate(symba_plA)
@@ -119,8 +113,7 @@ SUBROUTINE util_resize_pl(symba_plA, npl_new, npl_old)
      symba_plA%helio%swiftest%xb = new_symba_plA%helio%swiftest%xb 
      symba_plA%helio%swiftest%vb = new_symba_plA%helio%swiftest%vb
      symba_plA%helio%swiftest%rot = new_symba_plA%helio%swiftest%rot
-     symba_plA%helio%swiftest%ip = new_symba_plA%helio%swiftest%ip
-     symba_plA%helio%ah = new_symba_plA%helio%ah
+     symba_plA%helio%swiftest%Ip = new_symba_plA%helio%swiftest%Ip
      CALL symba_pl_deallocate(new_symba_plA)
 
 
