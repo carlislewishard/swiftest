@@ -24,7 +24,7 @@ subroutine symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_lis
    real(DP)                                :: mtot, avg_dens
    real(DP), dimension(NDIM)               :: xcom, vcom, Ip_new
    real(DP), dimension(2)                  :: vol
-   real(DP), dimension(:, :), allocatable  :: v_frag, x_frag, rot_frag, Ip_frag
+   real(DP), dimension(:, :), allocatable  :: vb_frag, xb_frag, rot_frag, Ip_frag
    real(DP), dimension(:), allocatable     :: m_frag, rad_frag
    logical                                 :: lmerge
 
@@ -32,8 +32,8 @@ subroutine symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_lis
    nfrag = 10 ! This value is set for testing. This needs to be updated such that it is calculated or set by the user
    allocate(m_frag(nfrag))
    allocate(rad_frag(nfrag))
-   allocate(x_frag(NDIM, nfrag))
-   allocate(v_frag(NDIM, nfrag))
+   allocate(xb_frag(NDIM, nfrag))
+   allocate(vb_frag(NDIM, nfrag))
    allocate(rot_frag(NDIM, nfrag))
    allocate(Ip_frag(NDIM, nfrag))
 
@@ -69,7 +69,7 @@ subroutine symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_lis
 
    ! Put the fragments on the circle surrounding the center of mass of the system
    call symba_frag_pos(symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, &
-                        Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag, lmerge, Qloss)
+                        Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, lmerge, Qloss)
 
    if (lmerge) then
       write(*,*) 'Should have been a merge instead.'
@@ -82,8 +82,8 @@ subroutine symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_lis
          param%plmaxname = max(param%plmaxname, param%tpmaxname) + 1
          mergeadd_list%name(nmergeadd) = param%plmaxname
          mergeadd_list%status(nmergeadd) = DISRUPTION
-         mergeadd_list%xb(:,nmergeadd) = x_frag(:, i) 
-         mergeadd_list%vb(:,nmergeadd) = v_frag(:, i) 
+         mergeadd_list%xb(:,nmergeadd) = xb_frag(:, i) 
+         mergeadd_list%vb(:,nmergeadd) = vb_frag(:, i) 
          mergeadd_list%mass(nmergeadd) = m_frag(i)
          mergeadd_list%radius(nmergeadd) = rad_frag(i)
          mergeadd_list%Ip(:,nmergeadd) = Ip_frag(:, i)

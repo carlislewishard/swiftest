@@ -25,7 +25,7 @@ subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list
    real(DP)                                :: mtot, avg_dens
    real(DP), dimension(NDIM)               :: xcom, vcom
    real(DP), dimension(2)                  :: vol
-   real(DP), dimension(:, :), allocatable  :: v_frag, x_frag, rot_frag, Ip_frag
+   real(DP), dimension(:, :), allocatable  :: vb_frag, xb_frag, rot_frag, Ip_frag
    real(DP), dimension(:), allocatable     :: m_frag, rad_frag
    integer(I4B), dimension(:), allocatable :: name_frag
    logical                                 :: lmerge
@@ -48,8 +48,8 @@ subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list
       allocate(m_frag, source = mass)
       allocate(name_frag, source = name)
       allocate(rad_frag, source = radius)
-      allocate(x_frag, source = x)
-      allocate(v_frag, source = v)
+      allocate(xb_frag, source = x)
+      allocate(vb_frag, source = v)
       allocate(Ip_frag, source = Ip)
       allocate(rot_frag(NDIM, nfrag))
       do i = 1, 2
@@ -61,15 +61,15 @@ subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list
       allocate(m_frag(nfrag))
       allocate(name_frag(nfrag))
       allocate(rad_frag(nfrag))
-      allocate(x_frag(NDIM, nfrag))
-      allocate(v_frag(NDIM, nfrag))
+      allocate(xb_frag(NDIM, nfrag))
+      allocate(vb_frag(NDIM, nfrag))
       allocate(rot_frag(NDIM, nfrag))
       allocate(Ip_frag(NDIM, nfrag))
       m_frag(1) = mass(jtarg)
       name_frag(1) = name(jtarg)
       rad_frag(1) = radius(jtarg)
-      x_frag(:, 1) = x(:, jtarg) 
-      v_frag(:, 1) = v(:, jtarg)
+      xb_frag(:, 1) = x(:, jtarg) 
+      vb_frag(:, 1) = v(:, jtarg)
       Ip_frag(:,1) = Ip(:, jtarg)
 
       ! Get mass weighted mean of Ip and average density
@@ -87,15 +87,15 @@ subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list
 
       ! Put the fragments on the circle surrounding the center of mass of the system
       call symba_frag_pos(symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, &
-                           Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag, lmerge, Qloss)
+                           Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, lmerge, Qloss)
       if (lmerge) then
          write(*,*) 'Should have been a pure hit and run instead'
          nfrag = 2
          deallocate(m_frag);    allocate(m_frag, source = mass)
          deallocate(name_frag); allocate(name_frag, source = name)
          deallocate(rad_frag);  allocate(rad_frag, source = radius)
-         deallocate(x_frag);    allocate(x_frag, source = x)
-         deallocate(v_frag);    allocate(v_frag, source = v)
+         deallocate(xb_frag);    allocate(xb_frag, source = x)
+         deallocate(vb_frag);    allocate(vb_frag, source = v)
          deallocate(Ip_frag);   allocate(Ip_frag, source = Ip)
          deallocate(rot_frag);  allocate(rot_frag(NDIM, nfrag))
          do i = 1, 2
@@ -115,8 +115,8 @@ subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list
       nmergeadd = nmergeadd + 1
       mergeadd_list%name(nmergeadd) = name_frag(i) 
       mergeadd_list%status(nmergeadd) = HIT_AND_RUN
-      mergeadd_list%xb(:,nmergeadd) = x_frag(:, i)
-      mergeadd_list%vb(:,nmergeadd) = v_frag(:, i)
+      mergeadd_list%xb(:,nmergeadd) = xb_frag(:, i)
+      mergeadd_list%vb(:,nmergeadd) = vb_frag(:, i)
       mergeadd_list%mass(nmergeadd) = m_frag(i)
       mergeadd_list%radius(nmergeadd) = rad_frag(i)
       mergeadd_list%Ip(:,nmergeadd) = Ip_frag(:, i)
