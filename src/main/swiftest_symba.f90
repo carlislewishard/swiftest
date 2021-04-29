@@ -80,7 +80,7 @@ program swiftest_symba
       inparfile = trim(adjustl(inparfile))
       ! read in the param.in file and get simulation parameters
       call param%read_from_file(inparfile)
-      mtiny = .true. ! Turn this on for SyMBA
+      param%lmtiny = .true. ! Turn this on for SyMBA
       
       !^^^^^^^^^^^^^^^^^^^^^^^^^
       if (.not. param%lrhill_present) then
