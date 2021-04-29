@@ -39,8 +39,9 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
 
 
    ! First determine the collisional regime for each colliding pair
-   ldiscard = any(plplenc_list%status(1:nplplenc) == COLLISION)
-   if (.not.ldiscard) return
+   associate(npl => symba_plA%helio%swiftest%nbody, xbpl => symba_plA%helio%swiftest%xb)
+      ldiscard = any(plplenc_list%status(1:nplplenc) == COLLISION)
+      if (.not.ldiscard) return
 
       ! Recompute central body barycentric velocity
       call coord_h2b(npl, symba_plA%helio%swiftest, msys)
@@ -188,16 +189,13 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
          select case (regime)
          case (COLLRESOLVE_REGIME_DISRUPTION)
             write(*, '("Disruption between particles ",20(I6,",",:))') name1(:), name2(:) 
-         call symba_casedisruption(symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, mass_res, param, Qloss)
-      case (COLLRESOLVE_REGIME_SUPERCATASTROPHIC)
-
             call symba_casedisruption(symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, mass_res, param, Qloss)
          case (COLLRESOLVE_REGIME_SUPERCATASTROPHIC)
             write(*, '("Supercatastrophic disruption between particles ",20(I6,",",:))') name1(:), name2(:) 
             call symba_casesupercatastrophic(symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, mass_res, param, Qloss)
          case (COLLRESOLVE_REGIME_HIT_AND_RUN)
-         write(*, '("Hit and run between particles ",20(I6,",",:))') name1(:), name2(:) 
-         call symba_casehitandrun(symba_plA, idx_parent, nmergeadd, mergeadd_list, name, x, v, mass, radius, L_spin, Ip, xbs, vbs, mass_res, param, Qloss)
+            write(*, '("Hit and run between particles ",20(I6,",",:))') name1(:), name2(:) 
+            call symba_casehitandrun(symba_plA, idx_parent, nmergeadd, mergeadd_list, name, x, v, mass, radius, L_spin, Ip, mass_res, param, Qloss)
          case (COLLRESOLVE_REGIME_MERGE, COLLRESOLVE_REGIME_GRAZE_AND_MERGE)
             write(*, '("Merging particles ",20(I6,",",:))') name1(:), name2(:) 
             call symba_casemerge(symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, param)
