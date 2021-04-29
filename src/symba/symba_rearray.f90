@@ -113,7 +113,7 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
 
       if (nmergeadd > 0) call symba_reorder_pl(npl, symba_plA)
 
-      nplm = count(symba_plA%helio%swiftest%mass>mtiny)
+      nplm = count(symba_plA%helio%swiftest%mass > mtiny)
       CALL util_dist_index_plpl(npl, nplm, symba_plA)
 
    end if 

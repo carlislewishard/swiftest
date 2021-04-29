@@ -923,12 +923,13 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-         subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, &
+         subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, &
                                     Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, lmerge, Qloss)
             use swiftest_globals
             USE swiftest_data_structures
             USE module_symba
             implicit none
+            type(user_input_parameters), intent(in)   :: param 
             type(symba_pl), intent(inout)             :: symba_plA
             integer(I4B), dimension(:), intent(in)    :: idx_parents
             real(DP), intent(in)                      :: Qloss

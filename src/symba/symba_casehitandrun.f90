@@ -10,7 +10,7 @@ subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list
    use module_swiftestalloc 
    use module_interfaces, EXCEPT_THIS_ONE => symba_casehitandrun
    implicit none
-
+   ! Arguments
    integer(I4B), intent(inout)               :: nmergeadd
    type(symba_merger), intent(inout)         :: mergeadd_list
    type(symba_pl), intent(inout)             :: symba_pla
@@ -20,7 +20,7 @@ subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list
    type(user_input_parameters),intent(inout) :: param
    integer(I4B), dimension(2), intent(inout) :: idx_parents
    real(DP), intent(inout)                   :: Qloss
-
+   ! Internals
    integer(I4B)                            :: i, nfrag, jproj, jtarg
    real(DP)                                :: mtot, avg_dens
    real(DP), dimension(NDIM)               :: xcom, vcom
@@ -86,7 +86,7 @@ subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list
       end do
 
       ! Put the fragments on the circle surrounding the center of mass of the system
-      call symba_frag_pos(symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, &
+      call symba_frag_pos(param, symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, &
                            Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, lmerge, Qloss)
       if (lmerge) then
          write(*,*) 'Should have been a pure hit and run instead'

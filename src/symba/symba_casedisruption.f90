@@ -1,5 +1,5 @@
 subroutine symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, xbs, vbs, &
-                                        mass_res, param, Qloss)
+                                 mass_res, param, Qloss)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
    !! Create the fragments resulting from a non-catastrophic disruption collision
@@ -11,6 +11,7 @@ subroutine symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_lis
    use module_interfaces, EXCEPT_THIS_ONE => symba_casedisruption
    implicit none
 
+   ! Arguments
    type(symba_pl), intent(inout)             :: symba_plA
    integer(I4B), dimension(2), intent(inout) :: idx_parents
    integer(I4B), intent(inout)               :: nmergeadd
@@ -19,7 +20,7 @@ subroutine symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_lis
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
    type(user_input_parameters),intent(inout) :: param
    real(DP), intent(inout)                   :: Qloss
-
+   ! Internals
    integer(I4B)                            :: i,  istart, nfrag
    real(DP)                                :: mtot, avg_dens
    real(DP), dimension(NDIM)               :: xcom, vcom, Ip_new
@@ -68,7 +69,7 @@ subroutine symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_lis
    end do
 
    ! Put the fragments on the circle surrounding the center of mass of the system
-   call symba_frag_pos(symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, &
+   call symba_frag_pos(param, symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, &
                         Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, lmerge, Qloss)
 
    if (lmerge) then

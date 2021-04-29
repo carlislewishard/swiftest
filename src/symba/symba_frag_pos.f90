@@ -1,4 +1,4 @@
-subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, &
+subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, &
                            Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, lmerge, Qloss)
    !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
@@ -12,6 +12,7 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
    use module_interfaces, EXCEPT_THIS_ONE => symba_frag_pos
    implicit none
    ! Arguments
+   type(user_input_parameters), intent(in)   :: param 
    type(symba_pl), intent(inout)             :: symba_plA
    integer(I4B), dimension(:), intent(in)    :: idx_parents
    real(DP), intent(in)                      :: Qloss
@@ -419,9 +420,9 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       real(DP), dimension(:), intent(in), optional :: m_frag, rad_frag
       real(DP), dimension(:,:), intent(in), optional :: Ip_frag, xb_frag, vb_frag, rot_frag
       ! Internals
-      integer(I4B) :: i, ntot, npl_loc
+      integer(I4B) :: i, ntot, npl_loc, nplm
       type(symba_pl) :: symba_pl_loc
-      real(DP) :: te, j2rp2, j4rp4
+      real(DP) :: te
 
       npl_loc = count(.not.lexclude(:))
       ntot = npl_loc
@@ -446,12 +447,13 @@ subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radiu
       end if
 
       symba_pl_loc%helio%swiftest%status(:) = ACTIVE
-      j2rp2 = 0.0_DP
-      j4rp4 = 0.0_DP
       
       call coord_b2h(ntot, symba_pl_loc%helio%swiftest)
 
-      call symba_energy_eucl(ntot, symba_pl_loc, j2rp2, j4rp4, ke_orbit, ke_spin, pe, te, Ltot)
+      nplm = count(symba_pl_loc%helio%swiftest%mass > param%mtiny)
+      call util_dist_index_plpl(ntot, nplm, symba_pl_loc)
+
+      call symba_energy_eucl(ntot, symba_pl_loc, param%j2rp2, param%j4rp4, ke_orbit, ke_spin, pe, te, Ltot)
 
       call symba_pl_deallocate(symba_pl_loc)
 
