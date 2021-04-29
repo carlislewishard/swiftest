@@ -4,9 +4,9 @@ subroutine symba_discard_sun_pl(t, npl, ntp, msys, swiftest_plA, swiftest_tpA, r
    !! Check to see if planets should be discarded based on their positions relative to the Sun.
    !! Updates the mass and angular momentum of the central body
    !!  
-   !! Adapted from David E. Kaufmann Swifter routine symba_energy.f90
+   !! Adapted from David E. Kaufmann Swifter routine symba_discard_sun_pl.f90
    !!  
-   !! Adapted from Martin Duncan's Swift routine anal_energy.f
+   !! Adapted from Martin Duncan's Swift routine discard_massive5.f
 
 ! modules
    use swiftest
