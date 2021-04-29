@@ -338,6 +338,7 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
       real(DP), dimension(NDIM)               :: x_cross_v, v_phi_unit, h_unit, v_r_unit
          
       nfrag = size(m_frag)
+      mtot = sum(m_frag)
 
       allocate(v_r(NDIM,nfrag))
       allocate(v_phi(NDIM,nfrag))
@@ -355,8 +356,8 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
       B = 0.0_DP
       C = 0.0_DP
       do i = 1, nfrag
-         A = A + m_frag(i) * dot_product(v_r(:,i), v_r(:,i))
-         B = B + m_frag(i) * dot_product(v_r(:,i), vcom(:))
+         A = A + m_frag(i) * (mtot / m_frag(i))**2 * dot_product(v_r(:,i), v_r(:,i))
+         B = B + m_frag(i) * (mtot / m_frag(i)) * dot_product(v_r(:,i), vcom(:))
          C = C + m_frag(i) * (0.5_DP * (dot_product(v_phi(:,i), v_phi(:,i)) + dot_product(vcom(:), vcom(:))) + dot_product(v_phi(:,i), vcom(:)))
       end do
       A = 0.5_DP * A
@@ -371,7 +372,9 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
       end if
 
       ! Shift the fragments into the system barycenter frame
-      v_frag(:,:) = f_corrected * v_r(:, :) + v_phi(:, :) 
+      do i = 1, nfrag
+         v_frag(:,i) = f_corrected * (mtot / m_frag(i)) *  v_r(:, i) + v_phi(:, i)
+      end do
 
       call symba_frag_pos_com_adjust(xcom, vcom, m_frag, x_frag, v_frag)
 
