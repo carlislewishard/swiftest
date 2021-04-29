@@ -1,4 +1,4 @@
-subroutine symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msys)
+subroutine symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit, ke_spin, pe, te, Ltot)
    !! author: David A. Minton
    !!
    !! Compute total system angular momentum vector and kinetic, potential and total system energy
@@ -14,14 +14,14 @@ subroutine symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msy
 ! arguments
    integer(I4B), intent(in)                 :: npl
    real(DP), intent(in)                     :: j2rp2, j4rp4
-   real(DP), intent(out)                    :: ke, pe, te, msys
+   real(DP), intent(out)                    :: ke_orbit, ke_spin, pe, te
    real(DP), dimension(:), intent(out)      :: Ltot
    type(symba_pl), intent(inout)         :: symba_plA
 
 ! internals
    integer(I4B)              :: i, j
    integer(I8B)              :: k
-   real(DP)                  :: rmag, v2, rot2, oblpot, hx, hy, hz, kespin
+   real(DP)                  :: rmag, v2, rot2, oblpot, hx, hy, hz
    real(DP), dimension(npl)  :: irh, kepl, kespinpl, pecb
    real(DP), dimension(npl) :: Lplx, Lply, Lplz
    real(DP), dimension(symba_plA%helio%swiftest%num_plpl_comparisons) :: pepl 
@@ -30,9 +30,9 @@ subroutine symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msy
 
 ! executable code
 
-   call coord_h2b(npl, symba_plA%helio%swiftest, msys)
    Ltot = 0.0_DP
-   ke = 0.0_DP
+   ke_orbit = 0.0_DP
+   ke_spin = 0.0_DP
    associate(xb => symba_plA%helio%swiftest%xb, vb => symba_plA%helio%swiftest%vb, mass => symba_plA%helio%swiftest%mass, radius => symba_plA%helio%swiftest%radius, &
       Ip => symba_plA%helio%swiftest%Ip, rot => symba_plA%helio%swiftest%rot, xh => symba_plA%helio%swiftest%xh, status => symba_plA%helio%swiftest%status)
       kepl(:) = 0.0_DP
@@ -58,8 +58,8 @@ subroutine symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msy
          kespinpl(i) = mass(i) * Ip(3,i) * radius(i)**2 * rot2
       end do
 
-      ke = 0.5_DP * sum(kepl(1:npl), lstatus(:))
-      kespin = 0.5_DP * sum(kespinpl(1:npl), lstatus(:))
+      ke_orbit = 0.5_DP * sum(kepl(1:npl), lstatus(:))
+      ke_spin = 0.5_DP * sum(kespinpl(1:npl), lstatus(:))
       Ltot(1) = sum(Lplx(1:npl), lstatus(1:npl)) 
       Ltot(2) = sum(Lply(1:npl), lstatus(1:npl)) 
       Ltot(3) = sum(Lplz(1:npl), lstatus(1:npl)) 
@@ -80,7 +80,7 @@ subroutine symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msy
          end associate
       end do
 
-      pe = sum(pecb(2:npl), lstatus(2:npl)) + sum(pepl(:), lstatpl(:))
+      pe = sum(pepl(:), lstatpl(:)) + sum(pecb(2:npl), lstatus(2:npl))
 
       ! Potential energy from the oblateness term
       if (j2rp2 /= 0.0_DP) then
@@ -92,7 +92,7 @@ subroutine symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msy
          pe = pe + oblpot
       end if
 
-      te = ke + kespin + pe
+      te = ke_orbit + ke_spin + pe
    end associate
    return
 

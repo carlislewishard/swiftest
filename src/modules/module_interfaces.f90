@@ -909,13 +909,13 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msys)
+          SUBROUTINE symba_energy(npl, swiftest_plA, j2rp2, j4rp4, ke_orbit, ke_spin, pe, te, Ltot)
                USE swiftest_globals
                USE swiftest_data_structures
                IMPLICIT NONE
                INTEGER(I4B), INTENT(IN)            :: npl
                REAL(DP), INTENT(IN)                :: j2rp2, j4rp4
-               REAL(DP), INTENT(OUT)               :: ke, pe, te, msys
+               REAL(DP), INTENT(OUT)               :: ke_orbit, ke_spin, pe, te
                REAL(DP), DIMENSION(:), INTENT(OUT) :: Ltot
                TYPE(swiftest_pl), INTENT(INOUT)    :: swiftest_plA
           END SUBROUTINE symba_energy
@@ -923,7 +923,7 @@ MODULE module_interfaces
 
      INTERFACE
          subroutine symba_frag_pos (symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, &
-                                    Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag, lmerge, Qloss)
+                                    Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, lmerge, Qloss)
             use swiftest_globals
             USE swiftest_data_structures
             USE module_symba
@@ -934,7 +934,7 @@ MODULE module_interfaces
             real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
             real(DP), dimension(:), intent(in)        :: mass, radius, m_frag, rad_frag
             real(DP), dimension(:,:), intent(in)      :: Ip_frag
-            real(DP), dimension(:,:), intent(out)     :: x_frag, v_frag, rot_frag
+            real(DP), dimension(:,:), intent(out)     :: xb_frag, vb_frag, rot_frag
             logical, intent(out)                      :: lmerge
          end subroutine symba_frag_pos
       END INTERFACE
@@ -1252,7 +1252,7 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-         SUBROUTINE symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke, pe, te, Ltot, msys)
+         SUBROUTINE symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit, ke_spin, pe, te, Ltot)
                USE swiftest_globals
                USE swiftest_data_structures
                use module_symba
@@ -1260,7 +1260,7 @@ MODULE module_interfaces
                integer(I4B), intent(in)              :: npl
                type(symba_pl), intent(inout)         :: symba_plA
                real(DP), intent(in)                  :: j2rp2, j4rp4
-               real(DP), intent(out)                 :: ke, pe, te, msys
+               real(DP), intent(out)                 :: ke_orbit, ke_spin, pe, te
                real(DP), dimension(:), intent(out)   :: Ltot
          END SUBROUTINE symba_energy_eucl
      END INTERFACE
