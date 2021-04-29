@@ -29,7 +29,7 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
    logical                                :: lescape
 
 ! executable code
-   if (ldiscard) then 
+   if (any(symba_plA%helio%swiftest%status(1:npl) /= ACTIVE)) then 
 
       ! Deal with the central body/system discards if there are any
       do i = 1, npl

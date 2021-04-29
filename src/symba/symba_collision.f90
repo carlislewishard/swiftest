@@ -36,6 +36,7 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
    real(DP)                                :: mtiny_si
    integer(I4B), dimension(:), allocatable :: array_index1_child, array_index2_child, name1, name2
    real(DP)                                :: mlr, mslr, msys, msys_new, Qloss
+   logical                                 :: lpure
 
 
    ! First determine the collisional regime for each colliding pair
@@ -195,7 +196,8 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
             call symba_casesupercatastrophic(symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, mass_res, param, Qloss)
          case (COLLRESOLVE_REGIME_HIT_AND_RUN)
             write(*, '("Hit and run between particles ",20(I6,",",:))') name1(:), name2(:) 
-            call symba_casehitandrun(symba_plA, idx_parent, nmergeadd, mergeadd_list, name, x, v, mass, radius, L_spin, Ip, mass_res, param, Qloss)
+            call symba_casehitandrun(symba_plA, idx_parent, nmergeadd, mergeadd_list, name, x, v, mass, radius, L_spin, Ip, mass_res, param, Qloss, lpure)
+            if (lpure) status = ACTIVE
          case (COLLRESOLVE_REGIME_MERGE, COLLRESOLVE_REGIME_GRAZE_AND_MERGE)
             write(*, '("Merging particles ",20(I6,",",:))') name1(:), name2(:) 
             call symba_casemerge(symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, param)

@@ -1,5 +1,5 @@
 subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list, name, x, v, mass, radius, L_spin, Ip,  &
-                                        mass_res, param, Qloss)
+                                        mass_res, param, Qloss, lpure)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
    !! Create the fragments resulting from a non-catastrophic hitandrun collision
@@ -20,6 +20,7 @@ subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list
    type(user_input_parameters),intent(inout) :: param
    integer(I4B), dimension(2), intent(inout) :: idx_parents
    real(DP), intent(inout)                   :: Qloss
+   logical, intent(out)                      :: lpure
    ! Internals
    integer(I4B)                            :: i, nfrag, jproj, jtarg
    real(DP)                                :: mtot, avg_dens
@@ -45,20 +46,11 @@ subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list
 
    if (mass_res(2) > 0.9_DP * mass(jproj)) then ! Pure hit and run, so we'll just keep the two bodies untouched
       write(*,*) 'Pure hit and run. No new fragments generated.'
-      nfrag = 2
-      allocate(m_frag, source = mass)
-      allocate(name_frag, source = name)
-      allocate(rad_frag, source = radius)
-      allocate(xb_frag, source = x)
-      allocate(vb_frag, source = v)
-      allocate(Ip_frag, source = Ip)
-      allocate(rot_frag(NDIM, nfrag))
-      do i = 1, 2
-         rot_frag(:,i) = L_spin(:, i) / (Ip_frag(3, i) * m_frag(i) * rad_frag(i)**2)
-      end do
-      
+      nfrag = 0
+      lpure = .true.
    else ! Imperfect hit and run, so we'll keep the largest body and destroy the other
       nfrag = 10
+      lpure = .false.
       allocate(m_frag(nfrag))
       allocate(name_frag(nfrag))
       allocate(rad_frag(nfrag))
@@ -91,18 +83,10 @@ subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list
                            Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, lmerge, Qloss)
       if (lmerge) then
          write(*,*) 'Should have been a pure hit and run instead'
-         nfrag = 2
-         deallocate(m_frag);    allocate(m_frag, source = mass)
-         deallocate(name_frag); allocate(name_frag, source = name)
-         deallocate(rad_frag);  allocate(rad_frag, source = radius)
-         deallocate(xb_frag);    allocate(xb_frag, source = x)
-         deallocate(vb_frag);    allocate(vb_frag, source = v)
-         deallocate(Ip_frag);   allocate(Ip_frag, source = Ip)
-         deallocate(rot_frag);  allocate(rot_frag(NDIM, nfrag))
-         do i = 1, 2
-            rot_frag(:,i) = L_spin(:, i) / (Ip_frag(3, i) * m_frag(i) * rad_frag(i)**2)
-         end do
+         lpure = .true.
+         nfrag = 0
       else
+         lpure = .false.
          write(*,'("Generating ",I2.0," fragments")') nfrag
          do i = 1, nfrag
             name_frag(i) = param%plmaxname + i 
@@ -110,6 +94,7 @@ subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list
          param%plmaxname = name_frag(nfrag)
       end if
    end if
+   if (lpure) return
 
    ! Populate the list of new bodies
    call symba_merger_size_check(mergeadd_list, nmergeadd + nfrag)  

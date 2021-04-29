@@ -732,7 +732,7 @@ MODULE module_interfaces
 
      INTERFACE
           SUBROUTINE symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list, name, x, v, mass, radius, Lspin, Ip, &
-            mass_res, param, Qloss)
+            mass_res, param, Qloss, lpure)
             USE swiftest_globals
             USE swiftest_data_structures
             USE module_symba
@@ -746,6 +746,7 @@ MODULE module_interfaces
             type(user_input_parameters),intent(inout) :: param
             integer(I4B), dimension(2), intent(inout) :: idx_parents
             real(DP), intent(in)                      :: Qloss
+            logical, intent(out)                      :: lpure
           END SUBROUTINE symba_casehitandrun
      END INTERFACE
 
