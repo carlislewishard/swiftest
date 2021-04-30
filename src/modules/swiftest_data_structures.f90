@@ -123,6 +123,7 @@ module swiftest_data_structures
 
          class(swiftest_tp), intent(inout)    :: self
 
+         self%nbody = 0
          if (allocated(self%name)) deallocate(self%name)
          if (allocated(self%status)) deallocate(self%status)
          if (allocated(self%isperi)) deallocate(self%isperi)
@@ -140,8 +141,8 @@ module swiftest_data_structures
          implicit none
 
          class(swiftest_pl), intent(inout)    :: self
-         call self%swiftest_tp%dealloc()
 
+         call self%swiftest_tp%dealloc()
          if (allocated(self%mass)) deallocate(self%mass)
          if (allocated(self%radius)) deallocate(self%radius)
          if (allocated(self%rhill)) deallocate(self%rhill)

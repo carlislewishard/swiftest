@@ -27,14 +27,15 @@ program swiftest_symba
    character(STRMAX)             :: inparfile
    type(symba_pl)                :: symba_plA
    type(symba_tp)                :: symba_tpA
-   type(swiftest_tp)             :: discard_tpA
-   type(swiftest_pl)             :: discard_plA
+   type(symba_tp)                :: discard_tpA
+   type(symba_pl)                :: discard_plA
    type(symba_plplenc)           :: plplenc_list
    type(symba_pltpenc)           :: pltpenc_list
    type(symba_merger)            :: mergeadd_list, mergesub_list
    real(DP)                      :: start, finish, deltawall, wallperstep
    integer(I8B)                  :: clock_count, count_rate, count_max
    integer(I4B)                  :: ierr
+   integer(I4B)                  :: nplfile, ntpfile ! Temporary variables until we switch over to the OOP branch
    integer(I4B), parameter       :: EGYDUMP = 88
    character(len=*), parameter   :: simtimefmt = '(" Time = ", es12.5, "; fraction done = ", f5.3, "; number of active pl, tp = ", i7, ", ", i7)'
    character(len=*), parameter   :: walltimefmt = '("      Wall time (s): ", es12.5, "; Wall time/step in this interval (s):  ", es12.5)'
@@ -95,10 +96,12 @@ program swiftest_symba
 
       !Temporary until the argument lists get fixed
       ! Temporary fix until all of the data structures are converted to OOP and inheritance works properly
+         nplfile = npl
+         ntpfile = ntp
          call symba_plA%helio%swiftest%dealloc()
          call symba_tpA%helio%swiftest%dealloc()
-         call symba_pl_allocate(symba_plA,npl)
-         call symba_tp_allocate(symba_tpA,ntp)
+         call symba_pl_allocate(symba_plA,nplfile)
+         call symba_tp_allocate(symba_tpA,ntpfile)
          call symba_plA%helio%swiftest%dealloc()
          call symba_tpA%helio%swiftest%dealloc()
          call symba_plA%helio%swiftest%read_from_file(param)
@@ -161,7 +164,7 @@ program swiftest_symba
             call symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
                                discard_tpA, ldiscard, ldiscard_tp, mtiny)
             call io_discard_write_symba(t, mtiny, npl, nsppl, nsptp, nmergesub, symba_plA, &
-                                        discard_plA, discard_tpA, mergeadd_list, mergesub_list, discard_file, param%lbig_discard) 
+                                        discard_plA%helio%swiftest, discard_tpA%helio%swiftest, mergeadd_list, mergesub_list, discard_file, param%lbig_discard) 
             nmergeadd = 0
             nmergesub = 0
             nsppl = 0
@@ -188,7 +191,7 @@ program swiftest_symba
                                discard_tpA, lfrag_add, ldiscard_tp, mtiny)
 
             call io_discard_write_symba(t, mtiny, npl, nsppl, nsptp, nmergesub, symba_plA, &
-                                         discard_plA, discard_tpA, mergeadd_list, mergesub_list, discard_file, param%lbig_discard) 
+                                         discard_plA%helio%swiftest, discard_tpA%helio%swiftest, mergeadd_list, mergesub_list, discard_file, param%lbig_discard) 
             nmergeadd = 0
             nmergesub = 0
             nsppl = 0
@@ -282,8 +285,8 @@ program swiftest_symba
             mergeadd_list%rot(:,:) = 0
          end if
 
-         if (allocated(discard_plA%name)) call swiftest_pl_deallocate(discard_plA)
-         if (allocated(discard_tpA%name)) call swiftest_tp_deallocate(discard_tpA)
+         if (allocated(discard_plA%helio%swiftest%name)) call symba_pl_deallocate(discard_plA)
+         if (allocated(discard_tpA%helio%swiftest%name)) call symba_tp_deallocate(discard_tpA)
 
       end do
 

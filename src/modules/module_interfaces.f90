@@ -1083,8 +1083,8 @@ MODULE module_interfaces
                INTEGER(I4B), INTENT(INOUT)                   :: npl, nplm, ntp, nsppl, nsptp, nmergeadd 
                TYPE(symba_pl), INTENT(INOUT)                 :: symba_plA
                TYPE(symba_tp), INTENT(INOUT)                 :: symba_tpA
-               TYPE(swiftest_tp), INTENT(INOUT)              :: discard_tpA
-               TYPE(swiftest_pl), INTENT(INOUT)              :: discard_plA
+               TYPE(symba_tp), INTENT(INOUT)              :: discard_tpA
+               TYPE(symba_pl), INTENT(INOUT)              :: discard_plA
                TYPE(symba_merger), INTENT(INOUT)             :: mergeadd_list 
                LOGICAL(LGT), INTENT(IN)                      :: ldiscard, ldiscard_tp 
                real(DP), intent(in)                          :: mtiny
