@@ -1,4 +1,4 @@
-function symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list, name, x, v, mass, radius, L_spin, Ip,  &
+function symba_casehitandrun (symba_plA, idx_parent, nmergeadd, mergeadd_list, name, x, v, mass, radius, L_spin, Ip,  &
                                         mass_res, param, Qloss) result(status)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
@@ -18,7 +18,7 @@ function symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list, 
    real(DP), dimension(:),   intent(in)      :: mass, radius, mass_res
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
    type(user_input_parameters),intent(inout) :: param
-   integer(I4B), dimension(2), intent(inout) :: idx_parents
+   integer(I4B), dimension(2), intent(inout) :: idx_parent
    real(DP), intent(inout)                   :: Qloss
    ! Result
    integer(I4B)                              :: status
@@ -81,7 +81,7 @@ function symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list, 
       end do
 
       ! Put the fragments on the circle surrounding the center of mass of the system
-      call symba_frag_pos(param, symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, &
+      call symba_frag_pos(param, symba_plA, idx_parent, x, v, L_spin, Ip, mass, radius, &
                            Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, lpure, Qloss)
       if (lpure) then
          write(*,*) 'Should have been a pure hit and run instead'

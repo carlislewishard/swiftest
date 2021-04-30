@@ -1,4 +1,4 @@
-function symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, param) result(status)
+function symba_casemerge (symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, param) result(status)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
    !! Merge planets.
@@ -14,7 +14,7 @@ function symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v
    implicit none
    ! Arguments
    type(symba_pl), intent(inout)             :: symba_plA
-   integer(I4B), dimension(2), intent(inout) :: idx_parents
+   integer(I4B), dimension(2), intent(inout) :: idx_parent
    integer(I4B), intent(inout)               :: nmergeadd
    type(symba_merger), intent(inout)         :: mergeadd_list
    real(DP), dimension(:),   intent(in)      :: mass, radius
@@ -33,17 +33,18 @@ function symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v
    integer(I4B)                            :: fam_size, istart
 
    ! Make the list of family members (bodies involved in the collision)
-   associate(nchild1 => symba_plA%kin(idx_parents(1))%nchild, nchild2 => symba_plA%kin(idx_parents(2))%nchild)
+   associate(nchild1 => symba_plA%kin(idx_parent(1))%nchild, nchild2 => symba_plA%kin(idx_parent(2))%nchild)
       fam_size = 2 + nchild1 + nchild2
       allocate(family(fam_size))
-      family(1) = idx_parents(1)
-      family(2) = idx_parents(2)
-      istart = 2 + nchild1
+      family = [idx_parent,symba_plA%kin(idx_parent(1))%child(1:nchild1),symba_plA%kin(idx_parent(2))%child(1:nchild2)]
+      !family(1) = idx_parent(1)
+      !family(2) = idx_parent(2)
+      !istart = 2 + nchild1
 
-      if (nchild1 > 0) family(3:istart) = symba_plA%kin(idx_parents(1))%child(1:nchild1)
-      if (nchild2 > 0) family(istart+1:istart+1+nchild2) = symba_plA%kin(idx_parents(2))%child(1:nchild2)
+      !if (nchild1 > 0) family(3:istart) = symba_plA%kin(idx_parent(1))%child(1:nchild1)
+      !if (nchild2 > 0) family(istart+1:istart+1+nchild2) = symba_plA%kin(idx_parent(2))%child(1:nchild2)
       mass_new = sum(symba_plA%helio%swiftest%mass(family(:)))
-      mergename = symba_plA%helio%swiftest%name(idx_parents(1))
+      mergename = symba_plA%helio%swiftest%name(idx_parent(1))
    end associate
    ! Merged body is created at the barycenter of the original bodies
    xcom(:) = (mass(1) * x(:,1) + mass(2) * x(:,2)) / mass_new
