@@ -121,6 +121,7 @@ module module_swiftestalloc
 
       if (nmerger <= 0) then
          n = 0
+         return
       else
          n = nmerger
       end if
@@ -134,7 +135,7 @@ module module_swiftestalloc
       allocate(merger_list%mass(n))
       allocate(merger_list%radius(n))
       allocate(merger_list%rot(NDIM,n))
-      allocate(merger_list%IP(NDIM,n))
+      allocate(merger_list%Ip(NDIM,n))
       allocate(merger_list%name_p1(n))
       allocate(merger_list%name_p2(n))
 
@@ -146,7 +147,7 @@ module module_swiftestalloc
       merger_list%vb(:, :) = 0.0_DP
       merger_list%mass(:) = 0.0_DP
       merger_list%radius(:) = 0.0_DP
-      merger_list%IP(:, :) = 0.0_DP
+      merger_list%Ip(:, :) = 0.0_DP
       merger_list%rot(:, :) = 0.0_DP
       merger_list%name_p1(:) = 0
       merger_list%name_p2(:) = 0
@@ -302,7 +303,7 @@ module module_swiftestalloc
       if (allocated(merger_list%mass)) deallocate(merger_list%mass)
       if (allocated(merger_list%radius)) deallocate(merger_list%radius)
       if (allocated(merger_list%rot)) deallocate(merger_list%rot)
-      if (allocated(merger_list%IP)) deallocate(merger_list%IP)
+      if (allocated(merger_list%Ip)) deallocate(merger_list%Ip)
       if (allocated(merger_list%name_p1)) deallocate(merger_list%name_p1)
       if (allocated(merger_list%name_p2)) deallocate(merger_list%name_p2)
       return
