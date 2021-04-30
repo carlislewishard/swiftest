@@ -11,13 +11,13 @@ function symba_casesupercatastrophic (symba_plA, idx_parent, nmergeadd, mergeadd
    use module_interfaces, EXCEPT_THIS_ONE => symba_casesupercatastrophic
    implicit none
    ! Arguments
+   type(symba_pl), intent(inout)             :: symba_plA
+   integer(I4B), dimension(:), intent(in)    :: idx_parent
    integer(I4B), intent(inout)               :: nmergeadd
    type(symba_merger), intent(inout)         :: mergeadd_list
-   type(symba_pl), intent(inout)             :: symba_pla
-   real(DP), dimension(:),   intent(in)      :: mass, radius, mass_res
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
+   real(DP), dimension(:),   intent(in)      :: mass, radius, mass_res
    type(user_input_parameters),intent(inout) :: param
-   integer(I4B), dimension(2), intent(inout) :: idx_parent
    real(DP), intent(inout)                   :: Qloss
    ! Result
    integer(I4B)                              :: status

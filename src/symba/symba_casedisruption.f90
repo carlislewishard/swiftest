@@ -13,7 +13,7 @@ function symba_casedisruption (symba_plA, idx_parent, nmergeadd, mergeadd_list, 
 
    ! Arguments
    type(symba_pl), intent(inout)             :: symba_plA
-   integer(I4B), dimension(2), intent(inout) :: idx_parent
+   integer(I4B), dimension(:), intent(in)    :: idx_parent
    integer(I4B), intent(inout)               :: nmergeadd
    type(symba_merger), intent(inout)         :: mergeadd_list
    real(DP), dimension(:),   intent(in)      :: mass, radius, mass_res

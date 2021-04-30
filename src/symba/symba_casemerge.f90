@@ -14,11 +14,11 @@ function symba_casemerge (symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v,
    implicit none
    ! Arguments
    type(symba_pl), intent(inout)             :: symba_plA
-   integer(I4B), dimension(:), intent(inout) :: idx_parent
+   integer(I4B), dimension(:), intent(in)    :: idx_parent
    integer(I4B), intent(inout)               :: nmergeadd
    type(symba_merger), intent(inout)         :: mergeadd_list
-   real(DP), dimension(:),   intent(in)      :: mass, radius
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
+   real(DP), dimension(:),   intent(in)      :: mass, radius
    type(user_input_parameters),intent(inout) :: param
    ! Result
    integer(I4B)                              :: status
