@@ -34,12 +34,14 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
    real(DP)                                :: mchild, mtot
    real(DP), dimension(NDIM)               :: xc, vc, xcom, vcom, xchild, vchild, xcrossv
    real(DP)                                :: mtiny_si
-   integer(I4B), dimension(:), allocatable :: array_index1_child, array_index2_child, name1, name2
    real(DP)                                :: mlr, mslr, msys, msys_new, Qloss
    integer(I4B), dimension(:), allocatable :: family
    integer(I4B)                            :: fam_size, istart
-   
-
+   type family_array
+      integer(I4B), dimension(:), allocatable :: name 
+      integer(I4B), dimension(:), allocatable :: idx
+   end type family_array
+   type(family_array), dimension(2)        :: parent_child_index_array
 
    ! First determine the collisional regime for each colliding pair
    associate(npl => symba_plA%helio%swiftest%nbody, xbpl => symba_plA%helio%swiftest%xb)
@@ -49,9 +51,9 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
       ! Recompute central body barycentric velocity
       call coord_h2b(npl, symba_plA%helio%swiftest, msys)
 
-      ! Set the appropriate flags for each of the discard types
+      ! Loop through the list of pl-pl encounters and pick out the collisions
       do index_enc = 1, nplplenc
-         if (plplenc_list%status(index_enc) /= COLLISION) cycle ! Not the primary collision for this pair
+         if (plplenc_list%status(index_enc) /= COLLISION) cycle ! Not the primary collision for this pl-pl encounter, so skip it
          if (t > 1.01E+05) then
             write(*,*) "We've arrived at a problem"
          end if
@@ -79,35 +81,29 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
          name(:) = symba_plA%helio%swiftest%name(idx_parent(:))
          radius(:) = symba_plA%helio%swiftest%radius(idx_parent(:))
          volume(:) =  (4.0_DP / 3.0_DP) * PI * radius(:)**3
-      
-         if (nchild(1) > 0) then
-            allocate(array_index1_child, source = symba_plA%kin(idx_parent(1))%child(1:nchild(1)))
-            allocate(name1(nchild(1)+1))
-            name1(1) = symba_plA%helio%swiftest%name(idx_parent(1))
-            name1(2:nchild(1)+1) = symba_plA%helio%swiftest%name(array_index1_child(:))
-         else 
-            allocate(array_index1_child(1))
-            allocate(name1(1))
-            array_index1_child(1) = idx_parent(1) 
-            name1(1) = symba_plA%helio%swiftest%name(idx_parent(1))
-         end if
-      
-         if (nchild(2) > 0) then
-            allocate(array_index2_child, source = symba_plA%kin(idx_parent(2))%child(1:nchild(2)))
-            allocate(name2(nchild(2)+1))
-            name2(1) = symba_plA%helio%swiftest%name(idx_parent(2))
-            name2(2:nchild(2)+1) = symba_plA%helio%swiftest%name(array_index2_child(:))
-         else 
-            allocate(array_index2_child(1))
-            allocate(name2(1))
-            array_index2_child(1) = idx_parent(2)
-            name2(1) = symba_plA%helio%swiftest%name(idx_parent(2))
-         end if
+    
+         ! Group together the names and indexes of each collisional parent and its children
+         do j = 1, 2
+            allocate(parent_child_index_array(j)%idx(nchild(j)+ 1))
+            allocate(parent_child_index_array(j)%name(nchild(j)+ 1))
+            associate(idx_arr => parent_child_index_array(j)%idx, &
+                      name_arr => parent_child_index_array(j)%name, &
+                      ncj => nchild(j), &
+                      pl => symba_plA%helio%swiftest, &
+                      plkinj => symba_plA%kin(idx_parent(j)))
+               idx_arr(1) = idx_parent(j)
+               if (ncj > 0) idx_arr(2:ncj + 1) = plkinj%child(1:ncj)
+               name_arr(:) = pl%name(idx_arr(:))
+            end associate
+         end do
 
-         ! Set the status flag for this collision family and scrub them from any future collisions
-         fam_size = size(idx_parent) + size(array_index1_child) + size(array_index2_child)
+         ! Consolidate the groups of collsional parents with any children they may have into a single "family" index array
+         fam_size = 2 + sum(nchild(:))
          allocate(family(fam_size))
-         family = [idx_parent,array_index1_child,array_index2_child]
+         family = [parent_child_index_array(1)%idx(:),parent_child_index_array(2)%idx(:)]
+
+         ! Prepare to resolve collisions by setting the status flag for all family members to COLLISION. This will get updated after
+         ! we have determined what kind of collision this group will produce.
          symba_plA%helio%swiftest%status(family(:)) = COLLISION
 
          ! Find the barycenter of each body along with its children, if it has any
@@ -119,11 +115,7 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
             L_spin(:, j)  = Ip(3, j) * radius(j)**2 * symba_plA%helio%swiftest%rot(:, idx_parent(j))
             if (nchild(j) > 0) then
                do i = 1, nchild(j) ! Loop over all children and take the mass weighted mean of the properties
-                  if (j == 1) then
-                     idx_child = array_index1_child(i)
-                  else
-                     idx_child = array_index2_child(i)
-                  end if
+                  idx_child = parent_child_index_array(j)%idx(i + 1)
                   mchild = symba_plA%helio%swiftest%mass(idx_child)
                   xchild(:) = symba_plA%helio%swiftest%xb(:, idx_child)
                   vchild(:) = symba_plA%helio%swiftest%vb(:, idx_child)
@@ -201,23 +193,22 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
          !! Use the positions and velocities of the parents and their children after the step is complete to generate the fragments
          select case (regime)
          case (COLLRESOLVE_REGIME_DISRUPTION)
-            write(*, '("Disruption between particles ",20(I6,",",:))') name1(:), name2(:) 
+            write(*, '("Disruption between particles ",20(I6,",",:))') parent_child_index_array(1)%name(:), parent_child_index_array(2)%name(:)
             status = symba_casedisruption(symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, mass_res, param, Qloss)
          case (COLLRESOLVE_REGIME_SUPERCATASTROPHIC)
-            write(*, '("Supercatastrophic disruption between particles ",20(I6,",",:))') name1(:), name2(:) 
+            write(*, '("Supercatastrophic disruption between particles ",20(I6,",",:))') parent_child_index_array(1)%name(:), parent_child_index_array(2)%name(:)
             status = symba_casesupercatastrophic(symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, mass_res, param, Qloss)
          case (COLLRESOLVE_REGIME_HIT_AND_RUN)
-            write(*, '("Hit and run between particles ",20(I6,",",:))') name1(:), name2(:) 
+            write(*, '("Hit and run between particles ",20(I6,",",:))') parent_child_index_array(1)%name(:), parent_child_index_array(2)%name(:)
             status = symba_casehitandrun(symba_plA, idx_parent, nmergeadd, mergeadd_list, name, x, v, mass, radius, L_spin, Ip, mass_res, param, Qloss)
          case (COLLRESOLVE_REGIME_MERGE, COLLRESOLVE_REGIME_GRAZE_AND_MERGE)
-            write(*, '("Merging particles ",20(I6,",",:))') name1(:), name2(:) 
+            write(*, '("Merging particles ",20(I6,",",:))') parent_child_index_array(1)%name(:), parent_child_index_array(2)%name(:)
             status = symba_casemerge(symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, param)
          case default 
             write(*,*) "Error in symba_collision, unrecognized collision regime"
             call util_exit(FAILURE)
             status = ACTIVE
          end select
-
 
          write(*,*) 'Current status of all family members: '
          write(*,*) ' index  name  status'
@@ -226,6 +217,8 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
          end do
          write(*,*) 'Changing all status flags to: ',status
 
+         ! If any body in the current collisional family is listed in subsequent collisions in this step, remove that 
+         ! collision from consideration, as the body's outcome has already been resolved.
          symba_plA%helio%swiftest%status(family(:)) = status 
          do k = index_enc + 1, nplplenc
             if (plplenc_list%status(k) /= COLLISION) cycle ! Not the primary collision for this pair
@@ -235,7 +228,13 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
             if (any(family(:) == idx(1)) .or. any(family(:) == idx(2))) plplenc_list%status(k) = ACTIVE
          end do
 
-         deallocate(array_index1_child, array_index2_child, name1, name2, family)
+         ! Reset the parent/child/family lists for the next collision
+         do j = 1, 2
+            deallocate(parent_child_index_array(j)%idx)
+            deallocate(parent_child_index_array(j)%name)
+         end do
+         deallocate(family)
+
       end do
    end associate
 
