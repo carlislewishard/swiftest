@@ -1,5 +1,5 @@
-subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list, name, x, v, mass, radius, L_spin, Ip,  &
-                                        mass_res, param, Qloss, lpure)
+function symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list, name, x, v, mass, radius, L_spin, Ip,  &
+                                        mass_res, param, Qloss) result(status)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
    !! Create the fragments resulting from a non-catastrophic hitandrun collision
@@ -20,7 +20,8 @@ subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list
    type(user_input_parameters),intent(inout) :: param
    integer(I4B), dimension(2), intent(inout) :: idx_parents
    real(DP), intent(inout)                   :: Qloss
-   logical, intent(out)                      :: lpure
+   ! Result
+   integer(I4B)                              :: status
    ! Internals
    integer(I4B)                            :: i, nfrag, jproj, jtarg
    real(DP)                                :: mtot, avg_dens
@@ -29,7 +30,7 @@ subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list
    real(DP), dimension(:, :), allocatable  :: vb_frag, xb_frag, rot_frag, Ip_frag
    real(DP), dimension(:), allocatable     :: m_frag, rad_frag
    integer(I4B), dimension(:), allocatable :: name_frag
-   logical                                 :: lmerge
+   logical                                 :: lpure
 
    mtot = sum(mass(:))
    xcom(:) = (mass(1) * x(:,1) + mass(2) * x(:,2)) / mtot
@@ -81,13 +82,11 @@ subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list
 
       ! Put the fragments on the circle surrounding the center of mass of the system
       call symba_frag_pos(param, symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, &
-                           Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, lmerge, Qloss)
-      if (lmerge) then
+                           Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, lpure, Qloss)
+      if (lpure) then
          write(*,*) 'Should have been a pure hit and run instead'
-         lpure = .true.
          nfrag = 0
       else
-         lpure = .false.
          write(*,'("Generating ",I2.0," fragments")') nfrag
          do i = 1, nfrag
             name_frag(i) = param%plmaxname + i 
@@ -95,21 +94,24 @@ subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list
          param%plmaxname = name_frag(nfrag)
       end if
    end if
-   if (lpure) return
-
-   ! Populate the list of new bodies
-   call symba_merger_size_check(mergeadd_list, nmergeadd + nfrag)  
-   do i = 1, nfrag
-      nmergeadd = nmergeadd + 1
-      mergeadd_list%name(nmergeadd) = name_frag(i) 
-      mergeadd_list%status(nmergeadd) = HIT_AND_RUN
-      mergeadd_list%xb(:,nmergeadd) = xb_frag(:, i)
-      mergeadd_list%vb(:,nmergeadd) = vb_frag(:, i)
-      mergeadd_list%mass(nmergeadd) = m_frag(i)
-      mergeadd_list%radius(nmergeadd) = rad_frag(i)
-      mergeadd_list%Ip(:,nmergeadd) = Ip_frag(:, i)
-      mergeadd_list%rot(:,nmergeadd) = rot_frag(:, i)
-   end do 
+   if (lpure) then
+      status = ACTIVE
+   else
+      status = HIT_AND_RUN
+      ! Populate the list of new bodies
+      call symba_merger_size_check(mergeadd_list, nmergeadd + nfrag)  
+      do i = 1, nfrag
+         nmergeadd = nmergeadd + 1
+         mergeadd_list%name(nmergeadd) = name_frag(i) 
+         mergeadd_list%status(nmergeadd) = HIT_AND_RUN
+         mergeadd_list%xb(:,nmergeadd) = xb_frag(:, i)
+         mergeadd_list%vb(:,nmergeadd) = vb_frag(:, i)
+         mergeadd_list%mass(nmergeadd) = m_frag(i)
+         mergeadd_list%radius(nmergeadd) = rad_frag(i)
+         mergeadd_list%Ip(:,nmergeadd) = Ip_frag(:, i)
+         mergeadd_list%rot(:,nmergeadd) = rot_frag(:, i)
+      end do 
+   end if
 
    return 
-end subroutine symba_casehitandrun
+end function symba_casehitandrun

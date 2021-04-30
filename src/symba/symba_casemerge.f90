@@ -1,4 +1,4 @@
-subroutine symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, param)
+function symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, param) result(status)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
    !! Merge planets.
@@ -12,7 +12,7 @@ subroutine symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x,
    use module_swiftestalloc 
    use module_interfaces, EXCEPT_THIS_ONE => symba_casemerge
    implicit none
-
+   ! Arguments
    type(symba_pl), intent(inout)             :: symba_plA
    integer(I4B), dimension(2), intent(inout) :: idx_parents
    integer(I4B), intent(inout)               :: nmergeadd
@@ -20,7 +20,9 @@ subroutine symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x,
    real(DP), dimension(:),   intent(in)      :: mass, radius
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
    type(user_input_parameters),intent(inout) :: param
-
+   ! Result
+   integer(I4B)                              :: status
+   ! Internals
    integer(I4B)                            :: j, mergename
    real(DP)                                :: mass_new, radius_new, volume_new
    real(DP), dimension(NDIM)               :: xcom, vcom, xc, vc, xcrossv
@@ -81,5 +83,7 @@ subroutine symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x,
    mergeadd_list%Ip(:,nmergeadd) = Ip_new(:)
    mergeadd_list%rot(:,nmergeadd) = rot_new(:)
 
+   status = MERGED
+
    return 
-end subroutine symba_casemerge
+end function symba_casemerge

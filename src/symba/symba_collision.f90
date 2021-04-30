@@ -36,7 +36,6 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
    real(DP)                                :: mtiny_si
    integer(I4B), dimension(:), allocatable :: array_index1_child, array_index2_child, name1, name2
    real(DP)                                :: mlr, mslr, msys, msys_new, Qloss
-   logical                                 :: lpure
    integer(I4B), dimension(:), allocatable :: family
    integer(I4B)                            :: fam_size, istart
 
@@ -52,13 +51,15 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
       ! Set the appropriate flags for each of the discard types
       do index_enc = 1, nplplenc
          if (plplenc_list%status(index_enc) /= COLLISION) cycle ! Not the primary collision for this pair
+         !if (t > 1.01E+05) then
+         !   write(*,*) "We've arrived at a problem"
+         !end if
 
          ! Index values of the original particle pair 
          idx(1) = plplenc_list%index1(index_enc)
          idx(2) = plplenc_list%index2(index_enc)
 
          if (any(symba_plA%helio%swiftest%status(idx(:)) /= ACTIVE)) cycle ! One of these two bodies is already gone
-         symba_plA%helio%swiftest%status(idx(:)) = COLLISION
 
          ! Index values for the parents of this particle pair
          idx_parent(:) = symba_plA%kin(idx(:))%parent
@@ -95,8 +96,11 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
             allocate(name2(1))
             array_index2_child(1) = idx_parent(2)
          end if
-         name1(1) = name(1)
-         name2(1) = name(2)
+
+         symba_plA%helio%swiftest%status(array_index1_child(:)) = COLLISION
+         symba_plA%helio%swiftest%status(array_index2_child(:)) = COLLISION
+         name1(:) = symba_plA%helio%swiftest%name(array_index1_child(:))
+         name2(:) = symba_plA%helio%swiftest%name(array_index2_child(:))
 
          ! Find the barycenter of each body along with its children, if it has any
          do j = 1, 2
@@ -107,13 +111,6 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
             L_spin(:, j)  = Ip(3, j) * radius(j)**2 * symba_plA%helio%swiftest%rot(:, idx_parent(j))
             if (nchild(j) > 0) then
                do i = 1, nchild(j) ! Loop over all children and take the mass weighted mean of the properties
-                  if (j == 1) then
-                     idx_child = array_index1_child(i)
-                     name1(1+i) = symba_plA%helio%swiftest%name(idx_child)
-                  else
-                     idx_child = array_index2_child(i)
-                     name2(1+i) = symba_plA%helio%swiftest%name(idx_child)
-                  end if
                   mchild = symba_plA%helio%swiftest%mass(idx_child)
                   xchild(:) = symba_plA%helio%swiftest%xb(:, idx_child)
                   vchild(:) = symba_plA%helio%swiftest%vb(:, idx_child)
@@ -186,38 +183,38 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
          end if
 
          write(*, *) "Collision detected at time t = ",t
-         status = COLLISION
+         
          ! Set the appropriate flags for each of the discard types
          !! Use the positions and velocities of the parents and their children after the step is complete to generate the fragments
          select case (regime)
          case (COLLRESOLVE_REGIME_DISRUPTION)
             write(*, '("Disruption between particles ",20(I6,",",:))') name1(:), name2(:) 
-            call symba_casedisruption(symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, mass_res, param, Qloss)
+            status = symba_casedisruption(symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, mass_res, param, Qloss)
          case (COLLRESOLVE_REGIME_SUPERCATASTROPHIC)
             write(*, '("Supercatastrophic disruption between particles ",20(I6,",",:))') name1(:), name2(:) 
-            call symba_casesupercatastrophic(symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, mass_res, param, Qloss)
+            status = symba_casesupercatastrophic(symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, mass_res, param, Qloss)
          case (COLLRESOLVE_REGIME_HIT_AND_RUN)
             write(*, '("Hit and run between particles ",20(I6,",",:))') name1(:), name2(:) 
-            call symba_casehitandrun(symba_plA, idx_parent, nmergeadd, mergeadd_list, name, x, v, mass, radius, L_spin, Ip, mass_res, param, Qloss, lpure)
-            if (lpure) status = ACTIVE
+            status = symba_casehitandrun(symba_plA, idx_parent, nmergeadd, mergeadd_list, name, x, v, mass, radius, L_spin, Ip, mass_res, param, Qloss)
          case (COLLRESOLVE_REGIME_MERGE, COLLRESOLVE_REGIME_GRAZE_AND_MERGE)
             write(*, '("Merging particles ",20(I6,",",:))') name1(:), name2(:) 
-            call symba_casemerge(symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, param)
+            status = symba_casemerge(symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, param)
          case default 
             write(*,*) "Error in symba_collision, unrecognized collision regime"
             call util_exit(FAILURE)
+            status = ACTIVE
          end select
 
          ! Set the status flag for this collision family and scrub them from any future collisions
-         fam_size = 2 + nchild(1)+ nchild(2)
+         fam_size = size(idx_parent) + size(array_index1_child) + size(array_index2_child)
          allocate(family(fam_size))
-         family(1) = idx_parent(1)
-         family(2) = idx_parent(2)
-         istart = 2 + nchild(1)
-   
-         ! Include any children of the progenitor bodies as part of the family
-         if (nchild(1) > 0) family(3:istart) = array_index1_child(:)
-         if (nchild(2) > 0) family(istart+1:istart+1+nchild(2)) = array_index2_child(:)
+         family = [idx_parent,array_index1_child,array_index2_child]
+         !write(*,*) 'Current status of all family members: '
+         !write(*,*) ' index  name  status'
+         !do i = 1, fam_size
+         !   write(*,*) family(i),symba_plA%helio%swiftest%name(family(i)),symba_plA%helio%swiftest%status(family(i))
+         !end do
+         !write(*,*) 'Changing all status flags to: ',status
 
          symba_plA%helio%swiftest%status(family(:)) = status 
          do k = index_enc + 1, nplplenc

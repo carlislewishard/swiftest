@@ -1,5 +1,5 @@
-subroutine symba_casesupercatastrophic (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, &
-                                        mass_res, param, Qloss)
+function symba_casesupercatastrophic (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, &
+                                        mass_res, param, Qloss) result(status)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
    !! Create the fragments resulting from a supercatastrophic collision
@@ -19,6 +19,8 @@ subroutine symba_casesupercatastrophic (symba_plA, idx_parents, nmergeadd, merge
    type(user_input_parameters),intent(inout) :: param
    integer(I4B), dimension(2), intent(inout) :: idx_parents
    real(DP), intent(inout)                   :: Qloss
+   ! Result
+   integer(I4B)                              :: status
    ! Internals
    integer(I4B)                            :: i, nfrag
    real(DP)                                :: mtot, avg_dens, min_frag_mass
@@ -70,9 +72,10 @@ subroutine symba_casesupercatastrophic (symba_plA, idx_parents, nmergeadd, merge
 
    if (lmerge) then
       write(*,*) 'Should have been a merge instead.'
-      call symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, param)
+      status = symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, param)
    else
       write(*,'("Generating ",I2.0," fragments")') nfrag
+      status = SUPERCATASTROPHIC
       ! Populate the list of new bodies
       call symba_merger_size_check(mergeadd_list, nmergeadd + nfrag)  
       do i = 1, nfrag
@@ -90,4 +93,4 @@ subroutine symba_casesupercatastrophic (symba_plA, idx_parents, nmergeadd, merge
    end if
    
    return 
-end subroutine symba_casesupercatastrophic
+end function symba_casesupercatastrophic

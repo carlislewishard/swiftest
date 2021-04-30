@@ -1,5 +1,5 @@
-subroutine symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, &
-                                 mass_res, param, Qloss)
+function symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, &
+                                 mass_res, param, Qloss) result(status)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
    !! Create the fragments resulting from a non-catastrophic disruption collision
@@ -20,6 +20,8 @@ subroutine symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_lis
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
    type(user_input_parameters),intent(inout) :: param
    real(DP), intent(inout)                   :: Qloss
+   ! Result
+   integer(I4B)                              :: status
    ! Internals
    integer(I4B)                            :: i,  istart, nfrag
    real(DP)                                :: mtot, avg_dens
@@ -74,11 +76,12 @@ subroutine symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_lis
 
    if (lmerge) then
       write(*,*) 'Should have been a merge instead.'
-      call symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, param)
+      status = symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, param)
    else
       ! Populate the list of new bodies
       write(*,'("Generating ",I2.0," fragments")') nfrag
       call symba_merger_size_check(mergeadd_list, nmergeadd + nfrag)  
+      status = DISRUPTION
       do i = 1, nfrag
          nmergeadd = nmergeadd + 1
          param%plmaxname = max(param%plmaxname, param%tpmaxname) + 1
@@ -94,4 +97,4 @@ subroutine symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_lis
    end if
 
    return 
-end subroutine symba_casedisruption
+end function symba_casedisruption

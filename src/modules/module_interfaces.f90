@@ -713,12 +713,12 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-         SUBROUTINE symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, &
-                                                 mass_res, param, Qloss)
-         USE swiftest_globals
-         USE swiftest_data_structures
-         USE module_symba
-         IMPLICIT NONE
+      function symba_casedisruption (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, &
+                                     mass_res, param, Qloss) result(status)
+         use swiftest_globals
+         use swiftest_data_structures
+         use module_symba
+         implicit none
          integer(I4B), intent(inout)               :: nmergeadd
          type(symba_merger), intent(inout)         :: mergeadd_list
          type(symba_pl), intent(inout)             :: symba_pla
@@ -727,62 +727,59 @@ MODULE module_interfaces
          type(user_input_parameters),intent(inout) :: param
          integer(I4B), dimension(2), intent(inout) :: idx_parents
          real(DP), intent(in)                      :: Qloss
-         END SUBROUTINE symba_casedisruption
-     END INTERFACE
+         integer(I4B)                              :: status
+      end function symba_casedisruption
 
-     INTERFACE
-          SUBROUTINE symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list, name, x, v, mass, radius, Lspin, Ip, &
-            mass_res, param, Qloss, lpure)
-            USE swiftest_globals
-            USE swiftest_data_structures
-            USE module_symba
-            IMPLICIT NONE
-            integer(I4B), intent(inout)               :: nmergeadd
-            type(symba_merger), intent(inout)         :: mergeadd_list
-            type(symba_pl), intent(inout)             :: symba_pla
-            integer(I4B), dimension(:), intent(in)    :: name
-            real(DP), dimension(:), intent(in)        :: mass, radius, mass_res
-            real(DP), dimension(:,:), intent(in)      :: x, v, Lspin, Ip
-            type(user_input_parameters),intent(inout) :: param
-            integer(I4B), dimension(2), intent(inout) :: idx_parents
-            real(DP), intent(in)                      :: Qloss
-            logical, intent(out)                      :: lpure
-          END SUBROUTINE symba_casehitandrun
-     END INTERFACE
-
-     INTERFACE
-          SUBROUTINE symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, Lspin, Ip, param)
-          USE swiftest_globals
-          USE swiftest_data_structures
-          USE module_symba
-          IMPLICIT NONE
-          type(symba_pl), intent(inout)             :: symba_plA
-          integer(I4B), dimension(2), intent(inout) :: idx_parents
-          integer(I4B), intent(inout)             :: nmergeadd
-          type(symba_merger), intent(inout)       :: mergeadd_list
-          real(DP), dimension(:), intent(in)      :: mass, radius
-          real(DP), dimension(:,:), intent(in)    :: x, v, Lspin, Ip
-          type(user_input_parameters),intent(inout) :: param
-          END SUBROUTINE symba_casemerge
-     END INTERFACE
-
-     INTERFACE
-         SUBROUTINE symba_casesupercatastrophic (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, Lspin, Ip, &
-                                                 mass_res, param, Qloss)
-         USE swiftest_globals
-         USE swiftest_data_structures
-         USE module_symba
-         IMPLICIT NONE
+      function symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list, name, x, v, mass, radius, Lspin, Ip, &
+                                    mass_res, param, Qloss) result(status)
+         use swiftest_globals
+         use swiftest_data_structures
+         use module_symba
+         implicit none
          integer(I4B), intent(inout)               :: nmergeadd
          type(symba_merger), intent(inout)         :: mergeadd_list
          type(symba_pl), intent(inout)             :: symba_pla
+         integer(I4B), dimension(:), intent(in)    :: name
          real(DP), dimension(:), intent(in)        :: mass, radius, mass_res
          real(DP), dimension(:,:), intent(in)      :: x, v, Lspin, Ip
          type(user_input_parameters),intent(inout) :: param
          integer(I4B), dimension(2), intent(inout) :: idx_parents
          real(DP), intent(in)                      :: Qloss
-         END SUBROUTINE symba_casesupercatastrophic
-     END INTERFACE
+         integer(I4B)                              :: status
+      end function symba_casehitandrun
+
+      function symba_casemerge (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, lspin, Ip, param) result(status)
+         use swiftest_globals
+         use swiftest_data_structures
+         use module_symba
+         implicit none
+         type(symba_pl), intent(inout)             :: symba_plA
+         integer(I4B), dimension(2), intent(inout) :: idx_parents
+         integer(I4B), intent(inout)             :: nmergeadd
+         type(symba_merger), intent(inout)       :: mergeadd_list
+         real(DP), dimension(:), intent(in)      :: mass, radius
+         real(DP), dimension(:,:), intent(in)    :: x, v, lspin, Ip
+         type(user_input_parameters),intent(inout) :: param
+         integer(I4B)                              :: status
+      end function symba_casemerge
+
+      function symba_casesupercatastrophic (symba_plA, idx_parents, nmergeadd, mergeadd_list, x, v, mass, radius, lspin, Ip, &
+                                                mass_res, param, Qloss) result(status)
+         use swiftest_globals
+         use swiftest_data_structures
+         use module_symba
+         implicit none
+         integer(I4B), intent(inout)               :: nmergeadd
+         type(symba_merger), intent(inout)         :: mergeadd_list
+         type(symba_pl), intent(inout)             :: symba_plA
+         real(DP), dimension(:), intent(in)        :: mass, radius, mass_res
+         real(DP), dimension(:,:), intent(in)      :: x, v, lspin, Ip
+         type(user_input_parameters),intent(inout) :: param
+         integer(I4B), dimension(2), intent(inout) :: idx_parents
+         real(DP), intent(in)                      :: qloss
+         integer(I4B)                              :: status
+      end function symba_casesupercatastrophic
+     end interface
 
      INTERFACE
           SUBROUTINE symba_chk(xr, vr, rhill1, rhill2, dt, irec, lencounter, lvdotr)
