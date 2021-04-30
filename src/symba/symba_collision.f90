@@ -64,9 +64,9 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
       ! Loop through the list of pl-pl encounters and pick out the collisions
       do index_enc = 1, nplplenc
          if (plplenc_list%status(index_enc) /= COLLISION) cycle ! Not the primary collision for this pl-pl encounter, so skip it
-         if (t > 1.01E+05) then
-            write(*,*) "We've arrived at a problem"
-         end if
+         !if (t > 1.01E+05) then
+         !   write(*,*) "We've arrived at a problem"
+         !end if
 
          ! Index values of the original particle pair 
          idx(1) = plplenc_list%index1(index_enc)
@@ -83,8 +83,8 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
          if (idx_parent(1) == idx_parent(2)) then
             idx_parent(2) = symba_plA%kin(idx_parent(1))%child(nchild(1))
             nchild(1) = nchild(1) - 1
-            symba_plA%kin(idx_parent(1))%nchild = nchild(1)
             nchild(2) = 0
+            symba_plA%kin(idx_parent(1))%nchild = nchild(1)
          end if
 
          mass(:) = symba_plA%helio%swiftest%mass(idx_parent(:))
@@ -220,12 +220,12 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
             status = ACTIVE
          end select
 
-         write(*,*) 'Current status of all family members: '
-         write(*,*) ' index  name  status'
-         do i = 1, fam_size
-            write(*,*) family(i),symba_plA%helio%swiftest%name(family(i)),symba_plA%helio%swiftest%status(family(i))
-         end do
-         write(*,*) 'Changing all status flags to: ',status
+         !write(*,*) 'Current status of all family members: '
+         !write(*,*) ' index  name  status'
+         !do i = 1, fam_size
+         !   write(*,*) family(i),symba_plA%helio%swiftest%name(family(i)),symba_plA%helio%swiftest%status(family(i))
+         !end do
+         !write(*,*) 'Changing all status flags to: ',status
 
          ! If any body in the current collisional family is listed in subsequent collisions in this step, remove that 
          ! collision from consideration, as the body's outcome has already been resolved.
@@ -238,14 +238,14 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
             if (any(family(:) == idx(1)) .or. any(family(:) == idx(2))) plplenc_list%status(k) = ACTIVE
          end do
 
-         Msystem = sum(symba_plA%helio%swiftest%mass(1:npl), symba_plA%helio%swiftest%status(1:npl) == ACTIVE) 
-         Mdiscard = sum(symba_plA%helio%swiftest%mass(1:npl), symba_plA%helio%swiftest%status(1:npl) /= ACTIVE) 
-         Madd = sum(mergeadd_list%mass(1:nmergeadd))
-         write(*,*) 'Mass balance in collision step'
-         write(*,*) ' Msystem / Minitial:  ', Msystem / Minitial
-         write(*,*) 'Mdiscard / Minitial: ', Mdiscard / Minitial
-         write(*,*) '    Madd / Minitial: ', Madd / Minitial
-         write(*,*) '  Mtotal / Minitial: ', (Msystem + Madd) / Minitial
+        ! Msystem = sum(symba_plA%helio%swiftest%mass(1:npl), symba_plA%helio%swiftest%status(1:npl) == ACTIVE) 
+        ! Mdiscard = sum(symba_plA%helio%swiftest%mass(1:npl), symba_plA%helio%swiftest%status(1:npl) /= ACTIVE) 
+        ! Madd = sum(mergeadd_list%mass(1:nmergeadd))
+        ! write(*,*) 'Mass balance in collision step'
+        ! write(*,*) ' Msystem / Minitial:  ', Msystem / Minitial
+        ! write(*,*) 'Mdiscard / Minitial: ', Mdiscard / Minitial
+        ! write(*,*) '    Madd / Minitial: ', Madd / Minitial
+        ! write(*,*) '  Mtotal / Minitial: ', (Msystem + Madd) / Minitial
 
          ! Reset the parent/child/family lists for the next collision
          do j = 1, 2
