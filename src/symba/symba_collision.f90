@@ -118,6 +118,11 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
             L_spin(:, j)  = Ip(3, j) * radius(j)**2 * symba_plA%helio%swiftest%rot(:, idx_parent(j))
             if (nchild(j) > 0) then
                do i = 1, nchild(j) ! Loop over all children and take the mass weighted mean of the properties
+                  if (j == 1) then
+                     idx_child = array_index1_child(i)
+                  else
+                     idx_child = array_index2_child(i)
+                  end if
                   mchild = symba_plA%helio%swiftest%mass(idx_child)
                   xchild(:) = symba_plA%helio%swiftest%xb(:, idx_child)
                   vchild(:) = symba_plA%helio%swiftest%vb(:, idx_child)
