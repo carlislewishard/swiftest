@@ -38,6 +38,7 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
    real(DP)                                :: mlr, mslr, msys, msys_new, Qloss
    integer(I4B), dimension(:), allocatable :: family
    integer(I4B)                            :: fam_size, istart
+   
 
 
    ! First determine the collisional regime for each colliding pair
