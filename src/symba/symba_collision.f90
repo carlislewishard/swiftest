@@ -51,9 +51,9 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
       ! Set the appropriate flags for each of the discard types
       do index_enc = 1, nplplenc
          if (plplenc_list%status(index_enc) /= COLLISION) cycle ! Not the primary collision for this pair
-         !if (t > 1.01E+05) then
-         !   write(*,*) "We've arrived at a problem"
-         !end if
+         if (t > 1.01E+05) then
+            write(*,*) "We've arrived at a problem"
+         end if
 
          ! Index values of the original particle pair 
          idx(1) = plplenc_list%index1(index_enc)
@@ -82,25 +82,32 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
          if (nchild(1) > 0) then
             allocate(array_index1_child, source = symba_plA%kin(idx_parent(1))%child(1:nchild(1)))
             allocate(name1(nchild(1)+1))
+            name1(1) = symba_plA%helio%swiftest%name(idx_parent(1))
+            name1(2:nchild(1)+1) = symba_plA%helio%swiftest%name(array_index1_child(:))
          else 
             allocate(array_index1_child(1))
             allocate(name1(1))
             array_index1_child(1) = idx_parent(1) 
+            name1(1) = symba_plA%helio%swiftest%name(idx_parent(1))
          end if
       
          if (nchild(2) > 0) then
             allocate(array_index2_child, source = symba_plA%kin(idx_parent(2))%child(1:nchild(2)))
             allocate(name2(nchild(2)+1))
+            name2(1) = symba_plA%helio%swiftest%name(idx_parent(2))
+            name2(2:nchild(2)+1) = symba_plA%helio%swiftest%name(array_index2_child(:))
          else 
             allocate(array_index2_child(1))
             allocate(name2(1))
             array_index2_child(1) = idx_parent(2)
+            name2(1) = symba_plA%helio%swiftest%name(idx_parent(2))
          end if
 
-         symba_plA%helio%swiftest%status(array_index1_child(:)) = COLLISION
-         symba_plA%helio%swiftest%status(array_index2_child(:)) = COLLISION
-         name1(:) = symba_plA%helio%swiftest%name(array_index1_child(:))
-         name2(:) = symba_plA%helio%swiftest%name(array_index2_child(:))
+         ! Set the status flag for this collision family and scrub them from any future collisions
+         fam_size = size(idx_parent) + size(array_index1_child) + size(array_index2_child)
+         allocate(family(fam_size))
+         family = [idx_parent,array_index1_child,array_index2_child]
+         symba_plA%helio%swiftest%status(family(:)) = COLLISION
 
          ! Find the barycenter of each body along with its children, if it has any
          do j = 1, 2
@@ -205,16 +212,13 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
             status = ACTIVE
          end select
 
-         ! Set the status flag for this collision family and scrub them from any future collisions
-         fam_size = size(idx_parent) + size(array_index1_child) + size(array_index2_child)
-         allocate(family(fam_size))
-         family = [idx_parent,array_index1_child,array_index2_child]
-         !write(*,*) 'Current status of all family members: '
-         !write(*,*) ' index  name  status'
-         !do i = 1, fam_size
-         !   write(*,*) family(i),symba_plA%helio%swiftest%name(family(i)),symba_plA%helio%swiftest%status(family(i))
-         !end do
-         !write(*,*) 'Changing all status flags to: ',status
+
+         write(*,*) 'Current status of all family members: '
+         write(*,*) ' index  name  status'
+         do i = 1, fam_size
+            write(*,*) family(i),symba_plA%helio%swiftest%name(family(i)),symba_plA%helio%swiftest%status(family(i))
+         end do
+         write(*,*) 'Changing all status flags to: ',status
 
          symba_plA%helio%swiftest%status(family(:)) = status 
          do k = index_enc + 1, nplplenc
