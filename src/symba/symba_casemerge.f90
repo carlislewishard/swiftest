@@ -37,7 +37,7 @@ function symba_casemerge (symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v,
              idx_child1 => symba_plA%kin(idx_parent(1))%child, idx_child2 => symba_plA%kin(idx_parent(2))%child)
       fam_size = 2 + nchild1 + nchild2
       allocate(family(fam_size))
-      family = [idx_parent, idx_child1, idx_child2]
+      family = [idx_parent, idx_child1(1:nchild1), idx_child2(1:nchild2)]
    end associate
 
    ! Sum the family mass together to get the new merged body's mass
