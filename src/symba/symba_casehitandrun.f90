@@ -34,6 +34,7 @@ subroutine symba_casehitandrun (symba_plA, idx_parents, nmergeadd, mergeadd_list
    mtot = sum(mass(:))
    xcom(:) = (mass(1) * x(:,1) + mass(2) * x(:,2)) / mtot
    vcom(:) = (mass(1) * v(:,1) + mass(2) * v(:,2)) / mtot
+   lpure = .false.
   
    ! The largest body will stay untouched
    if (mass(1) > mass(2)) then

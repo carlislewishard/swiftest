@@ -22,7 +22,7 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
    type(user_input_parameters),intent(inout) :: param
 
    integer(I4B), parameter                 :: NRES = 3   !! Number of collisional product results
-   integer(I4B)                            :: i, j, index_enc, jtarg, jproj
+   integer(I4B)                            :: i, j, k, index_enc, jtarg, jproj
    real(DP), dimension(NRES)               :: mass_res
    real(DP), dimension(NDIM)               :: x1_si, v1_si, x2_si, v2_si
    integer(I4B)                            :: regime, idx_child, status
@@ -37,6 +37,8 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
    integer(I4B), dimension(:), allocatable :: array_index1_child, array_index2_child, name1, name2
    real(DP)                                :: mlr, mslr, msys, msys_new, Qloss
    logical                                 :: lpure
+   integer(I4B), dimension(:), allocatable :: family
+   integer(I4B)                            :: fam_size, istart
 
 
    ! First determine the collisional regime for each colliding pair
@@ -206,20 +208,27 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
             call util_exit(FAILURE)
          end select
 
-         symba_plA%helio%swiftest%status(idx_parent(:)) = status
-         do j = 1, 2
-            if (nchild(j) > 0) then
-               do i = 1, nchild(j) ! Loop over all children and take the mass weighted mean of the properties
-                  if (j == 1) then
-                     idx_child = array_index1_child(i)
-                  else
-                     idx_child = array_index2_child(i)
-                  end if
-                  symba_plA%helio%swiftest%status(idx_child) = status 
-               end do
-            end if
+         ! Set the status flag for this collision family and scrub them from any future collisions
+         fam_size = 2 + nchild(1)+ nchild(2)
+         allocate(family(fam_size))
+         family(1) = idx_parent(1)
+         family(2) = idx_parent(2)
+         istart = 2 + nchild(1)
+   
+         ! Include any children of the progenitor bodies as part of the family
+         if (nchild(1) > 0) family(3:istart) = symba_plA%kin(idx_parent(1))%child(1:nchild(1))
+         if (nchild(2) > 0) family(istart+1:istart+1+nchild(2)) = symba_plA%kin(idx_parent(2))%child(1:nchild(2))
+
+         symba_plA%helio%swiftest%status(family(:)) = status 
+         do k = index_enc + 1, nplplenc
+            if (plplenc_list%status(k) /= COLLISION) cycle ! Not the primary collision for this pair
+            ! Index values of the original particle pair 
+            idx(1) = plplenc_list%index1(k)
+            idx(2) = plplenc_list%index2(k)
+            if (any(family(:) == idx(1)) .or. any(family(:) == idx(2))) plplenc_list%status(k) = ACTIVE
          end do
-         deallocate(array_index1_child, array_index2_child, name1, name2)
+
+         deallocate(array_index1_child, array_index2_child, name1, name2, family)
       end do
    end associate
 

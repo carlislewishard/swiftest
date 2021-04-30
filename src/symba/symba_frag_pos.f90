@@ -1,4 +1,4 @@
-subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass, radius, &
+subroutine symba_frag_pos (param, symba_plA, idx_parent, x, v, L_spin, Ip, mass, radius, &
                            Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, lmerge, Qloss)
    !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
@@ -14,7 +14,7 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
    ! Arguments
    type(user_input_parameters), intent(in)   :: param 
    type(symba_pl), intent(inout)             :: symba_plA
-   integer(I4B), dimension(:), intent(in)    :: idx_parents
+   integer(I4B), dimension(:), intent(in)    :: idx_parent
    real(DP), intent(in)                      :: Qloss
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
    real(DP), dimension(:), intent(in)        :: mass, radius, m_frag, rad_frag
@@ -31,14 +31,14 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
    real(DP)                                :: pe_after, ke_spin_before, ke_spin_after, ke_after, ke_family, ke_target, ke_frag
    real(DP), dimension(NDIM)               :: h, dx
    integer(I4B), dimension(:), allocatable :: family
-   real(DP)                                :: rmag, f_help
+   real(DP)                                :: rmag
    logical, dimension(:), allocatable      :: lexclude
    character(len=*), parameter             :: fmtlabel = "(A14,10(ES9.2,1X,:))"
    integer(I4B), parameter                 :: MAXITER = 100
    real(DP), dimension(NDIM)               :: x_cross_v, v_phi_unit, h_unit, v_r_unit
    real(DP), dimension(:,:), allocatable   :: v_r, v_phi
    
-   associate(nchild1 => symba_plA%kin(idx_parents(1))%nchild, nchild2 => symba_plA%kin(idx_parents(2))%nchild, &
+   associate(nchild1 => symba_plA%kin(idx_parent(1))%nchild, nchild2 => symba_plA%kin(idx_parent(2))%nchild, &
              xhpl => symba_plA%helio%swiftest%xh, xbpl => symba_plA%helio%swiftest%xh, vbpl => symba_plA%helio%swiftest%vb, &
              Mpl => symba_plA%helio%swiftest%mass, Ippl => symba_plA%helio%swiftest%Ip, radpl => symba_plA%helio%swiftest%radius, &
              rotpl => symba_plA%helio%swiftest%rot, status => symba_plA%helio%swiftest%status, npl => symba_plA%helio%swiftest%nbody, name => symba_plA%helio%swiftest%name)
@@ -56,13 +56,13 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
       ! Make the list of family members (progenitor bodies involved in the collision)
       fam_size = 2 + nchild1 + nchild2
       allocate(family(fam_size))
-      family(1) = idx_parents(1)
-      family(2) = idx_parents(2)
+      family(1) = idx_parent(1)
+      family(2) = idx_parent(2)
       istart = 2 + nchild1
 
       ! Include any children of the progenitor bodies as part of the family
-      if (nchild1 > 0) family(3:istart) = symba_plA%kin(idx_parents(1))%child(1:nchild1)
-      if (nchild2 > 0) family(istart+1:istart+1+nchild2) = symba_plA%kin(idx_parents(2))%child(1:nchild2)
+      if (nchild1 > 0) family(3:istart) = symba_plA%kin(idx_parent(1))%child(1:nchild1)
+      if (nchild2 > 0) family(istart+1:istart+1+nchild2) = symba_plA%kin(idx_parent(2))%child(1:nchild2)
 
       allocate(lexclude(npl))
       where (status(1:npl) == INACTIVE) ! Safety check in case one of the included bodies has been previously deactivated 
@@ -100,26 +100,25 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
       Etot_after = ke_after + ke_spin_after + pe_after
       Ltot_after = norm2(Ltot(:))
 
-      write(*,        "(' ---------------------------------------------------------------------------')")
-      write(*,        "('              Energy normalized by |Etot_before|')")
-      write(*,        "('             |    T_orb    T_spin         T         pe      Etot      Ltot')")
-      write(*,        "(' ---------------------------------------------------------------------------')")
-      write(*,        "(' ---------------------------------------------------------------------------')")
-      write(*,        "('  First pass to get angular momentum ')")
-      write(*,        "(' ---------------------------------------------------------------------------')")
-      write(*,fmtlabel) ' change      |',(ke_after - ke_before) / abs(Etot_before), &
-                                         (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
-                                         (ke_after + ke_spin_after - ke_before - ke_spin_before)/ abs(Etot_before), &
-                                         (pe_after - pe_before) / abs(Etot_before), &
-                                         (Etot_after - Etot_before) / abs(Etot_before), &
-                                         (Ltot_after - Ltot_before) / Ltot_before
-      write(*,        "(' ---------------------------------------------------------------------------')")
-      write(*,        "('  Second pass to get energy ')")
-      write(*,        "(' ---------------------------------------------------------------------------')")
-      write(*,fmtlabel) ' Q_loss      |',-Qloss / abs(Etot_before)
-      write(*,        "(' ---------------------------------------------------------------------------')")
+      !write(*,        "(' ---------------------------------------------------------------------------')")
+      !write(*,        "('              Energy normalized by |Etot_before|')")
+      !write(*,        "('             |    T_orb    T_spin         T         pe      Etot      Ltot')")
+      !write(*,        "(' ---------------------------------------------------------------------------')")
+      !write(*,        "(' ---------------------------------------------------------------------------')")
+      !write(*,        "('  First pass to get angular momentum ')")
+      !write(*,        "(' ---------------------------------------------------------------------------')")
+      !write(*,fmtlabel) ' change      |',(ke_after - ke_before) / abs(Etot_before), &
+      !                                   (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
+      !                                   (ke_after + ke_spin_after - ke_before - ke_spin_before)/ abs(Etot_before), &
+      !                                   (pe_after - pe_before) / abs(Etot_before), &
+      !                                   (Etot_after - Etot_before) / abs(Etot_before), &
+      !                                   (Ltot_after - Ltot_before) / Ltot_before
+      !write(*,        "(' ---------------------------------------------------------------------------')")
+      !write(*,        "('  Second pass to get energy ')")
+      !write(*,        "(' ---------------------------------------------------------------------------')")
+      !write(*,fmtlabel) ' Q_loss      |',-Qloss / abs(Etot_before)
+      !write(*,        "(' ---------------------------------------------------------------------------')")
 
-      f_help = 1._DP
       do j = 1, MAXITER
          ! Set the "target" ke_after (the value of the orbital kinetic energy that the fragments ought to have)
          ke_target = ke_family + (ke_spin_before - ke_spin_after) + (pe_before - pe_after) - Qloss
@@ -155,16 +154,16 @@ subroutine symba_frag_pos (param, symba_plA, idx_parents, x, v, L_spin, Ip, mass
          if (j == maxiter) lmerge = .true.
       end do
 
-      write(*,        "(' ---------------------------------------------------------------------------')")
-      write(*,        "('             |    T_orb    T_spin         T         pe      Etot      Ltot')")
-      write(*,        "(' ---------------------------------------------------------------------------')")
-      write(*,fmtlabel) ' change      |',(ke_after - ke_before) / abs(Etot_before), &
-                                       (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
-                                       (ke_after + ke_spin_after - ke_before - ke_spin_before)/ abs(Etot_before), &
-                                       (pe_after - pe_before) / abs(Etot_before), &
-                                       (Etot_after - Etot_before) / abs(Etot_before), &
-                                       (Ltot_after - Ltot_before) / Ltot_before
-      write(*,        "(' ---------------------------------------------------------------------------')")
+!      write(*,        "(' ---------------------------------------------------------------------------')")
+!      write(*,        "('             |    T_orb    T_spin         T         pe      Etot      Ltot')")
+!      write(*,        "(' ---------------------------------------------------------------------------')")
+!      write(*,fmtlabel) ' change      |',(ke_after - ke_before) / abs(Etot_before), &
+!                                       (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
+!                                       (ke_after + ke_spin_after - ke_before - ke_spin_before)/ abs(Etot_before), &
+!                                       (pe_after - pe_before) / abs(Etot_before), &
+!                                       (Etot_after - Etot_before) / abs(Etot_before), &
+!                                       (Ltot_after - Ltot_before) / Ltot_before
+!      write(*,        "(' ---------------------------------------------------------------------------')")
       write(*,*)   
       !****************************************************************************************************************
 
