@@ -43,8 +43,18 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
    end type family_array
    type(family_array), dimension(2)        :: parent_child_index_array
 
+   ! TESTING
+   logical, save   :: lfirst = .true.
+   real(DP), save  :: Minitial
+   real(DP)        :: Msystem, Madd, Mdiscard
+
+
    ! First determine the collisional regime for each colliding pair
    associate(npl => symba_plA%helio%swiftest%nbody, xbpl => symba_plA%helio%swiftest%xb)
+      if (lfirst) then
+         Minitial = sum(symba_plA%helio%swiftest%mass(1:npl))
+         lfirst = .false.
+      end if 
       ldiscard = any(plplenc_list%status(1:nplplenc) == COLLISION)
       if (.not.ldiscard) return
 
@@ -227,6 +237,15 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
             idx(2) = plplenc_list%index2(k)
             if (any(family(:) == idx(1)) .or. any(family(:) == idx(2))) plplenc_list%status(k) = ACTIVE
          end do
+
+         Msystem = sum(symba_plA%helio%swiftest%mass(1:npl), symba_plA%helio%swiftest%status(1:npl) == ACTIVE) 
+         Mdiscard = sum(symba_plA%helio%swiftest%mass(1:npl), symba_plA%helio%swiftest%status(1:npl) /= ACTIVE) 
+         Madd = sum(mergeadd_list%mass(1:nmergeadd))
+         write(*,*) 'Mass balance in collision step'
+         write(*,*) ' Msystem / Minitial:  ', Msystem / Minitial
+         write(*,*) 'Mdiscard / Minitial: ', Mdiscard / Minitial
+         write(*,*) '    Madd / Minitial: ', Madd / Minitial
+         write(*,*) '  Mtotal / Minitial: ', (Msystem + Madd) / Minitial
 
          ! Reset the parent/child/family lists for the next collision
          do j = 1, 2
