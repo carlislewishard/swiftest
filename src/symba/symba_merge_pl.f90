@@ -76,7 +76,7 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
       p2 = symba_plA%kin(idx(2))%parent
       if (p1 == p2) return ! This is a collision between to children of a shared parent. We will ignore it.
 
-      if (symba_plA%helio%swiftest%mass(p1) > symba_plA%helio%swiftest%mass(p1)) then
+      if (symba_plA%helio%swiftest%mass(p1) > symba_plA%helio%swiftest%mass(p2)) then
          index_parent = p1
          index_child = p2
       else
