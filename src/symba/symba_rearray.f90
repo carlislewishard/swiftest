@@ -23,12 +23,13 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
 
 
 ! internals
-   integer(I4B)                           :: i, nkpl, nktp, ntot, dlo
+   integer(I4B)                           :: i, j, nkpl, nktp, ntot, dlo
    logical, dimension(:), allocatable     :: discard_l_pl 
    logical, dimension(ntp)                :: discard_l_tp
    logical                                :: lescape
 
 ! executable code
+
    if (any(symba_plA%helio%swiftest%status(1:npl) /= ACTIVE)) then 
 
       ! Deal with the central body/system discards if there are any
@@ -126,6 +127,15 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
 
       nplm = count(symba_plA%helio%swiftest%mass > mtiny)
       CALL util_dist_index_plpl(npl, nplm, symba_plA)
+
+      ! check for duplicate names and fix if ncessary
+      do j = 1, npl
+         do i = j + 1, npl
+            if (symba_plA%helio%swiftest%name(i) == symba_plA%helio%swiftest%name(j)) then
+               symba_plA%helio%swiftest%name(i) = maxval(symba_plA%helio%swiftest%name(:)) + 1
+            end if
+         end do
+      end do
 
    end if 
 

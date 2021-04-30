@@ -170,6 +170,7 @@ program swiftest_symba
             nsppl = 0
             nsptp = 0
             nplm = count(symba_plA%helio%swiftest%mass(1:npl) > mtiny)
+            param%plmaxname = maxval(symba_plA%helio%swiftest%name(1:npl))
 
             if (param%lenergy)  then
                call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit_after, ke_spin_after, pe_after, Eorbit_after, Ltot)
