@@ -50,7 +50,7 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
       if (allocated(discard_plA%helio%swiftest%name)) then ! We alredy made a discard list in this step, so we need to append to it
          nsppl = nsppl + discard_plA%helio%swiftest%nbody
          dlo = dlo + discard_plA%helio%swiftest%nbody
-         call util_resize_pl(discard_plA, nsppl, discard_plA%helio%swiftest%nbody)
+         call util_resize_pl(discard_plA, nsppl)
       else
          call symba_pl_allocate(discard_plA, nsppl)
       end if
@@ -93,7 +93,7 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
    end if
 
    if (nmergeadd > 0) then
-      if (nkpl + nmergeadd > npl) call util_resize_pl(symba_plA, nkpl+nmergeadd, npl)
+      if (nkpl + nmergeadd > npl) call util_resize_pl(symba_plA, nkpl+nmergeadd)
       npl = nkpl + nmergeadd
 
       !add merge products to the end of the planet list

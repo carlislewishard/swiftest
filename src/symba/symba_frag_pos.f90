@@ -433,7 +433,7 @@ subroutine symba_frag_pos (param, symba_plA, idx_parent, x, v, L_spin, Ip, mass,
       real(DP), dimension(:), intent(in), optional :: m_frag, rad_frag
       real(DP), dimension(:,:), intent(in), optional :: Ip_frag, xb_frag, vb_frag, rot_frag
       ! Internals
-      integer(I4B) :: i, npl_old, nplm
+      integer(I4B) :: i, npl_old, npl_new, nplm
       logical, dimension(:), allocatable :: ltmp
       real(DP) :: te
       integer(I4B), dimension(:), allocatable :: old_status
@@ -453,8 +453,9 @@ subroutine symba_frag_pos (param, symba_plA, idx_parent, x, v, L_spin, Ip, mass,
       end where
       if (present(nfrag)) then ! Temporarily expand the planet list to feed it into symba_energy
          npl_old = npl
-         npl = npl_old + nfrag
-         call util_resize_pl(symba_plA, npl, npl_old)
+         npl_new = npl_old + nfrag
+         call util_resize_pl(symba_plA, npl_new)
+         npl = npl_new
          symba_plA%helio%swiftest%Ip(:,npl_old+1:npl) = Ip_frag(:,:)
          symba_plA%helio%swiftest%mass(npl_old+1:npl) = m_frag(:)
          symba_plA%helio%swiftest%radius(npl_old+1:npl) = m_frag(:)
@@ -474,7 +475,7 @@ subroutine symba_frag_pos (param, symba_plA, idx_parent, x, v, L_spin, Ip, mass,
       call symba_energy_eucl(npl, symba_plA, param%j2rp2, param%j4rp4, ke_orbit, ke_spin, pe, te, Ltot)
 
       if (present(nfrag)) then  ! Put the planet list back to where it started
-         call  util_resize_pl(symba_plA, npl_old, npl)
+         call  util_resize_pl(symba_plA, npl_old)
          npl = npl_old
          nplm = count(symba_plA%helio%swiftest%mass > param%mtiny)
          call util_dist_index_plpl(npl, nplm, symba_plA)

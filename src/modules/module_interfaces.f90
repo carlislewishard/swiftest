@@ -1501,17 +1501,13 @@ END INTERFACE
      END INTERFACE
 
      INTERFACE 
-          SUBROUTINE util_resize_pl(symba_plA, npl_new, npl_old)
-               USE swiftest_globals
-               USE module_symba
-               USE swiftest_data_structures
-               USE module_helio
-               USE module_nrutil
-               USE module_swiftestalloc
-               IMPLICIT NONE
-               TYPE(symba_pl), INTENT(INOUT) :: symba_plA
-               INTEGER(I4B), INTENT(IN)      :: npl_old, npl_new
-          END SUBROUTINE util_resize_pl
+         subroutine util_resize_pl(symba_plA, npl_new)
+            use swiftest_globals
+            use module_symba
+            implicit none
+            type(symba_pl), intent(inout) :: symba_plA
+            integer(I4B), intent(in)      :: npl_new
+          end subroutine util_resize_pl
      END INTERFACE
 
      INTERFACE util_sort
