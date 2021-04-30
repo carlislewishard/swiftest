@@ -216,8 +216,8 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
          istart = 2 + nchild(1)
    
          ! Include any children of the progenitor bodies as part of the family
-         if (nchild(1) > 0) family(3:istart) = symba_plA%kin(idx_parent(1))%child(1:nchild(1))
-         if (nchild(2) > 0) family(istart+1:istart+1+nchild(2)) = symba_plA%kin(idx_parent(2))%child(1:nchild(2))
+         if (nchild(1) > 0) family(3:istart) = array_index1_child(:)
+         if (nchild(2) > 0) family(istart+1:istart+1+nchild(2)) = array_index2_child(:)
 
          symba_plA%helio%swiftest%status(family(:)) = status 
          do k = index_enc + 1, nplplenc
