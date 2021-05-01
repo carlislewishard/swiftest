@@ -41,7 +41,7 @@ subroutine symba_frag_pos (param, symba_plA, idx_parent, x, v, L_spin, Ip, mass,
    associate(nchild1 => symba_plA%kin(idx_parent(1))%nchild, nchild2 => symba_plA%kin(idx_parent(2))%nchild, &
              xhpl => symba_plA%helio%swiftest%xh, xbpl => symba_plA%helio%swiftest%xh, vbpl => symba_plA%helio%swiftest%vb, &
              Mpl => symba_plA%helio%swiftest%mass, Ippl => symba_plA%helio%swiftest%Ip, radpl => symba_plA%helio%swiftest%radius, &
-             rotpl => symba_plA%helio%swiftest%rot, status => symba_plA%helio%swiftest%status, npl => symba_plA%helio%swiftest%nbody, name => symba_plA%helio%swiftest%name)
+             rotpl => symba_plA%helio%swiftest%rot, status => symba_plA%helio%swiftest%status, npl => symba_plA%helio%swiftest%nbody, name => symba_plA%helio%swiftest%id)
 
       allocate(x_frag, source=xb_frag)
       allocate(v_frag, source=vb_frag)

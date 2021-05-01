@@ -533,11 +533,11 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          FUNCTION io_read_encounter(t, name1, name2, mass1, mass2, xh1, xh2, vh1, vh2, encounter_file)
+          FUNCTION io_read_encounter(t, id1, id2, mass1, mass2, xh1, xh2, vh1, vh2, encounter_file)
                USE swiftest_globals
                IMPLICIT NONE
                INTEGER(I4B)                           :: io_read_encounter
-               INTEGER(I4B), INTENT(OUT)              :: name1, name2
+               INTEGER(I4B), INTENT(OUT)              :: id1, id2
                REAL(DP), INTENT(OUT)                  :: t, mass1, mass2
                REAL(DP), DIMENSION(:), INTENT(OUT)    :: xh1, xh2, vh1, vh2
                CHARACTER(*), INTENT(IN)               :: encounter_file
@@ -570,11 +570,11 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE io_write_encounter(t, name1, name2, mass1, mass2, radius1, radius2, &
+          SUBROUTINE io_write_encounter(t, id1, id2, mass1, mass2, radius1, radius2, &
                xh1, xh2, vh1, vh2, encounter_file)
                USE swiftest_globals
                IMPLICIT NONE
-               INTEGER(I4B), INTENT(IN)              :: name1, name2
+               INTEGER(I4B), INTENT(IN)              :: id1, id2
                REAL(DP), INTENT(IN)                  :: t, mass1, mass2, radius1, radius2
                REAL(DP), DIMENSION(:), INTENT(IN)    :: xh1, xh2, vh1, vh2
                CHARACTER(*), INTENT(IN)              :: encounter_file

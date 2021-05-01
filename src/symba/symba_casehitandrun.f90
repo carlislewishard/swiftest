@@ -1,4 +1,4 @@
-function symba_casehitandrun (symba_plA, idx_parent, nmergeadd, mergeadd_list, name, x, v, mass, radius, L_spin, Ip,  &
+function symba_casehitandrun (symba_plA, idx_parent, nmergeadd, mergeadd_list, id, x, v, mass, radius, L_spin, Ip,  &
                                         mass_res, param, Qloss) result(status)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
@@ -15,7 +15,7 @@ function symba_casehitandrun (symba_plA, idx_parent, nmergeadd, mergeadd_list, n
    integer(I4B), dimension(:), intent(in)    :: idx_parent
    integer(I4B), intent(inout)               :: nmergeadd
    type(symba_merger), intent(inout)         :: mergeadd_list
-   integer(I4B), dimension(:), intent(in)    :: name
+   integer(I4B), dimension(:), intent(in)    :: id
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
    real(DP), dimension(:),   intent(in)      :: mass, radius, mass_res
    type(user_input_parameters),intent(inout) :: param
@@ -23,13 +23,13 @@ function symba_casehitandrun (symba_plA, idx_parent, nmergeadd, mergeadd_list, n
    ! Result
    integer(I4B)                              :: status
    ! Internals
-   integer(I4B)                            :: i, nfrag, jproj, jtarg
+   integer(I4B)                            :: i, nfrag, jproj, jtarg, idstart
    real(DP)                                :: mtot, avg_dens
    real(DP), dimension(NDIM)               :: xcom, vcom
    real(DP), dimension(2)                  :: vol
    real(DP), dimension(:, :), allocatable  :: vb_frag, xb_frag, rot_frag, Ip_frag
    real(DP), dimension(:), allocatable     :: m_frag, rad_frag
-   integer(I4B), dimension(:), allocatable :: name_frag
+   integer(I4B), dimension(:), allocatable :: id_frag
    logical                                 :: lpure
 
    mtot = sum(mass(:))
@@ -54,14 +54,14 @@ function symba_casehitandrun (symba_plA, idx_parent, nmergeadd, mergeadd_list, n
       nfrag = 10
       lpure = .false.
       allocate(m_frag(nfrag))
-      allocate(name_frag(nfrag))
+      allocate(id_frag(nfrag))
       allocate(rad_frag(nfrag))
       allocate(xb_frag(NDIM, nfrag))
       allocate(vb_frag(NDIM, nfrag))
       allocate(rot_frag(NDIM, nfrag))
       allocate(Ip_frag(NDIM, nfrag))
       m_frag(1) = mass(jtarg)
-      name_frag(1) = name(jtarg)
+      id_frag(1) = id(jtarg)
       rad_frag(1) = radius(jtarg)
       xb_frag(:, 1) = x(:, jtarg) 
       vb_frag(:, 1) = v(:, jtarg)
@@ -74,8 +74,6 @@ function symba_casehitandrun (symba_plA, idx_parent, nmergeadd, mergeadd_list, n
       rad_frag(2:nfrag) = (3 * m_frag(2:nfrag) / (4 * PI * avg_dens))**(1.0_DP / 3.0_DP)
       m_frag(nfrag) = m_frag(nfrag) + (mtot - sum(m_frag(:)))
 
-      param%plmaxname = max(param%plmaxname, param%tpmaxname)
-      
       do i = 1, nfrag
          Ip_frag(:, i) = Ip(:, jproj)
       end do
@@ -89,9 +87,8 @@ function symba_casehitandrun (symba_plA, idx_parent, nmergeadd, mergeadd_list, n
       else
          write(*,'("Generating ",I2.0," fragments")') nfrag
          do i = 1, nfrag
-            name_frag(i) = param%plmaxname + i 
+            id_frag(i) = idstart + i 
          end do
-         param%plmaxname = name_frag(nfrag)
       end if
    end if
    if (lpure) then
@@ -99,10 +96,13 @@ function symba_casehitandrun (symba_plA, idx_parent, nmergeadd, mergeadd_list, n
    else
       status = HIT_AND_RUN
       ! Populate the list of new bodies
-      call symba_merger_size_check(mergeadd_list, nmergeadd + nfrag)  
+      call symba_merger_size_check(mergeadd_list, nmergeadd + nfrag) 
+      associate(npl => symba_plA%helio%swiftest%nbody)
+         idstart = maxval([symba_plA%helio%swiftest%id(1:npl), mergeadd_list%id(1:nmergeadd)])
+      end associate
       do i = 1, nfrag
          nmergeadd = nmergeadd + 1
-         mergeadd_list%name(nmergeadd) = name_frag(i) 
+         mergeadd_list%id(nmergeadd) = id_frag(i) 
          mergeadd_list%status(nmergeadd) = HIT_AND_RUN
          mergeadd_list%xb(:,nmergeadd) = xb_frag(:, i)
          mergeadd_list%vb(:,nmergeadd) = vb_frag(:, i)

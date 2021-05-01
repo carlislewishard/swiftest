@@ -49,7 +49,7 @@ SUBROUTINE symba_merge_tp(t, dt, index_enc, pltpenc_list, vbs, encounter_file, s
 
 ! Internals
      LOGICAL(LGT)              :: lmerge
-     INTEGER(I4B)              :: name1, name2, indexpl, indextp
+     INTEGER(I4B)              :: id1, id2, indexpl, indextp
      REAL(DP)                  :: r2, rlim, rlim2, vdotr, tcr2, dt2, mu, a, e, q, rad1
      REAL(DP), DIMENSION(NDIM) :: xr, vr, xh1, vh1, xh2, vh2
 
@@ -78,14 +78,14 @@ SUBROUTINE symba_merge_tp(t, dt, index_enc, pltpenc_list, vbs, encounter_file, s
                END IF
                IF (.NOT. lmerge) THEN
                     IF (encounter_file /= "") THEN
-                         name1 = symba_plA%helio%swiftest%name(indexpl)
+                         id1 = symba_plA%helio%swiftest%id(indexpl)
                          rad1 = symba_plA%helio%swiftest%radius(indexpl)
                          xh1(:) = symba_plA%helio%swiftest%xh(:,indexpl)
                          vh1(:) = symba_plA%helio%swiftest%vb(:,indexpl) - vbs(:)
-                         name2 = symba_tpA%helio%swiftest%name(indextp)
+                         id2 = symba_tpA%helio%swiftest%id(indextp)
                          xh2(:) = symba_tpA%helio%swiftest%xh(:,indextp)
                          vh2(:) = symba_tpA%helio%swiftest%vb(:,indextp) - vbs(:)
-                         CALL io_write_encounter(t, name1, name2, mu, 0.0_DP, rad1, 0.0_DP, &
+                         CALL io_write_encounter(t, id1, id2, mu, 0.0_DP, rad1, 0.0_DP, &
                               xh1(:), xh2(:), vh1(:), vh2(:), encounter_file)
                     END IF
                END IF
@@ -94,8 +94,8 @@ SUBROUTINE symba_merge_tp(t, dt, index_enc, pltpenc_list, vbs, encounter_file, s
      IF (lmerge) THEN
           pltpenc_list%status(index_enc) = MERGED
           symba_tpA%helio%swiftest%status = DISCARDED_PLR
-          WRITE(*, *) "Particle ", symba_tpA%helio%swiftest%name, " too close to Planet ", &
-          symba_plA%helio%swiftest%name, " at t = ", t
+          WRITE(*, *) "Particle ", symba_tpA%helio%swiftest%id, " too close to Planet ", &
+          symba_plA%helio%swiftest%id, " at t = ", t
      END IF
 
      RETURN

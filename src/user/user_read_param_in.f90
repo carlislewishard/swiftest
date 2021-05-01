@@ -41,8 +41,6 @@ contains
 
    close(LUN)
 
-   write(*,*) "NPLMAX         = ",param%plmaxname
-   write(*,*) "NTPMAX         = ",param%tpmaxname
    write(*,*) "T0             = ",param%t0
    write(*,*) "TSTOP          = ",param%tstop
    write(*,*) "DT             = ",param%dt

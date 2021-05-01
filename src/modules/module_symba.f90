@@ -87,7 +87,7 @@ MODULE module_symba
    end type symba_pltpenc
 
    type symba_merger
-      integer(I4B), dimension(:),   allocatable :: name   ! external identifier
+      integer(I4B), dimension(:),   allocatable :: id   ! external identifier
       integer(I4B), dimension(:),   allocatable :: index_ps ! position of the particle
       integer(I4B), dimension(:),   allocatable :: status   ! status
       integer(I4B), dimension(:),   allocatable :: nadded   ! number of resultant bodies from this collisional event aka 
@@ -98,8 +98,6 @@ MODULE module_symba
       real(DP),   dimension(:),   allocatable :: radius   ! radius
       real(DP),   dimension(:,:),   allocatable :: IP     ! moment of intertia
       real(DP),   dimension(:,:),   allocatable :: rot    ! rotation
-      real(DP),   dimension(:),   allocatable :: name_p1  ! name of parent 1 in symba_plA
-      real(DP),   dimension(:),   allocatable :: name_p2  ! name of parent 2 in symba_plA
 
    end type symba_merger 
 END MODULE module_symba

@@ -26,7 +26,7 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
    real(DP), dimension(NRES)               :: mass_res
    real(DP), dimension(NDIM)               :: x1_si, v1_si, x2_si, v2_si
    integer(I4B)                            :: regime, idx_child, status
-   integer(I4B), dimension(2)              :: idx, idx_parent, nchild, name 
+   integer(I4B), dimension(2)              :: idx, idx_parent, nchild, id
    real(DP), dimension(2)                  :: radius, mass, density, volume
    real(DP), dimension(2)                  :: radius_si, mass_si, density_si
    real(DP), dimension(NDIM, 2)            :: x, v, L_spin, Ip
@@ -38,7 +38,7 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
    integer(I4B), dimension(:), allocatable :: family
    integer(I4B)                            :: fam_size, istart
    type family_array
-      integer(I4B), dimension(:), allocatable :: name 
+      integer(I4B), dimension(:), allocatable :: id
       integer(I4B), dimension(:), allocatable :: idx
    end type family_array
    type(family_array), dimension(2)        :: parent_child_index_array
@@ -88,22 +88,22 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
          end if
 
          mass(:) = symba_plA%helio%swiftest%mass(idx_parent(:))
-         name(:) = symba_plA%helio%swiftest%name(idx_parent(:))
+         id(:) = symba_plA%helio%swiftest%id(idx_parent(:))
          radius(:) = symba_plA%helio%swiftest%radius(idx_parent(:))
          volume(:) =  (4.0_DP / 3.0_DP) * PI * radius(:)**3
     
-         ! Group together the names and indexes of each collisional parent and its children
+         ! Group together the ids and indexes of each collisional parent and its children
          do j = 1, 2
             allocate(parent_child_index_array(j)%idx(nchild(j)+ 1))
-            allocate(parent_child_index_array(j)%name(nchild(j)+ 1))
+            allocate(parent_child_index_array(j)%id(nchild(j)+ 1))
             associate(idx_arr => parent_child_index_array(j)%idx, &
-                      name_arr => parent_child_index_array(j)%name, &
+                      id_arr => parent_child_index_array(j)%id, &
                       ncj => nchild(j), &
                       pl => symba_plA%helio%swiftest, &
                       plkinj => symba_plA%kin(idx_parent(j)))
                idx_arr(1) = idx_parent(j)
                if (ncj > 0) idx_arr(2:ncj + 1) = plkinj%child(1:ncj)
-               name_arr(:) = pl%name(idx_arr(:))
+               id_arr(:) = pl%id(idx_arr(:))
             end associate
          end do
 
@@ -203,16 +203,16 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
          !! Use the positions and velocities of the parents and their children after the step is complete to generate the fragments
          select case (regime)
          case (COLLRESOLVE_REGIME_DISRUPTION)
-            write(*, '("Disruption between particles ",20(I6,",",:))') parent_child_index_array(1)%name(:), parent_child_index_array(2)%name(:)
+            write(*, '("Disruption between particles ",20(I6,",",:))') parent_child_index_array(1)%id(:), parent_child_index_array(2)%id(:)
             status = symba_casedisruption(symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, mass_res, param, Qloss)
          case (COLLRESOLVE_REGIME_SUPERCATASTROPHIC)
-            write(*, '("Supercatastrophic disruption between particles ",20(I6,",",:))') parent_child_index_array(1)%name(:), parent_child_index_array(2)%name(:)
+            write(*, '("Supercatastrophic disruption between particles ",20(I6,",",:))') parent_child_index_array(1)%id(:), parent_child_index_array(2)%id(:)
             status = symba_casesupercatastrophic(symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, mass_res, param, Qloss)
          case (COLLRESOLVE_REGIME_HIT_AND_RUN)
-            write(*, '("Hit and run between particles ",20(I6,",",:))') parent_child_index_array(1)%name(:), parent_child_index_array(2)%name(:)
-            status = symba_casehitandrun(symba_plA, idx_parent, nmergeadd, mergeadd_list, name, x, v, mass, radius, L_spin, Ip, mass_res, param, Qloss)
+            write(*, '("Hit and run between particles ",20(I6,",",:))') parent_child_index_array(1)%id(:), parent_child_index_array(2)%id(:)
+            status = symba_casehitandrun(symba_plA, idx_parent, nmergeadd, mergeadd_list, id, x, v, mass, radius, L_spin, Ip, mass_res, param, Qloss)
          case (COLLRESOLVE_REGIME_MERGE, COLLRESOLVE_REGIME_GRAZE_AND_MERGE)
-            write(*, '("Merging particles ",20(I6,",",:))') parent_child_index_array(1)%name(:), parent_child_index_array(2)%name(:)
+            write(*, '("Merging particles ",20(I6,",",:))') parent_child_index_array(1)%id(:), parent_child_index_array(2)%id(:)
             status = symba_casemerge(symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, param)
          case default 
             write(*,*) "Error in symba_collision, unrecognized collision regime"
@@ -221,9 +221,9 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
          end select
 
          !write(*,*) 'Current status of all family members: '
-         !write(*,*) ' index  name  status'
+         !write(*,*) ' index  id  status'
          !do i = 1, fam_size
-         !   write(*,*) family(i),symba_plA%helio%swiftest%name(family(i)),symba_plA%helio%swiftest%status(family(i))
+         !   write(*,*) family(i),symba_plA%helio%swiftest%id(family(i)),symba_plA%helio%swiftest%status(family(i))
          !end do
          !write(*,*) 'Changing all status flags to: ',status
 
@@ -250,7 +250,7 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
          ! Reset the parent/child/family lists for the next collision
          do j = 1, 2
             deallocate(parent_child_index_array(j)%idx)
-            deallocate(parent_child_index_array(j)%name)
+            deallocate(parent_child_index_array(j)%id)
          end do
          deallocate(family)
 

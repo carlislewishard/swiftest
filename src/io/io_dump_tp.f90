@@ -49,7 +49,7 @@ subroutine io_dump_tp(ntp, swiftest_tpa)
    end if
    write(LUN) ntp
    if (ntp > 0) then
-      write(LUN) swiftest_tpA%name(1:ntp)
+      write(LUN) swiftest_tpA%id(1:ntp)
       write(LUN) swiftest_tpA%xh(:,1:ntp)
       write(LUN) swiftest_tpA%vh(:,1:ntp)
    end if

@@ -36,7 +36,7 @@ contains
    call self%alloc(npl)
 
    if (is_ascii) then
-      read(LUN, *, iostat = ierr) self%name(1), self%mass(1)
+      read(LUN, *, iostat = ierr) self%id(1), self%mass(1)
       self%rhill(1) = 0.0_DP
       self%radius(1) = param%rmin
       read(LUN, *, iostat = ierr) self%xh(:,1)
@@ -61,9 +61,9 @@ contains
       self%status(1) = ACTIVE
       do i = 2, self%nbody
          if (param%lrhill_present) then
-            read(LUN, *, iostat = ierr) self%name(i), self%mass(i), self%rhill(i)
+            read(LUN, *, iostat = ierr) self%id(i), self%mass(i), self%rhill(i)
          else
-            read(LUN, *, iostat = ierr) self%name(i), self%mass(i)
+            read(LUN, *, iostat = ierr) self%id(i), self%mass(i)
             self%rhill(i) = 0.0_DP
          end if
          if (ierr /= 0 ) exit
@@ -83,7 +83,7 @@ contains
          self%status(i) = ACTIVE
       end do
    else
-      read(LUN, iostat = ierr) self%name(:)
+      read(LUN, iostat = ierr) self%id(:)
       read(LUN, iostat = ierr) self%mass(:)
       if (param%lrhill_present) then
          read(LUN, iostat = ierr) self%rhill(:)
@@ -109,8 +109,6 @@ contains
       write(*,*) 'Error reading in massive body initial conditions from ',trim(adjustl(param%inplfile))
       call util_exit(FAILURE)
    end if
-
-   param%plmaxname = max(param%plmaxname, maxval(self%name(:)))
 
    return
    end procedure swiftest_read_pl_in

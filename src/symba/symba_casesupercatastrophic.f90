@@ -22,7 +22,7 @@ function symba_casesupercatastrophic (symba_plA, idx_parent, nmergeadd, mergeadd
    ! Result
    integer(I4B)                              :: status
    ! Internals
-   integer(I4B)                            :: i, nfrag
+   integer(I4B)                            :: i, idstart, nfrag
    real(DP)                                :: mtot, avg_dens, min_frag_mass
    real(DP), dimension(NDIM)               :: xcom, vcom
    real(DP), dimension(2)                  :: vol
@@ -78,10 +78,12 @@ function symba_casesupercatastrophic (symba_plA, idx_parent, nmergeadd, mergeadd
       status = SUPERCATASTROPHIC
       ! Populate the list of new bodies
       call symba_merger_size_check(mergeadd_list, nmergeadd + nfrag)  
+      associate(npl => symba_plA%helio%swiftest%nbody)
+         idstart = maxval([symba_plA%helio%swiftest%id(1:npl), mergeadd_list%id(1:nmergeadd)])
+      end associate
       do i = 1, nfrag
          nmergeadd = nmergeadd + 1
-         param%plmaxname = max(param%plmaxname, param%tpmaxname) + 1
-         mergeadd_list%name(nmergeadd) = param%plmaxname
+         mergeadd_list%id(nmergeadd) = idstart + i
          mergeadd_list%status(nmergeadd) = SUPERCATASTROPHIC
          mergeadd_list%xb(:,nmergeadd) = xb_frag(:, i) 
          mergeadd_list%vb(:,nmergeadd) = vb_frag(:, i)

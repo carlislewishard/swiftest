@@ -154,12 +154,14 @@ program swiftest_symba
                
          ldiscard = .false. 
          ldiscard_tp = .false.
+         lfrag_add = .false.
          call symba_discard_pl(t, npl, ntp, symba_plA, symba_tpA, rmin, rmax, rmaxu, qmin, qmin_coord, qmin_alo, qmin_ahi, ldiscard)
          call symba_discard_tp(t, npl, ntp, symba_plA, symba_tpA, dt, rmin, rmax, rmaxu, qmin, qmin_coord, &    
                                 qmin_alo, qmin_ahi, param%lrhill_present, ldiscard_tp)
+         call symba_collision(t, symba_plA, nplplenc, plplenc_list, lfrag_add, mergeadd_list, nmergeadd, param)
 
          ! These next two blocks should be streamlined/improved but right now we treat discards separately from collisions so it has to be this way
-         if (ldiscard) then
+         if (ldiscard .or. lfrag_add .or. ldiscard_tp) then
             if (param%lenergy) call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit_before, ke_spin_before, pe_before, Eorbit_before, Ltot)
             call symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
                                discard_tpA, ldiscard, ldiscard_tp, mtiny)
@@ -170,34 +172,8 @@ program swiftest_symba
             nsppl = 0
             nsptp = 0
             nplm = count(symba_plA%helio%swiftest%mass(1:npl) > mtiny)
-            param%plmaxname = maxval(symba_plA%helio%swiftest%name(1:npl))
 
             if (param%lenergy)  then
-               call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit_after, ke_spin_after, pe_after, Eorbit_after, Ltot)
-               Ecollision = Eorbit_before - Eorbit_after    ! Energy change resulting in this collisional event Total running energy offset from collision in this step
-               symba_plA%helio%swiftest%Ecollisions = symba_plA%helio%swiftest%Ecollisions + Ecollision
-            end if
-            !if (ntp > 0) call util_dist_index_pltp(nplm, ntp, symba_plA, symba_tpA)
-         end if
-
-         if (param%lenergy .and. any(plplenc_list%status(1:nplplenc) == COLLISION)) then
-            call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit_before, ke_spin_before, pe_before, Eorbit_before, Ltot)
-         end if
-
-         lfrag_add = .false.
-
-         call symba_collision(t, symba_plA, nplplenc, plplenc_list, lfrag_add, mergeadd_list, nmergeadd, param)
-         if (lfrag_add) then
-            call symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
-                               discard_tpA, lfrag_add, ldiscard_tp, mtiny)
-
-            call io_discard_write_symba(t, mtiny, npl, nsppl, nsptp, nmergesub, symba_plA, &
-                                         discard_plA%helio%swiftest, discard_tpA%helio%swiftest, mergeadd_list, mergesub_list, discard_file, param%lbig_discard) 
-            nmergeadd = 0
-            nmergesub = 0
-            nsppl = 0
-            nsptp = 0
-            if (param%lenergy) then
                call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit_after, ke_spin_after, pe_after, Eorbit_after, Ltot)
                Ecollision = Eorbit_before - Eorbit_after    ! Energy change resulting in this collisional event Total running energy offset from collision in this step
                symba_plA%helio%swiftest%Ecollisions = symba_plA%helio%swiftest%Ecollisions + Ecollision
@@ -262,32 +238,32 @@ program swiftest_symba
             pltpenc_list%indextp(:) = 0
          end if
 
-         if (allocated(mergeadd_list%name)) then
-            mergeadd_list%name(:) = 0
+         if (allocated(mergeadd_list%id)) then
+            mergeadd_list%id(:) = 0
             mergeadd_list%index_ps(:) = 0
             mergeadd_list%status(:) = 0
             mergeadd_list%xb(:,:) = 0
             mergeadd_list%vb(:,:) = 0
             mergeadd_list%mass(:) = 0
             mergeadd_list%radius(:) = 0
-            mergeadd_list%IP(:,:) = 0
+            mergeadd_list%Ip(:,:) = 0
             mergeadd_list%rot(:,:) = 0
          end if
 
-         if (allocated(mergesub_list%name)) then
-            mergesub_list%name(:) = 0
+         if (allocated(mergesub_list%id)) then
+            mergesub_list%id(:) = 0
             mergesub_list%index_ps(:) = 0
             mergesub_list%status(:) = 0
             mergesub_list%xb(:,:) = 0
             mergesub_list%vb(:,:) = 0
             mergesub_list%mass(:) = 0
             mergesub_list%radius(:) = 0
-            mergeadd_list%IP(:,:) = 0
+            mergeadd_list%Ip(:,:) = 0
             mergeadd_list%rot(:,:) = 0
          end if
 
-         if (allocated(discard_plA%helio%swiftest%name)) call symba_pl_deallocate(discard_plA)
-         if (allocated(discard_tpA%helio%swiftest%name)) call symba_tp_deallocate(discard_tpA)
+         if (allocated(discard_plA%helio%swiftest%id)) call symba_pl_deallocate(discard_plA)
+         if (allocated(discard_tpA%helio%swiftest%id)) call symba_tp_deallocate(discard_tpA)
 
       end do
 

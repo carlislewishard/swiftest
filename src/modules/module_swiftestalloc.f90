@@ -126,7 +126,7 @@ module module_swiftestalloc
          n = nmerger
       end if
 
-      allocate(merger_list%name(n))
+      allocate(merger_list%id(n))
       allocate(merger_list%index_ps(n))
       allocate(merger_list%status(n))
       allocate(merger_list%nadded(n))
@@ -136,10 +136,8 @@ module module_swiftestalloc
       allocate(merger_list%radius(n))
       allocate(merger_list%rot(NDIM,n))
       allocate(merger_list%Ip(NDIM,n))
-      allocate(merger_list%name_p1(n))
-      allocate(merger_list%name_p2(n))
 
-      merger_list%name(:) = 0
+      merger_list%id(:) = 0
       merger_list%index_ps(:) = 1
       merger_list%status(:) = 0
       merger_list%nadded(:) = 0
@@ -149,8 +147,6 @@ module module_swiftestalloc
       merger_list%radius(:) = 0.0_DP
       merger_list%Ip(:, :) = 0.0_DP
       merger_list%rot(:, :) = 0.0_DP
-      merger_list%name_p1(:) = 0
-      merger_list%name_p2(:) = 0
 
       return
    end subroutine symba_merger_allocate
@@ -294,7 +290,7 @@ module module_swiftestalloc
 
       type(symba_merger), intent(inout)        :: merger_list
 
-      if (allocated(merger_list%name)) deallocate(merger_list%name)
+      if (allocated(merger_list%id)) deallocate(merger_list%id)
       if (allocated(merger_list%index_ps)) deallocate(merger_list%index_ps)
       if (allocated(merger_list%status)) deallocate(merger_list%status)
       if (allocated(merger_list%nadded)) deallocate(merger_list%nadded)
@@ -304,8 +300,6 @@ module module_swiftestalloc
       if (allocated(merger_list%radius)) deallocate(merger_list%radius)
       if (allocated(merger_list%rot)) deallocate(merger_list%rot)
       if (allocated(merger_list%Ip)) deallocate(merger_list%Ip)
-      if (allocated(merger_list%name_p1)) deallocate(merger_list%name_p1)
-      if (allocated(merger_list%name_p2)) deallocate(merger_list%name_p2)
       return
    end subroutine symba_merger_deallocate
 
@@ -392,7 +386,7 @@ module module_swiftestalloc
       type(symba_merger), intent(inout)     :: merger_list_out
       integer(I4B), intent(in)              :: n
 
-      merger_list_out%name(1:n) = merger_list_in%name(1:n)
+      merger_list_out%id(1:n) = merger_list_in%id(1:n)
       merger_list_out%index_ps(1:n) = merger_list_in%index_ps(1:n)
       merger_list_out%status(1:n) = merger_list_in%status(1:n)
       merger_list_out%nadded(1:n) = merger_list_in%nadded(1:n)
@@ -402,8 +396,6 @@ module module_swiftestalloc
       merger_list_out%radius(1:n) = merger_list_in%radius(1:n)
       merger_list_out%Ip(:, 1:n) = merger_list_in%Ip(:, 1:n)
       merger_list_out%rot(:, 1:n) = merger_list_in%rot(:, 1:n)
-      merger_list_out%name_p1(1:n) = merger_list_in%name_p1(1:n)
-      merger_list_out%name_p2(1:n) = merger_list_in%name_p2(1:n)
       return
    end subroutine symba_merger_copy
 

@@ -57,7 +57,7 @@ SUBROUTINE io_dump_pl(npl, swiftest_plA, param)
       call util_exit(failure)
    end if
    write(LUN) npl
-   write(LUN) swiftest_plA%name(1:npl)
+   write(LUN) swiftest_plA%id(1:npl)
    write(LUN) swiftest_plA%mass(1:npl)
    if (param%lrhill_present) write(LUN) swiftest_plA%rhill(1:npl) 
    if (param%lclose) write(LUN) swiftest_plA%radius(1:npl) 

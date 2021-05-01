@@ -38,10 +38,6 @@ contains
          ifirst = ilast + 1
          param_value = user_get_token(line_trim, ifirst, ilast, iostat)
          select case (param_name)
-         case ("NPLMAX")
-            read(param_value, *) param%plmaxname
-         case ("NTPMAX")
-            read(param_value, *) param%tpmaxname
          case ("T0")
             read(param_value, *) param%t0
             t0_set = .true.

@@ -23,7 +23,7 @@ function symba_casemerge (symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v,
    ! Result
    integer(I4B)                              :: status
    ! Internals
-   integer(I4B)                              :: j, mergename, ibiggest
+   integer(I4B)                              :: j, mergeid, ibiggest
    real(DP)                                  :: mass_new, radius_new, volume_new
    real(DP), dimension(NDIM)                 :: xcom, vcom, xc, vc, xcrossv
    real(DP), dimension(2)                    :: vol
@@ -38,7 +38,7 @@ function symba_casemerge (symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v,
    else
       ibiggest = idx_parent(2)
    end if
-   mergename = symba_plA%helio%swiftest%name(ibiggest)
+   mergeid = symba_plA%helio%swiftest%id(ibiggest)
 
    ! Merged body is created at the barycenter of the original bodies
    xcom(:) = (mass(1) * x(:,1) + mass(2) * x(:,2)) / mass_new
@@ -69,7 +69,7 @@ function symba_casemerge (symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v,
    ! Populate the list of new bodies
    call symba_merger_size_check(mergeadd_list, nmergeadd + 1)  
    nmergeadd = nmergeadd + 1
-   mergeadd_list%name(nmergeadd) = mergename
+   mergeadd_list%id(nmergeadd) = mergeid
    mergeadd_list%status(nmergeadd) = MERGED
    mergeadd_list%xb(:,nmergeadd) = xcom(:)
    mergeadd_list%vb(:,nmergeadd) = vcom(:)

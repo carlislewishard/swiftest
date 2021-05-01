@@ -74,20 +74,20 @@ SUBROUTINE io_discard_write_symba(t, mtiny, npl, nsppl, nsptp, nmergesub, symba_
  100 FORMAT(E23.16, 1X, I8, 1X, L1)
      index = 0
      DO i = 1, (nmergesub / 2)
-          WRITE(LUN, 200) SUB, mergesub_list%name(i), mergesub_list%status(i)
+          WRITE(LUN, 200) SUB, mergesub_list%id(i), mergesub_list%status(i)
  200      FORMAT(A, 2(1X, I8))
           WRITE(LUN, 300) mergesub_list%xb(:,i) - symba_plA%helio%swiftest%xb(:,1)
  300      FORMAT(3(E23.16, 1X))
           WRITE(LUN, 300) mergesub_list%vb(:,i) - symba_plA%helio%swiftest%vb(:,1)
           nadded = mergesub_list%nadded(i)
 
-          WRITE(LUN, 200) SUB, mergesub_list%name(i + 1), mergesub_list%status(i + 1)
+          WRITE(LUN, 200) SUB, mergesub_list%id(i + 1), mergesub_list%status(i + 1)
           WRITE(LUN, 300) mergesub_list%xb(:,i + 1) - symba_plA%helio%swiftest%xb(:,1)
           WRITE(LUN, 300) mergesub_list%vb(:,i + 1) - symba_plA%helio%swiftest%vb(:,1)
           WRITE(LUN, 500) mergesub_list%mass(i), mergesub_list%radius(i)
 
           DO index = 1, nadded
-               WRITE(LUN, 200) ADD, mergeadd_list%name(index), mergeadd_list%status(index)
+               WRITE(LUN, 200) ADD, mergeadd_list%id(index), mergeadd_list%status(index)
                WRITE(LUN, 300) mergeadd_list%xb(:,index) - symba_plA%helio%swiftest%xb(:,1)
                WRITE(LUN, 300) mergeadd_list%vb(:,index) - symba_plA%helio%swiftest%vb(:,1)
                WRITE(LUN, 500) mergeadd_list%mass(index), mergeadd_list%radius(index)
@@ -97,14 +97,14 @@ SUBROUTINE io_discard_write_symba(t, mtiny, npl, nsppl, nsptp, nmergesub, symba_
      DO i = 1, (nsppl / 2)
           IF ((discard_plA%status(i) /= MERGED) .AND. (discard_plA%status(i) /= HIT_AND_RUN) .AND. &
              (discard_plA%status(i) /= DISRUPTION) .AND. (discard_plA%status(i) /= SUPERCATASTROPHIC)) THEN
-               WRITE(LUN, 200) SUB, discard_plA%name(i), discard_plA%status(i)
+               WRITE(LUN, 200) SUB, discard_plA%id(i), discard_plA%status(i)
                WRITE(LUN, 300) discard_plA%xh(1,i),discard_plA%xh(2,i), discard_plA%xh(3,i)
                WRITE(LUN, 300) discard_plA%vh(1,i),discard_plA%vh(2,i), discard_plA%vh(3,i)
                WRITE(LUN, 500) discard_plA%mass(i), discard_plA%radius(i)
           END IF
      END DO
      DO i = 1, nsptp
-          WRITE(LUN, 200) SUB, discard_tpA%name(i), discard_tpA%status(i)
+          WRITE(LUN, 200) SUB, discard_tpA%id(i), discard_tpA%status(i)
           WRITE(LUN, 300) discard_tpA%xh(1,i),discard_tpA%xh(2,i), discard_tpA%xh(3,i)
           WRITE(LUN, 300) discard_tpA%vh(1,i),discard_tpA%vh(2,i), discard_tpA%vh(3,i)
      END DO
@@ -118,7 +118,7 @@ SUBROUTINE io_discard_write_symba(t, mtiny, npl, nsppl, nsptp, nmergesub, symba_
                WRITE(LUN, 400) nplm
  400           FORMAT(I8)
                DO i = 2, nplm
-                    WRITE(LUN, 600) symba_plA%helio%swiftest%name(i), symba_plA%helio%swiftest%mass(i),& 
+                    WRITE(LUN, 600) symba_plA%helio%swiftest%id(i), symba_plA%helio%swiftest%mass(i),& 
                      symba_plA%helio%swiftest%radius(i)
  500                FORMAT(2(1X, E23.16))
  600                FORMAT(I8, 2(1X, E23.16))

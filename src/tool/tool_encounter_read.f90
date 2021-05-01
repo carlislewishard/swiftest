@@ -33,8 +33,6 @@ PROGRAM tool_encounter_read
 
 ! Arguments
    type(user_input_parameters)  :: param    ! derived type containing user-defined parameters
-     INTEGER(I4B)      :: plmaxname         ! Maximum number of planets
-     INTEGER(I4B)      :: tpmaxname         ! Maximum number of test particles
      INTEGER(I4B)      :: istep_out      ! Time steps between binary outputs
      INTEGER(I4B)      :: istep_dump     ! Time steps between dumps
      REAL(DP)          :: t0             ! Integration start time
@@ -74,8 +72,6 @@ PROGRAM tool_encounter_read
    call param%read_from_file(inparfile)
 
    ! temporary until the conversion to the derived type argument list is complete
-   plmaxname = param%plmaxname
-   tpmaxname = param%tpmaxname
    t0 = param%t0
    tstop = param%tstop
    dt = param%dt

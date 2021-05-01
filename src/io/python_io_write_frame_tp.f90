@@ -82,7 +82,7 @@ subroutine python_io_write_frame_tp(t, symba_tpA, ntp, out_stat)
    end if
    write(iu, iostat = ierr) t
    write(iu, iostat = ierr) ntp
-   write(iu, iostat = ierr) symba_tpA%helio%swiftest%name(1:ntp)
+   write(iu, iostat = ierr) symba_tpA%helio%swiftest%id(1:ntp)
    write(iu, iostat = ierr) symba_tpA%helio%swiftest%status(1:ntp)
    write(iu, iostat = ierr) symba_tpA%helio%swiftest%peri(1:ntp)
    write(iu, iostat = ierr) symba_tpA%helio%swiftest%atp(1:ntp)

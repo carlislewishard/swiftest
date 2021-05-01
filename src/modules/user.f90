@@ -7,8 +7,6 @@ module user
 
    !> User defined input parameters that are read in from param.in
    type, public :: user_input_parameters
-      integer(I4B)         :: plmaxname = -1          !! Maximum allowed number of planets
-      integer(I4B)         :: tpmaxname = -1          !! Maximum allowed number of test particles
       real(DP)             :: t0 = 0.0_DP          !! Integration start time
       real(DP)             :: tstop = 0.0_DP       !! Integration stop time
       real(DP)             :: dt = 0.0_DP          !! Time step

@@ -48,7 +48,7 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
       nkpl = count(symba_plA%helio%swiftest%status(:) == ACTIVE)
       nsppl = npl - nkpl
       dlo = 1
-      if (allocated(discard_plA%helio%swiftest%name)) then ! We alredy made a discard list in this step, so we need to append to it
+      if (allocated(discard_plA%helio%swiftest%id)) then ! We alredy made a discard list in this step, so we need to append to it
          nsppl = nsppl + discard_plA%helio%swiftest%nbody
          dlo = dlo + discard_plA%helio%swiftest%nbody
          call util_resize_pl(discard_plA, nsppl)
@@ -59,7 +59,7 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
       discard_l_pl(:) = (symba_plA%helio%swiftest%status(1:npl) /= ACTIVE) 
 
       ! Spill discarded bodies into discard list
-      discard_plA%helio%swiftest%name(dlo:nsppl)   = pack(symba_plA%helio%swiftest%name(1:npl),   discard_l_pl)
+      discard_plA%helio%swiftest%id(dlo:nsppl)   = pack(symba_plA%helio%swiftest%id(1:npl),   discard_l_pl)
       discard_plA%helio%swiftest%status(dlo:nsppl) = pack(symba_plA%helio%swiftest%status(1:npl), discard_l_pl)
       discard_plA%helio%swiftest%mass(dlo:nsppl)   = pack(symba_plA%helio%swiftest%mass(1:npl),   discard_l_pl)
       discard_plA%helio%swiftest%radius(dlo:nsppl) = pack(symba_plA%helio%swiftest%radius(1:npl), discard_l_pl)
@@ -75,7 +75,7 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
 
       if (nkpl > 0) then
          ! Pack kept bodies down 
-         symba_plA%helio%swiftest%name(1:nkpl)   = pack(symba_plA%helio%swiftest%name(1:npl),   .not. discard_l_pl)
+         symba_plA%helio%swiftest%id(1:nkpl)   = pack(symba_plA%helio%swiftest%id(1:npl),   .not. discard_l_pl)
          symba_plA%helio%swiftest%status(1:nkpl) = pack(symba_plA%helio%swiftest%status(1:npl), .not. discard_l_pl)
          symba_plA%helio%swiftest%mass(1:nkpl)   = pack(symba_plA%helio%swiftest%mass(1:npl),   .not. discard_l_pl)
          symba_plA%helio%swiftest%radius(1:nkpl) = pack(symba_plA%helio%swiftest%radius(1:npl), .not. discard_l_pl)
@@ -99,7 +99,7 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
 
       !add merge products to the end of the planet list
       symba_plA%helio%swiftest%status(nkpl+1:npl) = ACTIVE
-      symba_plA%helio%swiftest%name(nkpl+1:npl)   = mergeadd_list%name(1:nmergeadd)
+      symba_plA%helio%swiftest%id(nkpl+1:npl)   = mergeadd_list%id(1:nmergeadd)
       symba_plA%helio%swiftest%mass(nkpl+1:npl)   = mergeadd_list%mass(1:nmergeadd)
       symba_plA%helio%swiftest%radius(nkpl+1:npl) = mergeadd_list%radius(1:nmergeadd)
       do i = 1, NDIM
@@ -114,7 +114,7 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
       if (ntot > npl) then
          symba_plA%helio%swiftest%status(npl+1:ntot) = INACTIVE
          symba_plA%helio%swiftest%mass(npl+1:ntot) = 0.0_DP
-         symba_plA%helio%swiftest%name(npl+1:ntot) = -1
+         symba_plA%helio%swiftest%id(npl+1:ntot) = -1
       end if
 
       symba_plA%helio%swiftest%nbody = npl
@@ -131,8 +131,8 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
       ! check for duplicate names and fix if ncessary
       do j = 1, npl
          do i = j + 1, npl
-            if (symba_plA%helio%swiftest%name(i) == symba_plA%helio%swiftest%name(j)) then
-               symba_plA%helio%swiftest%name(i) = maxval(symba_plA%helio%swiftest%name(:)) + 1
+            if (symba_plA%helio%swiftest%id(i) == symba_plA%helio%swiftest%id(j)) then
+               symba_plA%helio%swiftest%id(i) = maxval(symba_plA%helio%swiftest%id(:)) + 1
             end if
          end do
       end do
@@ -148,7 +148,7 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
       nktp = ntp - nsptp
 
       dlo = 1
-      if (allocated(discard_tpA%helio%swiftest%name)) then ! We alredy made a discard list in this step, so we need to append to it
+      if (allocated(discard_tpA%helio%swiftest%id)) then ! We alredy made a discard list in this step, so we need to append to it
          nsptp = nsptp + discard_tpA%helio%swiftest%nbody
          dlo = dlo + discard_tpA%helio%swiftest%nbody
          !call util_resize_tp(discard_plA, nsppl, discard_tplA%helio%swiftest%nbody) !TODO: Implement this. Probably best to wait until this gets OOFed
@@ -156,7 +156,7 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
          call symba_tp_allocate(discard_tpA, nsptp)
       end if
 
-      discard_tpA%helio%swiftest%name(1:nsptp)   = pack(symba_tpA%helio%swiftest%name(1:ntp),   discard_l_tp)
+      discard_tpA%helio%swiftest%id(1:nsptp)   = pack(symba_tpA%helio%swiftest%id(1:ntp),   discard_l_tp)
       discard_tpA%helio%swiftest%status(1:nsptp) = pack(symba_tpA%helio%swiftest%status(1:ntp), discard_l_tp)
       discard_tpA%helio%swiftest%isperi(1:nsptp) = pack(symba_tpA%helio%swiftest%isperi(1:ntp), discard_l_tp)
       discard_tpA%helio%swiftest%peri(1:nsptp)   = pack(symba_tpA%helio%swiftest%peri(1:ntp),   discard_l_tp)
@@ -168,7 +168,7 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
          discard_tpA%helio%swiftest%vb(i,1:nsptp)   = pack(symba_tpA%helio%swiftest%vb(i,1:ntp),   discard_l_tp)
       end do
 
-      symba_tpA%helio%swiftest%name(1:nktp)   = pack(symba_tpA%helio%swiftest%name(1:ntp),   .not. discard_l_tp)
+      symba_tpA%helio%swiftest%id(1:nktp)   = pack(symba_tpA%helio%swiftest%id(1:ntp),   .not. discard_l_tp)
       symba_tpA%helio%swiftest%status(1:nktp) = pack(symba_tpA%helio%swiftest%status(1:ntp), .not. discard_l_tp)
       symba_tpA%helio%swiftest%isperi(1:nktp) = pack(symba_tpA%helio%swiftest%isperi(1:ntp), .not. discard_l_tp)
       symba_tpA%helio%swiftest%peri(1:nktp)   = pack(symba_tpA%helio%swiftest%peri(1:ntp),   .not. discard_l_tp)

@@ -7,10 +7,10 @@ module swiftest_data_structures
    use user
    implicit none
 
-
    type,public :: swiftest_tp
       integer(I4B)                                :: nbody = 0  !! Number of bodies
-      integer(I4B), dimension(:),     allocatable :: name   !! External identifier (hash)
+      character(len=STRMAX), dimension(:),  allocatable :: name   !! Non-unique name
+      integer(I4B), dimension(:),     allocatable :: id     !! External identifier (unique)
       integer(I4B), dimension(:),     allocatable :: status !! Status
       integer(I4B), dimension(:),     allocatable :: isperi !! Perihelion passage flag
       real(DP),     dimension(:),     allocatable :: peri   !! Perihelion distance
@@ -72,7 +72,7 @@ module swiftest_data_structures
 
          self%nbody = n
          if (n <= 0) return
-         allocate(self%name(n))
+         allocate(self%id(n))
          allocate(self%status(n))
          allocate(self%peri(n))
          allocate(self%atp(n))
@@ -82,7 +82,7 @@ module swiftest_data_structures
          allocate(self%xb(NDIM,n))
          allocate(self%vb(NDIM,n))
 
-         self%name = 0
+         self%id = 0
          self%status = 0
          self%peri = 0.0_DP
          self%atp = 0.0_DP
@@ -124,7 +124,7 @@ module swiftest_data_structures
          class(swiftest_tp), intent(inout)    :: self
 
          self%nbody = 0
-         if (allocated(self%name)) deallocate(self%name)
+         if (allocated(self%id)) deallocate(self%id)
          if (allocated(self%status)) deallocate(self%status)
          if (allocated(self%isperi)) deallocate(self%isperi)
          if (allocated(self%peri)) deallocate(self%peri)

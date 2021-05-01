@@ -60,7 +60,7 @@ contains
       case (EL)
          do i = 2, swiftest_plA%nbody
             mu = swiftest_plA%mass(1) + swiftest_plA%mass(i)
-            j = swiftest_plA%name(i)
+            j = swiftest_plA%id(i)
             call orbel_xv2el(swiftest_plA%xh(:,i), swiftest_plA%vh(:,i), mu, a, e, inc, capom, omega, capm)
             a_pl(i) = a 
             e_pl(i) = e
@@ -71,7 +71,7 @@ contains
          end do
          mu = swiftest_plA%mass(1)
          do i = 1, swiftest_tpA%nbody
-            j = swiftest_tpA%name(i)
+            j = swiftest_tpA%id(i)
             call orbel_xv2el(swiftest_tpA%xh(:,i), swiftest_tpA%vh(:,i), mu, a, e, inc, capom, omega, capm)
             a_tp(i) = a 
             e_tp(i) = e
@@ -80,7 +80,7 @@ contains
             omega_tp(i) = omega
             capm_tp(i) = capm
          end do
-         write(LUN) swiftest_plA%name(2:swiftest_plA%nbody)
+         write(LUN) swiftest_plA%id(2:swiftest_plA%nbody)
          write(LUN) a_pl(2:swiftest_plA%nbody)
          write(LUN) e_pl(2:swiftest_plA%nbody)
          write(LUN) inc_pl(2:swiftest_plA%nbody)
@@ -98,7 +98,7 @@ contains
             write(LUN) swiftest_plA%Ip(3,2:swiftest_plA%nbody)
          end if
          if (swiftest_tpA%nbody > 0) then
-            write(LUN) swiftest_tpA%name(1:swiftest_tpA%nbody)
+            write(LUN) swiftest_tpA%id(1:swiftest_tpA%nbody)
             write(LUN) a_tp(1:swiftest_tpA%nbody)
             write(LUN) e_tp(1:swiftest_tpA%nbody)
             write(LUN) inc_tp(1:swiftest_tpA%nbody)
@@ -108,7 +108,7 @@ contains
          end if
 
       case (XV)
-            write(LUN) swiftest_plA%name(2:swiftest_plA%nbody)
+            write(LUN) swiftest_plA%id(2:swiftest_plA%nbody)
             write(LUN) swiftest_plA%xh(1,2:swiftest_plA%nbody)
             write(LUN) swiftest_plA%xh(2,2:swiftest_plA%nbody)
             write(LUN) swiftest_plA%xh(3,2:swiftest_plA%nbody)
@@ -127,7 +127,7 @@ contains
             end if
 
             if (swiftest_tpA%nbody > 0) then
-               write(LUN) swiftest_tpA%name(:)  
+               write(LUN) swiftest_tpA%id(:)  
                write(LUN) swiftest_tpA%xh(1,:)
                write(LUN) swiftest_tpA%xh(2,:)
                write(LUN) swiftest_tpA%xh(3,:)

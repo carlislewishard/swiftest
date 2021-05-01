@@ -25,8 +25,6 @@ contains
    character(*),parameter :: Lfmt  = '(A20,1X,L1)'         !! Format label for logical values 
    character(*),parameter :: Pfmt  = '(A20)'               !! Format label for single parameter string
 
-   write(unit, Ifmt) "NPLMAX",param%plmaxname
-   write(unit, Ifmt) "NTPMAX",param%tpmaxname
    write(unit, Rfmt) "T0", param%t0
    write(unit, Rfmt) "TSTOP",param%tstop
    write(unit, Rfmt) "DT",param%dt

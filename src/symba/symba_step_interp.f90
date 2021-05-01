@@ -47,7 +47,7 @@
 !    Terminal  : none
 !    File      : none
 !
-!  Invocation  : CALL symba_step_interp(param%lextra_force, param%lclose, t, npl, nplm, plmaxname, ntp, tpmaxname, symba_pl1P, symba_tp1P, param%j2rp2,
+!  Invocation  : CALL symba_step_interp(param%lextra_force, param%lclose, t, npl, nplm, ntp, tpmaxname, symba_pl1P, symba_tp1P, param%j2rp2,
 !                                       param%j4rp4, dt, mtiny, nplplenc, npltpenc, plplenc_list, pltpenc_list, nmergeadd,
 !                                       nmergesub, mergeadd_list, mergesub_list, param%encounter_file, param%out_type)
 !

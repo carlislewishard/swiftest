@@ -39,13 +39,13 @@ contains
 
    if (is_ascii) then
       do i = 1, self%nbody
-         read(LUN, *) self%name(i)
+         read(LUN, *) self%id(i)
          read(LUN, *) self%xh(:,i)
          read(LUN, *) self%vh(:,i)
          self%status(i) = ACTIVE
       end do
    else
-      read(LUN) self%name(:)
+      read(LUN) self%id(:)
       read(LUN) self%xh(:,:)
       read(LUN) self%vh(:,:)
       self%status(:) = ACTIVE

@@ -116,7 +116,7 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
             call symba_merger_size_check(mergesub_list, nmergesub + 1)  
             nmergesub = nmergesub + 1
             mergesub_list%status(nmergesub) = MERGED
-            mergesub_list%name(nmergesub) = symba_plA%helio%swiftest%name(idx(i)) 
+            mergesub_list%id(nmergesub) = symba_plA%helio%swiftest%id(idx(i)) 
             mergesub_list%xb(:,nmergesub) = symba_plA%helio%swiftest%xb(:, idx(i)) 
             mergesub_list%vb(:,nmergesub) = symba_plA%helio%swiftest%vb(:, idx(i)) 
             mergesub_list%mass(nmergesub) = symba_plA%helio%swiftest%mass(idx(i))
@@ -128,7 +128,7 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
 
    !else ! Not going to collide, so flag this as a close encounter
       !if (param%encounter_file /= "") then
-      !   name(:)   = symba_plA%helio%swiftest%name(idx(:))
+      !   id(:)   = symba_plA%helio%swiftest%id(idx(:))
       !   mass(:)   = symba_plA%helio%swiftest%mass(idx(:))
       !   radius(:) = symba_plA%helio%swiftest%radius(idx(:))
       !end if

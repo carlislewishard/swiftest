@@ -81,7 +81,7 @@ subroutine python_io_write_frame_pl(t, symba_plA, npl, out_stat)
    end if
    write(iu, iostat = ierr) t
    write(iu, iostat = ierr) npl
-   write(iu, iostat = ierr) symba_plA%helio%swiftest%name(1:npl)
+   write(iu, iostat = ierr) symba_plA%helio%swiftest%id(1:npl)
    write(iu, iostat = ierr) symba_plA%helio%swiftest%status(1:npl)
    write(iu, iostat = ierr) symba_plA%helio%swiftest%mass(1:npl)
    write(iu, iostat = ierr) symba_plA%helio%swiftest%radius(1:npl)
