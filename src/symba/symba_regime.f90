@@ -105,6 +105,7 @@ subroutine symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2,
      regime = COLLRESOLVE_REGIME_MERGE !perfect merging regime
      Mlr = Mtot
      Mslr = 0.0_DP
+     Qloss = 0.0_DP
      write(*,*) "FORCE MERGE"
    else 
       if( Vimp < Vescp) then
