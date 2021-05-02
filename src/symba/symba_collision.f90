@@ -50,7 +50,7 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
 
 
    ! First determine the collisional regime for each colliding pair
-   associate(npl => symba_plA%helio%swiftest%nbody, xbpl => symba_plA%helio%swiftest%xb)
+   associate(npl => symba_plA%helio%swiftest%nbody, xbpl => symba_plA%helio%swiftest%xb, statpl => symba_plA%helio%swiftest%status)
       if (lfirst) then
          Minitial = sum(symba_plA%helio%swiftest%mass(1:npl))
          lfirst = .false.
@@ -72,7 +72,7 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
          idx(1) = plplenc_list%index1(index_enc)
          idx(2) = plplenc_list%index2(index_enc)
 
-         if (any(symba_plA%helio%swiftest%status(idx(:)) /= ACTIVE)) cycle ! One of these two bodies is already gone
+         if (any(statpl(idx(:)) /= ACTIVE)) cycle ! One of these two bodies is already gone
 
          ! Index values for the parents of this particle pair
          idx_parent(:) = symba_plA%kin(idx(:))%parent
@@ -81,6 +81,7 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
          ! If all of these bodies share a parent, but this is still a unique collision, move the last child
          ! out of the parent's position and make it the secondary body
          if (idx_parent(1) == idx_parent(2)) then
+            write(*,*) idx_parent(1), "is having a collision with itself for some reason."
             idx_parent(2) = symba_plA%kin(idx_parent(1))%child(nchild(1))
             nchild(1) = nchild(1) - 1
             nchild(2) = 0
@@ -114,7 +115,7 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
 
          ! Prepare to resolve collisions by setting the status flag for all family members to COLLISION. This will get updated after
          ! we have determined what kind of collision this group will produce.
-         symba_plA%helio%swiftest%status(family(:)) = COLLISION
+         where (statpl(family(:)) == ACTIVE) statpl(family(:)) = COLLISION
 
          ! Find the barycenter of each body along with its children, if it has any
          do j = 1, 2
@@ -126,6 +127,7 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
             if (nchild(j) > 0) then
                do i = 1, nchild(j) ! Loop over all children and take the mass weighted mean of the properties
                   idx_child = parent_child_index_array(j)%idx(i + 1)
+                  if (statpl(idx_child) /= COLLISION) cycle
                   mchild = symba_plA%helio%swiftest%mass(idx_child)
                   xchild(:) = symba_plA%helio%swiftest%xb(:, idx_child)
                   vchild(:) = symba_plA%helio%swiftest%vb(:, idx_child)
@@ -229,7 +231,7 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
 
          ! If any body in the current collisional family is listed in subsequent collisions in this step, remove that 
          ! collision from consideration, as the body's outcome has already been resolved.
-         symba_plA%helio%swiftest%status(family(:)) = status 
+         where(statpl(family(:)) == COLLISION) statpl(family(:)) = status 
          do k = index_enc + 1, nplplenc
             if (plplenc_list%status(k) /= COLLISION) cycle ! Not the primary collision for this pair
             ! Index values of the original particle pair 
