@@ -112,10 +112,12 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
          fam_size = 2 + sum(nchild(:))
          allocate(family(fam_size))
          family = [parent_child_index_array(1)%idx(:),parent_child_index_array(2)%idx(:)]
+         fam_size = count(statpl(family(:)) == ACTIVE)
+         family = pack(family(:), statpl(family(:)) == ACTIVE)
 
          ! Prepare to resolve collisions by setting the status flag for all family members to COLLISION. This will get updated after
          ! we have determined what kind of collision this group will produce.
-         where (statpl(family(:)) == ACTIVE) statpl(family(:)) = COLLISION
+         statpl(family(:)) = COLLISION
 
          ! Find the barycenter of each body along with its children, if it has any
          do j = 1, 2
@@ -231,7 +233,7 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
 
          ! If any body in the current collisional family is listed in subsequent collisions in this step, remove that 
          ! collision from consideration, as the body's outcome has already been resolved.
-         where(statpl(family(:)) == COLLISION) statpl(family(:)) = status 
+         statpl(family(:)) = status 
          do k = index_enc + 1, nplplenc
             if (plplenc_list%status(k) /= COLLISION) cycle ! Not the primary collision for this pair
             ! Index values of the original particle pair 
