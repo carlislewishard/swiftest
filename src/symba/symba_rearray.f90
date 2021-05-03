@@ -53,13 +53,8 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
       else
          call symba_pl_allocate(discard_plA, nsppl)
       end if
-      !write(*,*) 'Keeping ',nkpl,' out of ',npl,' bodies.'
 
       discard_l_pl(:) = (symba_plA%helio%swiftest%status(1:npl) /= ACTIVE) 
-      !write(*,*) 'Discarding ',count(discard_l_pl(:)), ' out of ',npl,' bodies.'
-      !do i = 1, npl
-      !   if (discard_l_pl(i)) write(*,*) i,symba_plA%helio%swiftest%id(i), ' is on its way to destruction. Mass: ',symba_plA%helio%swiftest%mass(i)
-      !end do
 
       ! Spill discarded bodies into discard list
       discard_plA%helio%swiftest%id(dlo:nsppl)   = pack(symba_plA%helio%swiftest%id(1:npl),   discard_l_pl)
@@ -94,7 +89,6 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
       end if
 
       npl = nkpl
-      !write(*,*) 'Total mass of keeps:    ',sum(symba_plA%helio%swiftest%mass(1:nkpl))
    else
       nkpl = npl
    end if
@@ -103,11 +97,6 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
       call util_resize_pl(symba_plA, nkpl+nmergeadd)
       npl = nkpl + nmergeadd
       symba_plA%helio%swiftest%nbody = npl
-
-      !write(*,*) 'Adding ',nmergeadd, ' bodies.'
-      !do i = 1, nmergeadd 
-      !   write(*,*) nkpl+i,mergeadd_list%id(i), ' is on its way to creation.    Mass: ', mergeadd_list%mass(i)
-      !end do
 
       !add merge products to the end of the planet list
       symba_plA%helio%swiftest%status(nkpl+1:npl) = ACTIVE
@@ -120,7 +109,6 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
          symba_plA%helio%swiftest%Ip(i,nkpl+1:npl)  = mergeadd_list%Ip(i,1:nmergeadd)
          symba_plA%helio%swiftest%rot(i,nkpl+1:npl) = mergeadd_list%rot(i,1:nmergeadd)
       end do
-      !write(*,*) 'Total mass of discards: ',sum(symba_plA%helio%swiftest%mass(nkpl+1:npl))
    end if 
 
    if (ldiscard_pl) then
