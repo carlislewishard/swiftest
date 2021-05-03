@@ -106,15 +106,16 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
          idx(1) = idx1(index_enc)
          idx(2) = idx2(index_enc)
 
-         if (any(statpl(idx(:)) /= ACTIVE)) cycle ! One of these two bodies is already gone
-
          ! Index values for the parents of this particle pair
          idx_parent(:) = plparent(idx(:)) 
+
+         if (any(statpl(idx_parent(:)) /= ACTIVE)) cycle ! One of these two bodies is already gone
 
          nchild(:) = symba_plA%kin(idx_parent(:))%nchild 
          ! If all of these bodies share a parent, but this is still a unique collision, move the last child
          ! out of the parent's position and make it the secondary body
          if (idx_parent(1) == idx_parent(2)) then
+            if (nchild(1) == 0) cycle
             idx_parent(2) = symba_plA%kin(idx_parent(1))%child(nchild(1))
             nchild(1) = nchild(1) - 1
             nchild(2) = 0
