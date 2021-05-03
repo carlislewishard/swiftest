@@ -1,4 +1,4 @@
-function symba_casemerge (symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, param) result(status)
+function symba_casemerge (symba_plA, family, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, param) result(status)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
    !! Merge planets.
@@ -14,7 +14,7 @@ function symba_casemerge (symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v,
    implicit none
    ! Arguments
    type(symba_pl), intent(inout)             :: symba_plA
-   integer(I4B), dimension(:), intent(in)    :: idx_parent
+   integer(I4B), dimension(:), intent(in)    :: family
    integer(I4B), intent(inout)               :: nmergeadd
    type(symba_merger), intent(inout)         :: mergeadd_list
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
@@ -33,12 +33,8 @@ function symba_casemerge (symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v,
    mass_new = sum(mass(:))
 
    ! The merged body's name will be that of the largest of the two parents 
-   if (mass(1) > mass(2)) then
-      ibiggest = idx_parent(1)
-   else
-      ibiggest = idx_parent(2)
-   end if
-   mergeid = symba_plA%helio%swiftest%id(ibiggest)
+   ibiggest = maxloc(symba_plA%helio%swiftest%mass(family(:)), dim=1)
+   mergeid = symba_plA%helio%swiftest%id(family(ibiggest))
 
    ! Merged body is created at the barycenter of the original bodies
    xcom(:) = (mass(1) * x(:,1) + mass(2) * x(:,2)) / mass_new

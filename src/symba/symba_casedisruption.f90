@@ -1,4 +1,4 @@
-function symba_casedisruption (symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, &
+function symba_casedisruption (symba_plA, family, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, &
                                  mass_res, param, Qloss) result(status)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
@@ -13,7 +13,7 @@ function symba_casedisruption (symba_plA, idx_parent, nmergeadd, mergeadd_list, 
 
    ! Arguments
    type(symba_pl), intent(inout)             :: symba_plA
-   integer(I4B), dimension(:), intent(in)    :: idx_parent
+   integer(I4B), dimension(:), intent(in)    :: family
    integer(I4B), intent(inout)               :: nmergeadd
    type(symba_merger), intent(inout)         :: mergeadd_list
    real(DP), dimension(:),   intent(in)      :: mass, radius, mass_res
@@ -71,12 +71,12 @@ function symba_casedisruption (symba_plA, idx_parent, nmergeadd, mergeadd_list, 
    end do
 
    ! Put the fragments on the circle surrounding the center of mass of the system
-   call symba_frag_pos(param, symba_plA, idx_parent, x, v, L_spin, Ip, mass, radius, &
+   call symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radius, &
                         Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, lmerge, Qloss)
 
    if (lmerge) then
       write(*,*) 'Should have been a merge instead.'
-      status = symba_casemerge (symba_plA, idx_parent, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, param)
+      status = symba_casemerge (symba_plA, family, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, param)
    else
       ! Populate the list of new bodies
       write(*,'("Generating ",I2.0," fragments")') nfrag

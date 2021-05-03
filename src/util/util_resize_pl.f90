@@ -34,7 +34,7 @@ subroutine util_resize_pl(symba_plA, npl_new)
          new_symba_plA%helio%swiftest%xb(:,1:npl_old) = symba_plA%helio%swiftest%xb(:,1:npl_old)
          new_symba_plA%helio%swiftest%vb(:,1:npl_old) = symba_plA%helio%swiftest%vb(:,1:npl_old)
          new_symba_plA%helio%swiftest%rot(:,1:npl_old) = symba_plA%helio%swiftest%rot(:,1:npl_old)
-         new_symba_plA%helio%swiftest%Ip(:,1:npl_old) = symba_plA%helio%swiftest%ip(:,1:npl_old)
+         new_symba_plA%helio%swiftest%Ip(:,1:npl_old) = symba_plA%helio%swiftest%Ip(:,1:npl_old)
       else
          new_symba_plA%helio%swiftest%id(1:npl_new) = symba_plA%helio%swiftest%id(1:npl_new)
          new_symba_plA%helio%swiftest%status(1:npl_new) = symba_plA%helio%swiftest%status(1:npl_new)
@@ -46,8 +46,7 @@ subroutine util_resize_pl(symba_plA, npl_new)
          new_symba_plA%helio%swiftest%xb(:,1:npl_new) = symba_plA%helio%swiftest%xb(:,1:npl_new)
          new_symba_plA%helio%swiftest%vb(:,1:npl_new) = symba_plA%helio%swiftest%vb(:,1:npl_new)
          new_symba_plA%helio%swiftest%rot(:,1:npl_new) = symba_plA%helio%swiftest%rot(:,1:npl_new)
-         new_symba_plA%helio%swiftest%Ip(:,1:npl_new) = symba_plA%helio%swiftest%ip(:,1:npl_new)
-   
+         new_symba_plA%helio%swiftest%Ip(:,1:npl_new) = symba_plA%helio%swiftest%Ip(:,1:npl_new)
       end if
       call symba_pl_deallocate(symba_plA)
       call symba_pl_allocate(symba_plA, npl_new)

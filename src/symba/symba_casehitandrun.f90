@@ -1,5 +1,5 @@
-function symba_casehitandrun (symba_plA, idx_parent, nmergeadd, mergeadd_list, id, x, v, mass, radius, L_spin, Ip,  &
-                                        mass_res, param, Qloss) result(status)
+function symba_casehitandrun(symba_plA, family, nmergeadd, mergeadd_list, id, x, v, mass, radius, L_spin, Ip,  &
+                              mass_res, param, Qloss) result(status)
    !! author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
    !! Create the fragments resulting from a non-catastrophic hitandrun collision
@@ -12,7 +12,7 @@ function symba_casehitandrun (symba_plA, idx_parent, nmergeadd, mergeadd_list, i
    implicit none
    ! Arguments
    type(symba_pl), intent(inout)             :: symba_plA
-   integer(I4B), dimension(:), intent(in)    :: idx_parent
+   integer(I4B), dimension(:), intent(in)    :: family
    integer(I4B), intent(inout)               :: nmergeadd
    type(symba_merger), intent(inout)         :: mergeadd_list
    integer(I4B), dimension(:), intent(in)    :: id
@@ -79,7 +79,7 @@ function symba_casehitandrun (symba_plA, idx_parent, nmergeadd, mergeadd_list, i
       end do
 
       ! Put the fragments on the circle surrounding the center of mass of the system
-      call symba_frag_pos(param, symba_plA, idx_parent, x, v, L_spin, Ip, mass, radius, &
+      call symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radius, &
                            Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, lpure, Qloss)
       if (lpure) then
          write(*,*) 'Should have been a pure hit and run instead'

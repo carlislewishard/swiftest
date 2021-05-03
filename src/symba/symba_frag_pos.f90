@@ -1,4 +1,4 @@
-subroutine symba_frag_pos (param, symba_plA, idx_parent, x, v, L_spin, Ip, mass, radius, &
+subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, radius, &
                            Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, lmerge, Qloss)
    !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
@@ -14,7 +14,7 @@ subroutine symba_frag_pos (param, symba_plA, idx_parent, x, v, L_spin, Ip, mass,
    ! Arguments
    type(user_input_parameters), intent(in)   :: param 
    type(symba_pl), intent(inout)             :: symba_plA
-   integer(I4B), dimension(:), intent(in)    :: idx_parent
+   integer(I4B), dimension(:), intent(in)    :: family
    real(DP), intent(in)                      :: Qloss
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
    real(DP), dimension(:), intent(in)        :: mass, radius, m_frag, rad_frag
@@ -30,7 +30,6 @@ subroutine symba_frag_pos (param, symba_plA, idx_parent, x, v, L_spin, Ip, mass,
    real(DP)                                :: Etot_before, Etot_after, ke_before, pe_before
    real(DP)                                :: pe_after, ke_spin_before, ke_spin_after, ke_after, ke_family, ke_target, ke_frag
    real(DP), dimension(NDIM)               :: h, dx
-   integer(I4B), dimension(:), allocatable :: family
    real(DP)                                :: rmag
    logical, dimension(:), allocatable      :: lexclude
    character(len=*), parameter             :: fmtlabel = "(A14,10(ES9.2,1X,:))"
@@ -38,8 +37,7 @@ subroutine symba_frag_pos (param, symba_plA, idx_parent, x, v, L_spin, Ip, mass,
    real(DP), dimension(NDIM)               :: x_cross_v, v_phi_unit, h_unit, v_r_unit
    real(DP), dimension(:,:), allocatable   :: v_r, v_phi
    
-   associate(nchild1 => symba_plA%kin(idx_parent(1))%nchild, nchild2 => symba_plA%kin(idx_parent(2))%nchild, &
-             xhpl => symba_plA%helio%swiftest%xh, xbpl => symba_plA%helio%swiftest%xh, vbpl => symba_plA%helio%swiftest%vb, &
+   associate(xhpl => symba_plA%helio%swiftest%xh, xbpl => symba_plA%helio%swiftest%xh, vbpl => symba_plA%helio%swiftest%vb, &
              Mpl => symba_plA%helio%swiftest%mass, Ippl => symba_plA%helio%swiftest%Ip, radpl => symba_plA%helio%swiftest%radius, &
              rotpl => symba_plA%helio%swiftest%rot, status => symba_plA%helio%swiftest%status, npl => symba_plA%helio%swiftest%nbody, name => symba_plA%helio%swiftest%id)
 
@@ -47,22 +45,12 @@ subroutine symba_frag_pos (param, symba_plA, idx_parent, x, v, L_spin, Ip, mass,
       allocate(v_frag, source=vb_frag)
       allocate(v_r, mold=v_frag)
       allocate(v_phi, mold=v_frag)
+      fam_size = size(family)
 
       ! Find the center of mass of the collisional system
       mtot = sum(mass(:))
       xcom(:) = (mass(1) * x(:,1) + mass(2) * x(:,2)) / mtot
       vcom(:) = (mass(1) * v(:,1) + mass(2) * v(:,2)) / mtot 
-
-      ! Make the list of family members (progenitor bodies involved in the collision)
-      fam_size = 2 + nchild1 + nchild2
-      allocate(family(fam_size))
-      family(1) = idx_parent(1)
-      family(2) = idx_parent(2)
-      istart = 2 + nchild1
-
-      ! Include any children of the progenitor bodies as part of the family
-      if (nchild1 > 0) family(3:istart) = symba_plA%kin(idx_parent(1))%child(1:nchild1)
-      if (nchild2 > 0) family(istart+1:istart+1+nchild2) = symba_plA%kin(idx_parent(2))%child(1:nchild2)
 
       allocate(lexclude(npl))
       where (status(1:npl) == INACTIVE) ! Safety check in case one of the included bodies has been previously deactivated 
@@ -433,10 +421,11 @@ subroutine symba_frag_pos (param, symba_plA, idx_parent, x, v, L_spin, Ip, mass,
       real(DP), dimension(:), intent(in), optional :: m_frag, rad_frag
       real(DP), dimension(:,:), intent(in), optional :: Ip_frag, xb_frag, vb_frag, rot_frag
       ! Internals
-      integer(I4B) :: i, npl_old, npl_new, nplm
+      integer(I4B) :: i, npl_new, nplm
       logical, dimension(:), allocatable :: ltmp
+      logical :: lk_plpl
       real(DP) :: te
-      integer(I4B), dimension(:), allocatable :: old_status
+      type(symba_pl) :: symba_plwksp
 
       ! Because we're making a copy of symba_pl with the excludes/fragments appended, we need to deallocate the
       ! big k_plpl array and recreate it when we're done, otherwise we run the risk of blowing up the memory by
@@ -447,40 +436,55 @@ subroutine symba_frag_pos (param, symba_plA, idx_parent, x, v, L_spin, Ip, mass,
       ! Build the internal planet list out of the non-excluded bodies and optionally with fragments appended. This
       ! will get passed to the energy calculation subroutine so that energy is computed exactly the same way is it
       ! is in the main program.
-      allocate(old_status, source=symba_plA%helio%swiftest%status)
-      where (lexclude(1:npl))
-         symba_plA%helio%swiftest%status(1:npl) = INACTIVE
-      end where
+      lk_plpl = allocated(symba_plA%helio%swiftest%k_plpl)
+      if (lk_plpl) deallocate(symba_plA%helio%swiftest%k_plpl) 
       if (present(nfrag)) then ! Temporarily expand the planet list to feed it into symba_energy
-         npl_old = npl
-         npl_new = npl_old + nfrag
-         call util_resize_pl(symba_plA, npl_new)
-         npl = npl_new
-         symba_plA%helio%swiftest%Ip(:,npl_old+1:npl) = Ip_frag(:,:)
-         symba_plA%helio%swiftest%mass(npl_old+1:npl) = m_frag(:)
-         symba_plA%helio%swiftest%radius(npl_old+1:npl) = m_frag(:)
-         symba_plA%helio%swiftest%xb(:,npl_old+1:npl) =  xb_frag(:,:)
-         symba_plA%helio%swiftest%vb(:,npl_old+1:npl) =  vb_frag(:,:)
-         symba_plA%helio%swiftest%rot(:,npl_old+1:npl) = rot_frag(:,:)
-         symba_plA%helio%swiftest%status(npl_old+1:npl) = COLLISION
-         call coord_b2h(npl, symba_plA%helio%swiftest)
-         allocate(ltmp(npl))
-         ltmp(1:npl_old) = lexclude(1:npl_old)
-         ltmp(npl_old+1:npl) = .false.
+         npl_new = npl + nfrag
+      else
+         npl_new  = npl
+      end if
+      call symba_pl_allocate(symba_plwksp, npl_new)
+
+      ! Copy over old data
+      symba_plwksp%helio%swiftest%id(1:npl) = symba_plA%helio%swiftest%id(1:npl)
+      symba_plwksp%helio%swiftest%status(1:npl) = symba_plA%helio%swiftest%status(1:npl)
+      symba_plwksp%helio%swiftest%mass(1:npl) = symba_plA%helio%swiftest%mass(1:npl)
+      symba_plwksp%helio%swiftest%radius(1:npl) = symba_plA%helio%swiftest%radius(1:npl)
+      symba_plwksp%helio%swiftest%xh(:,1:npl) = symba_plA%helio%swiftest%xh(:,1:npl)
+      symba_plwksp%helio%swiftest%vh(:,1:npl) = symba_plA%helio%swiftest%vh(:,1:npl)
+      symba_plwksp%helio%swiftest%rhill(1:npl) = symba_plA%helio%swiftest%rhill(1:npl)
+      symba_plwksp%helio%swiftest%xb(:,1:npl) = symba_plA%helio%swiftest%xb(:,1:npl)
+      symba_plwksp%helio%swiftest%vb(:,1:npl) = symba_plA%helio%swiftest%vb(:,1:npl)
+      symba_plwksp%helio%swiftest%rot(:,1:npl) = symba_plA%helio%swiftest%rot(:,1:npl)
+      symba_plwksp%helio%swiftest%Ip(:,1:npl) = symba_plA%helio%swiftest%Ip(:,1:npl)
+
+      if (present(nfrag)) then ! Append the fragments if they are included
+         symba_plwksp%helio%swiftest%Ip(:,npl+1:npl_new) = Ip_frag(:,:)
+         symba_plwksp%helio%swiftest%mass(npl+1:npl_new) = m_frag(:)
+         symba_plwksp%helio%swiftest%radius(npl+1:npl_new) = m_frag(:)
+         symba_plwksp%helio%swiftest%xb(:,npl+1:npl_new) =  xb_frag(:,:)
+         symba_plwksp%helio%swiftest%vb(:,npl+1:npl_new) =  vb_frag(:,:)
+         symba_plwksp%helio%swiftest%rot(:,npl+1:npl_new) = rot_frag(:,:)
+         symba_plwksp%helio%swiftest%status(npl+1:npl_new) = COLLISION
+         call coord_b2h(npl_new, symba_plwksp%helio%swiftest)
+         allocate(ltmp(npl_new))
+         ltmp(1:npl) = lexclude(1:npl)
+         ltmp(npl+1:npl_new) = .false.
          call move_alloc(ltmp, lexclude)
       end if
 
-      nplm = count(symba_plA%helio%swiftest%mass > param%mtiny)
-      call util_dist_index_plpl(npl, nplm, symba_plA)
-      call symba_energy_eucl(npl, symba_plA, param%j2rp2, param%j4rp4, ke_orbit, ke_spin, pe, te, Ltot)
+      where (lexclude(1:npl))
+         symba_plwksp%helio%swiftest%status(1:npl) = INACTIVE
+      end where
 
-      if (present(nfrag)) then  ! Put the planet list back to where it started
-         call  util_resize_pl(symba_plA, npl_old)
-         npl = npl_old
-         nplm = count(symba_plA%helio%swiftest%mass > param%mtiny)
-         call util_dist_index_plpl(npl, nplm, symba_plA)
-      end if
-      call move_alloc(old_status, symba_plA%helio%swiftest%status)
+      nplm = count(symba_plwksp%helio%swiftest%mass > param%mtiny)
+      call util_dist_index_plpl(npl_new, nplm, symba_plwksp)
+      call symba_energy_eucl(npl_new, symba_plwksp, param%j2rp2, param%j4rp4, ke_orbit, ke_spin, pe, te, Ltot)
+
+      ! Restore the big array
+      deallocate(symba_plwksp%helio%swiftest%k_plpl) 
+      nplm = count(symba_plA%helio%swiftest%mass > param%mtiny)
+      if (lk_plpl) call util_dist_index_plpl(npl, nplm, symba_plA)
 
       return
    end subroutine symba_frag_pos_energy_calc
