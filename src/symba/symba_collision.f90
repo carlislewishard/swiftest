@@ -119,7 +119,8 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
             idx_parent(2) = symba_plA%kin(idx_parent(1))%child(nchild(1))
             nchild(1) = nchild(1) - 1
             nchild(2) = 0
-            symba_plA%kin(idx_parent(1))%nchild = nchild(1)
+            symba_plA%kin(idx_parent(:))%nchild = nchild(:)
+            symba_plA%kin(idx_parent(2))%parent = idx_parent(1)
          end if
 
          mass(:) = symba_plA%helio%swiftest%mass(idx_parent(:))
