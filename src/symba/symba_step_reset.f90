@@ -21,7 +21,7 @@ subroutine symba_step_reset(npl, symba_plA, symba_tpA, plplenc_list, pltpenc_lis
    integer(I4B)                  :: i
 
    symba_plA%lcollision(:) = .false.
-   symba_plA%kin(:)%parent = (/ (i, i=1, size(symba_plA%kin(:))) /)
+   symba_plA%kin(:)%parent = [(i, i=1, size(symba_plA%kin(:)))]
    symba_plA%kin(:)%nchild = 0
    do i = 1, size(symba_plA%kin(:))
       if (allocated(symba_plA%kin(i)%child)) deallocate(symba_plA%kin(i)%child)

@@ -22,7 +22,7 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
    type(user_input_parameters),intent(inout) :: param
 
    integer(I4B), parameter                 :: NRES = 3   !! Number of collisional product results
-   integer(I4B)                            :: i, j, k, index_enc, jtarg, jproj
+   integer(I4B)                            :: i, j, k, index_enc, index_coll, jtarg, jproj
    real(DP), dimension(NRES)               :: mass_res
    real(DP), dimension(NDIM)               :: x1_si, v1_si, x2_si, v2_si
    integer(I4B)                            :: regime, idx_child, status
@@ -35,13 +35,16 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
    real(DP), dimension(NDIM)               :: xc, vc, xcom, vcom, xchild, vchild, xcrossv
    real(DP)                                :: mtiny_si
    real(DP)                                :: mlr, mslr, msys, msys_new, Qloss
-   integer(I4B), dimension(:), allocatable :: family
-   integer(I4B)                            :: fam_size, istart
+   integer(I4B), dimension(:), allocatable :: family, collision_idx, unique_parent_idx
+   integer(I4B)                            :: fam_size, istart, ncollisions, nunique_parent
    type family_array
       integer(I4B), dimension(:), allocatable :: id
       integer(I4B), dimension(:), allocatable :: idx
    end type family_array
-   type(family_array), dimension(2)        :: parent_child_index_array
+   type(family_array), dimension(2)           :: parent_child_index_array
+   logical, dimension(nplplenc)               :: lplpl_collision
+   logical, dimension(:), allocatable         :: lplpl_unique_parent
+   integer(I4B), dimension(:), pointer        :: plparent  
 
    ! TESTING
    logical, save   :: lfirst = .true.
@@ -49,29 +52,64 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
    real(DP)        :: Msystem, Madd, Mdiscard
 
    ! First determine the collisional regime for each colliding pair
-   associate(npl => symba_plA%helio%swiftest%nbody, xbpl => symba_plA%helio%swiftest%xb, statpl => symba_plA%helio%swiftest%status)
+   associate(npl => symba_plA%helio%swiftest%nbody, xbpl => symba_plA%helio%swiftest%xb, statpl => symba_plA%helio%swiftest%status, idpl => symba_plA%helio%swiftest%id, &
+             idx1 => plplenc_list%index1, idx2 => plplenc_list%index2, plparent => symba_plA%kin%parent)
       if (lfirst) then
          Minitial = sum(symba_plA%helio%swiftest%mass(1:npl))
          lfirst = .false.
       end if 
-      ldiscard = any(plplenc_list%status(1:nplplenc) == COLLISION)
+      lplpl_collision(:) = plplenc_list%status(1:nplplenc) == COLLISION
+      ldiscard = any(lplpl_collision)
       if (.not.ldiscard) return
 
-      ! Recompute central body barycentric velocity
+      ! Get the subset of pl-pl encounters that lead to a collision
+      ncollisions = count(lplpl_collision(:))
+      allocate(collision_idx(ncollisions))
+      collision_idx = pack([(i, i=1, nplplenc)], lplpl_collision)
+
+      ! Get the subset of collisions that involve a unique pair of parents
+      allocate(lplpl_unique_parent(ncollisions))
+
+      lplpl_unique_parent(:) = plparent(idx1(collision_idx(:))) /= plparent(idx2(collision_idx(:)))
+      nunique_parent = count(lplpl_unique_parent(:))
+      allocate(unique_parent_idx(nunique_parent))
+      unique_parent_idx = pack(collision_idx(:), lplpl_unique_parent(:))
+
+      ! Scrub all pl-pl collisions involving unique pairs of parents, which will remove all duplicates and leave behind
+      ! all pairs that have themselves as parents but are not part of the unique parent list. This can hapepn in rare cases
+      ! due to restructuring of parent/child relationships when there are large numbers of multi-body collisions in a single
+      ! step
+      lplpl_unique_parent(:) = .true.
+      do index_coll = 1, ncollisions
+         index_enc = collision_idx(index_coll)
+         idx(1) = plparent(idx1(index_enc)) 
+         idx(2) = plparent(idx2(index_enc))
+         lplpl_unique_parent(:) = .not. ( any(plparent(idx1(unique_parent_idx(:))) == idx(1)) .or. &
+                                          any(plparent(idx2(unique_parent_idx(:))) == idx(1)) .or. &
+                                          any(plparent(idx1(unique_parent_idx(:))) == idx(2)) .or. &
+                                          any(plparent(idx2(unique_parent_idx(:))) == idx(2)) )
+      end do
+
+      ! Reassemble collision index list to include only those containing the unique pairs of parents, plus all the non-unique pairs that don't
+      ! contain a parent body on the unique parent list.
+      ncollisions = nunique_parent + count(lplpl_unique_parent)
+      collision_idx = [unique_parent_idx(:), pack(collision_idx(:), lplpl_unique_parent(:))]
+
+      ! Recompute central barycentric velocities
       call coord_h2b(npl, symba_plA%helio%swiftest, msys)
 
       ! Loop through the list of pl-pl encounters and pick out the collisions
-      do index_enc = 1, nplplenc
-         if (plplenc_list%status(index_enc) /= COLLISION) cycle ! Not the primary collision for this pl-pl encounter, so skip it
+      do index_coll = 1, ncollisions
+         index_enc = collision_idx(index_coll)
 
          ! Index values of the original particle pair 
-         idx(1) = plplenc_list%index1(index_enc)
-         idx(2) = plplenc_list%index2(index_enc)
+         idx(1) = idx1(index_enc)
+         idx(2) = idx2(index_enc)
 
          if (any(statpl(idx(:)) /= ACTIVE)) cycle ! One of these two bodies is already gone
 
          ! Index values for the parents of this particle pair
-         idx_parent(:) = symba_plA%kin(idx(:))%parent
+         idx_parent(:) = plparent(idx(:)) 
 
          nchild(:) = symba_plA%kin(idx_parent(:))%nchild 
          ! If all of these bodies share a parent, but this is still a unique collision, move the last child
@@ -224,8 +262,8 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
          do k = index_enc + 1, nplplenc
             if (plplenc_list%status(k) /= COLLISION) cycle ! Not the primary collision for this pair
             ! Index values of the original particle pair 
-            idx(1) = plplenc_list%index1(k)
-            idx(2) = plplenc_list%index2(k)
+            idx(1) = idx1(k) 
+            idx(2) = idx2(k) 
             if (any(family(1:fam_size) == idx(1)) .or. any(family(1:fam_size) == idx(2))) plplenc_list%status(k) = ACTIVE
          end do
 
@@ -242,9 +280,8 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
          !      write(*,*) i, symba_plA%helio%swiftest%id(i),statpl(i),symba_plA%helio%swiftest%mass(i)
          !   end if
          !end do
-         !write(*,*) 'Total   : ', count(symba_plA%helio%swiftest%status(1:npl) /= ACTIVE)
+         !write(*,*) 'Total   : ', count(statpl(1:npl) /= ACTIVE)
          !write(*,*) 'Mdiscard: ', Mdiscard 
-         !!write(*,*) '  Mtotal / Minitial: ', (Msystem + Madd) / Minitial
          !write(*,*) '-------------------------------------------------------------'
          !write(*,*) 'Adding:     idx, id, status, mass'
          !do i = 1, nmergeadd
@@ -256,6 +293,14 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
          !write(*,*) 'Madd - Mdiscard: ', Madd - Mdiscard
          !write(*,*) 'Mnew - Minitial: ', (Msystem + Madd) - Minitial
          !write(*,*) '-------------------------------------------------------------'
+         !if (abs(Msystem + Madd - Minitial) > 1.0_DP) then
+         !   write(*,*) '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+         !   write(*,*) 'Mass conservation problem!'
+         !   write(*,*) 'Mcb: ',symba_plA%helio%swiftest%mass(1)
+         !   write(*,*) 'Mcb_initial: ',symba_plA%helio%swiftest%Mcb_initial
+         !   write(*,*) 'dMcb       : ',symba_plA%helio%swiftest%dMcb
+         !   write(*,*) '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+         !end if
 
          ! Reset the parent/child/family lists for the next collision
          do j = 1, 2

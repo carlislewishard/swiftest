@@ -1,5 +1,5 @@
 subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA,&
-   discard_tpA, ldiscard, ldiscard_tp, mtiny)
+   discard_tpA, ldiscard_pl, ldiscard_tp, mtiny)
    !! Author: the Purdue Swiftest Team -  David A. Minton, Carlisle A. Wishard, Jennifer L.L. Pouplin, and Jacob R. Elliott
    !!
    !! Clean up tp and pl arrays to remove discarded bodies and add new bodies
@@ -11,24 +11,22 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
    use module_interfaces, EXCEPT_THIS_ONE => symba_rearray
    implicit none
 
-! arguments
-   integer(I4B), intent(inout)             :: npl, nplm, ntp, nsppl, nsptp, nmergeadd 
+   ! Arguments
+   integer(I4B), intent(inout)             :: npl, nplm, ntp, nsppl, nsptp
+   integer(I4B), intent(in)                :: nmergeadd 
    type(symba_pl), intent(inout)           :: symba_plA
    type(symba_tp), intent(inout)           :: symba_tpA
-   type(symba_tp), intent(inout)        :: discard_tpA
-   type(symba_pl), intent(inout)        :: discard_plA
+   type(symba_tp), intent(inout)           :: discard_tpA
+   type(symba_pl), intent(inout)           :: discard_plA
    type(symba_merger), intent(inout)       :: mergeadd_list 
-   logical, intent(in)                     :: ldiscard, ldiscard_tp 
+   logical, intent(in)                     :: ldiscard_pl, ldiscard_tp 
    real(DP), intent(in)                    :: mtiny
 
-
-! internals
+   ! Internals
    integer(I4B)                           :: i, j, nkpl, nktp, ntot, dlo
    logical, dimension(:), allocatable     :: discard_l_pl 
    logical, dimension(ntp)                :: discard_l_tp
    logical                                :: lescape
-
-! executable code
 
    if (any(symba_plA%helio%swiftest%status(1:npl) /= ACTIVE)) then 
 
@@ -55,8 +53,13 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
       else
          call symba_pl_allocate(discard_plA, nsppl)
       end if
+      !write(*,*) 'Keeping ',nkpl,' out of ',npl,' bodies.'
 
       discard_l_pl(:) = (symba_plA%helio%swiftest%status(1:npl) /= ACTIVE) 
+      !write(*,*) 'Discarding ',count(discard_l_pl(:)), ' out of ',npl,' bodies.'
+      !do i = 1, npl
+      !   if (discard_l_pl(i)) write(*,*) i,symba_plA%helio%swiftest%id(i), ' is on its way to destruction. Mass: ',symba_plA%helio%swiftest%mass(i)
+      !end do
 
       ! Spill discarded bodies into discard list
       discard_plA%helio%swiftest%id(dlo:nsppl)   = pack(symba_plA%helio%swiftest%id(1:npl),   discard_l_pl)
@@ -89,13 +92,22 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
             symba_plA%helio%swiftest%rot(i,1:nkpl) = pack(symba_plA%helio%swiftest%rot(i,1:npl), .not. discard_l_pl)
          end do
       end if
+
+      npl = nkpl
+      !write(*,*) 'Total mass of keeps:    ',sum(symba_plA%helio%swiftest%mass(1:nkpl))
    else
       nkpl = npl
    end if
 
    if (nmergeadd > 0) then
-      if (nkpl + nmergeadd > npl) call util_resize_pl(symba_plA, nkpl+nmergeadd)
+      call util_resize_pl(symba_plA, nkpl+nmergeadd)
       npl = nkpl + nmergeadd
+      symba_plA%helio%swiftest%nbody = npl
+
+      !write(*,*) 'Adding ',nmergeadd, ' bodies.'
+      !do i = 1, nmergeadd 
+      !   write(*,*) nkpl+i,mergeadd_list%id(i), ' is on its way to creation.    Mass: ', mergeadd_list%mass(i)
+      !end do
 
       !add merge products to the end of the planet list
       symba_plA%helio%swiftest%status(nkpl+1:npl) = ACTIVE
@@ -108,8 +120,10 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
          symba_plA%helio%swiftest%Ip(i,nkpl+1:npl)  = mergeadd_list%Ip(i,1:nmergeadd)
          symba_plA%helio%swiftest%rot(i,nkpl+1:npl) = mergeadd_list%rot(i,1:nmergeadd)
       end do
+      !write(*,*) 'Total mass of discards: ',sum(symba_plA%helio%swiftest%mass(nkpl+1:npl))
+   end if 
 
-      npl = count(symba_plA%helio%swiftest%status(1:npl) == ACTIVE)
+   if (ldiscard_pl) then
       ntot= size(symba_plA%helio%swiftest%status(:))
       if (ntot > npl) then
          symba_plA%helio%swiftest%status(npl+1:ntot) = INACTIVE
@@ -117,15 +131,14 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
          symba_plA%helio%swiftest%id(npl+1:ntot) = -1
       end if
 
-      symba_plA%helio%swiftest%nbody = npl
-      
+      call symba_reorder_pl(npl, symba_plA)
+
+      nplm = count(symba_plA%helio%swiftest%mass > mtiny)
+
       call coord_b2h(npl, symba_plA%helio%swiftest)
       
       call util_hills(npl, symba_plA%helio%swiftest)
 
-      if (nmergeadd > 0) call symba_reorder_pl(npl, symba_plA)
-
-      nplm = count(symba_plA%helio%swiftest%mass > mtiny)
       CALL util_dist_index_plpl(npl, nplm, symba_plA)
 
       ! check for duplicate names and fix if ncessary
@@ -136,8 +149,7 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
             end if
          end do
       end do
-
-   end if 
+   end if
 
    if (ldiscard_tp) then 
       nktp = 0
