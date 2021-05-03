@@ -41,8 +41,11 @@ subroutine symba_discard_conserve_mtm(swiftest_plA, ipl, lescape)
       swiftest_plA%rot(:,1) = (swiftest_plA%Lcb_initial(:) + swiftest_plA%dLcb(:)) / (Ip(3, 1) * mass(1) * rad(1)**2)        
       
       ! Update position and velocity of central body
-      !xb(:, 1) = xcom(:)
-      !vb(:, 1) = vcom(:)
+      xb(:, 1) = xcom(:)
+      vb(:, 1) = vcom(:)
+
+      ! Update the heliocentric coordinates of everything else
+      call coord_b2h(npl, swiftest_plA)
    end associate
    return
 
