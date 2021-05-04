@@ -18,7 +18,7 @@ subroutine symba_discard_conserve_mtm(swiftest_plA, ipl, lescape)
       statipl => swiftest_plA%status(ipl), xbpl => swiftest_plA%xb(:,ipl), xbcb => swiftest_plA%xb(:,1))
    
       xcom(:) = (mass(ipl) * xb(:, ipl) + mass(1) * xb(:,1)) / (mass(1) + mass(ipl))
-      xcom(:) = (mass(ipl) * vb(:, ipl) + mass(1) * vb(:,1)) / (mass(1) + mass(ipl))
+      vcom(:) = (mass(ipl) * vb(:, ipl) + mass(1) * vb(:,1)) / (mass(1) + mass(ipl))
 
       call util_crossproduct(xb(:,ipl) - xcom(:),vb(:,ipl) - vcom(:), Lpl)
       Lpl(:) = mass(ipl) * (Lpl(:) + rad(ipl)**2 * Ip(3,ipl) * rot(:, ipl))
