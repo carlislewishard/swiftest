@@ -15,6 +15,7 @@ module user
       character(STRMAX)    :: in_type = 'ASCII'    !! Format of input data files
       integer(I4B)         :: istep_out = -1       !! Number of time steps between binary outputs
       character(STRMAX)    :: outfile = ''         !! Name of output binary file
+      character(STRMAX)    :: particle_file = ''        !! Name of output particle information file
       character(STRMAX)    :: out_type = REAL4_TYPE!! Binary format of output file
       character(STRMAX)    :: out_form = 'XV'      !! Data to write to output file
       character(STRMAX)    :: out_stat = 'NEW'     !! Open status for output binary file

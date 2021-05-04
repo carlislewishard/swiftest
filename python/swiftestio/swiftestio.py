@@ -123,8 +123,9 @@ def read_swiftest_config(config_file_name):
    'PL_IN'        : "",
    'TP_IN'        : "",
    'IN_TYPE'      : "ASCII",
-   'ISTEP_OUT'     : -1,
+   'ISTEP_OUT'    : -1,
    'BIN_OUT'      : "",
+   'PARTICLE_FILE' : "",
    'OUT_TYPE'      : 'REAL8',
    'OUT_FORM'      : "XV",
    'OUT_STAT'      : "NEW",
@@ -290,12 +291,12 @@ def swifter_stream(f, param):
 
 def swiftest_stream(f, config):
    """
-   Reads in a Swifter bin.dat file and returns a single frame of data as a datastream
+   Reads in a Swiftest bin.dat file and returns a single frame of data as a datastream
 
    Parameters
    ----------
    f : file object
-   param : dict
+   config : dict
 
    Yields
    -------
@@ -451,22 +452,82 @@ def swiftest2xr(config):
          bdxr = bdxr.assign(npl=npl[0])
          bdxr = bdxr.assign(ntp=ntp[0])
          dsframes.append(bdxr)
-         #animated_loading(config['BIN_OUT'])
          sys.stdout.write('\r'+f"Reading in time {t[0]}")
          sys.stdout.flush()
       print('\nCreating Dataset')
       ds = xr.concat(dsframes, dim='time')
+   if not config['PARTICLE_FILE'] == '':
+      ds = swiftest_particle_2xr(ds, config)
    print(f"Successfully converted {ds.sizes['time']} output frames.")
+   return ds
+
+def swiftest_particle_stream(f):
+   """
+   Reads in a Swiftest particle.dat file and returns a single frame of particle data as a datastream
+
+   Parameters
+   ----------
+   f : file object
+   config : dict
+
+   Yields
+   -------
+   plid : int
+      ID of massive bodie
+   origin_type : string
+      The origin type for the body (Initial conditions, disruption, supercatastrophic, hit and run, etc)
+   origin_xh : float array
+      The origin heliocentric position vector
+   origin_vh : float array
+      The origin heliocentric velocity vector
+   """
+   while True:  # Loop until you read the end of file
+      try:
+         # Read multi-line header
+         plid = f.read_ints()  # Try first part of the header
+      except:
+         break
+      origin_rec = f.read_record(np.dtype('a32'), np.dtype(('<f8', (7))))
+      origin_type = np.char.strip(str(origin_rec[0], encoding='utf-8'))
+      origin_vec = origin_rec[1]
+      yield plid, origin_type, origin_vec
+
+def swiftest_particle_2xr(ds, config):
+   """Reads in the Swiftest PARTICLE_FILE  and converts it to an xarray Dataset"""
+   veclab = ['time_origin', 'px_origin', 'py_origin', 'pz_origin', 'vx_origin', 'vy_origin', 'vz_origin']
+   id_list = []
+   origin_type_list = []
+   origin_vec_list = []
+
+   with FortranFile(config['PARTICLE_FILE'], 'r') as f:
+      for plid, origin_type, origin_vec in swiftest_particle_stream(f):
+         id_list.append(plid)
+
+         origin_type_list.append(origin_type)
+         origin_vec_list.append(origin_vec)
+
+   id_list =  np.asarray(id_list)[:,0]
+   origin_type_list = np.asarray(origin_type_list)
+   origin_vec_list = np.vstack(origin_vec_list)
+
+   typeda = xr.DataArray(origin_type_list, dims=['id'], coords={'id' : id_list})
+   vecda = xr.DataArray(origin_vec_list, dims=['id', 'vec'], coords={'id' : id_list, 'vec' : veclab})
+
+   infoxr = vecda.to_dataset(dim='vec')
+   infoxr['origin_type'] = typeda
+
+   print('\nAdding particle info Dataset')
+   ds = xr.merge([ds, infoxr])
    return ds
 
 if __name__ == '__main__':
 
-   workingdir = '/Users/carlislewishard/Research/Prospectus_Runs/3me_Frag_1/'
+   workingdir = '/Users/daminton/git/swiftest/examples/symba_mars_disk/'
    config_file_name = workingdir + 'param.in'
    config = read_swiftest_config(config_file_name)
    config['BIN_OUT'] = workingdir + config['BIN_OUT']
+   config['PARTICLE_FILE'] = workingdir + config['PARTICLE_FILE']
    config['WORKINGDIR'] = workingdir
-   swiftestdat = swiftest2xr(config, subsize=10)
-   print (swiftestdat['npl'].plot.line())
-   plt.show()
+   swiftestdat = swiftest2xr(config)
+
 

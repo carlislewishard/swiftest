@@ -53,6 +53,7 @@ PROGRAM tool_encounter_read
      CHARACTER(STRMAX) :: intpfile       ! Name of input file for test particles
      CHARACTER(STRMAX) :: in_type        ! Format of input data files
      CHARACTER(STRMAX) :: outfile        ! Name of output binary file
+     CHARACTER(STRMAX) :: particle_file  ! Name of output particle information file
      CHARACTER(STRMAX) :: out_type       ! Binary format of output file
      CHARACTER(STRMAX) :: out_form       ! Data to write to output file
      CHARACTER(STRMAX) :: out_stat       ! Open status for output binary file

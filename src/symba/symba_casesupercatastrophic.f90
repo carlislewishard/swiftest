@@ -91,6 +91,7 @@ function symba_casesupercatastrophic (symba_plA, family, nmergeadd, mergeadd_lis
          mergeadd_list%radius(nmergeadd) = rad_frag(i)
          mergeadd_list%Ip(:,nmergeadd) = Ip_frag(:, i)
          mergeadd_list%rot(:,nmergeadd) = rot_frag(:, i)
+         mergeadd_list%info%origin_type = "Supercatastrophic"
       end do 
    end if
    

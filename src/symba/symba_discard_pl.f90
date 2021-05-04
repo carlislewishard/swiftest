@@ -63,7 +63,7 @@ SUBROUTINE symba_discard_pl(t, npl, ntp, symba_plA, symba_tpA, rmin, rmax, rmaxu
           CALL coord_h2b(npl, symba_plA%helio%swiftest, msys)
      IF ((rmin >= 0.0_DP) .OR. (rmax >= 0.0_DP) .OR. (rmaxu >= 0.0_DP))                                                           &
           CALL symba_discard_sun_pl(t, npl, ntp, msys, symba_plA%helio%swiftest, symba_tpA%helio%swiftest, rmin, rmax, rmaxu, ldiscard)
-     IF (qmin >= 0.0_DP) CALL symba_discard_peri_pl(t, npl, symba_plA, msys, qmin, qmin_alo, qmin_ahi, qmin_coord, ldiscard)
+     !IF (qmin >= 0.0_DP) CALL symba_discard_peri_pl(t, npl, symba_plA, msys, qmin, qmin_alo, qmin_ahi, qmin_coord, ldiscard)
      RETURN 
 
 END SUBROUTINE symba_discard_pl

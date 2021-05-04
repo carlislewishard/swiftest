@@ -15,7 +15,7 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
 
    real(DP), intent(in)                      :: t
    integer(I4B), intent(inout)               :: nplplenc, nmergeadd
-   type(symba_pl)                            :: symba_pla
+   type(symba_pl)                            :: symba_plA
    type(symba_plplenc), intent(inout)        :: plplenc_list
    type(symba_merger), intent(inout)         :: mergeadd_list
    logical, intent(inout)                    :: ldiscard
@@ -95,7 +95,7 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
       ncollisions = nunique_parent + count(lplpl_unique_parent)
       collision_idx = [unique_parent_idx(:), pack(collision_idx(:), lplpl_unique_parent(:))]
 
-      ! Recompute central barycentric velocities
+      ! Recompute barycentric coordinates
       call coord_h2b(npl, symba_plA%helio%swiftest, msys)
 
       ! Loop through the list of pl-pl encounters and pick out the collisions
@@ -242,16 +242,16 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
          !! Use the positions and velocities of the parents and their children after the step is complete to generate the fragments
          select case (regime)
          case (COLLRESOLVE_REGIME_DISRUPTION)
-            write(*, '("Disruption between particles ",20(I6,",",:))') parent_child_index_array(1)%id(:), parent_child_index_array(2)%id(:)
+            write(*, '("Disruption between particles ",99(I8,",",:))') parent_child_index_array(1)%id(:), parent_child_index_array(2)%id(:)
             status = symba_casedisruption(symba_plA, family(1:fam_size), nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, mass_res, param, Qloss)
          case (COLLRESOLVE_REGIME_SUPERCATASTROPHIC)
-            write(*, '("Supercatastrophic disruption between particles ",20(I6,",",:))') parent_child_index_array(1)%id(:), parent_child_index_array(2)%id(:)
+            write(*, '("Supercatastrophic disruption between particles ",99(I8,",",:))') parent_child_index_array(1)%id(:), parent_child_index_array(2)%id(:)
             status = symba_casesupercatastrophic(symba_plA, family, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, mass_res, param, Qloss)
          case (COLLRESOLVE_REGIME_HIT_AND_RUN)
-            write(*, '("Hit and run between particles ",20(I6,",",:))') parent_child_index_array(1)%id(:), parent_child_index_array(2)%id(:)
+            write(*, '("Hit and run between particles ",99(I8,",",:))') parent_child_index_array(1)%id(:), parent_child_index_array(2)%id(:)
             status = symba_casehitandrun(symba_plA, family(1:fam_size), nmergeadd, mergeadd_list, id, x, v, mass, radius, L_spin, Ip, mass_res, param, Qloss)
          case (COLLRESOLVE_REGIME_MERGE, COLLRESOLVE_REGIME_GRAZE_AND_MERGE)
-            write(*, '("Merging particles ",20(I6,",",:))') parent_child_index_array(1)%id(:), parent_child_index_array(2)%id(:)
+            write(*, '("Merging particles ",99(I8,",",:))') parent_child_index_array(1)%id(:), parent_child_index_array(2)%id(:)
             status = symba_casemerge(symba_plA, family(1:fam_size), nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, param)
          case default 
             write(*,*) "Error in symba_collision, unrecognized collision regime"

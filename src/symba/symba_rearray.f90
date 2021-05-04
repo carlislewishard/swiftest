@@ -1,5 +1,5 @@
-subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA,&
-   discard_tpA, ldiscard_pl, ldiscard_tp, mtiny)
+subroutine symba_rearray(t, npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA,&
+   discard_tpA, ldiscard_pl, ldiscard_tp, mtiny, param)
    !! Author: the Purdue Swiftest Team -  David A. Minton, Carlisle A. Wishard, Jennifer L.L. Pouplin, and Jacob R. Elliott
    !!
    !! Clean up tp and pl arrays to remove discarded bodies and add new bodies
@@ -12,19 +12,21 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
    implicit none
 
    ! Arguments
-   integer(I4B), intent(inout)             :: npl, nplm, ntp, nsppl, nsptp
-   integer(I4B), intent(in)                :: nmergeadd 
-   type(symba_pl), intent(inout)           :: symba_plA
-   type(symba_tp), intent(inout)           :: symba_tpA
-   type(symba_tp), intent(inout)           :: discard_tpA
-   type(symba_pl), intent(inout)           :: discard_plA
-   type(symba_merger), intent(inout)       :: mergeadd_list 
-   logical, intent(in)                     :: ldiscard_pl, ldiscard_tp 
-   real(DP), intent(in)                    :: mtiny
+   real(DP),                    intent(in)    :: t 
+   integer(I4B),                intent(inout) :: npl, nplm, ntp, nsppl, nsptp
+   integer(I4B),                intent(in)    :: nmergeadd 
+   type(symba_pl),              intent(inout) :: symba_plA
+   type(symba_tp),              intent(inout) :: symba_tpA
+   type(symba_tp),              intent(inout) :: discard_tpA
+   type(symba_pl),              intent(inout) :: discard_plA
+   type(symba_merger),          intent(inout) :: mergeadd_list 
+   logical,                     intent(in)    :: ldiscard_pl, ldiscard_tp 
+   real(DP),                    intent(in)    :: mtiny
+   type(user_input_parameters), intent(in)    :: param
 
    ! Internals
    integer(I4B)                           :: i, j, nkpl, nktp, ntot, dlo
-   logical, dimension(:), allocatable     :: discard_l_pl 
+   logical, dimension(:), allocatable     :: discard_l_pl, add_l_pl
    logical, dimension(ntp)                :: discard_l_tp
    logical                                :: lescape
 
@@ -99,7 +101,7 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
       symba_plA%helio%swiftest%nbody = npl
 
       !add merge products to the end of the planet list
-      symba_plA%helio%swiftest%status(nkpl+1:npl) = ACTIVE
+      symba_plA%helio%swiftest%status(nkpl+1:npl) = mergeadd_list%status(1:nmergeadd)
       symba_plA%helio%swiftest%id(nkpl+1:npl)   = mergeadd_list%id(1:nmergeadd)
       symba_plA%helio%swiftest%mass(nkpl+1:npl)   = mergeadd_list%mass(1:nmergeadd)
       symba_plA%helio%swiftest%radius(nkpl+1:npl) = mergeadd_list%radius(1:nmergeadd)
@@ -109,25 +111,39 @@ subroutine symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nme
          symba_plA%helio%swiftest%Ip(i,nkpl+1:npl)  = mergeadd_list%Ip(i,1:nmergeadd)
          symba_plA%helio%swiftest%rot(i,nkpl+1:npl) = mergeadd_list%rot(i,1:nmergeadd)
       end do
+      symba_plA%helio%swiftest%info(nkpl+1:npl) = mergeadd_list%info(1:nmergeadd)
    end if 
 
    if (ldiscard_pl) then
-      ntot= size(symba_plA%helio%swiftest%status(:))
-      if (ntot > npl) then
-         symba_plA%helio%swiftest%status(npl+1:ntot) = INACTIVE
-         symba_plA%helio%swiftest%mass(npl+1:ntot) = 0.0_DP
-         symba_plA%helio%swiftest%id(npl+1:ntot) = -1
-      end if
-
-      call symba_reorder_pl(npl, symba_plA)
-
-      nplm = count(symba_plA%helio%swiftest%mass > mtiny)
-
       call coord_b2h(npl, symba_plA%helio%swiftest)
+      ! Create the particle information and set the status flags of all new particles
+      allocate(add_l_pl(npl))
+      
+      where ((symba_plA%helio%swiftest%status(:) == DISRUPTION) .or. &
+             (symba_plA%helio%swiftest%status(:) == SUPERCATASTROPHIC) .or. &
+             (symba_plA%helio%swiftest%status(:) == HIT_AND_RUN))
+         symba_plA%helio%swiftest%info(:)%origin_time = t
+         symba_plA%helio%swiftest%info(:)%origin_xh(1) = symba_plA%helio%swiftest%xh(1,:)
+         symba_plA%helio%swiftest%info(:)%origin_xh(2) = symba_plA%helio%swiftest%xh(2,:)
+         symba_plA%helio%swiftest%info(:)%origin_xh(3) = symba_plA%helio%swiftest%xh(3,:)
+         symba_plA%helio%swiftest%info(:)%origin_vh(1) = symba_plA%helio%swiftest%vh(1,:)
+         symba_plA%helio%swiftest%info(:)%origin_vh(2) = symba_plA%helio%swiftest%vh(2,:)
+         symba_plA%helio%swiftest%info(:)%origin_vh(3) = symba_plA%helio%swiftest%vh(3,:)
+         add_l_pl(:) = .true.
+      elsewhere
+         add_l_pl(:) = .false.
+      end where
+
+      call io_write_particle_pl(symba_plA%helio%swiftest, pack([(i, i=1,npl)], add_l_pl(:)), param)
+
+      symba_plA%helio%swiftest%status(1:npl) = ACTIVE
+      call symba_reorder_pl(npl, symba_plA)
       
       call util_hills(npl, symba_plA%helio%swiftest)
 
+      nplm = count(symba_plA%helio%swiftest%mass > mtiny)
       CALL util_dist_index_plpl(npl, nplm, symba_plA)
+
 
       ! check for duplicate names and fix if ncessary
       do j = 1, npl

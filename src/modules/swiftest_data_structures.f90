@@ -7,6 +7,14 @@ module swiftest_data_structures
    use user
    implicit none
 
+   type swiftest_particle_info
+      sequence
+      character(len=32)         :: origin_type 
+      real(DP)                  :: origin_time 
+      real(DP), dimension(NDIM) :: origin_xh
+      real(DP), dimension(NDIM) :: origin_vh
+   end type swiftest_particle_info
+
    type,public :: swiftest_tp
       integer(I4B)                                :: nbody = 0  !! Number of bodies
       character(len=STRMAX), dimension(:),  allocatable :: name   !! Non-unique name
@@ -20,7 +28,8 @@ module swiftest_data_structures
       real(DP),     dimension(:,:),   allocatable :: xb     !! Barycentric position
       real(DP),     dimension(:,:),   allocatable :: vb     !! Barycentric velocity
       integer(I4B), dimension(:,:),   allocatable :: k_pltp
-      integer(I8B)                                ::  num_pltp_comparisons
+      integer(I8B)                                :: num_pltp_comparisons
+      type(swiftest_particle_info), dimension(:), allocatable :: info
    contains
       procedure :: alloc => swiftest_tp_allocate
       procedure :: dealloc => swiftest_tp_deallocate
@@ -50,17 +59,16 @@ module swiftest_data_structures
 
    interface
 
-      module subroutine swiftest_read_pl_in(self,param) 
-         class(swiftest_pl), intent(inout)         :: self  !! Swiftest data structure to store massive body initial conditions
-         type(user_input_parameters),intent(inout) :: param    !! Input collection of user-defined parameters
+      module subroutine swiftest_read_pl_in(self, param) 
+         class(swiftest_pl),          intent(inout) :: self  !! Swiftest data structure to store massive body initial conditions
+         type(user_input_parameters), intent(inout) :: param    !! Input collection of user-defined parameters
       end subroutine swiftest_read_pl_in
 
-      module subroutine swiftest_read_tp_in(self,param) 
-         class(swiftest_tp), intent(inout)         :: self  !! Swiftest data structure to store massive body initial conditions
-         type(user_input_parameters),intent(inout) :: param    !! Input collection of user-defined parameters
+      module subroutine swiftest_read_tp_in(self, param) 
+         class(swiftest_tp),          intent(inout) :: self  !! Swiftest data structure to store massive body initial conditions
+         type(user_input_parameters), intent(inout) :: param    !! Input collection of user-defined parameters
       end subroutine swiftest_read_tp_in
    end interface
-
 
    contains
 
@@ -81,6 +89,7 @@ module swiftest_data_structures
          allocate(self%vh(NDIM,n))
          allocate(self%xb(NDIM,n))
          allocate(self%vb(NDIM,n))
+         allocate(self%info(n))
 
          self%id = 0
          self%status = 0
@@ -134,6 +143,7 @@ module swiftest_data_structures
          if (allocated(self%xb)) deallocate(self%xb)
          if (allocated(self%vb)) deallocate(self%vb)
          if (allocated(self%k_pltp)) deallocate(self%k_pltp)
+         if (allocated(self%info)) deallocate(self%info)
          return
       end subroutine swiftest_tp_deallocate
 

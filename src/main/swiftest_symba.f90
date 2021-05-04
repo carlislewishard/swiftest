@@ -107,6 +107,7 @@ program swiftest_symba
          call symba_plA%helio%swiftest%read_from_file(param)
          call symba_tpA%helio%swiftest%read_from_file(param)
       !**************************************************
+      call io_write_particle_pl(symba_plA%helio%swiftest, [(i, i=1,npl)], param)
 
       if (ntp > 0) then
          call symba_pltpenc_allocate(pltpenc_list, ntp)
@@ -164,8 +165,8 @@ program swiftest_symba
          ! These next two blocks should be streamlined/improved but right now we treat discards separately from collisions so it has to be this way
          if (ldiscard_pl .or. ldiscard_tp) then
             if (param%lenergy) call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit_before, ke_spin_before, pe_before, Eorbit_before, Ltot)
-            call symba_rearray(npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
-                               discard_tpA, ldiscard_pl, ldiscard_tp, mtiny)
+            call symba_rearray(t, npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
+                               discard_tpA, ldiscard_pl, ldiscard_tp, mtiny, param)
             call io_discard_write_symba(t, mtiny, npl, nsppl, nsptp, nmergesub, symba_plA, &
                                         discard_plA%helio%swiftest, discard_tpA%helio%swiftest, mergeadd_list, mergesub_list, discard_file, param%lbig_discard) 
             nmergeadd = 0

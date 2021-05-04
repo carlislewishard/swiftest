@@ -30,6 +30,8 @@ function symba_casemerge (symba_plA, family, nmergeadd, mergeadd_list, x, v, mas
    real(DP), dimension(NDIM)                 :: L_orb_old, L_spin_old
    real(DP), dimension(NDIM)                 :: L_spin_new, rot_new, Ip_new
 
+   status = MERGED
+
    mass_new = sum(mass(:))
 
    ! The merged body's name will be that of the largest of the two parents 
@@ -66,15 +68,14 @@ function symba_casemerge (symba_plA, family, nmergeadd, mergeadd_list, x, v, mas
    call symba_merger_size_check(mergeadd_list, nmergeadd + 1)  
    nmergeadd = nmergeadd + 1
    mergeadd_list%id(nmergeadd) = mergeid
-   mergeadd_list%status(nmergeadd) = MERGED
+   mergeadd_list%status(nmergeadd) = status
    mergeadd_list%xb(:,nmergeadd) = xcom(:)
    mergeadd_list%vb(:,nmergeadd) = vcom(:)
    mergeadd_list%mass(nmergeadd) = mass_new
    mergeadd_list%radius(nmergeadd) = radius_new
    mergeadd_list%Ip(:,nmergeadd) = Ip_new(:)
    mergeadd_list%rot(:,nmergeadd) = rot_new(:)
-
-   status = MERGED
+   mergeadd_list%info(nmergeadd) = symba_plA%helio%swiftest%info(family(ibiggest)) 
 
    return 
 end function symba_casemerge

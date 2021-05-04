@@ -58,6 +58,8 @@ contains
             read(param_value, *) param%istep_out
          case ("BIN_OUT")
             param%outfile = param_value
+         case ("PARTICLE_FILE")
+            param%particle_file = param_value
          case ("OUT_TYPE")
             call util_toupper(param_value)
             param%out_type = param_value
@@ -179,6 +181,11 @@ contains
    end if
    if ((param%istep_out > 0) .and. (param%outfile == "")) then
       write(iomsg,*) 'Invalid outfile'
+      iostat = -1
+      return
+   end if
+   if ((param%istep_out > 0) .and. (param%particle_file == "")) then
+      write(iomsg,*) 'Invalid particle file'
       iostat = -1
       return
    end if

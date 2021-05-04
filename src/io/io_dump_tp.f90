@@ -28,13 +28,13 @@
 !  Notes       : Adapted from Martin Duncan's Swift routine io_dump_tp.f
 !
 !**********************************************************************************************************************************
-subroutine io_dump_tp(ntp, swiftest_tpa)
+subroutine io_dump_tp(ntp, swiftest_tpA)
    use swiftest
    use module_interfaces, except_this_one => io_dump_tp
    implicit none
 
    integer(I4B), intent(in)            :: ntp
-   type(swiftest_tp), intent(inout)    :: swiftest_tpa
+   type(swiftest_tp), intent(inout)    :: swiftest_tpA
 
    integer(I4B)                        :: ierr
    integer(I4B), save                  :: idx = 1

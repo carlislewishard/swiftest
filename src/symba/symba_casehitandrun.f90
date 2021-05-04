@@ -110,6 +110,7 @@ function symba_casehitandrun(symba_plA, family, nmergeadd, mergeadd_list, id, x,
          mergeadd_list%radius(nmergeadd) = rad_frag(i)
          mergeadd_list%Ip(:,nmergeadd) = Ip_frag(:, i)
          mergeadd_list%rot(:,nmergeadd) = rot_frag(:, i)
+         mergeadd_list%info%origin_type = "Hit and run fragment"
       end do 
    end if
 

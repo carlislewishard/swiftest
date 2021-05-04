@@ -95,6 +95,7 @@ function symba_casedisruption (symba_plA, family, nmergeadd, mergeadd_list, x, v
          mergeadd_list%radius(nmergeadd) = rad_frag(i)
          mergeadd_list%Ip(:,nmergeadd) = Ip_frag(:, i)
          mergeadd_list%rot(:,nmergeadd) = rot_frag(:, i)
+         mergeadd_list%info%origin_type = "Disruption"
       end do 
    end if
 

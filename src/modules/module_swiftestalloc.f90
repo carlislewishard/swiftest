@@ -51,10 +51,10 @@ module module_swiftestalloc
       allocate(symba_plA%ntpenc(n))
       allocate(symba_plA%levelg(n))
       allocate(symba_plA%levelm(n))
-      allocate(symba_plA%kin(n))
       allocate(symba_plA%isperi(n))
       allocate(symba_plA%peri(n))
       allocate(symba_plA%atp(n))
+      allocate(symba_plA%kin(n))
 
       symba_plA%lcollision(:) = .false.
       symba_plA%lencounter(:) = .false.
@@ -136,6 +136,7 @@ module module_swiftestalloc
       allocate(merger_list%radius(n))
       allocate(merger_list%rot(NDIM,n))
       allocate(merger_list%Ip(NDIM,n))
+      allocate(merger_list%info(n))
 
       merger_list%id(:) = 0
       merger_list%index_ps(:) = 1
@@ -256,10 +257,10 @@ module module_swiftestalloc
       if (allocated(symba_plA%ntpenc)) deallocate(symba_plA%ntpenc)
       if (allocated(symba_plA%levelg)) deallocate(symba_plA%levelg)
       if (allocated(symba_plA%levelm)) deallocate(symba_plA%levelm)
-      if (allocated(symba_plA%kin)) deallocate(symba_plA%kin)
       if (allocated(symba_plA%isperi)) deallocate(symba_plA%isperi)
       if (allocated(symba_plA%peri)) deallocate(symba_plA%peri)
       if (allocated(symba_plA%atp)) deallocate(symba_plA%atp)
+      if (allocated(symba_plA%kin)) deallocate(symba_plA%kin)
       call helio_pl_deallocate(symba_plA%helio)
       return
    end subroutine symba_pl_deallocate
@@ -300,6 +301,7 @@ module module_swiftestalloc
       if (allocated(merger_list%radius)) deallocate(merger_list%radius)
       if (allocated(merger_list%rot)) deallocate(merger_list%rot)
       if (allocated(merger_list%Ip)) deallocate(merger_list%Ip)
+      if (allocated(merger_list%info)) deallocate(merger_list%info)
       return
    end subroutine symba_merger_deallocate
 
@@ -382,9 +384,10 @@ module module_swiftestalloc
       use module_symba
       implicit none
 
-      type(symba_merger), intent(in)        :: merger_list_in
-      type(symba_merger), intent(inout)     :: merger_list_out
-      integer(I4B), intent(in)              :: n
+      type(symba_merger), intent(in)     :: merger_list_in
+      type(symba_merger), intent(inout)  :: merger_list_out
+      integer(I4B), intent(in)           :: n
+
 
       merger_list_out%id(1:n) = merger_list_in%id(1:n)
       merger_list_out%index_ps(1:n) = merger_list_in%index_ps(1:n)
@@ -396,6 +399,7 @@ module module_swiftestalloc
       merger_list_out%radius(1:n) = merger_list_in%radius(1:n)
       merger_list_out%Ip(:, 1:n) = merger_list_in%Ip(:, 1:n)
       merger_list_out%rot(:, 1:n) = merger_list_in%rot(:, 1:n)
+      merger_list_out%info(1:n) = merger_list_in%info(1:n)
       return
    end subroutine symba_merger_copy
 
