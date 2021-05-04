@@ -340,27 +340,45 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       end do
 
       A = 0.0_DP
-      B = 0.0_DP
       C = 0.0_DP
+
       do i = 1, nfrag
-         A = A + m_frag(i) * (mtot / m_frag(i))**2 * dot_product(v_r(:,i), v_r(:,i))
-         B = B + m_frag(i) * (mtot / m_frag(i)) * dot_product(v_r(:,i), vcom(:))
-         C = C + m_frag(i) * (0.5_DP * (dot_product(v_phi(:,i), v_phi(:,i)) + dot_product(vcom(:), vcom(:))) + dot_product(v_phi(:,i), vcom(:)))
+         A = A + (0.5_DP * m_frag(i) * dot_product(v_r(:,i),v_r(:,i)))
+         C = C + (0.5_DP * m_frag(i) * dot_product(vcom(:),vcom(:))) + (0.5_DP * m_frag(i) * dot_product(v_phi(:,i),v_phi(:,i)))
       end do
-      A = 0.5_DP * A
+
       C = C - ke_target
-      rterm = B**2 - 4 * A * C
+      rterm = - 4 * A * C
       if (rterm > 0.0_DP) then
-         f_corrected = (-B + sqrt(rterm)) / (2 * A)
+         f_corrected = sqrt(rterm) / (2 * A)
          lmerge = .false.
       else
          f_corrected = 0.0_DP
          lmerge = .true.
       end if
 
+      !A = 0.0_DP
+      !B = 0.0_DP
+      !C = 0.0_DP
+      !do i = 1, nfrag
+      !   A = A + m_frag(i) * (mtot / m_frag(i))**2 * dot_product(v_r(:,i), v_r(:,i))
+      !   B = B + m_frag(i) * (mtot / m_frag(i)) * dot_product(v_r(:,i), vcom(:))
+      !   C = C + m_frag(i) * (0.5_DP * (dot_product(v_phi(:,i), v_phi(:,i)) + dot_product(vcom(:), vcom(:))) + dot_product(v_phi(:,i), vcom(:)))
+      !end do
+      !A = 0.5_DP * A
+      !C = C - ke_target
+      !rterm = B**2 - 4 * A * C
+      !if (rterm > 0.0_DP) then
+      !   f_corrected = (-B + sqrt(rterm)) / (2 * A)
+      !   lmerge = .false.
+      !else
+      !   f_corrected = 0.0_DP
+      !   lmerge = .true.
+      !end if
+
       ! Shift the fragments into the system barycenter frame
       do i = 1, nfrag
-         v_frag(:,i) = f_corrected * (mtot / m_frag(i)) *  v_r(:, i) + v_phi(:, i)
+         v_frag(:,i) = f_corrected * v_r(:, i) + v_phi(:, i)
       end do
 
       call symba_frag_pos_com_adjust(xcom, vcom, m_frag, x_frag, v_frag)
