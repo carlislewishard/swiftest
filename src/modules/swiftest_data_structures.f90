@@ -17,6 +17,7 @@ module swiftest_data_structures
 
    type,public :: swiftest_tp
       integer(I4B)                                :: nbody = 0  !! Number of bodies
+      integer(I4B)                                :: maxid = 0  !! Maximum id
       character(len=STRMAX), dimension(:),  allocatable :: name   !! Non-unique name
       integer(I4B), dimension(:),     allocatable :: id     !! External identifier (unique)
       integer(I4B), dimension(:),     allocatable :: status !! Status

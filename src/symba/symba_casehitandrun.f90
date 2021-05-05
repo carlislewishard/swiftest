@@ -86,9 +86,6 @@ function symba_casehitandrun(symba_plA, family, nmergeadd, mergeadd_list, id, x,
          nfrag = 0
       else
          write(*,'("Generating ",I2.0," fragments")') nfrag
-         do i = 1, nfrag
-            id_frag(i) = idstart + i 
-         end do
       end if
    end if
    if (lpure) then
@@ -102,7 +99,8 @@ function symba_casehitandrun(symba_plA, family, nmergeadd, mergeadd_list, id, x,
       end associate
       do i = 1, nfrag
          nmergeadd = nmergeadd + 1
-         mergeadd_list%id(nmergeadd) = id_frag(i) 
+         symba_plA%helio%swiftest%maxid = symba_plA%helio%swiftest%maxid + 1
+         mergeadd_list%id(nmergeadd) = symba_plA%helio%swiftest%maxid
          mergeadd_list%status(nmergeadd) = HIT_AND_RUN
          mergeadd_list%xb(:,nmergeadd) = xb_frag(:, i)
          mergeadd_list%vb(:,nmergeadd) = vb_frag(:, i)

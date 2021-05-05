@@ -23,7 +23,7 @@ function symba_casedisruption (symba_plA, family, nmergeadd, mergeadd_list, x, v
    ! Result
    integer(I4B)                              :: status
    ! Internals
-   integer(I4B)                            :: i,  istart, nfrag, idstart
+   integer(I4B)                            :: i, istart, nfrag
    real(DP)                                :: mtot, avg_dens
    real(DP), dimension(NDIM)               :: xcom, vcom, Ip_new
    real(DP), dimension(2)                  :: vol
@@ -82,12 +82,10 @@ function symba_casedisruption (symba_plA, family, nmergeadd, mergeadd_list, x, v
       write(*,'("Generating ",I2.0," fragments")') nfrag
       call symba_merger_size_check(mergeadd_list, nmergeadd + nfrag)  
       status = DISRUPTION
-      associate(npl => symba_plA%helio%swiftest%nbody)
-         idstart = maxval([symba_plA%helio%swiftest%id(1:npl), mergeadd_list%id(1:nmergeadd)])
-      end associate
       do i = 1, nfrag
          nmergeadd = nmergeadd + 1
-         mergeadd_list%id(nmergeadd) = idstart + i
+         symba_plA%helio%swiftest%maxid = symba_plA%helio%swiftest%maxid + 1
+         mergeadd_list%id(nmergeadd) = symba_plA%helio%swiftest%maxid
          mergeadd_list%status(nmergeadd) = DISRUPTION
          mergeadd_list%xb(:,nmergeadd) = xb_frag(:, i) 
          mergeadd_list%vb(:,nmergeadd) = vb_frag(:, i) 

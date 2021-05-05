@@ -134,6 +134,16 @@ subroutine symba_rearray(t, npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, 
          add_l_pl(:) = .false.
       end where
 
+      ! check for duplicate names and fix if ncessary
+      do j = 1, npl
+         do i = j + 1, npl
+            if (symba_plA%helio%swiftest%id(i) == symba_plA%helio%swiftest%id(j)) then
+               symba_plA%helio%swiftest%id(i) = maxval(symba_plA%helio%swiftest%id(:)) + 1
+            end if
+         end do
+      end do
+      symba_plA%helio%swiftest%maxid = max(symba_plA%helio%swiftest%maxid, maxval(symba_plA%helio%swiftest%id))
+
       call io_write_particle_pl(symba_plA%helio%swiftest, pack([(i, i=1,npl)], add_l_pl(:)), param)
 
       symba_plA%helio%swiftest%status(1:npl) = ACTIVE
@@ -145,14 +155,6 @@ subroutine symba_rearray(t, npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, 
       CALL util_dist_index_plpl(npl, nplm, symba_plA)
 
 
-      ! check for duplicate names and fix if ncessary
-      do j = 1, npl
-         do i = j + 1, npl
-            if (symba_plA%helio%swiftest%id(i) == symba_plA%helio%swiftest%id(j)) then
-               symba_plA%helio%swiftest%id(i) = maxval(symba_plA%helio%swiftest%id(:)) + 1
-            end if
-         end do
-      end do
    end if
 
    if (ldiscard_tp) then 

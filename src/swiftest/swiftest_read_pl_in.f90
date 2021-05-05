@@ -121,6 +121,10 @@ contains
       end do
       self%info(1)%origin_type = "Central body"
 
+      ! Give massive bodies a positive id
+      self%id(:) = abs(self%id(:))
+      self%maxid = maxval(self%id(:))
+
       return
    end procedure swiftest_read_pl_in 
 

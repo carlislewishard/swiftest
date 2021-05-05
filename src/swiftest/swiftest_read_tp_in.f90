@@ -51,6 +51,10 @@ contains
          self%status(:) = ACTIVE
       end if
       close(LUN)
+      
+      ! Give test particles a negative id
+      where(self%id(:) > 0) self%id(:) = -self%id(:)
+      self%maxid = minval(self%id(:))
 
       return
       end procedure swiftest_read_tp_in
