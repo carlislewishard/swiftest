@@ -33,7 +33,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
    real(DP)                                :: rmag
    logical, dimension(:), allocatable      :: lexclude
    character(len=*), parameter             :: fmtlabel = "(A14,10(ES9.2,1X,:))"
-   integer(I4B), parameter                 :: MAXITER = 100
+   integer(I4B), parameter                 :: MAXITER = 2
    real(DP), dimension(NDIM)               :: x_cross_v, v_phi_unit, h_unit, v_r_unit
    real(DP), dimension(:,:), allocatable   :: v_r, v_phi
    
@@ -343,14 +343,14 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       C = 0.0_DP
 
       do i = 1, nfrag
-         A = A + (0.5_DP * m_frag(i) * dot_product(v_r(:,i),v_r(:,i)))
-         C = C + (0.5_DP * m_frag(i) * dot_product(vcom(:),vcom(:))) + (0.5_DP * m_frag(i) * dot_product(v_phi(:,i),v_phi(:,i)))
+         A = A + m_frag(i) * dot_product(v_r(:,i),v_r(:,i))
+         C = C + m_frag(i) * (dot_product(vcom(:),vcom(:)) + dot_product(v_phi(:,i),v_phi(:,i)) + dot_product(vcom(:), v_phi(:, i)))
       end do
 
-      C = C - ke_target
-      rterm = - 4 * A * C
+      C = C - 2 * ke_target
+      rterm = - C
       if (rterm > 0.0_DP) then
-         f_corrected = sqrt(rterm) / (2 * A)
+         f_corrected = sqrt(rterm / A)
          lmerge = .false.
       else
          f_corrected = 0.0_DP
