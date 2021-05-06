@@ -171,6 +171,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       integer(I4B), save                      :: thetashift = 0
       integer(I4B), parameter                 :: SHIFTMAX = 9
       real(DP)                                :: mtot, phase_ang, theta, v_frag_norm, r_frag_norm, v_col_norm, r_col_norm
+      real(DP)                                :: semi_major, semi_minor, x_ellipse, y_ellipse, r_ellipse
       real(DP), dimension(NDIM)               :: Ltot, xc, vc, x_cross_v, delta_r, delta_v
       real(DP), dimension(NDIM)               :: r_col_unit_vec, v_col_unit_vec, v_plane_unit_vec
       integer(I4B)                            :: i, nfrag
@@ -194,7 +195,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       ! Shifts the starting circle of fragments around so that multiple fragments generated 
       ! from a single collision in a single time step don't pile up on top of each other
       phase_ang = theta * thetashift / SHIFTMAX
-      phase_ang = PI / 2._DP
+      phase_ang = 0.0_DP !PI / 2._DP
       !thetashift = thetashift + 1
       IF (thetashift >= shiftmax) thetashift = 0
 
@@ -228,7 +229,21 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       do i = 1, nfrag
          ! Place the fragments on the collision plane at a distance proportional to mass wrt the collisional barycenter
          ! This gets updated later after the new potential energy is calculated
-         r_frag_norm = r_col_norm * mtot / m_frag(i) 
+
+         semi_major = r_col_norm
+         semi_minor = 0.25_DP * r_col_norm
+         
+         x_ellipse = (semi_major * semi_minor) / sqrt(semi_minor**2 + semi_major**2 * tan(theta)**2)
+         y_ellipse = (semi_major * semi_minor) / sqrt(semi_major**2 + semi_minor**2 / tan(theta)**2)
+
+         !if ((theta < (3.0_DP * PI / 2.0_DP)) .AND. (theta > (PI / 2.0_DP))) then
+         !   x = -x
+         !   y = -y
+         !end if  
+
+         r_ellipse = sqrt(x_ellipse**2 + y_ellipse**2)
+
+         r_frag_norm = r_ellipse * mtot / m_frag(i) 
 
          x_frag(:,i) =  r_frag_norm * ((cos(phase_ang + theta * (i - 1))) * v_col_unit_vec(:)  + &
                                        (sin(phase_ang + theta * (i - 1))) * v_plane_unit_vec(:)) 
