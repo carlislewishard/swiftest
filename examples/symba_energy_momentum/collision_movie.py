@@ -9,9 +9,9 @@ xmax = 8.0
 ymin = -8.0
 ymax = 8.0
 
-animfile = 'supercat_headon.mp4'
-titletext = "Supercatastrophic - Head on"
-configfile = 'param.supercatastrophic_headon.in'
+animfile = 'disruption_off_axis.mp4'
+titletext = "Disruption - Off Axis"
+configfile = 'param.disruption_off_axis.in'
 
 def scale_sim(ds, config):
 
