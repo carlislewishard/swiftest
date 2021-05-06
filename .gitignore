@@ -52,3 +52,5 @@ example/
 !docs/*
 !docs/*/*
 !docs/*/*/*
+
+examples/symba_energy_momentum/.ipynb_checkpoints/
