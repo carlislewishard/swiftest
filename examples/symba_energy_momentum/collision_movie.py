@@ -4,12 +4,12 @@ import matplotlib.pyplot as plt
 from matplotlib import animation
 import matplotlib.collections as clt
 
-xmin = -8.0
-xmax = 8.0
-ymin = -8.0
-ymax = 8.0
+xmin = -20.0
+xmax = 20.0
+ymin = -20.0
+ymax = 20.0
 
-case = 'supercat_head'
+case = 'supercat_off'
 
 if case == 'supercat_off':
     animfile = 'supercat_off_axis.mp4'

@@ -168,11 +168,13 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       real(DP), dimension(:,:), intent(out)   :: x_frag, v_frag  !! Fragment position and velocities
 
       ! Internals
-      real(DP)                                :: mtot, phase_ang, theta, v_frag_norm, r_frag_norm, v_col_norm, r_col_norm
-      real(DP)                                :: ecc_ellipse, b2a
+      real(DP)                                :: mtot, theta, v_frag_norm, r_frag_norm, v_col_norm, r_col_norm
+      real(DP)                                :: ecc_ellipse, b2a,  phase_ang, imp_param
       real(DP), dimension(NDIM)               :: Ltot, xc, vc, x_cross_v, delta_r, delta_v
       real(DP), dimension(NDIM)               :: x_col_unit, y_col_unit, z_col_unit
       integer(I4B)                            :: i, nfrag
+      real(DP), dimension(2,2)                :: orientation
+      real(DP), dimension(2)                  :: frag_vec
 
 
       ! Now create the fragment distribution
@@ -200,30 +202,39 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       ! The cross product of the z- by x-axis will give us the y-axis
       call util_crossproduct(z_col_unit, x_col_unit, y_col_unit)
 
-      ! Re-normalize position and velocity vectors by the fragment number so that for our initial guess we weight each
-      ! fragment position by the mass and assume equipartition of energy for the velocity
-      r_col_norm = max(2 * r_col_norm, 2 * sum(radius(:))) / nfrag ! To ensure that the new fragments aren't overlapping we will pick an initial starting radius 
-      v_col_norm = v_col_norm / sqrt(1.0_DP * nfrag)
+
       
       ! Place the fragments on the collision planea on an ellipse, but with the distance proportional to mass wrt the collisional barycenter
       ! This gets updated later after the new potential energy is calculated
-      ecc_ellipse = 0.75_DP
-      b2a = 1.0_DP / sqrt(1.0_DP - ecc_ellipse**2)
+      ecc_ellipse = 0.90_DP
 
+
+      b2a = 1.0_DP / sqrt(1.0_DP - ecc_ellipse**2)
+      
       ! The orientation and angular spacing of fragments on the ellipse
       theta = (2 * PI) / nfrag
-      phase_ang = 0.0_DP
-      do i = 1, nfrag
-         r_frag_norm = r_col_norm * mtot / m_frag(i) 
+      ! Impirically determined phase angle that depends on the impact paarameter
+      imp_param = norm2(Ltot(:)) / (r_col_norm * v_col_norm * mtot)
+      phase_ang = -asin(imp_param**(0.25_DP))
+      orientation = reshape([cos(phase_ang), sin(phase_ang), -sin(phase_ang), cos(phase_ang)], shape(orientation))
 
-         x_frag(:,i) =  r_frag_norm * (b2a * (cos(phase_ang + theta * (i - 1))) * x_col_unit(:) + &
-                                             (sin(phase_ang + theta * (i - 1))) * y_col_unit(:)) 
+      ! Re-normalize position and velocity vectors by the fragment number so that for our initial guess we weight each
+      ! fragment position by the mass and assume equipartition of energy for the velocity
+      v_col_norm = 0.0_DP
+      v_col_norm = v_col_norm / sqrt(1.0_DP * nfrag)
+      r_col_norm = 2 * max(r_col_norm, sum(radius(:))) / nfrag ! To ensure that the new fragments aren't overlapping we will pick an initial starting radius 
+      do i = 1, nfrag
+         frag_vec(:) = [b2a * cos(theta * (i - 1)), sin(theta * (i - 1))]
+         frag_vec(:) = matmul(orientation(:,:), frag_vec(:))
+
+         r_frag_norm = r_col_norm * mtot / m_frag(i) 
+         x_frag(:,i) =  r_frag_norm * (frag_vec(1) * x_col_unit(:) + frag_vec(2) * y_col_unit(:))
                         
          ! Apply a simple mass weighting first to ensure that the velocity follows the barycenter
          ! This gets updated later after the new potential and kinetic energy is calcualted
          v_frag_norm = v_col_norm * sqrt(mtot / m_frag(i))
-         v_frag(:,i) =  v_frag_norm * (b2a * (cos(phase_ang + theta * (i - 1))) * x_col_unit(:) + &
-                                             (sin(phase_ang + theta * (i - 1))) * y_col_unit(:)) 
+         v_frag(:,i) = v_frag_norm * (frag_vec(1) * x_col_unit(:) + frag_vec(2) * y_col_unit(:))
+
       end do
 
       return
@@ -315,22 +326,17 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          h_unit(:) = x_cross_v(:) / norm2(x_cross_v(:))
          v_r_unit(:) = x_frag(:,i) / norm2(x_frag(:, i))
          call utiL_crossproduct(h_unit(:), v_r_unit(:), v_phi_unit(:))
-         v_r(:,i) = dot_product(v_frag(:,i), v_r_unit(:)) * v_r_unit(:)
+         v_r(:,i) = v_r_unit(:) !dot_product(v_frag(:,i), v_r_unit(:)) * v_r_unit(:)
          v_phi(:,i) = dot_product(v_frag(:,i), v_phi_unit(:)) * v_phi_unit(:)
       end do
 
-      A = 0.0_DP
-      C = 0.0_DP
-
+      C = 2 * ke_target
       do i = 1, nfrag
-         A = A + m_frag(i) * dot_product(v_r(:,i),v_r(:,i))
-         C = C + m_frag(i) * (dot_product(vcom(:),vcom(:)) + dot_product(v_phi(:,i),v_phi(:,i)) + dot_product(vcom(:), v_phi(:, i)))
+         C = C - m_frag(i) * (dot_product(vcom(:),vcom(:)) + dot_product(v_phi(:,i),v_phi(:,i)) + dot_product(vcom(:), v_phi(:, i)))
       end do
 
-      C = C - 2 * ke_target
-      rterm = - C
-      if (rterm > 0.0_DP) then
-         f_corrected = sqrt(rterm / A)
+      if (C > 0.0_DP) then
+         f_corrected = sqrt(C / mtot)
          lmerge = .false.
       else
          f_corrected = 0.0_DP
