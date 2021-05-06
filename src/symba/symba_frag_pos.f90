@@ -171,9 +171,9 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       !integer(I4B), save                      :: thetashift = 0
       !integer(I4B), parameter                 :: SHIFTMAX = 9
       real(DP)                                :: mtot, phase_ang, theta, v_frag_norm, r_frag_norm, v_col_norm, r_col_norm
-      real(DP)                                :: ecc_ellipse
+      real(DP)                                :: ecc_ellipse, b2a
       real(DP), dimension(NDIM)               :: Ltot, xc, vc, x_cross_v, delta_r, delta_v
-      real(DP), dimension(NDIM)               :: r_col_unit_vec, v_col_unit_vec, v_plane_unit_vec
+      real(DP), dimension(NDIM)               :: x_col_unit, y_col_unit, z_col_unit
       integer(I4B)                            :: i, nfrag
 
 
@@ -194,8 +194,8 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       !theta = (2 * PI) / nfrag
       ! Shifts the starting circle of fragments around so that multiple fragments generated 
       ! from a single collision in a single time step don't pile up on top of each other
-      !phase_ang = theta * thetashift / SHIFTMAX
-      !phase_ang = 0.0_DP !PI / 2._DP
+      phase_ang = theta * thetashift / SHIFTMAX
+      phase_ang = PI / 2.0_DP !0.0_DP !PI / 2._DP
 
       !IF (thetashift >= shiftmax) thetashift = 0
 
@@ -208,40 +208,42 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          Ltot(:) = Ltot(:) + mass(i) * x_cross_v(:)
       end do
 
-      ! Relative position and velocity vectors of the two impacting "clouds" 
+      ! We will initialize fragments on a planet defined by the pre-impact system, with the z-axis aligned with the angular momentum
+      ! and the x-axis aligned with the impact velocity vector.
+      z_col_unit = Ltot(:) / norm2(Ltot(:))
+      delta_v(:) = v(:, 2) - v(:, 1)
+      v_col_norm = norm2(delta_v(:))     
+      x_col_unit(:) = delta_v(:) / v_col_norm  
+      ! The cross product of the z- by x-axis will give us the y-axis
+      call util_crossproduct(z_col_unit, x_col_unit, y_col_unit)
+
+      ! The initial guess for the radial scaling of the fragment distribution will be based on the pre-impact distance
       delta_r(:) = x(:, 2) - x(:, 1)
       r_col_norm = norm2(delta_r(:))
-      delta_v(:) = v(:, 2) - v(:, 1)
-      v_col_norm = norm2(delta_v(:))               
-
-      ! Calculate the triple product to get the plane of the fragment distribution
-      call util_crossproduct(Ltot,delta_v,v_plane_unit_vec)
-      v_plane_unit_vec(:) = v_plane_unit_vec(:) / norm2(v_plane_unit_vec(:))
-
-      v_col_unit_vec(:) = delta_v(:) / v_col_norm 
-      r_col_unit_vec(:) = delta_r(:) / norm2(delta_r(:)) ! unit vector of collision distance
 
       ! Re-normalize position and velocity vectors by the fragment number so that for our initial guess we weight each
       ! fragment position by the mass and assume equipartition of energy for the velocity
       r_col_norm = max(2 * r_col_norm, 2 * sum(radius(:))) / nfrag ! To ensure that the new fragments aren't overlapping we will pick an initial starting radius 
                                                                    ! that is the bigger of: 2x the initial separation or 2x the mutual radius. 
       v_col_norm = v_col_norm / sqrt(1.0_DP * nfrag)
-      do i = 1, nfrag
-         ! Place the fragments on the collision plane at a distance proportional to mass wrt the collisional barycenter
-         ! This gets updated later after the new potential energy is calculated
 
-         ecc_ellipse = 0.25_DP
+      
+      ! Place the fragments on the collision planea on an ellipse, but with the distance proportional to mass wrt the collisional barycenter
+      ! This gets updated later after the new potential energy is calculated
+      ecc_ellipse = 0.25_DP
+      b2a = (1.0_DP + ecc_ellipse) / (1.0_DP - ecc_ellipse)
+      do i = 1, nfrag
 
          r_frag_norm = r_col_norm * mtot / m_frag(i) 
 
-         x_frag(:,i) =  r_frag_norm * ((1.0_DP + ecc_ellipse) * (cos(theta * (i - 1))) * v_col_unit_vec(:) + &
-                                       (1.0_DP - ecc_ellipse) * (sin(theta * (i - 1))) * v_plane_unit_vec(:)) 
+         x_frag(:,i) =  r_frag_norm * (b2a * (cos(phase_ang + theta * (i - 1))) * x_col_unit(:) + &
+                                             (sin(phase_ang + theta * (i - 1))) * y_col_unit(:)) 
                         
          ! Apply a simple mass weighting first to ensure that the velocity follows the barycenter
          ! This gets updated later after the new potential and kinetic energy is calcualted
          v_frag_norm = v_col_norm * sqrt(mtot / m_frag(i))
-         v_frag(:,i) =  v_frag_norm * ((1.0_DP + ecc_ellipse) * (cos(theta * (i - 1))) * v_col_unit_vec(:) + &
-                                       (1.0_DP - ecc_ellipse) * (sin(theta * (i - 1))) * v_plane_unit_vec(:)) 
+         v_frag(:,i) =  v_frag_norm * (b2a * (cos(phase_ang + theta * (i - 1))) * x_col_unit(:) + &
+                                             (sin(phase_ang + theta * (i - 1))) * y_col_unit(:)) 
       end do
 
       return
