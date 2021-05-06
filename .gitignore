@@ -54,3 +54,5 @@ example/
 !docs/*/*/*
 
 examples/symba_energy_momentum/.ipynb_checkpoints/
+
+examples/symba_mars_disk/.ipynb_checkpoints/
