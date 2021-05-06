@@ -9,9 +9,24 @@ xmax = 8.0
 ymin = -8.0
 ymax = 8.0
 
-animfile = 'disruption_off_axis.mp4'
-titletext = "Disruption - Off Axis"
-configfile = 'param.disruption_off_axis.in'
+case = 'supercat_head'
+
+if case == 'supercat_off':
+    animfile = 'supercat_off_axis.mp4'
+    titletext = "Supercatastrophic - Off Axis"
+    configfile = 'param.supercatastrophic_off_axis.in'
+elif case == 'supercat_head':
+    animfile = 'supercat_headon.mp4'
+    titletext = "Supercatastrophic - Head on"
+    configfile = 'param.supercatastrophic_headon.in'
+elif case == 'disruption_off':
+    animfile = 'disruption_off_axis.mp4'
+    titletext = "Disruption - Off Axis"
+    configfile = 'param.disruption_off_axis.in'
+elif case == 'disruption_head':
+    animfile = 'disruption_headon.mp4'
+    titletext = "Disruption- Head on"
+    configfile = 'param.disruption_headon.in'
 
 def scale_sim(ds, config):
 
