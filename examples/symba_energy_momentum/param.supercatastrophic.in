@@ -1,5 +1,5 @@
 T0             0.0e0
-TSTOP          0.000015            ! simulation length in seconds = 100 years
+TSTOP          0.000030            ! simulation length in seconds = 100 years
 DT             0.0000001              ! stepsize in seconds
 PL_IN          supercatastrophic.in
 TP_IN          tp.in

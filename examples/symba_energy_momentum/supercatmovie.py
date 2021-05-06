@@ -25,9 +25,6 @@ def scale_sim(ds, config):
     dsscale['px'] /= rscale
     dsscale['py'] /= rscale
     dsscale['pz'] /= rscale
-    dsscale['vx'] /= rscale
-    dsscale['vy'] /= rscale
-    dsscale['vz'] /= rscale
 
     mpx = dsscale['mass'] * dsscale['px']
     mpy = dsscale['mass'] * dsscale['py']
@@ -81,6 +78,7 @@ class AnimatedScatter(object):
         self.stream = self.data_stream(frame)
         # Setup the figure and axes...
         self.fig, self.ax = plt.subplots(figsize=(8,8))
+        plt.tight_layout()
         # Then setup FuncAnimation.
         self.ani = animation.FuncAnimation(self.fig, self.update, interval=1, frames=nframes,
                                           init_func=self.setup_plot, blit=False)
@@ -89,11 +87,43 @@ class AnimatedScatter(object):
 
     def plot_pl_circles(self, pl, radmarker):
         patches = []
-        #s = self.ax.scatter(pl[idx, 0], pl[idx, 1], marker='o', s=radmarker[idx], c=value, alpha=1.00, label=key)
         for i in range(pl.shape[0]):
             s = plt.Circle((pl[i, 0], pl[i, 1]), radmarker[i])
             patches.append(s)
         return patches
+
+    def vec_props(self, c):
+        arrowprops = {
+            'arrowstyle': '<|-',
+            'mutation_scale': 20,
+            'connectionstyle': 'arc3',
+        }
+
+        arrow_args = {
+            'xycoords': 'data',
+            'textcoords': 'data',
+            'arrowprops': arrowprops,
+            'annotation_clip': True,
+            'zorder': 100,
+            'animated' : True
+        }
+        aarg = arrow_args.copy()
+        aprop = arrowprops.copy()
+        aprop['color'] = c
+        aarg['arrowprops'] = aprop
+        aarg['color'] = c
+        return aarg
+
+    def plot_pl_vectors(self, pl, cval):
+
+        arrows = []
+        for i in range(pl.shape[0]):
+            aarg = self.vec_props(cval[i])
+            varrowend = (pl[i, 0], pl[i, 1])
+            varrowtip = (pl[i, 0] + pl[i, 2] * self.v_length, pl[i, 1] + pl[i, 3] * self.v_length)
+            a = self.ax.annotate("",xy=varrowend,xytext=varrowtip, **aarg)
+            arrows.append(a)
+        return arrows
 
     def origin_to_color(self, origin):
         cval = []
@@ -114,9 +144,8 @@ class AnimatedScatter(object):
         self.ax.set_aspect(1)
 
         # Scale markers to the size of the system
+        self.v_length = 0.50  # Length of arrow as fraction of velocity
 
-        sfac = self.ax.get_window_extent().width / (xmax - xmin) * (72. / self.fig.dpi)
-        #self.ds['radmarker'] = (sfac * ds['radmarker'])**2
         self.ax.margins(x=1, y=1)
         self.ax.set_xlabel('x distance / ($R_1 + R_2$)', fontsize='16', labelpad=1)
         self.ax.set_ylabel('y distance / ($R_1 + R_2$)', fontsize='16', labelpad=1)
@@ -129,21 +158,25 @@ class AnimatedScatter(object):
 
         self.collection = UpdatablePatchCollection(self.patches, color=cval)
         self.ax.add_collection(self.collection)
+        self.arrows = self.plot_pl_vectors(pl, cval)
 
-        return self.collection
+        return self.collection, self.arrows
 
     def update(self,frame):
         """Update the scatter plot."""
         t, name, mass, radius, npl, pl, radmarker, origin = next(self.data_stream(frame))
         cval = self.origin_to_color(origin)
-        # We need to return the updated artist for FuncAnimation to draw..
-        # Note that it expects a sequence of artists, thus the trailing comma.
         for i, p in enumerate(self.patches):
             p.set_center((pl[i, 0], pl[i,1]))
             p.set_radius(radmarker[i])
             p.set_color(cval[i])
+            varrowend = (pl[i, 0], pl[i, 1])
+            varrowtip = (pl[i, 0] + pl[i, 2] * self.v_length, pl[i, 1] + pl[i, 3] * self.v_length)
+            self.arrows[i].set_position(varrowtip)
+            self.arrows[i].xy = varrowend
+
         self.collection.set_paths(self.patches)
-        return self.collection
+        return self.collection, self.arrows
 
     def data_stream(self, frame=0):
         while True:
@@ -152,6 +185,8 @@ class AnimatedScatter(object):
             mass = d['mass'].values
             x = d['pxb'].values
             y = d['pyb'].values
+            vx = d['vxb'].values
+            vy = d['vyb'].values
             name = d['id'].values
             npl = d['npl'].values
             radmarker = d['radmarker'].values
@@ -160,7 +195,7 @@ class AnimatedScatter(object):
             t = self.ds.coords['time'].values[frame]
 
             frame += 1
-            yield t, name, mass, radius, npl, np.c_[x, y], radmarker, origin
+            yield t, name, mass, radius, npl, np.c_[x, y, vx, vy], radmarker, origin
 
 config = swio.read_swiftest_config("param.supercatastrophic.in")
 ds = swio.swiftest2xr(config)
