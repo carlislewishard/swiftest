@@ -179,9 +179,6 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       nfrag = size(m_frag(:))
       mtot = sum(mass(:))
 
-      ! Calculate the position of each fragment 
-      theta = (2 * PI) / nfrag
-      phase_ang = PI / 2.0_DP !0.0_DP !PI / 2._DP
 
       ! Compute orbital angular momentum of pre-impact system. This will be the normal vector to the collision fragment plane
       Ltot = L_spin(:,1) + L_spin(:,2)
@@ -212,6 +209,10 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       ! This gets updated later after the new potential energy is calculated
       ecc_ellipse = 0.75_DP
       b2a = 1.0_DP / sqrt(1.0_DP - ecc_ellipse**2)
+
+      ! The orientation and angular spacing of fragments on the ellipse
+      theta = (2 * PI) / nfrag
+      phase_ang = 0.0_DP
       do i = 1, nfrag
          r_frag_norm = r_col_norm * mtot / m_frag(i) 
 
