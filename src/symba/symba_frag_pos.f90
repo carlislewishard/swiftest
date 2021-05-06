@@ -194,7 +194,8 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       ! Shifts the starting circle of fragments around so that multiple fragments generated 
       ! from a single collision in a single time step don't pile up on top of each other
       phase_ang = theta * thetashift / SHIFTMAX
-      thetashift = thetashift + 1
+      phase_ang = PI / 2._DP
+      !thetashift = thetashift + 1
       IF (thetashift >= shiftmax) thetashift = 0
 
       ! Compute orbital angular momentum of pre-impact system. This will be the normal vector to the collision fragment plane
@@ -229,14 +230,14 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          ! This gets updated later after the new potential energy is calculated
          r_frag_norm = r_col_norm * mtot / m_frag(i) 
 
-         x_frag(:,i) =  r_frag_norm * ((cos(phase_ang + theta * i)) * v_col_unit_vec(:)  + &
-                                       (sin(phase_ang + theta * i)) * v_plane_unit_vec(:)) 
+         x_frag(:,i) =  r_frag_norm * ((cos(phase_ang + theta * (i - 1))) * v_col_unit_vec(:)  + &
+                                       (sin(phase_ang + theta * (i - 1))) * v_plane_unit_vec(:)) 
                         
          ! Apply a simple mass weighting first to ensure that the velocity follows the barycenter
          ! This gets updated later after the new potential and kinetic energy is calcualted
          v_frag_norm = v_col_norm * sqrt(mtot / m_frag(i))
-         v_frag(:,i) =  v_frag_norm * ((cos(phase_ang + theta * i)) * v_col_unit_vec(:) + &
-                                       (sin(phase_ang + theta * i)) * v_plane_unit_vec(:)) 
+         v_frag(:,i) =  v_frag_norm * ((cos(phase_ang + theta * (i - 1))) * v_col_unit_vec(:) + &
+                                       (sin(phase_ang + theta * (i - 1))) * v_plane_unit_vec(:)) 
       end do
 
       return

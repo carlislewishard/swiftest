@@ -9,7 +9,7 @@ xmax = 8.0
 ymin = -8.0
 ymax = 8.0
 
-outfile = 'supercat.mp4'
+outfile = 'disruption.mp4'
 
 def scale_sim(ds, config):
 
@@ -114,14 +114,12 @@ class AnimatedScatter(object):
         aarg['color'] = c
         return aarg
 
-    def plot_pl_vectors(self, pl, cval):
-
+    def plot_pl_vectors(self, pl, cval, r):
+        varrowend, varrowtip = self.arrowheads(pl, r)
         arrows = []
         for i in range(pl.shape[0]):
             aarg = self.vec_props(cval[i])
-            varrowend = (pl[i, 0], pl[i, 1])
-            varrowtip = (pl[i, 0] + pl[i, 2] * self.v_length, pl[i, 1] + pl[i, 3] * self.v_length)
-            a = self.ax.annotate("",xy=varrowend,xytext=varrowtip, **aarg)
+            a = self.ax.annotate("",xy=varrowend[i],xytext=varrowtip[i], **aarg)
             arrows.append(a)
         return arrows
 
@@ -132,6 +130,25 @@ class AnimatedScatter(object):
            cval.append(c)
 
         return cval
+
+    def arrowheads(self, pl, r):
+        px = pl[:, 0]
+        py = pl[:, 1]
+        vx = pl[:, 2]
+        vy = pl[:, 3]
+        vmag = np.sqrt(vx ** 2 + vy ** 2)
+        ux = vx / vmag
+        uy = vy / vmag
+        ux = np.nan_to_num(ux,copy=False)
+        uy = np.nan_to_num(uy,copy=False)
+        varrowend = []
+        varrowtip = []
+        for i in range(pl.shape[0]):
+            vend = (px[i], py[i])
+            vtip = (px[i] + vx[i] * self.v_length, py[i] + vy[i] * self.v_length)
+            varrowend.append(vend)
+            varrowtip.append(vtip)
+        return varrowend, varrowtip
 
     def setup_plot(self):
         # First frame
@@ -144,7 +161,7 @@ class AnimatedScatter(object):
         self.ax.set_aspect(1)
 
         # Scale markers to the size of the system
-        self.v_length = 0.50  # Length of arrow as fraction of velocity
+        self.v_length = 2.00  # Length of arrow as fraction of velocity
 
         self.ax.margins(x=1, y=1)
         self.ax.set_xlabel('x distance / ($R_1 + R_2$)', fontsize='16', labelpad=1)
@@ -153,12 +170,12 @@ class AnimatedScatter(object):
         self.title = self.ax.text(0.50, 1.05, "", bbox={'facecolor': 'w', 'alpha': 0.5, 'pad': 5}, transform=self.ax.transAxes,
                         ha="center")
 
-        self.title.set_text('Supercatastrophic')
+        self.title.set_text('Disruption')
         self.patches = self.plot_pl_circles(pl, radmarker)
 
         self.collection = UpdatablePatchCollection(self.patches, color=cval)
         self.ax.add_collection(self.collection)
-        self.arrows = self.plot_pl_vectors(pl, cval)
+        self.arrows = self.plot_pl_vectors(pl, cval, radmarker)
 
         return self.collection, self.arrows
 
@@ -166,14 +183,13 @@ class AnimatedScatter(object):
         """Update the scatter plot."""
         t, name, mass, radius, npl, pl, radmarker, origin = next(self.data_stream(frame))
         cval = self.origin_to_color(origin)
+        varrowend, varrowtip = self.arrowheads(pl, radmarker)
         for i, p in enumerate(self.patches):
             p.set_center((pl[i, 0], pl[i,1]))
             p.set_radius(radmarker[i])
             p.set_color(cval[i])
-            varrowend = (pl[i, 0], pl[i, 1])
-            varrowtip = (pl[i, 0] + pl[i, 2] * self.v_length, pl[i, 1] + pl[i, 3] * self.v_length)
-            self.arrows[i].set_position(varrowtip)
-            self.arrows[i].xy = varrowend
+            self.arrows[i].set_position(varrowtip[i])
+            self.arrows[i].xy = varrowend[i]
 
         self.collection.set_paths(self.patches)
         return self.collection, self.arrows
@@ -194,10 +210,18 @@ class AnimatedScatter(object):
 
             t = self.ds.coords['time'].values[frame]
 
+            x = np.nan_to_num(x, copy=False)
+            y = np.nan_to_num(y, copy=False)
+            vx = np.nan_to_num(vx, copy=False)
+            vy = np.nan_to_num(vy, copy=False)
+            radmarker = np.nan_to_num(radmarker, copy=False)
+            mass = np.nan_to_num(mass, copy=False)
+            radius = np.nan_to_num(radius, copy=False)
+
             frame += 1
             yield t, name, mass, radius, npl, np.c_[x, y, vx, vy], radmarker, origin
 
-config = swio.read_swiftest_config("param.supercatastrophic.in")
+config = swio.read_swiftest_config("param.disruption.in")
 ds = swio.swiftest2xr(config)
 print('Making animation')
 anim = AnimatedScatter(ds,config)

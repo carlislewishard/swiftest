@@ -452,7 +452,7 @@ def swiftest2xr(config):
          bdxr = bdxr.assign(npl=npl[0])
          bdxr = bdxr.assign(ntp=ntp[0])
          dsframes.append(bdxr)
-         sys.stdout.write('\r'+f"Reading in time {t[0]}")
+         sys.stdout.write('\r'+f"Reading in time {t[0]:.3e}")
          sys.stdout.flush()
       print('\nCreating Dataset')
       ds = xr.concat(dsframes, dim='time')

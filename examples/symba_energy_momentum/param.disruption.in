@@ -1,16 +1,12 @@
-!
-! Parameter file for Mars in SI units
-!
-NPLMAX         3                 ! not used
-NTPMAX         0                 ! not used
 T0             0.0e0
-TSTOP          0.10              ! simulation length in seconds = 100 years
-DT             0.01              ! stepsize in seconds
+TSTOP          0.000100            ! simulation length in seconds = 100 years
+DT             0.0000001              ! stepsize in seconds
 PL_IN          disruption.in
 TP_IN          tp.in
 IN_TYPE        ASCII
 ISTEP_OUT      1                 ! output cadence every year
 BIN_OUT        bin.disruption.dat
+PARTICLE_FILE  particle.disruption.dat
 OUT_TYPE       REAL8             ! double precision real output
 OUT_FORM       XV                ! osculating element output
 OUT_STAT       REPLACE
@@ -18,8 +14,8 @@ ISTEP_DUMP     1                 ! system dump cadence
 J2             0.0               ! no J2 term
 J4             0.0               ! no J4 term
 CHK_CLOSE      yes               ! check for planetary close encounters
-CHK_RMIN       3389.5e3
-CHK_RMAX       3389.5e6          
+CHK_RMIN       0.005
+CHK_RMAX       1e6
 CHK_EJECT      -1.0              ! ignore this check
 CHK_QMIN       -1.0              ! ignore this check
 !CHK_QMIN_COORD HELIO            ! commented out here
@@ -28,13 +24,10 @@ ENC_OUT        enc.disruption.dat
 EXTRA_FORCE    no                ! no extra user-defined forces
 BIG_DISCARD    no                ! output all planets if anything discarded
 RHILL_PRESENT  yes               ! Hill's sphere radii in input file
-MTINY          1.0e-6
+MTINY          1.0e-16
 FRAGMENTATION  yes
-MU2KG          1.0
-TU2S           1.0
-DU2M           1.0
-!MU2KG          1.98908e30
-!TU2S           3.1556925e7
-!DU2M           1.49598e11
+MU2KG          1.98908e30
+TU2S           3.1556925e7
+DU2M           1.49598e11
 ENERGY         yes
 ROTATION       yes
