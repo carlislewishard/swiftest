@@ -9,9 +9,9 @@ xmax = 8.0
 ymin = -8.0
 ymax = 8.0
 
-animfile = 'supercat_off_axis.mp4'
-titletext = "Supercatastrophic - Off Axis"
-configfile = 'param.supercatastrophic_off_axis.in'
+animfile = 'supercat_headon.mp4'
+titletext = "Supercatastrophic - Head on"
+configfile = 'param.supercatastrophic_headon.in'
 
 def scale_sim(ds, config):
 
@@ -71,11 +71,11 @@ class AnimatedScatter(object):
         self.ds = scale_sim(ds, config)
         self.config = config
 
-        self.clist = {'Initial conditions' : 'xkcd:faded blue',
-                      'Disruption' : 'xkcd:marigold',
+        self.clist = {'Initial conditions' : 'xkcd:windows blue',
+                      'Disruption' : 'xkcd:baby poop',
                       'Supercatastrophic' : 'xkcd:shocking pink',
-                      'Hit and run fragment' : 'xkcd:baby poop green',
-                      'Central body'    : 'black'}
+                      'Hit and run fragment' : 'xkcd:blue with a hint of purple',
+                      'Central body'    : 'xkcd:almost black'}
 
         self.stream = self.data_stream(frame)
         # Setup the figure and axes...
@@ -138,10 +138,11 @@ class AnimatedScatter(object):
         vx = pl[:, 2]
         vy = pl[:, 3]
         vmag = np.sqrt(vx ** 2 + vy ** 2)
-        ux = vx / vmag
-        uy = vy / vmag
-        ux = np.nan_to_num(ux,copy=False)
-        uy = np.nan_to_num(uy,copy=False)
+        ux = np.zeros_like(vx)
+        uy = np.zeros_like(vx)
+        mask = vmag > 0.0
+        ux[mask] = vx[mask] / vmag[mask]
+        uy[mask] = vy[mask] / vmag[mask]
         varrowend = []
         varrowtip = []
         for i in range(pl.shape[0]):
@@ -159,24 +160,26 @@ class AnimatedScatter(object):
         cval = self.origin_to_color(origin)
         # set up the figure
         self.ax = plt.axes(xlim=(xmin, xmax), ylim=(ymin, ymax))
+        plt.axis('off')
+        plt.tight_layout(pad=0)
         self.ax.set_aspect(1)
         self.ax.get_xaxis().set_visible(False)
         self.ax.get_yaxis().set_visible(False)
 
         # Scale markers to the size of the system
-        self.v_length = 2.00  # Length of arrow as fraction of velocity
+        self.v_length = 0.50  # Length of arrow as fraction of velocity
 
         self.ax.margins(x=1, y=1)
         self.ax.set_xlabel('x distance / ($R_1 + R_2$)', fontsize='16', labelpad=1)
         self.ax.set_ylabel('y distance / ($R_1 + R_2$)', fontsize='16', labelpad=1)
 
-        self.title = self.ax.text(0.50, 1.05, "", bbox={'facecolor': 'w', 'alpha': 0.5, 'pad': 5}, transform=self.ax.transAxes,
-                        ha="center")
+        self.title = self.ax.text(0.50, 0.90, "", bbox={'facecolor': 'w', 'pad': 5}, transform=self.ax.transAxes,
+                        ha="center", zorder=1000)
 
         self.title.set_text(titletext)
         self.patches = self.plot_pl_circles(pl, radmarker)
 
-        self.collection = UpdatablePatchCollection(self.patches, color=cval)
+        self.collection = UpdatablePatchCollection(self.patches, color=cval, alpha=0.5, zorder=50)
         self.ax.add_collection(self.collection)
         self.arrows = self.plot_pl_vectors(pl, cval, radmarker)
 
