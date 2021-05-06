@@ -168,8 +168,8 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       real(DP), dimension(:,:), intent(out)   :: x_frag, v_frag  !! Fragment position and velocities
 
       ! Internals
-      integer(I4B), save                      :: thetashift = 0
-      integer(I4B), parameter                 :: SHIFTMAX = 9
+      !integer(I4B), save                      :: thetashift = 0
+      !integer(I4B), parameter                 :: SHIFTMAX = 9
       real(DP)                                :: mtot, phase_ang, theta, v_frag_norm, r_frag_norm, v_col_norm, r_col_norm
       real(DP)                                :: ecc_ellipse
       real(DP), dimension(NDIM)               :: Ltot, xc, vc, x_cross_v, delta_r, delta_v
@@ -186,18 +186,18 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       theta = (2 * PI) / nfrag
       ! Shifts the starting circle of fragments around so that multiple fragments generated 
       ! from a single collision in a single time step don't pile up on top of each other
-      phase_ang = theta * thetashift / SHIFTMAX
-      thetashift = thetashift + 1
-      IF (thetashift >= shiftmax) thetashift = 0
+      !phase_ang = 0.0_DP!theta * thetashift / SHIFTMAX
+      !thetashift = thetashift + 1
+      !IF (thetashift >= shiftmax) thetashift = 0
 
       ! Theta is a phase shift value that ensures that successive nearby collisions in a single step are rotated to avoid possible overlap
-      theta = (2 * PI) / nfrag
+      !theta = (2 * PI) / nfrag
       ! Shifts the starting circle of fragments around so that multiple fragments generated 
       ! from a single collision in a single time step don't pile up on top of each other
-      phase_ang = theta * thetashift / SHIFTMAX
-      phase_ang = 0.0_DP !PI / 2._DP
-      !thetashift = thetashift + 1
-      IF (thetashift >= shiftmax) thetashift = 0
+      !phase_ang = theta * thetashift / SHIFTMAX
+      !phase_ang = 0.0_DP !PI / 2._DP
+
+      !IF (thetashift >= shiftmax) thetashift = 0
 
       ! Compute orbital angular momentum of pre-impact system. This will be the normal vector to the collision fragment plane
       Ltot = L_spin(:,1) + L_spin(:,2)
@@ -234,14 +234,14 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 
          r_frag_norm = r_col_norm * mtot / m_frag(i) 
 
-         x_frag(:,i) =  r_frag_norm * ((1.0_DP + ecc_ellipse) * (cos(phase_ang + theta * (i - 1))) * v_col_unit_vec(:) + &
-                                       (1.0_DP - ecc_ellipse) * (sin(phase_ang + theta * (i - 1))) * v_plane_unit_vec(:)) 
+         x_frag(:,i) =  r_frag_norm * ((1.0_DP + ecc_ellipse) * (cos(theta * (i - 1))) * v_col_unit_vec(:) + &
+                                       (1.0_DP - ecc_ellipse) * (sin(theta * (i - 1))) * v_plane_unit_vec(:)) 
                         
          ! Apply a simple mass weighting first to ensure that the velocity follows the barycenter
          ! This gets updated later after the new potential and kinetic energy is calcualted
          v_frag_norm = v_col_norm * sqrt(mtot / m_frag(i))
-         v_frag(:,i) =  v_frag_norm * ((1.0_DP + ecc_ellipse) * (cos(phase_ang + theta * (i - 1))) * v_col_unit_vec(:) + &
-                                       (1.0_DP - ecc_ellipse) * (sin(phase_ang + theta * (i - 1))) * v_plane_unit_vec(:)) 
+         v_frag(:,i) =  v_frag_norm * ((1.0_DP + ecc_ellipse) * (cos(theta * (i - 1))) * v_col_unit_vec(:) + &
+                                       (1.0_DP - ecc_ellipse) * (sin(theta * (i - 1))) * v_plane_unit_vec(:)) 
       end do
 
       return
@@ -317,7 +317,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       logical, intent(out)                    :: lmerge
 
       ! Internals
-      real(DP)                                :: f_corrected, A, B, C, rterm, mtot
+      real(DP)                                :: f_corrected, mtot, A, C, rterm
       integer(I4B)                            :: i, nfrag
       real(DP), dimension(:,:), allocatable   :: v_r, v_phi
       real(DP), dimension(NDIM)               :: x_cross_v, v_phi_unit, h_unit, v_r_unit
@@ -354,25 +354,6 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          f_corrected = 0.0_DP
          lmerge = .true.
       end if
-
-      !A = 0.0_DP
-      !B = 0.0_DP
-      !C = 0.0_DP
-      !do i = 1, nfrag
-      !   A = A + m_frag(i) * (mtot / m_frag(i))**2 * dot_product(v_r(:,i), v_r(:,i))
-      !   B = B + m_frag(i) * (mtot / m_frag(i)) * dot_product(v_r(:,i), vcom(:))
-      !   C = C + m_frag(i) * (0.5_DP * (dot_product(v_phi(:,i), v_phi(:,i)) + dot_product(vcom(:), vcom(:))) + dot_product(v_phi(:,i), vcom(:)))
-      !end do
-      !A = 0.5_DP * A
-      !C = C - ke_target
-      !rterm = B**2 - 4 * A * C
-      !if (rterm > 0.0_DP) then
-      !   f_corrected = (-B + sqrt(rterm)) / (2 * A)
-      !   lmerge = .false.
-      !else
-      !   f_corrected = 0.0_DP
-      !   lmerge = .true.
-      !end if
 
       ! Shift the fragments into the system barycenter frame
       do i = 1, nfrag
