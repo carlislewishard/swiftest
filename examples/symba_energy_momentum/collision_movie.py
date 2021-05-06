@@ -9,7 +9,9 @@ xmax = 8.0
 ymin = -8.0
 ymax = 8.0
 
-outfile = 'disruption.mp4'
+animfile = 'supercat_off_axis.mp4'
+titletext = "Supercatastrophic - Off Axis"
+configfile = 'param.supercatastrophic.in'
 
 def scale_sim(ds, config):
 
@@ -82,7 +84,7 @@ class AnimatedScatter(object):
         # Then setup FuncAnimation.
         self.ani = animation.FuncAnimation(self.fig, self.update, interval=1, frames=nframes,
                                           init_func=self.setup_plot, blit=False)
-        self.ani.save(outfile, fps=60, dpi=300,
+        self.ani.save(animfile, fps=60, dpi=300,
                       extra_args=['-vcodec', 'libx264'])
 
     def plot_pl_circles(self, pl, radmarker):
@@ -170,7 +172,7 @@ class AnimatedScatter(object):
         self.title = self.ax.text(0.50, 1.05, "", bbox={'facecolor': 'w', 'alpha': 0.5, 'pad': 5}, transform=self.ax.transAxes,
                         ha="center")
 
-        self.title.set_text('Disruption')
+        self.title.set_text(titletext)
         self.patches = self.plot_pl_circles(pl, radmarker)
 
         self.collection = UpdatablePatchCollection(self.patches, color=cval)
@@ -221,7 +223,7 @@ class AnimatedScatter(object):
             frame += 1
             yield t, name, mass, radius, npl, np.c_[x, y, vx, vy], radmarker, origin
 
-config = swio.read_swiftest_config("param.disruption.in")
+config = swio.read_swiftest_config(configfile)
 ds = swio.swiftest2xr(config)
 print('Making animation')
 anim = AnimatedScatter(ds,config)
