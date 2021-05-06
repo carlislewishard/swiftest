@@ -11,7 +11,7 @@ ymax = 8.0
 
 animfile = 'supercat_off_axis.mp4'
 titletext = "Supercatastrophic - Off Axis"
-configfile = 'param.supercatastrophic.in'
+configfile = 'param.supercatastrophic_off_axis.in'
 
 def scale_sim(ds, config):
 
@@ -80,7 +80,6 @@ class AnimatedScatter(object):
         self.stream = self.data_stream(frame)
         # Setup the figure and axes...
         self.fig, self.ax = plt.subplots(figsize=(8,8))
-        plt.tight_layout()
         # Then setup FuncAnimation.
         self.ani = animation.FuncAnimation(self.fig, self.update, interval=1, frames=nframes,
                                           init_func=self.setup_plot, blit=False)
@@ -161,6 +160,8 @@ class AnimatedScatter(object):
         # set up the figure
         self.ax = plt.axes(xlim=(xmin, xmax), ylim=(ymin, ymax))
         self.ax.set_aspect(1)
+        self.ax.get_xaxis().set_visible(False)
+        self.ax.get_yaxis().set_visible(False)
 
         # Scale markers to the size of the system
         self.v_length = 2.00  # Length of arrow as fraction of velocity

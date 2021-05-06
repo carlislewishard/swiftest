@@ -1,8 +1,6 @@
 !
 ! Parameter file for Mars in SI units
 !
-NPLMAX         3                 ! not used
-NTPMAX         0                 ! not used
 T0             0.0e0
 TSTOP          0.01              ! simulation length in seconds = 100 years
 DT             0.01              ! stepsize in seconds

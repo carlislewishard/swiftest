@@ -1,16 +1,12 @@
-!
-! Parameter file for Mars in SI units
-!
-NPLMAX         3                 ! not used
-NTPMAX         0                 ! not used
 T0             0.0e0
-TSTOP          0.10              ! simulation length in seconds = 100 years
-DT             0.01              ! stepsize in seconds
-PL_IN          headon.in
+TSTOP          0.000030            ! simulation length in seconds = 100 years
+DT             0.0000001              ! stepsize in seconds
+PL_IN          supercatastrophic_headon.in
 TP_IN          tp.in
 IN_TYPE        ASCII
 ISTEP_OUT      1                 ! output cadence every year
-BIN_OUT        bin.headon.dat
+BIN_OUT        bin.supercatastrophic_headon.dat
+PARTICLE_FILE  particle.supercatastrophic_headon.dat
 OUT_TYPE       REAL8             ! double precision real output
 OUT_FORM       XV                ! osculating element output
 OUT_STAT       REPLACE
@@ -24,11 +20,11 @@ CHK_EJECT      -1.0              ! ignore this check
 CHK_QMIN       -1.0              ! ignore this check
 !CHK_QMIN_COORD HELIO            ! commented out here
 !CHK_QMIN_RANGE 1.0 1000.0       ! commented out here
-ENC_OUT        enc.headon.dat
+ENC_OUT        enc.supercatastrophic_headon.dat
 EXTRA_FORCE    no                ! no extra user-defined forces
 BIG_DISCARD    no                ! output all planets if anything discarded
 RHILL_PRESENT  yes               ! Hill's sphere radii in input file
-MTINY          1.0e-6
+MTINY          1.0e-16
 FRAGMENTATION  yes
 MU2KG          1.98908e30
 TU2S           3.1556925e7
