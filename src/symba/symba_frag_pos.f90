@@ -215,7 +215,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       theta = (2 * PI) / nfrag
       ! Impirically determined phase angle that depends on the impact paarameter
       imp_param = norm2(Ltot(:)) / (r_col_norm * v_col_norm * mtot)
-      phase_ang = asin(imp_param**(0.25_DP))
+      phase_ang = 0.5_DP * PI 
       orientation = reshape([cos(phase_ang), sin(phase_ang), -sin(phase_ang), cos(phase_ang)], shape(orientation))
 
       ! Re-normalize position and velocity vectors by the fragment number so that for our initial guess we weight each
