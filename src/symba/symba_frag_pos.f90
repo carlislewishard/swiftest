@@ -204,7 +204,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       ! We will initialize fragments on a planet defined by the pre-impact system, with the z-axis aligned with the angular momentum
       ! and the x-axis aligned with the impact velocity vector.
       z_col_unit = Ltot(:) / norm2(Ltot(:))
-      x_col_unit(:) = delta_v(:) / v_col_norm  
+      x_col_unit(:) = delta_r(:) / r_col_norm  
       ! The cross product of the z- by x-axis will give us the y-axis
       call util_crossproduct(z_col_unit, x_col_unit, y_col_unit)
 
@@ -216,7 +216,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       ! The orientation and angular spacing of fragments on the ellipse
       theta = (2 * PI) / nfrag
       ! Impirically determined phase angle that depends on the impact paarameter
-      phase_ang = 0.0_DP
+      phase_ang = PI
       orientation = reshape([cos(phase_ang), sin(phase_ang), -sin(phase_ang), cos(phase_ang)], shape(orientation))
 
       ! Re-normalize position and velocity vectors by the fragment number so that for our initial guess we weight each
