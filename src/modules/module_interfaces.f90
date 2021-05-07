@@ -1075,12 +1075,13 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-      subroutine symba_rearray_pl(t, symba_plA, nmergeadd, mergeadd_list, discard_plA, param)
+      subroutine symba_rearray_pl(t, npl, symba_plA, nmergeadd, mergeadd_list, discard_plA, param)
          use swiftest_globals
          use swiftest_data_structures
          use module_symba
          implicit none
          real(DP),                    intent(in)    :: t
+         integer(I4B),                intent(inout) :: npl
          integer(I4B),                intent(in)    :: nmergeadd
          type(symba_pl),              intent(inout) :: symba_plA
          type(symba_pl),              intent(inout) :: discard_plA

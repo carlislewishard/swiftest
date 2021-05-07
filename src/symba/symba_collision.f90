@@ -304,7 +304,7 @@ subroutine symba_collision(t, symba_plA, nplplenc, plplenc_list, lfrag_add, nmer
          end do
          deallocate(family)
 
-         call symba_rearray_pl(t, symba_plA, nmergeadd, mergeadd_list, discard_plA, param)
+         call symba_rearray_pl(t, npl, symba_plA, nmergeadd, mergeadd_list, discard_plA, param)
 
       end do
    end associate

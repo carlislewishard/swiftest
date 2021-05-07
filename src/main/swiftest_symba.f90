@@ -156,7 +156,7 @@ program swiftest_symba
          call symba_discard_pl(t, npl, ntp, symba_plA, symba_tpA, rmin, rmax, rmaxu, qmin, qmin_coord, qmin_alo, qmin_ahi, ldiscard_pl)
          if (ldiscard_pl) then
             if (param%lenergy) call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit_before, ke_spin_before, pe_before, Eorbit_before, Ltot)
-            call symba_rearray_pl(t, symba_plA, nmergeadd, mergeadd_list, discard_plA, param)
+            call symba_rearray_pl(t, npl, symba_plA, nmergeadd, mergeadd_list, discard_plA, param)
             if (param%lenergy) then
                call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit_after, ke_spin_after, pe_after, Eorbit_after, Ltot)
                Ecollision = Eorbit_before - Eorbit_after    ! Energy change resulting in this collisional event Total running energy offset from collision in this step
