@@ -45,12 +45,11 @@ subroutine symba_collision(t, symba_plA, nplplenc, plplenc_list, lfrag_add, nmer
    type(family_array), dimension(2)           :: parent_child_index_array
    logical, dimension(nplplenc)               :: lplpl_collision
    logical, dimension(:), allocatable         :: lplpl_unique_parent
-   integer(I4B), dimension(:), pointer        :: plparent  
    logical                                    :: ldiscard
 
    ! First determine the collisional regime for each colliding pair
    associate(npl => symba_plA%helio%swiftest%nbody, xbpl => symba_plA%helio%swiftest%xb, statpl => symba_plA%helio%swiftest%status, idpl => symba_plA%helio%swiftest%id, &
-             idx1 => plplenc_list%index1, idx2 => plplenc_list%index2, plparent => symba_plA%kin%parent)
+             idx1 => plplenc_list%index1, idx2 => plplenc_list%index2)
       lplpl_collision(:) = plplenc_list%status(1:nplplenc) == COLLISION
       ldiscard = any(lplpl_collision)
       if (.not.ldiscard) return
@@ -63,7 +62,7 @@ subroutine symba_collision(t, symba_plA, nplplenc, plplenc_list, lfrag_add, nmer
       ! Get the subset of collisions that involve a unique pair of parents
       allocate(lplpl_unique_parent(ncollisions))
 
-      lplpl_unique_parent(:) = plparent(idx1(collision_idx(:))) /= plparent(idx2(collision_idx(:)))
+      lplpl_unique_parent(:) =  symba_plA%kin(idx1(collision_idx(:)))%parent /= symba_plA%kin(idx2(collision_idx(:)))%parent
       nunique_parent = count(lplpl_unique_parent(:))
       allocate(unique_parent_idx(nunique_parent))
       unique_parent_idx = pack(collision_idx(:), lplpl_unique_parent(:))
@@ -75,12 +74,12 @@ subroutine symba_collision(t, symba_plA, nplplenc, plplenc_list, lfrag_add, nmer
       lplpl_unique_parent(:) = .true.
       do index_coll = 1, ncollisions
          index_enc = collision_idx(index_coll)
-         idx(1) = plparent(idx1(index_enc)) 
-         idx(2) = plparent(idx2(index_enc))
-         lplpl_unique_parent(:) = .not. ( any(plparent(idx1(unique_parent_idx(:))) == idx(1)) .or. &
-                                          any(plparent(idx2(unique_parent_idx(:))) == idx(1)) .or. &
-                                          any(plparent(idx1(unique_parent_idx(:))) == idx(2)) .or. &
-                                          any(plparent(idx2(unique_parent_idx(:))) == idx(2)) )
+         idx(1) = symba_plA%kin(idx1(index_enc))%parent
+         idx(2) = symba_plA%kin(idx2(index_enc))%parent
+         lplpl_unique_parent(:) = .not. ( any(symba_plA%kin(idx1(unique_parent_idx(:)))%parent == idx(1)) .or. &
+                                          any(symba_plA%kin(idx2(unique_parent_idx(:)))%parent == idx(1)) .or. &
+                                          any(symba_plA%kin(idx1(unique_parent_idx(:)))%parent == idx(2)) .or. &
+                                          any(symba_plA%kin(idx2(unique_parent_idx(:)))%parent == idx(2)) )
       end do
 
       ! Reassemble collision index list to include only those containing the unique pairs of parents, plus all the non-unique pairs that don't
@@ -100,7 +99,7 @@ subroutine symba_collision(t, symba_plA, nplplenc, plplenc_list, lfrag_add, nmer
          idx(2) = idx2(index_enc)
 
          ! Index values for the parents of this particle pair
-         idx_parent(:) = plparent(idx(:)) 
+         idx_parent(:) = symba_plA%kin(idx(:))%parent
 
          if (any(statpl(idx_parent(:)) /= ACTIVE)) cycle ! One of these two bodies is already gone
 
@@ -123,8 +122,8 @@ subroutine symba_collision(t, symba_plA, nplplenc, plplenc_list, lfrag_add, nmer
     
          ! Group together the ids and indexes of each collisional parent and its children
          do j = 1, 2
-            allocate(parent_child_index_array(j)%idx(nchild(j)+ 1))
-            allocate(parent_child_index_array(j)%id(nchild(j)+ 1))
+            allocate(parent_child_index_array(j)%idx(nchild(j) + 1))
+            allocate(parent_child_index_array(j)%id(nchild(j) + 1))
             associate(idx_arr => parent_child_index_array(j)%idx, &
                       id_arr => parent_child_index_array(j)%id, &
                       ncj => nchild(j), &
@@ -304,9 +303,9 @@ subroutine symba_collision(t, symba_plA, nplplenc, plplenc_list, lfrag_add, nmer
          end do
          deallocate(family)
 
-         call symba_rearray_pl(t, symba_plA, nmergeadd, mergeadd_list, discard_plA, param)
 
       end do
+      call symba_rearray_pl(t, symba_plA, nmergeadd, mergeadd_list, discard_plA, param)
    end associate
 
    return
