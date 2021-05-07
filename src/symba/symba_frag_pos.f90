@@ -23,9 +23,9 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
    logical, intent(out)                      :: lmerge ! Answers the question: Should this have been a merger instead?
    ! Internals
    real(DP), dimension(:,:), allocatable   :: x_frag, v_frag ! Fragment positions and velocities in the collision center of mass frame
-   real(DP), dimension(NDIM, 2)            :: rot
+   real(DP), dimension(NDIM, 2)            :: rot, L_orb 
    integer(I4B)                            :: i, j, nfrag, fam_size, istart
-   real(DP), dimension(NDIM)               :: xcom, vcom, Ltot_before, Ltot_after, Lres, L_spin_frag
+   real(DP), dimension(NDIM)               :: xcom, vcom, Ltot_before, Ltot_after, L_residual, L_spin_frag
    real(DP)                                :: mtot, Lmag_before, Lmag_after
    real(DP)                                :: Etot_before, Etot_after, ke_before, pe_before
    real(DP)                                :: pe_after, ke_spin_before, ke_spin_after, ke_after, ke_family, ke_target, ke_frag
@@ -33,8 +33,8 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
    real(DP)                                :: rmag
    logical, dimension(:), allocatable      :: lexclude
    character(len=*), parameter             :: fmtlabel = "(A14,10(ES9.2,1X,:))"
-   real(DP), dimension(NDIM)               :: x_cross_v, v_phi_unit, h_unit, v_r_unit
-   real(DP), dimension(:,:), allocatable   :: v_r, v_phi
+   real(DP), dimension(NDIM)               :: x_cross_v, v_t_unit, h_unit, v_r_unit
+   real(DP), dimension(:,:), allocatable   :: v_r, v_t
    
    associate(xhpl => symba_plA%helio%swiftest%xh, xbpl => symba_plA%helio%swiftest%xh, vbpl => symba_plA%helio%swiftest%vb, &
              Mpl => symba_plA%helio%swiftest%mass, Ippl => symba_plA%helio%swiftest%Ip, radpl => symba_plA%helio%swiftest%radius, &
@@ -43,13 +43,20 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       allocate(x_frag, source=xb_frag)
       allocate(v_frag, source=vb_frag)
       allocate(v_r, mold=v_frag)
-      allocate(v_phi, mold=v_frag)
+      allocate(v_t, mold=v_frag)
       fam_size = size(family)
 
       ! Find the center of mass of the collisional system	
       mtot = sum(mass(:))
       xcom(:) = (mass(1) * x(:,1) + mass(2) * x(:,2)) / mtot
       vcom(:) = (mass(1) * v(:,1) + mass(2) * v(:,2)) / mtot 
+
+      L_orb(:, :) = 0.0_DP
+      ! Compute orbital angular momentum of pre-impact system
+      do j = 1, 2
+         call utiL_crossproduct(x(:, j) - xcom(:), v(:, j) - vcom(:), x_cross_v(:))
+         L_orb(:, j) = mass(j) * x_cross_v(:)
+      end do
 
       allocate(lexclude(npl))
       where (status(1:npl) == INACTIVE) ! Safety check in case one of the included bodies has been previously deactivated 
@@ -70,13 +77,11 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       end do
       ke_family = 0.5_DP * ke_family
 
-      call symba_frag_pos_initialize_fragments(xcom, vcom, x, v, L_spin, mass, m_frag, x_frag, v_frag)   
-
-      ! Conserve the system angular momentum (but not energy)
-      call symba_frag_pos_ang_mtm(xcom, vcom, x, v, mass, radius, L_spin, Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag)
+      nfrag = size(m_frag)
+      ! Initialize  positions and velocities of fragments that conserve angular momentum
+      call symba_frag_pos_initialize_fragments(nfrag, xcom, vcom, x, v, L_orb, L_spin, mass, radius, m_frag, rad_frag, Ip_frag, x_frag, v_frag, rot_frag)
 
       ! Energy calculation requires the fragments to be in the system barcyentric frame, so we need to temporarily shift them
-      nfrag = size(m_frag)
       do i = 1, nfrag
          xb_frag(:,i) = x_frag(:,i) + xcom(:)
          vb_frag(:,i) = v_frag(:,i) + vcom(:)
@@ -107,40 +112,34 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       !write(*,        "(' ---------------------------------------------------------------------------')")
 
       
-         ! Set the "target" ke_after (the value of the orbital kinetic energy that the fragments ought to have)
-         ke_target = ke_family + (ke_spin_before - ke_spin_after) + (pe_before - pe_after) - Qloss
-         call symba_frag_pos_kinetic_energy(xcom, vcom, m_frag, x_frag, v_frag, ke_target, lmerge)
-         !write(*,        "(' ---------------------------------------------------------------------------')")
-         !write(*,fmtlabel) ' T_frag targ |',ke_target / abs(Etot_before)
-
-         ! Shift the fragments into the system barycenter frame
-         do i = 1, nfrag
-            xb_frag(:,i) = x_frag(:, i) + xcom(:)
-            vb_frag(:,i) = v_frag(:, i) + vcom(:)
-         end do
-
-         ke_frag = 0.0_DP
-         do i = 1, nfrag
-            ke_frag = ke_frag + m_frag(i) * dot_product(vb_frag(:,i), vb_frag(:,i)) 
-         end do
-         ke_frag = 0.5_DP * ke_frag
-         !write(*,fmtlabel) ' T_frag new  |',ke_frag / abs(Etot_before)
-         !write(*,        "(' ---------------------------------------------------------------------------')")
-
-         ! Calculate the new energy of the system of fragments
-         call symba_frag_pos_energy_calc(npl, symba_plA, lexclude, ke_after, ke_spin_after, pe_after, Ltot_after,&
-               nfrag=nfrag, Ip_frag=Ip_frag, m_frag=m_frag, rad_frag=rad_frag, xb_frag=xb_frag, vb_frag=vb_frag, rot_frag=rot_frag)
-         Etot_after = ke_after + ke_spin_after + pe_after
-         Lmag_after = norm2(Ltot_after(:))
+      ! Set the "target" ke_after (the value of the orbital kinetic energy that the fragments ought to have)
+      ke_target = ke_family + (ke_spin_before - ke_spin_after) + (pe_before - pe_after) - Qloss
+      call symba_frag_pos_kinetic_energy(xcom, vcom, L_orb, m_frag, x_frag, v_frag, ke_target, lmerge)
       
-         lmerge = lmerge .or. ((Etot_after - Etot_before) / abs(Etot_before) > 0._DP) 
-         if (.not.lmerge) then
-         	Lres(:) = Ltot_before(:) - Ltot_after(:)
-         	do i = 1, nfrag
-                L_spin_frag(:) = Lres(:) * m_frag(i) / mtot / nfrag
-                rot_frag(:,i) = rot_frag(:,i) + L_spin_frag(:) / (Ip_frag(3, i) * m_frag(i) * rad_frag(i)**2)
-            end do
-         end if
+      !write(*,        "(' ---------------------------------------------------------------------------')")
+      !write(*,fmtlabel) ' T_frag targ |',ke_target / abs(Etot_before)
+
+      ! Shift the fragments into the system barycenter frame
+      do i = 1, nfrag
+         xb_frag(:,i) = x_frag(:, i) + xcom(:)
+         vb_frag(:,i) = v_frag(:, i) + vcom(:)
+      end do
+
+      ! Calculate the new energy of the system of fragments
+      call symba_frag_pos_energy_calc(npl, symba_plA, lexclude, ke_after, ke_spin_after, pe_after, Ltot_after,&
+            nfrag=nfrag, Ip_frag=Ip_frag, m_frag=m_frag, rad_frag=rad_frag, xb_frag=xb_frag, vb_frag=vb_frag, rot_frag=rot_frag)
+      Etot_after = ke_after + ke_spin_after + pe_after
+      Lmag_after = norm2(Ltot_after(:))
+   
+      lmerge = lmerge .or. ((Etot_after - Etot_before) / abs(Etot_before) > 0._DP) 
+      if (.not.lmerge) then
+         L_residual(:) = Ltot_before(:) - Ltot_after(:)
+         L_spin_frag(:) = L_residual(:) / nfrag
+         write(*,*) 'Residual DL/L0', norm2(L_residual(:)) / Lmag_before
+         do i = 1, nfrag
+            rot_frag(:,i) = rot_frag(:,i) + L_spin_frag(:) / (Ip_frag(3, i) * m_frag(i) * rad_frag(i)**2)
+         end do
+      end if
 
 !      write(*,        "(' ---------------------------------------------------------------------------')")
 !      write(*,        "('             |    T_orb    T_spin         T         pe      Etot      Ltot')")
@@ -152,7 +151,6 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 !                                       (Etot_after - Etot_before) / abs(Etot_before), &
 !                                       (Lmag_after - Lma_before) / Lmag_before
 !      write(*,        "(' ---------------------------------------------------------------------------')")
-      write(*,*)   
       !****************************************************************************************************************
 
    end associate
@@ -160,7 +158,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 
    contains
 
-   subroutine symba_frag_pos_initialize_fragments(xcom, vcom, x, v, L_spin, mass, m_frag, x_frag, v_frag)
+   subroutine symba_frag_pos_initialize_fragments(nfrag, xcom, vcom, x, v, L_orb, L_spin, mass, radius, m_frag, rad_frag, Ip_frag, x_frag, v_frag, rot_frag)
       !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
       !!
       !! Initializes the orbits of the fragments around the center of mass. The fragments are initially placed on a plane defined by the 
@@ -168,125 +166,121 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       !! The initial positions do not conserve energy or momentum, so these need to be adjusted later.
       implicit none
       ! Arguments
-      real(DP), dimension(:),   intent(in)    :: xcom, vcom      !! Center of mass position and velocity in the system barycenter frame
-      real(DP), dimension(:,:), intent(in)    :: x, v, L_spin    !! Pre-impact spins
-      real(DP), dimension(:), intent(in)      :: mass            !! Pre-impact masses
-      real(DP), dimension(:), intent(in)      :: m_frag          !! Fragment masses
-      real(DP), dimension(:,:), intent(out)   :: x_frag, v_frag  !! Fragment position and velocities
-
+      integer(I4B),             intent(in)    :: nfrag                    !! Number of collisional fragments
+      real(DP), dimension(:),   intent(in)    :: xcom, vcom               !! Center of mass position and velocity in the system barycenter frame
+      real(DP), dimension(:,:), intent(in)    :: x, v, L_orb, L_spin     !! Pre-impact angular momentum vectors
+      real(DP), dimension(:),   intent(in)    :: mass, radius             !! Pre-impact masses and radii
+      real(DP), dimension(:),   intent(in)    :: m_frag, rad_frag         !! Fragment masses and radii
+      real(DP), dimension(:,:), intent(in)    :: Ip_frag                  !! Fragment prinicpal moments of inertia
+      real(DP), dimension(:,:), intent(out)   :: x_frag, v_frag, rot_frag !! Fragment position, velocities, and spin states
       ! Internals
       real(DP)                                :: mtot, theta, v_frag_norm, r_frag_norm, v_col_norm, r_col_norm
       real(DP)                                :: b2a, phase_ang
-      real(DP), dimension(NDIM)               :: Ltot, xc, vc, x_cross_v, delta_r, delta_v
+      real(DP), dimension(NDIM)               :: Ltot, delta_r, delta_v
       real(DP), dimension(NDIM)               :: x_col_unit, y_col_unit, z_col_unit
-      integer(I4B)                            :: i, nfrag
+      integer(I4B)                            :: i
       real(DP), dimension(2,2)                :: orientation
       real(DP), dimension(2)                  :: frag_vec
-      real(DP), parameter                     :: ecc_ellipse = 0.9_DP ! Eccentricity of the fragment distribution ellipse
+      real(DP), parameter                     :: ecc_ellipse = 0.0_DP ! Eccentricity of the fragment distribution ellipse
 
       ! Now create the fragment distribution
-      nfrag = size(m_frag(:))
       mtot = sum(mass(:))
 
       ! Compute orbital angular momentum of pre-impact system. This will be the normal vector to the collision fragment plane
-      Ltot = L_spin(:,1) + L_spin(:,2)
-      do i = 1, 2
-         xc(:) = x(:, i) - xcom(:)
-         vc(:) = v(:, i) - vcom(:)
-         call utiL_crossproduct(xc(:), vc(:), x_cross_v(:))
-         Ltot(:) = Ltot(:) + mass(i) * x_cross_v(:)
-      end do
+      Ltot = L_spin(:,1) + L_spin(:,2) + L_orb(:, 1) + L_orb(:, 2)
+
       delta_v(:) = v(:, 2) - v(:, 1)
       v_col_norm = norm2(delta_v(:))     
       delta_r(:) = x(:, 2) - x(:, 1)
       r_col_norm = norm2(delta_r(:))
 
-      ! We will initialize fragments on a planet defined by the pre-impact system, with the z-axis aligned with the angular momentum
-      ! and the x-axis aligned with the impact velocity vector.
-      z_col_unit = Ltot(:) / norm2(Ltot(:))
-      x_col_unit(:) = delta_r(:) / r_col_norm  
+      ! We will initialize fragments on a plane defined by the pre-impact system, with the y-axis aligned with the angular momentum vector
+      ! and the z-axis aligned with the pre-impact distance vector.
+      y_col_unit = Ltot(:) / norm2(Ltot(:))
+      z_col_unit(:) = delta_r(:) / r_col_norm  
       ! The cross product of the z- by x-axis will give us the y-axis
-      call util_crossproduct(z_col_unit, x_col_unit, y_col_unit)
+      call util_crossproduct(y_col_unit, z_col_unit, x_col_unit)
 
       ! Place the fragments on the collision planea on an ellipse, but with the distance proportional to mass wrt the collisional barycenter
       ! This gets updated later after the new potential energy is calculated
-
       b2a = 1.0_DP / sqrt(1.0_DP - ecc_ellipse**2)
       
-      ! The orientation and angular spacing of fragments on the ellipse
-      theta = (2 * PI) / nfrag
-      ! Impirically determined phase angle that depends on the impact paarameter
-      phase_ang = PI
+      ! The angular spacing of fragments on the ellipse - We will only use half the ellipse
+      theta = 2 * PI / nfrag
+
+      ! Adjust the orientation of the ellipse. This mainly affects the disruption case as the first body in the distribution (theta=0) is the largest
+      phase_ang = 0.0_DP
       orientation = reshape([cos(phase_ang), sin(phase_ang), -sin(phase_ang), cos(phase_ang)], shape(orientation))
 
       ! Re-normalize position and velocity vectors by the fragment number so that for our initial guess we weight each
       ! fragment position by the mass and assume equipartition of energy for the velocity
-      v_frag(:,:) = 0.0_DP
-      r_col_norm = 1.10_DP * sum(rad_frag(:)) / PI
-      do i = 1, nfrag
+      r_col_norm = 1.5_DP * 2 * sum(rad_frag(:)) / theta / (nfrag - 2)
+
+      ! We will treat the first two fragments of the list as special cases. They get placed on the "poles" of the
+      ! fragment distribution (aligned with the collisional system z-axis)
+      x_frag(:, 1) = -r_col_norm * z_col_unit(:)
+      x_frag(:, 2) =  r_col_norm * z_col_unit(:)
+
+      ! The rest of the fragments will go in a ring on the x-y plane
+      do i = 3, nfrag
          frag_vec(:) = [b2a * cos(theta * (i - 1)), sin(theta * (i - 1))]
          frag_vec(:) = matmul(orientation(:,:), frag_vec(:))
 
          r_frag_norm = r_col_norm 
-         x_frag(:,i) =  r_frag_norm * (frag_vec(1) * x_col_unit(:) + frag_vec(2) * y_col_unit(:))
+         x_frag(:, i) = r_frag_norm * (frag_vec(1) * x_col_unit(:) + frag_vec(2) * y_col_unit(:))
       end do
       call symba_frag_pos_com_adjust(xcom, m_frag, x_frag)
+
+      call symba_frag_pos_ang_mtm(nfrag, xcom, vcom, L_orb, L_spin, mass, radius, m_frag, rad_frag, Ip_frag, x_frag, v_frag, rot_frag)
 
       return
    end subroutine symba_frag_pos_initialize_fragments
 
-   subroutine symba_frag_pos_ang_mtm(xcom, vcom, x, v, mass, radius, L_spin, Ip_frag, m_frag, rad_frag, x_frag, v_frag, rot_frag)
+   subroutine symba_frag_pos_ang_mtm(nfrag, xcom, vcom, L_orb, L_spin, mass, radius, m_frag, rad_frag, Ip_frag, x_frag, v_frag, rot_frag)
       !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
       !!
       !! Adjusts the positions, velocities, and spins of a collection of fragments such that they conserve angular momentum
       implicit none
-   
-      real(DP), dimension(:),   intent(in)    :: xcom, vcom, mass, radius
-      real(DP), dimension(:,:), intent(in)    :: x, v, L_spin
-      real(DP), dimension(:,:), intent(in)    :: Ip_frag
-      real(DP), dimension(:),   intent(in)    :: m_frag, rad_frag
-      real(DP), dimension(:,:), intent(inout) :: x_frag, v_frag, rot_frag
-   
+      ! Arguments
+      integer(I4B),             intent(in)    :: nfrag            !! Number of collisional fragments
+      real(DP), dimension(:),   intent(in)    :: xcom, vcom       !! Center of mass position and velocity in the system barycenter frame
+      real(DP), dimension(:,:), intent(in)    :: L_orb, L_spin     !! Pre-impact position, velocity, and spin states, Ip_frag
+      real(DP), dimension(:),   intent(in)    :: mass, radius     !! Pre-impact masses and radii
+      real(DP), dimension(:),   intent(in)    :: m_frag, rad_frag !! Fragment masses and radii
+      real(DP), dimension(:,:), intent(in)    :: Ip_frag, x_frag  !! Fragment prinicpal moments of inertia and position vectors
+      real(DP), dimension(:,:), intent(out)   :: v_frag, rot_frag !! Fragment velocities and spin states
+      ! Internals
       real(DP), dimension(NDIM, 2)            :: rot, Ip
-      integer(I4B)                            :: i, j, nfrag
-      real(DP)                                :: mtot
-      real(DP), dimension(NDIM)               :: xc, vc, x_cross_v, v_phi_unit, h_unit, v_r_unit
-      real(DP), dimension(NDIM)               :: L_orb_old, L_spin_old, L_orb_new, L_spin_frag, L_residual, L_spin_new
+      integer(I4B)                            :: i, j
+      real(DP)                                :: mtot, rmag, L_orb_frag_mag
+      real(DP), dimension(NDIM)               :: xc, vc, v_t_unit, h_unit, v_r_unit
+      real(DP), dimension(NDIM)               :: L_orb_old, L_spin_frag, L_spin_new
    
-      nfrag = size(m_frag)
       mtot = sum(mass(:))
+      L_orb_old(:) = L_orb(:, 1) + L_orb(:, 2)
       
-      L_spin_old(:) = L_spin(:,1) + L_spin(:,2)
-      L_orb_old(:) = 0.0_DP
-      ! Compute orbital angular momentum of pre-impact system
-      do j = 1, 2
-         xc(:) = x(:, j) - xcom(:)
-         vc(:) = v(:, j) - vcom(:)
-         call utiL_crossproduct(xc(:), vc(:), x_cross_v(:))
-         L_orb_old(:) = L_orb_old(:) + mass(j) * x_cross_v(:)
-      end do
-      call symba_frag_pos_com_adjust(xcom, m_frag, x_frag)
+      h_unit(:) = L_orb_old(:) / norm2(L_orb_old(:))
    
       ! Divide up the pre-impact spin angular momentum equally between the various bodies by mass
-      L_spin_new(:) = L_spin_old(:)
+      L_spin_new(:) = L_spin(:,1) + L_spin(:, 2)
+      L_spin_frag(:) = L_spin_new(:) / nfrag
       do i = 1, nfrag
-         L_spin_frag(:) = L_spin_new(:) * m_frag(i) / mtot
          rot_frag(:,i) = L_spin_frag(:) / (Ip_frag(3, i) * m_frag(i) * rad_frag(i)**2)
       end do
       
+      L_orb_frag_mag = norm2(L_orb_old(:)) / nfrag
       do i = 1, nfrag
-         L_residual(:) = L_orb_old(:) * m_frag(i) / mtot
-         h_unit(:) = L_orb_old(:) / norm2(L_orb_old(:))
-         v_r_unit(:) = x_frag(:,i) / norm2(x_frag(:,i))
-         call util_crossproduct(h_unit(:), v_r_unit(:), v_phi_unit(:))  ! make a unit vector in the tangential velocity direction
-         v_frag(:,i) = v_frag(:,i) + norm2(L_residual(:)) / m_frag(i) / norm2(x_frag(:,i)) * v_phi_unit(:) ! Distribute the angular momentum equally amongst the fragments
+         rmag = norm2(x_frag(:,i))
+         v_r_unit(:) = x_frag(:,i) / rmag
+         call util_crossproduct(h_unit(:), v_r_unit(:), v_t_unit(:))  ! make a unit vector in the tangential velocity direction wrt the angular momentum plane
+         v_frag(:,i) = L_orb_frag_mag / (m_frag(i) * rmag) * v_t_unit(:) ! Distribute the angular momentum equally amongst the fragments
       end do
-      call symba_frag_pos_com_adjust(vcom, m_frag, v_frag)
    
       return 
    end subroutine symba_frag_pos_ang_mtm
 
-   subroutine symba_frag_pos_kinetic_energy(xcom, vcom, m_frag, x_frag, v_frag, ke_target, lmerge)
+
+   subroutine symba_frag_pos_kinetic_energy(xcom, vcom, L_orb, m_frag, x_frag, v_frag, ke_target, lmerge)
       !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
       !!
       !! 
@@ -299,52 +293,52 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       implicit none
       ! Arguments
       real(DP), dimension(:),   intent(in)    :: xcom, vcom      !! Center of mass position and velocity in the system barycenter frame
+      real(DP), dimension(:,:), intent(in)    :: L_orb
       real(DP), dimension(:),   intent(in)    :: m_frag          !! Fragment masses
       real(DP), dimension(:,:), intent(inout) :: x_frag, v_frag  !! Fragment position and velocities in the center of mass frame   
       real(DP), intent(in)                    :: ke_target        !! Target kinetic energy 
       logical, intent(out)                    :: lmerge
 
       ! Internals
-      real(DP)                                :: f_corrected, mtot, A, C, rterm
+      real(DP)                                :: v_corrected, mtot, A, C, rterm
       integer(I4B)                            :: i, nfrag
-      real(DP), dimension(:,:), allocatable   :: v_r, v_phi
-      real(DP), dimension(NDIM)               :: x_cross_v, v_phi_unit, h_unit, v_r_unit
+      real(DP), dimension(:,:), allocatable   :: v_r_unit, v_t
+      real(DP), dimension(NDIM)               :: v_t_unit, h_unit, L_orb_frag
          
       nfrag = size(m_frag)
       mtot = sum(m_frag)
 
-      allocate(v_r(NDIM,nfrag))
-      allocate(v_phi(NDIM,nfrag))
+      allocate(v_r_unit, mold=v_frag) 
+      allocate(v_t, mold=v_frag)
       call symba_frag_pos_com_adjust(xcom, m_frag, x_frag)
-      call symba_frag_pos_com_adjust(vcom, m_frag, v_frag)
+
+      h_unit(:) = (L_orb(:, 1) + L_orb(:, 2)) / norm2(L_orb(:, 1) + L_orb(:, 2))
 
       do i = 1, nfrag
-         call utiL_crossproduct(x_frag(:,i), v_frag(:,i), x_cross_v(:))
-         h_unit(:) = x_cross_v(:) / norm2(x_cross_v(:))
-         v_r_unit(:) = x_frag(:,i) / norm2(x_frag(:, i))
-         call utiL_crossproduct(h_unit(:), v_r_unit(:), v_phi_unit(:))
-         v_r(:,i) = v_r_unit(:) 
-         v_phi(:,i) = dot_product(v_frag(:,i), v_phi_unit(:)) * v_phi_unit(:)
+         v_r_unit(:, i) = x_frag(:,i) / norm2(x_frag(:, i))
+         call utiL_crossproduct(h_unit(:), v_r_unit(:, i), v_t_unit(:))
+         v_t(:,i) = dot_product(v_frag(:,i), v_t_unit(:)) * v_t_unit(:)
       end do
 
       C = 2 * ke_target
       A = 0._DP
       do i = 1, nfrag
          A = A + m_frag(i) * (mtot / m_frag(i))**2
-         C = C - m_frag(i) * (dot_product(vcom(:),vcom(:)) + dot_product(v_phi(:,i),v_phi(:,i)) + dot_product(vcom(:), v_phi(:, i)))
+         C = C - m_frag(i) * (dot_product(vcom(:), vcom(:)) + dot_product(v_t(:,i), v_t(:,i)) + dot_product(vcom(:), v_t(:, i)))
       end do
 
       if (C > 0.0_DP) then
-         f_corrected = sqrt(C / A)
+         v_corrected = sqrt(C / A)
          lmerge = .false.
       else
-         f_corrected = 0.0_DP
+         v_corrected = 0.0_DP
          lmerge = .true.
       end if
 
+
       ! Shift the fragments into the system barycenter frame
       do i = 1, nfrag
-         v_frag(:,i) = f_corrected * mtot / m_frag(i) *  v_r(:, i) + v_phi(:, i)
+         v_frag(:,i) = v_corrected * mtot / m_frag(i) * v_r_unit(:, i) + v_t(:, i)
       end do
 
       call symba_frag_pos_com_adjust(vcom, m_frag, v_frag)

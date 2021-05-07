@@ -9,27 +9,8 @@ xmax = 20.0
 ymin = -20.0
 ymax = 20.0
 
-case = 'supercat_head'
-
-if case == 'supercat_off':
-    animfile = 'movies/supercat_off_axis.mp4'
-    titletext = "Supercatastrophic - Off Axis"
-    configfile = 'param.supercatastrophic_off_axis.in'
-elif case == 'supercat_head':
-    animfile = 'movies/supercat_headon.mp4'
-    titletext = "Supercatastrophic - Head on"
-    configfile = 'param.supercatastrophic_headon.in'
-elif case == 'disruption_off':
-    animfile = 'movies/disruption_off_axis.mp4'
-    titletext = "Disruption - Off Axis"
-    configfile = 'param.disruption_off_axis.in'
-elif case == 'disruption_head':
-    animfile = 'movies/disruption_headon.mp4'
-    titletext = "Disruption- Head on"
-    configfile = 'param.disruption_headon.in'
-else:
-    print(f'{case} is an unknown case')
-    exit(-1)
+cases = ['supercat_head', 'supercat_off', 'disruption_head', 'disruption_off']
+#cases = ['disruption_head']
 
 def scale_sim(ds, config):
 
@@ -245,8 +226,29 @@ class AnimatedScatter(object):
             frame += 1
             yield t, name, mass, radius, npl, np.c_[x, y, vx, vy], radmarker, origin
 
-config = swio.read_swiftest_config(configfile)
-ds = swio.swiftest2xr(config)
-print('Making animation')
-anim = AnimatedScatter(ds,config)
-print('Animation finished')
+for case in cases:
+    if case == 'supercat_off':
+        animfile = 'movies/supercat_off_axis.mp4'
+        titletext = "Supercatastrophic - Off Axis"
+        configfile = 'param.supercatastrophic_off_axis.in'
+    elif case == 'supercat_head':
+        animfile = 'movies/supercat_headon.mp4'
+        titletext = "Supercatastrophic - Head on"
+        configfile = 'param.supercatastrophic_headon.in'
+    elif case == 'disruption_off':
+        animfile = 'movies/disruption_off_axis.mp4'
+        titletext = "Disruption - Off Axis"
+        configfile = 'param.disruption_off_axis.in'
+    elif case == 'disruption_head':
+        animfile = 'movies/disruption_headon.mp4'
+        titletext = "Disruption- Head on"
+        configfile = 'param.disruption_headon.in'
+    else:
+        print(f'{case} is an unknown case')
+        exit(-1)
+    config = swio.read_swiftest_config(configfile)
+    ds = swio.swiftest2xr(config)
+    print('Making animation')
+    anim = AnimatedScatter(ds,config)
+    print('Animation finished')
+    plt.close(fig='all')

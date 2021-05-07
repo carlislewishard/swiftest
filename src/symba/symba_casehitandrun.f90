@@ -51,7 +51,7 @@ function symba_casehitandrun(symba_plA, family, nmergeadd, mergeadd_list, id, x,
       nfrag = 0
       lpure = .true.
    else ! Imperfect hit and run, so we'll keep the largest body and destroy the other
-      nfrag = 10
+      nfrag = 12
       lpure = .false.
       allocate(m_frag(nfrag))
       allocate(id_frag(nfrag))

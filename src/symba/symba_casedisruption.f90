@@ -32,7 +32,7 @@ function symba_casedisruption (symba_plA, family, nmergeadd, mergeadd_list, x, v
    logical                                 :: lmerge
 
    ! Collisional fragments will be uniformly distributed around the pre-impact barycenter
-   nfrag = 10 ! This value is set for testing. This needs to be updated such that it is calculated or set by the user
+   nfrag = 12 ! This value is set for testing. This needs to be updated such that it is calculated or set by the user
    allocate(m_frag(nfrag))
    allocate(rad_frag(nfrag))
    allocate(xb_frag(NDIM, nfrag))
