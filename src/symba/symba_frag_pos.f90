@@ -131,14 +131,14 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          call symba_frag_pos_energy_calc(npl, symba_plA, lexclude, ke_after, ke_spin_after, pe_after, Ltot_after,&
                nfrag=nfrag, Ip_frag=Ip_frag, m_frag=m_frag, rad_frag=rad_frag, xb_frag=xb_frag, vb_frag=vb_frag, rot_frag=rot_frag)
          Etot_after = ke_after + ke_spin_after + pe_after
-         Lmag_after = norm2(Ltot_after(:))
+         Lmag_after = norm2(Ltot(:))
       
          lmerge = lmerge .or. ((Etot_after - Etot_before) / abs(Etot_before) > 0._DP) 
          if (.not.lmerge) then
          	Lres(:) = Ltot_before(:) - Ltot_after(:)
          	do i = 1, nfrag
                 L_spin_frag(:) = Lres(:) * m_frag(i) / mtot / nfrag
-                rot_frag(:,i) = L_spin_frag(:) / (Ip_frag(3, i) * m_frag(i) * rad_frag(i)**2)
+                rot_frag(:,i) = rot_frag(:,i) + L_spin_frag(:) / (Ip_frag(3, i) * m_frag(i) * rad_frag(i)**2)
             end do
          end if
 
