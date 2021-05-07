@@ -176,11 +176,9 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       real(DP), dimension(2,2)                :: orientation
       real(DP), dimension(2)                  :: frag_vec
 
-
       ! Now create the fragment distribution
       nfrag = size(m_frag(:))
       mtot = sum(mass(:))
-
 
       ! Compute orbital angular momentum of pre-impact system. This will be the normal vector to the collision fragment plane
       Ltot = L_spin(:,1) + L_spin(:,2)
@@ -202,12 +200,9 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       ! The cross product of the z- by x-axis will give us the y-axis
       call util_crossproduct(z_col_unit, x_col_unit, y_col_unit)
 
-
-      
       ! Place the fragments on the collision planea on an ellipse, but with the distance proportional to mass wrt the collisional barycenter
       ! This gets updated later after the new potential energy is calculated
-      ecc_ellipse = 0.90_DP
-
+      ecc_ellipse = 0.5_DP
 
       b2a = 1.0_DP / sqrt(1.0_DP - ecc_ellipse**2)
       
@@ -221,7 +216,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       ! fragment position by the mass and assume equipartition of energy for the velocity
       v_col_norm = 0.0_DP
       v_col_norm = v_col_norm / sqrt(1.0_DP * nfrag)
-      r_col_norm = 2 * max(r_col_norm, sum(radius(:))) / nfrag ! To ensure that the new fragments aren't overlapping we will pick an initial starting radius 
+      r_col_norm = 2 * max(r_col_norm, sum(radius(:))) / nfrag 
       do i = 1, nfrag
          frag_vec(:) = [b2a * cos(theta * (i - 1)), sin(theta * (i - 1))]
          frag_vec(:) = matmul(orientation(:,:), frag_vec(:))
