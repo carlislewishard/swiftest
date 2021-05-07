@@ -1,5 +1,4 @@
-subroutine symba_rearray(t, npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA,&
-   discard_tpA, ldiscard_pl, ldiscard_tp, mtiny, param)
+subroutine symba_rearray_pl(t, npl, symba_plA, nmergeadd, mergeadd_list, discard_plA, param)
    !! Author: the Purdue Swiftest Team -  David A. Minton, Carlisle A. Wishard, Jennifer L.L. Pouplin, and Jacob R. Elliott
    !!
    !! Clean up tp and pl arrays to remove discarded bodies and add new bodies
@@ -8,29 +7,25 @@ subroutine symba_rearray(t, npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, 
    use module_swiftestalloc 
    use module_helio
    use module_symba
-   use module_interfaces, EXCEPT_THIS_ONE => symba_rearray
+   use module_interfaces, EXCEPT_THIS_ONE => symba_rearray_pl
    implicit none
 
    ! Arguments
-   real(DP),                    intent(in)    :: t 
-   integer(I4B),                intent(inout) :: npl, nplm, ntp, nsppl, nsptp
-   integer(I4B),                intent(in)    :: nmergeadd 
+   real(DP),                    intent(in)    :: t
+   integer(I4B),                intent(inout) :: npl
+   integer(I4B),                intent(in)    :: nmergeadd
    type(symba_pl),              intent(inout) :: symba_plA
-   type(symba_tp),              intent(inout) :: symba_tpA
-   type(symba_tp),              intent(inout) :: discard_tpA
    type(symba_pl),              intent(inout) :: discard_plA
    type(symba_merger),          intent(inout) :: mergeadd_list 
-   logical,                     intent(in)    :: ldiscard_pl, ldiscard_tp 
-   real(DP),                    intent(in)    :: mtiny
    type(user_input_parameters), intent(in)    :: param
 
    ! Internals
-   integer(I4B)                           :: i, j, nkpl, nktp, ntot, dlo
+   integer(I4B)                           :: i, j, nsppl, nkpl, ntot, dlo, nplm
    logical, dimension(:), allocatable     :: discard_l_pl, add_l_pl
-   logical, dimension(ntp)                :: discard_l_tp
-   logical                                :: lescape
+   logical                                :: lescape, ldiscard_pl
 
-   if (any(symba_plA%helio%swiftest%status(1:npl) /= ACTIVE)) then 
+   ldiscard_pl = any(symba_plA%helio%swiftest%status(1:npl) /= ACTIVE)
+   if (ldiscard_pl) then 
 
       ! Deal with the central body/system discards if there are any
       do i = 1, npl
@@ -151,57 +146,10 @@ subroutine symba_rearray(t, npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, 
       
       call util_hills(npl, symba_plA%helio%swiftest)
 
-      nplm = count(symba_plA%helio%swiftest%mass > mtiny)
+      nplm = count(symba_plA%helio%swiftest%mass > param%mtiny)
       CALL util_dist_index_plpl(npl, nplm, symba_plA)
-
 
    end if
 
-   if (ldiscard_tp) then 
-      nktp = 0
-      nsptp = 0  
 
-      discard_l_tp(1:ntp) = (symba_tpA%helio%swiftest%status(1:ntp) /= ACTIVE)
-      nsptp = count(discard_l_tp)
-      nktp = ntp - nsptp
-
-      dlo = 1
-      if (allocated(discard_tpA%helio%swiftest%id)) then ! We alredy made a discard list in this step, so we need to append to it
-         nsptp = nsptp + discard_tpA%helio%swiftest%nbody
-         dlo = dlo + discard_tpA%helio%swiftest%nbody
-         !call util_resize_tp(discard_plA, nsppl, discard_tplA%helio%swiftest%nbody) !TODO: Implement this. Probably best to wait until this gets OOFed
-      else
-         call symba_tp_allocate(discard_tpA, nsptp)
-      end if
-
-      discard_tpA%helio%swiftest%id(1:nsptp)   = pack(symba_tpA%helio%swiftest%id(1:ntp),   discard_l_tp)
-      discard_tpA%helio%swiftest%status(1:nsptp) = pack(symba_tpA%helio%swiftest%status(1:ntp), discard_l_tp)
-      discard_tpA%helio%swiftest%isperi(1:nsptp) = pack(symba_tpA%helio%swiftest%isperi(1:ntp), discard_l_tp)
-      discard_tpA%helio%swiftest%peri(1:nsptp)   = pack(symba_tpA%helio%swiftest%peri(1:ntp),   discard_l_tp)
-      discard_tpA%helio%swiftest%atp(1:nsptp)    = pack(symba_tpA%helio%swiftest%atp(1:ntp),    discard_l_tp)
-      do i = 1, NDIM
-         discard_tpA%helio%swiftest%xh(i,1:nsptp)   = pack(symba_tpA%helio%swiftest%xh(i,1:ntp),   discard_l_tp)
-         discard_tpA%helio%swiftest%vh(i,1:nsptp)   = pack(symba_tpA%helio%swiftest%vh(i,1:ntp),   discard_l_tp)
-         discard_tpA%helio%swiftest%xb(i,1:nsptp)   = pack(symba_tpA%helio%swiftest%xb(i,1:ntp),   discard_l_tp)
-         discard_tpA%helio%swiftest%vb(i,1:nsptp)   = pack(symba_tpA%helio%swiftest%vb(i,1:ntp),   discard_l_tp)
-      end do
-
-      symba_tpA%helio%swiftest%id(1:nktp)   = pack(symba_tpA%helio%swiftest%id(1:ntp),   .not. discard_l_tp)
-      symba_tpA%helio%swiftest%status(1:nktp) = pack(symba_tpA%helio%swiftest%status(1:ntp), .not. discard_l_tp)
-      symba_tpA%helio%swiftest%isperi(1:nktp) = pack(symba_tpA%helio%swiftest%isperi(1:ntp), .not. discard_l_tp)
-      symba_tpA%helio%swiftest%peri(1:nktp)   = pack(symba_tpA%helio%swiftest%peri(1:ntp),   .not. discard_l_tp)
-      symba_tpA%helio%swiftest%atp(1:nktp)    = pack(symba_tpA%helio%swiftest%atp(1:ntp),    .not. discard_l_tp)
-      do i = 1, NDIM
-         symba_tpA%helio%swiftest%xh(i,1:nktp)   = pack(symba_tpA%helio%swiftest%xh(i,1:ntp), .not. discard_l_tp)
-         symba_tpA%helio%swiftest%vh(i,1:nktp)   = pack(symba_tpA%helio%swiftest%vh(i,1:ntp), .not. discard_l_tp)
-         symba_tpA%helio%swiftest%xb(i,1:nktp)   = pack(symba_tpA%helio%swiftest%xb(i,1:ntp), .not. discard_l_tp)
-         symba_tpA%helio%swiftest%vb(i,1:nktp)   = pack(symba_tpA%helio%swiftest%vb(i,1:ntp), .not. discard_l_tp)
-         symba_tpA%helio%ah(i,1:nktp)            = pack(symba_tpA%helio%ah(i,1:ntp),          .not. discard_l_tp)
-      end do
-      ntp = nktp
-      symba_tpA%helio%swiftest%nbody = ntp
-      nplm = count(symba_plA%helio%swiftest%mass>mtiny)
-      call coord_b2h_tp(ntp, symba_tpA%helio%swiftest, symba_plA%helio%swiftest)
-   end if 
-
-end subroutine symba_rearray
+end subroutine symba_rearray_pl

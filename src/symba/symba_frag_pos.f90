@@ -110,7 +110,15 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       !write(*,        "(' ---------------------------------------------------------------------------')")
       !write(*,fmtlabel) ' Q_loss      |',-Qloss / abs(Etot_before)
       !write(*,        "(' ---------------------------------------------------------------------------')")
-
+!
+      ! Put any residual angular momentum into the spin before constraining energy
+      !L_residual(:) = Ltot_before(:) - Ltot_after(:)
+      !L_spin_frag(:) = L_residual(:) / nfrag
+      !do i = 1, nfrag
+      !   ke_spin_after = ke_spin_after - m_frag(i) * Ip_frag(3,i) * rad_frag(i)**2 * norm2(rot_frag(:,i))
+      !   rot_frag(:,i) = rot_frag(:,i) + L_spin_frag(:) / (Ip_frag(3, i) * m_frag(i) * rad_frag(i)**2)
+      !   ke_spin_after = ke_spin_after + m_frag(i) * Ip_frag(3,i) * rad_frag(i)**2 * norm2(rot_frag(:,i))
+      !end do
       
       ! Set the "target" ke_after (the value of the orbital kinetic energy that the fragments ought to have)
       ke_target = ke_family + (ke_spin_before - ke_spin_after) + (pe_before - pe_after) - Qloss
@@ -132,24 +140,17 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       Lmag_after = norm2(Ltot_after(:))
    
       lmerge = lmerge .or. ((Etot_after - Etot_before) / abs(Etot_before) > 0._DP) 
-      if (.not.lmerge) then
-         L_residual(:) = Ltot_before(:) - Ltot_after(:)
-         L_spin_frag(:) = L_residual(:) / nfrag
-         do i = 1, nfrag
-            rot_frag(:,i) = rot_frag(:,i) + L_spin_frag(:) / (Ip_frag(3, i) * m_frag(i) * rad_frag(i)**2)
-         end do
-      end if
 
-!      write(*,        "(' ---------------------------------------------------------------------------')")
-!      write(*,        "('             |    T_orb    T_spin         T         pe      Etot      Ltot')")
-!      write(*,        "(' ---------------------------------------------------------------------------')")
-!      write(*,fmtlabel) ' change      |',(ke_after - ke_before) / abs(Etot_before), &
-!                                       (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
-!                                       (ke_after + ke_spin_after - ke_before - ke_spin_before)/ abs(Etot_before), &
-!                                       (pe_after - pe_before) / abs(Etot_before), &
-!                                       (Etot_after - Etot_before) / abs(Etot_before), &
-!                                       (Lmag_after - Lma_before) / Lmag_before
-!      write(*,        "(' ---------------------------------------------------------------------------')")
+      !write(*,        "(' ---------------------------------------------------------------------------')")
+      !write(*,        "('             |    T_orb    T_spin         T         pe      Etot      Ltot')")
+      !write(*,        "(' ---------------------------------------------------------------------------')")
+      !write(*,fmtlabel) ' change      |',(ke_after - ke_before) / abs(Etot_before), &
+      !                                 (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
+      !                                 (ke_after + ke_spin_after - ke_before - ke_spin_before)/ abs(Etot_before), &
+      !                                 (pe_after - pe_before) / abs(Etot_before), &
+      !                                 (Etot_after - Etot_before) / abs(Etot_before), &
+      !                                 (Lmag_after - Lmag_before) / Lmag_before
+      !write(*,        "(' ---------------------------------------------------------------------------')")
       !****************************************************************************************************************
 
    end associate
@@ -229,8 +230,10 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          x_frag(:, i) = r_frag_norm * (frag_vec(1) * x_col_unit(:) + frag_vec(2) * y_col_unit(:))
       end do
       call symba_frag_pos_com_adjust(xcom, m_frag, x_frag)
+      v_frag(:,:) = 0.0_DP
 
       call symba_frag_pos_ang_mtm(nfrag, xcom, vcom, L_orb, L_spin, mass, radius, m_frag, rad_frag, Ip_frag, x_frag, v_frag, rot_frag)
+      call symba_frag_pos_com_adjust(vcom, m_frag, v_frag)
 
       return
    end subroutine symba_frag_pos_initialize_fragments
@@ -272,12 +275,11 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          rmag = norm2(x_frag(:,i))
          v_r_unit(:) = x_frag(:,i) / rmag
          call util_crossproduct(h_unit(:), v_r_unit(:), v_t_unit(:))  ! make a unit vector in the tangential velocity direction wrt the angular momentum plane
-         v_frag(:,i) = L_orb_frag_mag / (m_frag(i) * rmag) * v_t_unit(:) ! Distribute the angular momentum equally amongst the fragments
+         v_frag(:,i) = v_frag(:,i) + L_orb_frag_mag / (m_frag(i) * rmag) * v_t_unit(:) ! Distribute the angular momentum equally amongst the fragments
       end do
    
       return 
    end subroutine symba_frag_pos_ang_mtm
-
 
    subroutine symba_frag_pos_kinetic_energy(xcom, vcom, L_orb, m_frag, x_frag, v_frag, ke_target, lmerge)
       !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
@@ -333,7 +335,6 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          v_corrected = 0.0_DP
          lmerge = .true.
       end if
-
 
       ! Shift the fragments into the system barycenter frame
       do i = 1, nfrag
@@ -444,11 +445,13 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          call move_alloc(ltmp, lexclude)
       end if
 
-      where (lexclude(1:npl))
-         symba_plwksp%helio%swiftest%status(1:npl) = INACTIVE
+      where (lexclude(1:npl_new))
+         symba_plwksp%helio%swiftest%status(1:npl_new) = INACTIVE
+      elsewhere
+         symba_plwksp%helio%swiftest%status(1:npl_new) = ACTIVE
       end where
 
-      nplm = count(symba_plwksp%helio%swiftest%mass > param%mtiny)
+      nplm = count((symba_plwksp%helio%swiftest%mass(:) > param%mtiny) .and. .not.lexclude(:))
       call util_dist_index_plpl(npl_new, nplm, symba_plwksp)
       call symba_energy_eucl(npl_new, symba_plwksp, param%j2rp2, param%j4rp4, ke_orbit, ke_spin, pe, te, Ltot)
 
