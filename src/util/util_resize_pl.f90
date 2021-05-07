@@ -18,7 +18,6 @@ subroutine util_resize_pl(symba_plA, npl_new)
 
 ! Internals
    type(symba_pl)          :: new_symba_plA
-   integer(I4B)            :: i
 
 ! Executable code
 
@@ -36,11 +35,6 @@ subroutine util_resize_pl(symba_plA, npl_new)
          new_symba_plA%helio%swiftest%vb(:,1:npl_old) = symba_plA%helio%swiftest%vb(:,1:npl_old)
          new_symba_plA%helio%swiftest%rot(:,1:npl_old) = symba_plA%helio%swiftest%rot(:,1:npl_old)
          new_symba_plA%helio%swiftest%Ip(:,1:npl_old) = symba_plA%helio%swiftest%Ip(:,1:npl_old)
-         new_symba_plA%helio%swiftest%info(1:npl_old) = symba_plA%helio%swiftest%info(1:npl_old)
-         new_symba_plA%kin(1:npl_old) = symba_plA%kin(1:npl_old)
-         do i = 1, npl_old
-            if (allocated(symba_plA%kin(i)%child)) allocate(new_symba_plA%kin(i)%child, source = symba_plA%kin(i)%child)
-         end do
       else
          new_symba_plA%helio%swiftest%id(1:npl_new) = symba_plA%helio%swiftest%id(1:npl_new)
          new_symba_plA%helio%swiftest%status(1:npl_new) = symba_plA%helio%swiftest%status(1:npl_new)
@@ -53,11 +47,6 @@ subroutine util_resize_pl(symba_plA, npl_new)
          new_symba_plA%helio%swiftest%vb(:,1:npl_new) = symba_plA%helio%swiftest%vb(:,1:npl_new)
          new_symba_plA%helio%swiftest%rot(:,1:npl_new) = symba_plA%helio%swiftest%rot(:,1:npl_new)
          new_symba_plA%helio%swiftest%Ip(:,1:npl_new) = symba_plA%helio%swiftest%Ip(:,1:npl_new)
-         new_symba_plA%helio%swiftest%info(1:npl_new) = symba_plA%helio%swiftest%info(1:npl_new)
-         new_symba_plA%kin(1:npl_new) = symba_plA%kin(1:npl_new)
-         do i = 1, npl_new
-            if (allocated(symba_plA%kin(i)%child)) allocate(new_symba_plA%kin(i)%child, source = symba_plA%kin(i)%child)
-         end do
       end if
       call symba_pl_deallocate(symba_plA)
       call symba_pl_allocate(symba_plA, npl_new)
@@ -72,8 +61,7 @@ subroutine util_resize_pl(symba_plA, npl_new)
       call move_alloc(new_symba_plA%helio%swiftest%vb, symba_plA%helio%swiftest%vb)
       call move_alloc(new_symba_plA%helio%swiftest%rot, symba_plA%helio%swiftest%rot)
       call move_alloc(new_symba_plA%helio%swiftest%Ip, symba_plA%helio%swiftest%Ip)
-      call move_alloc(new_symba_plA%helio%swiftest%info, symba_plA%helio%swiftest%info)
-      call move_alloc(new_symba_plA%kin, symba_plA%kin)
+      call symba_pl_deallocate(new_symba_plA)
 
    end associate
    return
