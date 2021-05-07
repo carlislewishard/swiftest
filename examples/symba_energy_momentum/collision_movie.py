@@ -9,24 +9,27 @@ xmax = 20.0
 ymin = -20.0
 ymax = 20.0
 
-case = 'supercat_off'
+case = 'supercat_head'
 
 if case == 'supercat_off':
-    animfile = 'supercat_off_axis.mp4'
+    animfile = 'movies/supercat_off_axis.mp4'
     titletext = "Supercatastrophic - Off Axis"
     configfile = 'param.supercatastrophic_off_axis.in'
 elif case == 'supercat_head':
-    animfile = 'supercat_headon.mp4'
+    animfile = 'movies/supercat_headon.mp4'
     titletext = "Supercatastrophic - Head on"
     configfile = 'param.supercatastrophic_headon.in'
 elif case == 'disruption_off':
-    animfile = 'disruption_off_axis.mp4'
+    animfile = 'movies/disruption_off_axis.mp4'
     titletext = "Disruption - Off Axis"
     configfile = 'param.disruption_off_axis.in'
 elif case == 'disruption_head':
-    animfile = 'disruption_headon.mp4'
+    animfile = 'movies/disruption_headon.mp4'
     titletext = "Disruption- Head on"
     configfile = 'param.disruption_headon.in'
+else:
+    print(f'{case} is an unknown case')
+    exit(-1)
 
 def scale_sim(ds, config):
 

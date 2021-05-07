@@ -131,7 +131,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          call symba_frag_pos_energy_calc(npl, symba_plA, lexclude, ke_after, ke_spin_after, pe_after, Ltot_after,&
                nfrag=nfrag, Ip_frag=Ip_frag, m_frag=m_frag, rad_frag=rad_frag, xb_frag=xb_frag, vb_frag=vb_frag, rot_frag=rot_frag)
          Etot_after = ke_after + ke_spin_after + pe_after
-         Lmag_after = norm2(Ltot(:))
+         Lmag_after = norm2(Ltot_after(:))
       
          lmerge = lmerge .or. ((Etot_after - Etot_before) / abs(Etot_before) > 0._DP) 
          if (.not.lmerge) then
@@ -164,7 +164,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
       !!
       !! Initializes the orbits of the fragments around the center of mass. The fragments are initially placed on a plane defined by the 
-      !! pre-impact angular momentum. They are distributed on a circle surrounding the center of mass and with velocities pointing outward.
+      !! pre-impact angular momentum. They are distributed on an ellipse surrounding the center of mass.
       !! The initial positions do not conserve energy or momentum, so these need to be adjusted later.
       implicit none
       ! Arguments
@@ -176,12 +176,13 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 
       ! Internals
       real(DP)                                :: mtot, theta, v_frag_norm, r_frag_norm, v_col_norm, r_col_norm
-      real(DP)                                :: ecc_ellipse, b2a, phase_ang
+      real(DP)                                :: b2a, phase_ang
       real(DP), dimension(NDIM)               :: Ltot, xc, vc, x_cross_v, delta_r, delta_v
       real(DP), dimension(NDIM)               :: x_col_unit, y_col_unit, z_col_unit
       integer(I4B)                            :: i, nfrag
       real(DP), dimension(2,2)                :: orientation
       real(DP), dimension(2)                  :: frag_vec
+      real(DP), parameter                     :: ecc_ellipse = 0.9_DP ! Eccentricity of the fragment distribution ellipse
 
       ! Now create the fragment distribution
       nfrag = size(m_frag(:))
@@ -209,7 +210,6 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 
       ! Place the fragments on the collision planea on an ellipse, but with the distance proportional to mass wrt the collisional barycenter
       ! This gets updated later after the new potential energy is calculated
-      ecc_ellipse = 0.5_DP
 
       b2a = 1.0_DP / sqrt(1.0_DP - ecc_ellipse**2)
       
@@ -221,22 +221,16 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 
       ! Re-normalize position and velocity vectors by the fragment number so that for our initial guess we weight each
       ! fragment position by the mass and assume equipartition of energy for the velocity
-      v_col_norm = 0.0_DP
-      v_col_norm = v_col_norm / sqrt(1.0_DP * nfrag)
-      r_col_norm = 2 * max(r_col_norm, sum(radius(:))) / nfrag 
+      v_frag(:,:) = 0.0_DP
+      r_col_norm = 1.10_DP * sum(rad_frag(:)) / PI
       do i = 1, nfrag
          frag_vec(:) = [b2a * cos(theta * (i - 1)), sin(theta * (i - 1))]
          frag_vec(:) = matmul(orientation(:,:), frag_vec(:))
 
-         r_frag_norm = r_col_norm * mtot / m_frag(i) 
+         r_frag_norm = r_col_norm 
          x_frag(:,i) =  r_frag_norm * (frag_vec(1) * x_col_unit(:) + frag_vec(2) * y_col_unit(:))
-                        
-         ! Apply a simple mass weighting first to ensure that the velocity follows the barycenter
-         ! This gets updated later after the new potential and kinetic energy is calcualted
-         v_frag_norm = v_col_norm * sqrt(mtot / m_frag(i))
-         v_frag(:,i) = v_frag_norm * (frag_vec(1) * x_col_unit(:) + frag_vec(2) * y_col_unit(:))
-
       end do
+      call symba_frag_pos_com_adjust(xcom, m_frag, x_frag)
 
       return
    end subroutine symba_frag_pos_initialize_fragments
@@ -271,6 +265,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          call utiL_crossproduct(xc(:), vc(:), x_cross_v(:))
          L_orb_old(:) = L_orb_old(:) + mass(j) * x_cross_v(:)
       end do
+      call symba_frag_pos_com_adjust(xcom, m_frag, x_frag)
    
       ! Divide up the pre-impact spin angular momentum equally between the various bodies by mass
       L_spin_new(:) = L_spin_old(:)
@@ -286,8 +281,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          call util_crossproduct(h_unit(:), v_r_unit(:), v_phi_unit(:))  ! make a unit vector in the tangential velocity direction
          v_frag(:,i) = v_frag(:,i) + norm2(L_residual(:)) / m_frag(i) / norm2(x_frag(:,i)) * v_phi_unit(:) ! Distribute the angular momentum equally amongst the fragments
       end do
-
-      call symba_frag_pos_com_adjust(xcom, vcom, m_frag, x_frag, v_frag)
+      call symba_frag_pos_com_adjust(vcom, m_frag, v_frag)
    
       return 
    end subroutine symba_frag_pos_ang_mtm
@@ -321,6 +315,8 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 
       allocate(v_r(NDIM,nfrag))
       allocate(v_phi(NDIM,nfrag))
+      call symba_frag_pos_com_adjust(xcom, m_frag, x_frag)
+      call symba_frag_pos_com_adjust(vcom, m_frag, v_frag)
 
       do i = 1, nfrag
          call utiL_crossproduct(x_frag(:,i), v_frag(:,i), x_cross_v(:))
@@ -351,40 +347,36 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          v_frag(:,i) = f_corrected * mtot / m_frag(i) *  v_r(:, i) + v_phi(:, i)
       end do
 
-      call symba_frag_pos_com_adjust(xcom, vcom, m_frag, x_frag, v_frag)
+      call symba_frag_pos_com_adjust(vcom, m_frag, v_frag)
 
       return
    end subroutine symba_frag_pos_kinetic_energy
 
-   subroutine symba_frag_pos_com_adjust(xcom, vcom, m_frag, x_frag, v_frag)
+   subroutine symba_frag_pos_com_adjust(vec_com, m_frag, vec_frag)
       !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
       !!
-      !! Adjust the position and velocity of the fragments as needed to align them with the original trajectory center of mass
+      !! Adjusts the position or velocity of the fragments as needed to align them with the original trajectory center of mass.
       implicit none
       ! Arguments
-      real(DP), dimension(:),   intent(in)    :: xcom, vcom      !! Center of mass position and velocity in the system barycenter frame
-      real(DP), dimension(:),   intent(in)    :: m_frag          !! Fragment masses
-      real(DP), dimension(:,:), intent(inout) :: x_frag, v_frag  !! Fragment position and velocities in the center of mass frame
+      real(DP), dimension(:),   intent(in)    :: vec_com   !! Center of mass position or velocity in the system barycenter frame
+      real(DP), dimension(:),   intent(in)    :: m_frag    !! Fragment masses
+      real(DP), dimension(:,:), intent(inout) :: vec_frag  !! Fragment positions or velocities in the center of mass frame
 
       ! Internals
-      real(DP), dimension(NDIM)               :: mx_frag, mv_frag, COM_offset_x, COM_offset_v
+      real(DP), dimension(NDIM)               :: mvec_frag, COM_offset
       real(DP)                                :: mtot
       integer(I4B)                            :: i, nfrag
          
       mtot = sum(m_frag(:))
       nfrag = size(m_frag(:))
-      mx_frag(:) = 0.0_DP
-      mv_frag(:) = 0.0_DP
+      mvec_frag(:) = 0.0_DP
 
       do i = 1, nfrag
-         mx_frag = mx_frag(:) + (x_frag(:,i) + xcom(:)) * m_frag(i)
-         mv_frag = mv_frag(:) + (v_frag(:,i) + vcom(:)) * m_frag(i)
+         mvec_frag = mvec_frag(:) + (vec_frag(:,i) + vec_com(:)) * m_frag(i)
       end do
-      COM_offset_x(:) = xcom(:) - mx_frag(:) / mtot
-      COM_offset_v(:) = vcom(:) - mv_frag(:) / mtot
+      COM_offset(:) = vec_com(:) - mvec_frag(:) / mtot
       do i = 1, nfrag 
-         x_frag(:, i) = x_frag(:, i) + COM_offset_x(:)
-         v_frag(:, i) = v_frag(:, i) + COM_offset_v(:)
+         vec_frag(:, i) = vec_frag(:, i) + COM_offset(:)
       end do
 
       return
