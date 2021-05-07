@@ -216,7 +216,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       ! The orientation and angular spacing of fragments on the ellipse
       theta = (2 * PI) / nfrag
       ! Impirically determined phase angle that depends on the impact paarameter
-      phase_ang =  PI 
+      phase_ang = 0.0_DP
       orientation = reshape([cos(phase_ang), sin(phase_ang), -sin(phase_ang), cos(phase_ang)], shape(orientation))
 
       ! Re-normalize position and velocity vectors by the fragment number so that for our initial guess we weight each
