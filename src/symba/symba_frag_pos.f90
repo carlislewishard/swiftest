@@ -135,7 +135,6 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       if (.not.lmerge) then
          L_residual(:) = Ltot_before(:) - Ltot_after(:)
          L_spin_frag(:) = L_residual(:) / nfrag
-         write(*,*) 'Residual DL/L0', norm2(L_residual(:)) / Lmag_before
          do i = 1, nfrag
             rot_frag(:,i) = rot_frag(:,i) + L_spin_frag(:) / (Ip_frag(3, i) * m_frag(i) * rad_frag(i)**2)
          end do
