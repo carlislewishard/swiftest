@@ -169,7 +169,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 
       ! Internals
       real(DP)                                :: mtot, theta, v_frag_norm, r_frag_norm, v_col_norm, r_col_norm
-      real(DP)                                :: ecc_ellipse, b2a,  phase_ang, imp_param
+      real(DP)                                :: ecc_ellipse, b2a, phase_ang
       real(DP), dimension(NDIM)               :: Ltot, xc, vc, x_cross_v, delta_r, delta_v
       real(DP), dimension(NDIM)               :: x_col_unit, y_col_unit, z_col_unit
       integer(I4B)                            :: i, nfrag
@@ -214,8 +214,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       ! The orientation and angular spacing of fragments on the ellipse
       theta = (2 * PI) / nfrag
       ! Impirically determined phase angle that depends on the impact paarameter
-      imp_param = norm2(Ltot(:)) / (r_col_norm * v_col_norm * mtot)
-      phase_ang = 0.5_DP * PI 
+      phase_ang =  PI 
       orientation = reshape([cos(phase_ang), sin(phase_ang), -sin(phase_ang), cos(phase_ang)], shape(orientation))
 
       ! Re-normalize position and velocity vectors by the fragment number so that for our initial guess we weight each
@@ -326,17 +325,19 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          h_unit(:) = x_cross_v(:) / norm2(x_cross_v(:))
          v_r_unit(:) = x_frag(:,i) / norm2(x_frag(:, i))
          call utiL_crossproduct(h_unit(:), v_r_unit(:), v_phi_unit(:))
-         v_r(:,i) = v_r_unit(:) !dot_product(v_frag(:,i), v_r_unit(:)) * v_r_unit(:)
+         v_r(:,i) = v_r_unit(:) 
          v_phi(:,i) = dot_product(v_frag(:,i), v_phi_unit(:)) * v_phi_unit(:)
       end do
 
       C = 2 * ke_target
+      A = 0._DP
       do i = 1, nfrag
+         A = A + m_frag(i) * (mtot / m_frag(i))**2
          C = C - m_frag(i) * (dot_product(vcom(:),vcom(:)) + dot_product(v_phi(:,i),v_phi(:,i)) + dot_product(vcom(:), v_phi(:, i)))
       end do
 
       if (C > 0.0_DP) then
-         f_corrected = sqrt(C / mtot)
+         f_corrected = sqrt(C / A)
          lmerge = .false.
       else
          f_corrected = 0.0_DP
@@ -345,12 +346,10 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 
       ! Shift the fragments into the system barycenter frame
       do i = 1, nfrag
-         v_frag(:,i) = f_corrected * v_r(:, i) + v_phi(:, i)
+         v_frag(:,i) = f_corrected * mtot / m_frag(i) *  v_r(:, i) + v_phi(:, i)
       end do
 
       call symba_frag_pos_com_adjust(xcom, vcom, m_frag, x_frag, v_frag)
-
-      !write(*,fmtlabel) ' f_corrected |',f_corrected
 
       return
    end subroutine symba_frag_pos_kinetic_energy
