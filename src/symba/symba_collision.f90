@@ -1,4 +1,4 @@
-subroutine symba_collision(t, symba_plA, nplplenc, plplenc_list, lfrag_add, nmergeadd, mergeadd_list, discard_plA, param)
+subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, mergeadd_list, nmergeadd, param)
    !! author: Jennifer L.L. Pouplin, Carlisle A. wishard, and David A. Minton
    !!
    !! Check for merger between planets in SyMBA. If the user has turned on the FRAGMENTATION feature, it will call the 
@@ -12,16 +12,15 @@ subroutine symba_collision(t, symba_plA, nplplenc, plplenc_list, lfrag_add, nmer
    use module_symba
    use module_interfaces, EXCEPT_THIS_ONE => symba_collision
    implicit none
-   ! Arguments
+
    real(DP), intent(in)                      :: t
-   type(symba_pl)                            :: symba_plA
    integer(I4B), intent(inout)               :: nplplenc, nmergeadd
+   type(symba_pl)                            :: symba_plA
    type(symba_plplenc), intent(inout)        :: plplenc_list
-   logical, intent(inout)                    :: lfrag_add
    type(symba_merger), intent(inout)         :: mergeadd_list
-   type(symba_pl), intent(inout)             :: discard_plA
+   logical, intent(inout)                    :: ldiscard
    type(user_input_parameters),intent(inout) :: param
-   ! internals
+
    integer(I4B), parameter                 :: NRES = 3   !! Number of collisional product results
    integer(I4B)                            :: i, j, k, index_enc, index_coll, jtarg, jproj
    real(DP), dimension(NRES)               :: mass_res
@@ -46,11 +45,19 @@ subroutine symba_collision(t, symba_plA, nplplenc, plplenc_list, lfrag_add, nmer
    logical, dimension(nplplenc)               :: lplpl_collision
    logical, dimension(:), allocatable         :: lplpl_unique_parent
    integer(I4B), dimension(:), pointer        :: plparent  
-   logical                                    :: ldiscard
+
+   ! TESTING
+   logical, save   :: lfirst = .true.
+   real(DP), save  :: Minitial
+   real(DP)        :: Msystem, Madd, Mdiscard
 
    ! First determine the collisional regime for each colliding pair
    associate(npl => symba_plA%helio%swiftest%nbody, xbpl => symba_plA%helio%swiftest%xb, statpl => symba_plA%helio%swiftest%status, idpl => symba_plA%helio%swiftest%id, &
              idx1 => plplenc_list%index1, idx2 => plplenc_list%index2, plparent => symba_plA%kin%parent)
+      if (lfirst) then
+         Minitial = sum(symba_plA%helio%swiftest%mass(1:npl))
+         lfirst = .false.
+      end if 
       lplpl_collision(:) = plplenc_list%status(1:nplplenc) == COLLISION
       ldiscard = any(lplpl_collision)
       if (.not.ldiscard) return
@@ -303,8 +310,6 @@ subroutine symba_collision(t, symba_plA, nplplenc, plplenc_list, lfrag_add, nmer
             deallocate(parent_child_index_array(j)%id)
          end do
          deallocate(family)
-
-         call symba_rearray_pl(t, npl, symba_plA, nmergeadd, mergeadd_list, discard_plA, param)
 
       end do
    end associate

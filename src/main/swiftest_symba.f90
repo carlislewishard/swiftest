@@ -152,38 +152,35 @@ program swiftest_symba
       do while ((t < tstop) .and. ((ntp0 == 0) .or. (ntp > 0)))
          call symba_step_eucl(t, dt, param,npl,ntp,symba_plA, symba_tpA, nplplenc, npltpenc,&
                plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list)
-         
+               
+         ldiscard_pl = .false. 
+         ldiscard_tp = .false.
+         lfrag_add = .false.
          call symba_discard_pl(t, npl, ntp, symba_plA, symba_tpA, rmin, rmax, rmaxu, qmin, qmin_coord, qmin_alo, qmin_ahi, ldiscard_pl)
-         if (ldiscard_pl) then
-            if (param%lenergy) call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit_before, ke_spin_before, pe_before, Eorbit_before, Ltot)
-            call symba_rearray_pl(t, npl, symba_plA, nmergeadd, mergeadd_list, discard_plA, param)
-            if (param%lenergy) then
-               call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit_after, ke_spin_after, pe_after, Eorbit_after, Ltot)
-               Ecollision = Eorbit_before - Eorbit_after    ! Energy change resulting in this collisional event Total running energy offset from collision in this step
-               symba_plA%helio%swiftest%Ecollisions = symba_plA%helio%swiftest%Ecollisions + Ecollision
-            end if
-         end if
-         
-         lfrag_add = any(plplenc_list%status(1:nplplenc) == COLLISION)
-         if (lfrag_add) then
-            if (param%lenergy) call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit_before, ke_spin_before, pe_before, Eorbit_before, Ltot)
-            call symba_collision(t, symba_plA, nplplenc, plplenc_list, lfrag_add, nmergeadd, mergeadd_list, discard_plA, param)
-            if (param%lenergy) then
-               call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit_after, ke_spin_after, pe_after, Eorbit_after, Ltot)
-               Ecollision = Eorbit_before - Eorbit_after    ! Energy change resulting in this collisional event Total running energy offset from collision in this step
-               symba_plA%helio%swiftest%Ecollisions = symba_plA%helio%swiftest%Ecollisions + Ecollision
-               !write(*,*) 'Dke_orbit: ',ke_orbit_before - ke_orbit_after
-               !write(*,*) 'Dke_spin:  ',ke_spin_before - ke_spin_after
-               !write(*,*) 'Dpe:       ',pe_before - pe_after
-            end if
-         end if
-
          call symba_discard_tp(t, npl, ntp, symba_plA, symba_tpA, dt, rmin, rmax, rmaxu, qmin, qmin_coord, &    
                                 qmin_alo, qmin_ahi, param%lrhill_present, ldiscard_tp)
+         call symba_collision(t, symba_plA, nplplenc, plplenc_list, lfrag_add, mergeadd_list, nmergeadd, param)
+         ldiscard_pl = ldiscard_pl .or. lfrag_add
 
-         if (ldiscard_pl .or. ldiscard_tp .or. lfrag_add) then
+         ! These next two blocks should be streamlined/improved but right now we treat discards separately from collisions so it has to be this way
+         if (ldiscard_pl .or. ldiscard_tp) then
+            if (param%lenergy) call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit_before, ke_spin_before, pe_before, Eorbit_before, Ltot)
+            call symba_rearray(t, npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
+                               discard_tpA, ldiscard_pl, ldiscard_tp, mtiny, param)
             call io_discard_write_symba(t, mtiny, npl, nsppl, nsptp, nmergesub, symba_plA, &
                                         discard_plA%helio%swiftest, discard_tpA%helio%swiftest, mergeadd_list, mergesub_list, discard_file, param%lbig_discard) 
+            nmergeadd = 0
+            nmergesub = 0
+            nsppl = 0
+            nsptp = 0
+            nplm = count(symba_plA%helio%swiftest%mass(1:npl) > mtiny)
+
+            if (param%lenergy)  then
+               call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit_after, ke_spin_after, pe_after, Eorbit_after, Ltot)
+               Ecollision = Eorbit_before - Eorbit_after    ! Energy change resulting in this collisional event Total running energy offset from collision in this step
+               symba_plA%helio%swiftest%Ecollisions = symba_plA%helio%swiftest%Ecollisions + Ecollision
+            end if
+            !if (ntp > 0) call util_dist_index_pltp(nplm, ntp, symba_plA, symba_tpA)
          end if
 
          iloop = iloop + 1
