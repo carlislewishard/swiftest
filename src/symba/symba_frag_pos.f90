@@ -213,21 +213,23 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 
       ! Re-normalize position and velocity vectors by the fragment number so that for our initial guess we weight each
       ! fragment position by the mass and assume equipartition of energy for the velocity
-      r_col_norm = 1.5_DP * 2 * sum(rad_frag(:)) / theta / (nfrag - 2)
+      r_col_norm = 1.5_DP * 4 * sum(rad_frag(:)) / theta / (nfrag - 2)
 
       ! We will treat the first two fragments of the list as special cases. They get placed on the "poles" of the
       ! fragment distribution (aligned with the collisional system z-axis)
-      x_frag(:, 1) = -r_col_norm * z_col_unit(:)
-      x_frag(:, 2) =  r_col_norm * z_col_unit(:)
+      x_frag(:, 1) = - z_col_unit(:)
+      x_frag(:, 2) =   z_col_unit(:)
+      call random_number(x_frag(:,3:nfrag)) 
 
+      x_frag(:,:) = x_frag(:,:) * r_col_norm
       ! The rest of the fragments will go in a ring on the x-y plane
-      do i = 3, nfrag
-         frag_vec(:) = [b2a * cos(theta * (i - 1)), sin(theta * (i - 1))]
-         frag_vec(:) = matmul(orientation(:,:), frag_vec(:))
-
-         r_frag_norm = r_col_norm 
-         x_frag(:, i) = r_frag_norm * (frag_vec(1) * x_col_unit(:) + frag_vec(2) * y_col_unit(:))
-      end do
+      !do i = 3, nfrag
+      !   frag_vec(:) = [b2a * cos(theta * (i - 1)), sin(theta * (i - 1))]
+      !   frag_vec(:) = matmul(orientation(:,:), frag_vec(:))
+!
+!         r_frag_norm = r_col_norm 
+!         x_frag(:, i) = r_frag_norm * (frag_vec(1) * x_col_unit(:) + frag_vec(2) * y_col_unit(:))
+!      end do
       call symba_frag_pos_com_adjust(xcom, m_frag, x_frag)
 
       call symba_frag_pos_ang_mtm(nfrag, xcom, vcom, L_orb, L_spin, mass, radius, m_frag, rad_frag, Ip_frag, x_frag, v_frag, rot_frag)
