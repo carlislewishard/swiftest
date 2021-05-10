@@ -70,6 +70,7 @@ program swiftest_symba
                ntp => symba_tpA%helio%swiftest%nbody)
 
       call util_version
+      call random_seed()
 
       call get_command_argument(1, inparfile, status = ierr) 
       if (ierr /= 0) then

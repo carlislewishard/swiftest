@@ -1,6 +1,6 @@
 !Parameter file for the SyMBA-RINGMOONS test
 T0             0.0 
-TSTOP          31536000000.0
+TSTOP          3e3
 DT             500.0
 PL_IN          mars.in
 TP_IN          tp.in
