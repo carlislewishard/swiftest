@@ -104,7 +104,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
                                          (ke_after + ke_spin_after - ke_before - ke_spin_before)/ abs(Etot_before), &
                                          (pe_after - pe_before) / abs(Etot_before), &
                                          (Etot_after - Etot_before) / abs(Etot_before), &
-                                         (Lmag_after - Lmag_before) / Lmag_before
+                                         norm2(Ltot_after - Ltot_before) / Lmag_before
       write(*,        "(' ---------------------------------------------------------------------------')")
       write(*,        "('  Second pass to get energy ')")
       write(*,        "(' ---------------------------------------------------------------------------')")
@@ -138,7 +138,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
                                         (ke_after + ke_spin_after - ke_before - ke_spin_before)/ abs(Etot_before), &
                                         (pe_after - pe_before) / abs(Etot_before), &
                                         (Etot_after - Etot_before) / abs(Etot_before), &
-                                        (Lmag_after - Lmag_before) / Lmag_before
+                                        norm2(Ltot_after - Ltot_before) / Lmag_before
    
       lmerge = lmerge .or. ((Etot_after - Etot_before) / abs(Etot_before) > 0._DP) 
       if (.not.lmerge) then
@@ -163,7 +163,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
                                        (ke_after + ke_spin_after - ke_before - ke_spin_before)/ abs(Etot_before), &
                                        (pe_after - pe_before) / abs(Etot_before), &
                                        (Etot_after - Etot_before) / abs(Etot_before), &
-                                       (Lmag_after - Lmag_before) / Lmag_before
+                                       norm2(Ltot_after - Ltot_before) / Lmag_before
       write(*,        "(' ---------------------------------------------------------------------------')")
       !****************************************************************************************************************
 

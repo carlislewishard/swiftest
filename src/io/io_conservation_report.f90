@@ -56,7 +56,7 @@ contains
          flush(egyiu)
          if (.not.lfirst .and. lterminal) then 
             Lmag_now = norm2(Ltot_now)
-            Lerror = (Lmag_now - Lmag_orig) / Lmag_orig
+            Lerror = norm2(Ltot_now - Ltot_orig) / Lmag_orig
             Eorbit_error = (Eorbit - Eorbit_orig) / abs(Eorbit_orig)
             Ecoll_error = -Ecollisions / abs(Eorbit_orig)
             Etotal_error = (Eorbit - (Eorbit_orig - Ecollisions)) / abs(Eorbit_orig)
