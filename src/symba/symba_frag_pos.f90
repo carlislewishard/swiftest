@@ -125,6 +125,13 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          vb_frag(:,i) = v_frag(:, i) + vcom(:)
       end do
 
+      ke_target = 0._DP
+      do i = 1, nfrag
+         ke_target = ke_target + 0.5_DP * m_frag(i) * dot_product(vb_frag(:, i), vb_frag(:, i))
+      end do
+      write(*,        "(' ---------------------------------------------------------------------------')")
+      write(*,fmtlabel) ' T_frag calc |',ke_target / abs(Etot_before)
+
       ! Calculate the new energy of the system of fragments
       call symba_frag_pos_energy_calc(npl, symba_plA, lexclude, ke_after, ke_spin_after, pe_after, Ltot_after,&
             nfrag=nfrag, Ip_frag=Ip_frag, m_frag=m_frag, rad_frag=rad_frag, xb_frag=xb_frag, vb_frag=vb_frag, rot_frag=rot_frag)
@@ -250,7 +257,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       real(DP)                                :: rmag, L_orb_frag_mag
       real(DP), dimension(NDIM)               :: xc, vc, v_t_unit, h_unit, v_r_unit
       real(DP), dimension(NDIM)               :: L_orb_old, L_spin_frag, L_spin_new
-      real(DP), parameter                     :: f_spin = 0.25_DP !! Fraction of pre-impact orbital angular momentum that is converted to fragment spin
+      real(DP), parameter                     :: f_spin = 0.00_DP !! Fraction of pre-impact orbital angular momentum that is converted to fragment spin
    
       L_orb_old(:) = L_orb(:, 1) + L_orb(:, 2)
       
@@ -295,7 +302,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       logical, intent(out)                    :: lmerge
 
       ! Internals
-      real(DP)                                :: v_corrected, mtot, A, C, rterm
+      real(DP)                                :: v_r_mag, mtot, ke_frag
       integer(I4B)                            :: i, nfrag
       real(DP), dimension(:,:), allocatable   :: v_r_unit, v_t
       real(DP), dimension(NDIM)               :: v_t_unit, h_unit, L_orb_frag
@@ -307,36 +314,27 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       allocate(v_t, mold=v_frag)
       call symba_frag_pos_com_adjust(xcom, m_frag, x_frag)
 
-      h_unit(:) = L_orb(:, 1) + L_orb(:, 2) + L_spin(:, 1) + L_spin(:, 2)
-      h_unit(:) = h_unit(:) / norm2(h_unit(:))
-
       do i = 1, nfrag
          v_r_unit(:, i) = x_frag(:,i) / norm2(x_frag(:, i))
-         call utiL_crossproduct(h_unit(:), v_r_unit(:, i), v_t_unit(:))
-         v_t(:,i) = dot_product(v_frag(:,i), v_t_unit(:)) * v_t_unit(:)
+         v_t(:,i) = v_frag(:, i) - dot_product(v_frag(:,i), v_r_unit(:, i)) * v_r_unit(:, i)
       end do
 
-      C = 2 * ke_target
-      A = mtot
+      ke_frag = ke_target - 0.5_DP * mtot * dot_product(vcom(:), vcom(:))
       do i = 1, nfrag
-         C = C - m_frag(i) * (dot_product(vcom(:), vcom(:)) + dot_product(v_t(:,i), v_t(:,i)) + dot_product(vcom(:), v_t(:, i)))
+         ke_frag = ke_frag - 0.5_DP * m_frag(i) * dot_product(v_t(:, i), v_t(:, i))
       end do
 
-      if (C > 0.0_DP) then
-         v_corrected = sqrt(C / A)
+      if (ke_frag > 0.0_DP) then
+         ke_frag = ke_frag / nfrag ! Equipartition the energy between all fragments
+         do i = 1, nfrag
+           v_r_mag = sqrt(2 * ke_frag / m_frag(i)) 
+           v_frag(:, i) = v_r_mag * v_r_unit(:, i) + v_t(:, i)
+         end do
          lmerge = .false.
       else
-         v_corrected = 0.0_DP
+         v_frag(:, :) = 0.0_DP
          lmerge = .true.
       end if
-
-      ! Alter the fragment velocity distribution to hve the new radial component required to constrain kinetic energy
-      do i = 1, nfrag
-         v_frag(:,i) = v_corrected * v_r_unit(:, i) + v_t(:, i)
-      end do
-
-      ! Shift the fragments into the system barycenter frame
-      call symba_frag_pos_com_adjust(vcom, m_frag, v_frag)
 
       return
    end subroutine symba_frag_pos_kinetic_energy
