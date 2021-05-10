@@ -447,7 +447,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       if (present(nfrag)) then ! Append the fragments if they are included
          symba_plwksp%helio%swiftest%Ip(:,npl+1:npl_new) = Ip_frag(:,:)
          symba_plwksp%helio%swiftest%mass(npl+1:npl_new) = m_frag(:)
-         symba_plwksp%helio%swiftest%radius(npl+1:npl_new) = m_frag(:)
+         symba_plwksp%helio%swiftest%radius(npl+1:npl_new) = rad_frag(:)
          symba_plwksp%helio%swiftest%xb(:,npl+1:npl_new) =  xb_frag(:,:)
          symba_plwksp%helio%swiftest%vb(:,npl+1:npl_new) =  vb_frag(:,:)
          symba_plwksp%helio%swiftest%rot(:,npl+1:npl_new) = rot_frag(:,:)
