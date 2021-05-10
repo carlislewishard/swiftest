@@ -145,12 +145,19 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          L_residual(:) = Ltot_before(:) - Ltot_after(:)
          L_spin_frag(:) = L_residual(:) / nfrag
          do i = 1, nfrag
-            rot_frag(:,i) = rot_frag(:,i) + L_spin_frag(:) / (Ip_frag(3, i) * m_frag(i) * rad_frag(i)**2)
+            rot_frag(:,i) = rot_frag(:,i) + L_spin_frag(:) / (Ip_frag(:, i) * m_frag(i) * rad_frag(i)**2)
+         end do
+         L_spin_frag(:) = 0._DP
+         do i = 1, nfrag
+            L_spin_frag(:) = L_spin_frag(:) + Ip_frag(:,i) * rad_frag(i)**2 * m_frag(i) * rot_frag(:,i) 
          end do
       end if
+
+
       call symba_frag_pos_energy_calc(npl, symba_plA, lexclude, ke_after, ke_spin_after, pe_after, Ltot_after,&
          nfrag=nfrag, Ip_frag=Ip_frag, m_frag=m_frag, rad_frag=rad_frag, xb_frag=xb_frag, vb_frag=vb_frag, rot_frag=rot_frag)
          Etot_after = ke_after + ke_spin_after + pe_after
+      L_residual(:) = Ltot_before(:) - Ltot_after(:)
       Lmag_after = norm2(Ltot_after(:))
 
       write(*,        "(' ---------------------------------------------------------------------------')")
@@ -189,13 +196,9 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       real(DP), dimension(:,:), intent(out)   :: x_frag, v_frag, rot_frag !! Fragment position, velocities, and spin states
       ! Internals
       real(DP)                                :: mtot, theta, v_frag_norm, r_frag_norm, v_col_norm, r_col_norm
-      real(DP)                                :: b2a, phase_ang
       real(DP), dimension(NDIM)               :: Ltot, delta_r, delta_v
       real(DP), dimension(NDIM)               :: x_col_unit, y_col_unit, z_col_unit
       integer(I4B)                            :: i
-      real(DP), dimension(2,2)                :: orientation
-      real(DP), dimension(2)                  :: frag_vec
-      real(DP), parameter                     :: ecc_ellipse = 0.0_DP ! Eccentricity of the fragment distribution ellipse
 
       ! Now create the fragment distribution
       mtot = sum(mass(:))
@@ -215,16 +218,8 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       ! The cross product of the z- by x-axis will give us the y-axis
       call util_crossproduct(y_col_unit, z_col_unit, x_col_unit)
 
-      ! Place the fragments on the collision planea on an ellipse, but with the distance proportional to mass wrt the collisional barycenter
-      ! This gets updated later after the new potential energy is calculated
-      b2a = 1.0_DP / sqrt(1.0_DP - ecc_ellipse**2)
-      
       ! The angular spacing of fragments on the ellipse - We will only use half the ellipse
       theta = 2 * PI / nfrag
-
-      ! Adjust the orientation of the ellipse. This mainly affects the disruption case as the first body in the distribution (theta=0) is the largest
-      phase_ang = 0.0_DP
-      orientation = reshape([cos(phase_ang), sin(phase_ang), -sin(phase_ang), cos(phase_ang)], shape(orientation))
 
       ! Re-normalize position and velocity vectors by the fragment number so that for our initial guess we weight each
       ! fragment position by the mass and assume equipartition of energy for the velocity
@@ -235,14 +230,6 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       call random_number(x_frag(:,2:nfrag)) 
       
       x_frag(:, :) = x_frag(:, :) * r_col_norm 
-      ! The rest of the fragments will go in a ring on the x-y plane
-      !do i = 3, nfrag
-      !   frag_vec(:) = [b2a * cos(theta * (i - 1)), sin(theta * (i - 1))]
-      !   frag_vec(:) = matmul(orientation(:,:), frag_vec(:))
-!
-!         r_frag_norm = r_col_norm 
-!         x_frag(:, i) = r_frag_norm * (frag_vec(1) * x_col_unit(:) + frag_vec(2) * y_col_unit(:))
-!      end do
       call symba_frag_pos_com_adjust(xcom, m_frag, x_frag)
 
       call symba_frag_pos_ang_mtm(nfrag, xcom, vcom, L_orb, L_spin, mass, radius, m_frag, rad_frag, Ip_frag, x_frag, v_frag, rot_frag)
@@ -279,7 +266,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       L_spin_new(:) = L_spin(:,1) + L_spin(:, 2)
       L_spin_frag(:) = L_spin_new(:) / nfrag
       do i = 1, nfrag
-         rot_frag(:,i) = L_spin_frag(:) / (Ip_frag(3, i) * m_frag(i) * rad_frag(i)**2)
+         rot_frag(:,i) = L_spin_frag(:) / (Ip_frag(:, i) * m_frag(i) * rad_frag(i)**2)
       end do
       
       L_orb_frag_mag = norm2(L_orb_old(:)) / nfrag
@@ -292,7 +279,6 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
    
       return 
    end subroutine symba_frag_pos_ang_mtm
-
 
    subroutine symba_frag_pos_kinetic_energy(xcom, vcom, L_orb, m_frag, x_frag, v_frag, ke_target, lmerge)
       !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
