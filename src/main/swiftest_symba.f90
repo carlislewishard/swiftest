@@ -40,6 +40,8 @@ program swiftest_symba
    character(len=*), parameter   :: simtimefmt = '(" Time = ", es12.5, "; fraction done = ", f5.3, "; number of active pl, tp = ", i7, ", ", i7)'
    character(len=*), parameter   :: walltimefmt = '("      Wall time (s): ", es12.5, "; Wall time/step in this interval (s):  ", es12.5)'
    character(len=*), parameter   :: endwallfmt = '("Wall time to complete run (s): ", es12.5)'
+   integer(I4B), allocatable :: seed(:)
+   integer(I4B) :: nseeds
 
 ! Executable code
    ! temporary until the conversion to the derived type argument list is complete
@@ -70,7 +72,11 @@ program swiftest_symba
                ntp => symba_tpA%helio%swiftest%nbody)
 
       call util_version
-      call random_seed()
+       
+      call random_seed(size = nseeds)
+      allocate(seed(nseeds))
+      seed(:) = [(i * 1, i = 1, nseeds)]
+      call random_seed(put = seed)
 
       call get_command_argument(1, inparfile, status = ierr) 
       if (ierr /= 0) then
