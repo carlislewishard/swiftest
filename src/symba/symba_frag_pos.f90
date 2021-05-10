@@ -114,7 +114,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       
       ! Set the "target" ke_after (the value of the orbital kinetic energy that the fragments ought to have)
       ke_target = ke_family + (ke_spin_before - ke_spin_after) + (pe_before - pe_after) - Qloss
-      call symba_frag_pos_kinetic_energy(xcom, vcom, L_orb, m_frag, x_frag, v_frag, ke_target, lmerge)
+      call symba_frag_pos_kinetic_energy(xcom, vcom, L_orb, L_spin, m_frag, x_frag, v_frag, ke_target, lmerge)
       
       write(*,        "(' ---------------------------------------------------------------------------')")
       write(*,fmtlabel) ' T_frag targ |',ke_target / abs(Etot_before)
@@ -131,7 +131,6 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       Etot_after = ke_after + ke_spin_after + pe_after
       Lmag_after = norm2(Ltot_after(:))
 
-
       write(*,        "(' ---------------------------------------------------------------------------')")
       write(*,fmtlabel) ' change      |',(ke_after - ke_before) / abs(Etot_before), &
                                         (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
@@ -141,37 +140,32 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
                                         norm2(Ltot_after - Ltot_before) / Lmag_before
    
       lmerge = lmerge .or. ((Etot_after - Etot_before) / abs(Etot_before) > 0._DP) 
-      if (.not.lmerge) then
-         L_residual(:) = Ltot_before(:) - Ltot_after(:)
-         L_spin_frag(:) = L_residual(:) / nfrag
-         do i = 1, nfrag
-            rot_frag(:,i) = rot_frag(:,i) + L_spin_frag(:) / (Ip_frag(:, i) * m_frag(i) * rad_frag(i)**2)
-         end do
-         L_spin_frag(:) = 0._DP
-         do i = 1, nfrag
-            L_spin_frag(:) = L_spin_frag(:) + Ip_frag(:,i) * rad_frag(i)**2 * m_frag(i) * rot_frag(:,i) 
-         end do
-      end if
+      !if (.not.lmerge) then
+      !   L_residual(:) = Ltot_before(:) - Ltot_after(:)
+      !   L_spin_frag(:) = L_residual(:) / nfrag
+      !   do i = 1, nfrag
+      !      rot_frag(:,i) = rot_frag(:,i) + L_spin_frag(:) / (Ip_frag(:, i) * m_frag(i) * rad_frag(i)**2)
+      !   end do
+      !end if
 
-
-      call symba_frag_pos_energy_calc(npl, symba_plA, lexclude, ke_after, ke_spin_after, pe_after, Ltot_after,&
-         nfrag=nfrag, Ip_frag=Ip_frag, m_frag=m_frag, rad_frag=rad_frag, xb_frag=xb_frag, vb_frag=vb_frag, rot_frag=rot_frag)
-         Etot_after = ke_after + ke_spin_after + pe_after
-      L_residual(:) = Ltot_before(:) - Ltot_after(:)
-      Lmag_after = norm2(Ltot_after(:))
-
-      write(*,        "(' ---------------------------------------------------------------------------')")
-      write(*,        "('  Third pass for correcting any residual angular momentum ')")
-      write(*,        "(' ---------------------------------------------------------------------------')")
-      !write(*,        "('             |    T_orb    T_spin         T         pe      Etot      Ltot')")
-      !write(*,        "(' ---------------------------------------------------------------------------')")
-      write(*,fmtlabel) ' change      |',(ke_after - ke_before) / abs(Etot_before), &
-                                       (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
-                                       (ke_after + ke_spin_after - ke_before - ke_spin_before)/ abs(Etot_before), &
-                                       (pe_after - pe_before) / abs(Etot_before), &
-                                       (Etot_after - Etot_before) / abs(Etot_before), &
-                                       norm2(Ltot_after - Ltot_before) / Lmag_before
-      write(*,        "(' ---------------------------------------------------------------------------')")
+!      call symba_frag_pos_energy_calc(npl, symba_plA, lexclude, ke_after, ke_spin_after, pe_after, Ltot_after,&
+!         nfrag=nfrag, Ip_frag=Ip_frag, m_frag=m_frag, rad_frag=rad_frag, xb_frag=xb_frag, vb_frag=vb_frag, rot_frag=rot_frag)
+!         Etot_after = ke_after + ke_spin_after + pe_after
+!      L_residual(:) = Ltot_before(:) - Ltot_after(:)
+!      Lmag_after = norm2(Ltot_after(:))
+!
+!      write(*,        "(' ---------------------------------------------------------------------------')")
+!      write(*,        "('  Third pass for correcting any residual angular momentum ')")
+!      write(*,        "(' ---------------------------------------------------------------------------')")
+!      !write(*,        "('             |    T_orb    T_spin         T         pe      Etot      Ltot')")
+!      !write(*,        "(' ---------------------------------------------------------------------------')")
+!      write(*,fmtlabel) ' change      |',(ke_after - ke_before) / abs(Etot_before), &
+!                                       (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
+!                                       (ke_after + ke_spin_after - ke_before - ke_spin_before)/ abs(Etot_before), &
+!                                       (pe_after - pe_before) / abs(Etot_before), &
+!                                       (Etot_after - Etot_before) / abs(Etot_before), &
+!                                       norm2(Ltot_after - Ltot_before) / Lmag_before
+!      write(*,        "(' ---------------------------------------------------------------------------')")
       !****************************************************************************************************************
 
    end associate
@@ -223,7 +217,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 
       ! Re-normalize position and velocity vectors by the fragment number so that for our initial guess we weight each
       ! fragment position by the mass and assume equipartition of energy for the velocity
-      r_col_norm = 1.5_DP * 4 * sum(rad_frag(:)) / theta / (nfrag - 1)
+      r_col_norm = 1.5_DP * 2 * sum(rad_frag(:)) / theta / nfrag 
 
       ! We will treat the first fragment of the list as a special case.
       x_frag(:, 1) = -z_col_unit(:) 
@@ -231,13 +225,14 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       
       x_frag(:, :) = x_frag(:, :) * r_col_norm 
       call symba_frag_pos_com_adjust(xcom, m_frag, x_frag)
+      v_frag(:,:) = 0._DP
 
-      call symba_frag_pos_ang_mtm(nfrag, xcom, vcom, L_orb, L_spin, mass, radius, m_frag, rad_frag, Ip_frag, x_frag, v_frag, rot_frag)
+      call symba_frag_pos_ang_mtm(nfrag, xcom, vcom, L_orb, L_spin, m_frag, rad_frag, Ip_frag, x_frag, v_frag, rot_frag)
 
       return
    end subroutine symba_frag_pos_initialize_fragments
 
-   subroutine symba_frag_pos_ang_mtm(nfrag, xcom, vcom, L_orb, L_spin, mass, radius, m_frag, rad_frag, Ip_frag, x_frag, v_frag, rot_frag)
+   subroutine symba_frag_pos_ang_mtm(nfrag, xcom, vcom, L_orb, L_spin, m_frag, rad_frag, Ip_frag, x_frag, v_frag, rot_frag)
       !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
       !!
       !! Adjusts the positions, velocities, and spins of a collection of fragments such that they conserve angular momentum
@@ -246,41 +241,41 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       integer(I4B),             intent(in)    :: nfrag            !! Number of collisional fragments
       real(DP), dimension(:),   intent(in)    :: xcom, vcom       !! Center of mass position and velocity in the system barycenter frame
       real(DP), dimension(:,:), intent(in)    :: L_orb, L_spin     !! Pre-impact position, velocity, and spin states, Ip_frag
-      real(DP), dimension(:),   intent(in)    :: mass, radius     !! Pre-impact masses and radii
       real(DP), dimension(:),   intent(in)    :: m_frag, rad_frag !! Fragment masses and radii
       real(DP), dimension(:,:), intent(in)    :: Ip_frag, x_frag  !! Fragment prinicpal moments of inertia and position vectors
       real(DP), dimension(:,:), intent(out)   :: v_frag, rot_frag !! Fragment velocities and spin states
       ! Internals
       real(DP), dimension(NDIM, 2)            :: rot, Ip
       integer(I4B)                            :: i, j
-      real(DP)                                :: mtot, rmag, L_orb_frag_mag
+      real(DP)                                :: rmag, L_orb_frag_mag
       real(DP), dimension(NDIM)               :: xc, vc, v_t_unit, h_unit, v_r_unit
       real(DP), dimension(NDIM)               :: L_orb_old, L_spin_frag, L_spin_new
+      real(DP), parameter                     :: f_spin = 0.25_DP !! Fraction of pre-impact orbital angular momentum that is converted to fragment spin
    
-      mtot = sum(mass(:))
       L_orb_old(:) = L_orb(:, 1) + L_orb(:, 2)
       
       h_unit(:) = L_orb_old(:) / norm2(L_orb_old(:))
    
       ! Divide up the pre-impact spin angular momentum equally between the various bodies by mass
-      L_spin_new(:) = L_spin(:,1) + L_spin(:, 2)
+      L_spin_new(:) = L_spin(:,1) + L_spin(:, 2) + f_spin * L_orb_old(:)
       L_spin_frag(:) = L_spin_new(:) / nfrag
       do i = 1, nfrag
          rot_frag(:,i) = L_spin_frag(:) / (Ip_frag(:, i) * m_frag(i) * rad_frag(i)**2)
       end do
       
-      L_orb_frag_mag = norm2(L_orb_old(:)) / nfrag
+      L_orb_frag_mag = norm2((1._DP - f_spin) * L_orb_old(:)) / nfrag
       do i = 1, nfrag
          rmag = norm2(x_frag(:,i))
          v_r_unit(:) = x_frag(:,i) / rmag
          call util_crossproduct(h_unit(:), v_r_unit(:), v_t_unit(:))  ! make a unit vector in the tangential velocity direction wrt the angular momentum plane
-         v_frag(:,i) = L_orb_frag_mag / (m_frag(i) * rmag) * v_t_unit(:) ! Distribute the angular momentum equally amongst the fragments
+         v_frag(:,i) = v_frag(:, i) + L_orb_frag_mag / (m_frag(i) * rmag) * v_t_unit(:) ! Distribute the angular momentum equally amongst the fragments
       end do
+      call symba_frag_pos_com_adjust(vcom, m_frag, v_frag)
    
       return 
    end subroutine symba_frag_pos_ang_mtm
 
-   subroutine symba_frag_pos_kinetic_energy(xcom, vcom, L_orb, m_frag, x_frag, v_frag, ke_target, lmerge)
+   subroutine symba_frag_pos_kinetic_energy(xcom, vcom, L_orb, L_spin, m_frag, x_frag, v_frag, ke_target, lmerge)
       !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
       !!
       !! 
@@ -293,7 +288,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       implicit none
       ! Arguments
       real(DP), dimension(:),   intent(in)    :: xcom, vcom      !! Center of mass position and velocity in the system barycenter frame
-      real(DP), dimension(:,:), intent(in)    :: L_orb
+      real(DP), dimension(:,:), intent(in)    :: L_orb, L_spin   !! Pre-impact orbital and spin angular momentum
       real(DP), dimension(:),   intent(in)    :: m_frag          !! Fragment masses
       real(DP), dimension(:,:), intent(inout) :: x_frag, v_frag  !! Fragment position and velocities in the center of mass frame   
       real(DP), intent(in)                    :: ke_target        !! Target kinetic energy 
@@ -312,7 +307,8 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       allocate(v_t, mold=v_frag)
       call symba_frag_pos_com_adjust(xcom, m_frag, x_frag)
 
-      h_unit(:) = (L_orb(:, 1) + L_orb(:, 2)) / norm2(L_orb(:, 1) + L_orb(:, 2))
+      h_unit(:) = L_orb(:, 1) + L_orb(:, 2) + L_spin(:, 1) + L_spin(:, 2)
+      h_unit(:) = h_unit(:) / norm2(h_unit(:))
 
       do i = 1, nfrag
          v_r_unit(:, i) = x_frag(:,i) / norm2(x_frag(:, i))
@@ -321,9 +317,8 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       end do
 
       C = 2 * ke_target
-      A = 0._DP
+      A = mtot
       do i = 1, nfrag
-         A = A + m_frag(i)
          C = C - m_frag(i) * (dot_product(vcom(:), vcom(:)) + dot_product(v_t(:,i), v_t(:,i)) + dot_product(vcom(:), v_t(:, i)))
       end do
 
@@ -335,12 +330,12 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          lmerge = .true.
       end if
 
-
-      ! Shift the fragments into the system barycenter frame
+      ! Alter the fragment velocity distribution to hve the new radial component required to constrain kinetic energy
       do i = 1, nfrag
          v_frag(:,i) = v_corrected * v_r_unit(:, i) + v_t(:, i)
       end do
 
+      ! Shift the fragments into the system barycenter frame
       call symba_frag_pos_com_adjust(vcom, m_frag, v_frag)
 
       return
