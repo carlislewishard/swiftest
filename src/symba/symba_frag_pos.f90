@@ -334,8 +334,6 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       ! Internals
       real(DP)                                :: mtot           !! Total mass of fragments
       real(DP)                                :: Lambda         !! Sum of the radial kinetic energy of all fragments 
-      real(DP)                                :: Gam            !! Sum of the radial momentum vector of i>4 fragments
-      real(DP), dimension(NDIM)               :: tau  		    !! Sum of the tangential momentum vector of all fragments
       integer(I4B)                            :: i, nfrag
       real(DP), dimension(:,:), allocatable   :: v_r_unit, v_t
       real(DP), dimension(NDIM)               :: v_t_unit, h_unit, L_orb_frag
@@ -362,12 +360,9 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       end do
       if (Lambda > 0.0_DP) then
          lmerge = .false.
-         call random_number(v_r_mag(:))
-         ! Our initial guess for the first 4 fragments and the values of will be based on an equipartition of KE with some random variation
-         ! We shift the random variate to the range 0.5, 1.5 to prevent any zero values for radial velocities
-         v_r_mag(:) = sqrt(2 * Lambda / nfrag / m_frag(:)) * (v_r_mag(:) + 0.5_DP)
+         call symba_frag_pos_fragment_velocity(m_frag, v_r_unit, Lambda, v_r_mag)
          do i = 1, nfrag
-           v_frag(:, i) = v_r_mag(i) * v_r_unit(:, i) + v_t(:, i)
+            v_frag(:, i) = v_r_mag(i) * v_r_unit(:, i) + v_t(:, i)
          end do
       else
          ! No solution exists for this case, so we need to indicate that this should be a merge
@@ -378,6 +373,28 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 
       return
    end subroutine symba_frag_pos_kinetic_energy
+
+   subroutine symba_frag_pos_fragment_velocity(m_frag, v_r_unit, Lambda, v_r_mag)
+      implicit none
+      ! Arguments
+      real(DP), dimension(:),   intent(in)  :: m_frag   !! Fragment masses
+      real(DP), dimension(:,:), intent(in)  :: v_r_unit !! Radial velocity unit vector for each fragment
+      real(DP), intent(in)                  :: Lambda   !! Sum of the radial kinetic energy of all fragments 
+      real(DP), dimension(:), intent(out)  :: v_r_mag  !! Radial velocity magnitude (the intial guess values for i=1:4, and the final values for i=5:nfrag)
+      ! Internals
+      integer(I4B)                            :: i, j, k, nfrag
+      real(DP)                                :: Gam            !! Sum of the radial momentum vector of i>4 fragments
+      real(DP), dimension(NDIM)               :: tau  		    !! Sum of the tangential momentum vector of all fragments
+      nfrag = size(m_frag(:))
+
+      ! Our initial guess for the first 4 fragments and the values of will be based on an equipartition of KE with some random variation
+      ! We shift the random variate to the range 0.5, 1.5 to prevent any zero values for radial velocities
+      call random_number(v_r_mag(:))
+      v_r_mag(:) = sqrt(2 * Lambda / nfrag / m_frag(:)) * (v_r_mag(:) + 0.5_DP)
+
+      return
+
+   end subroutine symba_frag_pos_fragment_velocity
 
    subroutine symba_frag_pos_com_adjust(vec_com, m_frag, vec_frag)
       !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
