@@ -319,8 +319,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       do i = 1, nfrag
          v_frag(:, i) = v_frag(:, i) + v_t_mag(i) * v_t_unit(:, i)
       end do
-      !call symba_frag_pos_com_adjust(vcom, m_frag, v_frag)
-      
+
       return 
    end subroutine symba_frag_pos_ang_mtm
 
