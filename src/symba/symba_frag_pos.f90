@@ -117,6 +117,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       call symba_frag_pos_kinetic_energy(xcom, vcom, L_orb, L_spin, m_frag, x_frag, v_frag, ke_target, lmerge)
       
       write(*,        "(' ---------------------------------------------------------------------------')")
+      write(*,fmtlabel) ' T_family    |',ke_family / abs(Etot_before)
       write(*,fmtlabel) ' T_frag targ |',ke_target / abs(Etot_before)
 
       ! Shift the fragments into the system barycenter frame
@@ -125,12 +126,13 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          vb_frag(:,i) = v_frag(:, i) + vcom(:)
       end do
 
-      ke_target = 0._DP
+      ke_frag = 0._DP
       do i = 1, nfrag
-         ke_target = ke_target + 0.5_DP * m_frag(i) * dot_product(vb_frag(:, i), vb_frag(:, i))
+         ke_frag = ke_frag + 0.5_DP * m_frag(i) * dot_product(vb_frag(:, i), vb_frag(:, i))
       end do
       write(*,        "(' ---------------------------------------------------------------------------')")
-      write(*,fmtlabel) ' T_frag calc |',ke_target / abs(Etot_before)
+      write(*,fmtlabel) ' T_frag calc |',ke_frag / abs(Etot_before)
+      write(*,fmtlabel) ' residual    |',1.0_DP - ke_frag / ke_target
 
       ! Calculate the new energy of the system of fragments
       call symba_frag_pos_energy_calc(npl, symba_plA, lexclude, ke_after, ke_spin_after, pe_after, Ltot_after,&
