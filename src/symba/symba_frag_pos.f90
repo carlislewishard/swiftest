@@ -559,7 +559,6 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       n = size(a, 1)
       allocate(u(n, (n + 1)))
       u = reshape([a, b], [n, n + 1])
-      write(*,*) 'u = ',u
       do j = 1, n
          p = maxloc(abs(u(j:n, j)), 1) + j - 1 ! maxloc returns indices between (1, n - j + 1)
          if (p /= j) u([p, j], j) = u([j, p], j)
