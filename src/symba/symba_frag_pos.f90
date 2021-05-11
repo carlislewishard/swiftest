@@ -315,12 +315,6 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       end do
       b(1:2) = -Gam(:)
       b(3) = L_orb_frag_mag - rho
-      write(*,*) 'A = '
-      do i = 1, 3
-         write(*,*) A(i,:)
-      end do
-      write(*,*) 'b = '
-      write(*,*) b(:)
       v_t_mag(1:3) = solve_wbs(ge_wpp(A, b))
       do i = 1, nfrag
          v_frag(:, i) = v_frag(:, i) + v_t_mag(i) * v_t_unit(:, i)
