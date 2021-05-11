@@ -367,6 +367,8 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
            v_frag(:, i) = v_r_mag(i) * v_r_unit(:, i) + v_t(:, i)
          end do
       else
+         ! No solution exists for this case, so we need to indicate that this should be a merge
+         ! This may happen due to setting the tangential velocities too high when setting the angular momentum constraint
          lmerge = .true.
          v_frag(:, :) = 0.0_DP
       end if
