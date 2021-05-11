@@ -332,7 +332,10 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       logical, intent(out)                    :: lmerge
 
       ! Internals
-      real(DP)                                ::  mtot, ke_frag
+      real(DP)                                :: mtot           !! Total mass of fragments
+      real(DP)                                :: Lambda         !! Sum of the radial kinetic energy of all fragments 
+      real(DP)                                :: Gam            !! Sum of the radial momentum vector of i>4 fragments
+      real(DP), dimension(NDIM)               :: tau  		    !! Sum of the tangential momentum vector of all fragments
       integer(I4B)                            :: i, nfrag
       real(DP), dimension(:,:), allocatable   :: v_r_unit, v_t
       real(DP), dimension(NDIM)               :: v_t_unit, h_unit, L_orb_frag
@@ -353,16 +356,16 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          v_t(:,i) = v_frag(:, i) - dot_product(v_frag(:,i), v_r_unit(:, i)) * v_r_unit(:, i)
       end do
 
-      ke_frag = ke_target - 0.5_DP * mtot * dot_product(vcom(:), vcom(:))
+      Lambda = ke_target - 0.5_DP * mtot * dot_product(vcom(:), vcom(:))
       do i = 1, nfrag
-         ke_frag = ke_frag - 0.5_DP * m_frag(i) * dot_product(v_t(:, i), v_t(:, i))
+         Lambda = Lambda - 0.5_DP * m_frag(i) * dot_product(v_t(:, i), v_t(:, i))
       end do
-      if (ke_frag > 0.0_DP) then
+      if (Lambda > 0.0_DP) then
          lmerge = .false.
          call random_number(v_r_mag(:))
          ! Our initial guess for the first 4 fragments and the values of will be based on an equipartition of KE with some random variation
          ! We shift the random variate to the range 0.5, 1.5 to prevent any zero values for radial velocities
-         v_r_mag(:) = sqrt(2 * ke_frag / nfrag / m_frag(:)) * (v_r_mag(:) + 0.5_DP)
+         v_r_mag(:) = sqrt(2 * Lambda / nfrag / m_frag(:)) * (v_r_mag(:) + 0.5_DP)
          do i = 1, nfrag
            v_frag(:, i) = v_r_mag(i) * v_r_unit(:, i) + v_t(:, i)
          end do
