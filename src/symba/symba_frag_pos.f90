@@ -256,22 +256,22 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       ! Internals
       real(DP), dimension(NDIM, 2)            :: rot, Ip
       integer(I4B)                            :: i, j
-      real(DP)                                :: rmag, L_orb_frag_mag, rho
-      real(DP), dimension(NDIM)               :: xc, vc, h_unit
-      real(DP), dimension(NDIM)               :: L_orb_old, L_spin_frag, L_spin_new, Gam
+      real(DP)                                :: L_orb_frag_mag, rho
+      real(DP), dimension(NDIM)               :: x_unit, y_unit, z_unit
+      real(DP), dimension(NDIM)               :: L_orb_old, L_spin_frag, L_spin_new
       real(DP), parameter                     :: f_spin = 0.00_DP !! Fraction of pre-impact orbital angular momentum that is converted to fragment spin
-      real(DP), dimension(4,4)                :: A ! LHS of linear equation used to solve for momentum constraint in Gauss elimination code
-      real(DP), dimension(4)                  :: b, sol ! RHS of linear equation used to solve for momentum constraint in Gauss elimination code
-      real(DP), dimension(:,:), allocatable   :: v_r_unit, v_t_unit
-      real(DP), dimension(:), allocatable     :: v_t_mag
+      real(DP), dimension(3,3)                :: A ! LHS of linear equation used to solve for momentum constraint in Gauss elimination code
+      real(DP), dimension(3)                  :: b, sol ! RHS of linear equation used to solve for momentum constraint in Gauss elimination code
+      real(DP), dimension(:,:), allocatable   :: v_t_unit, L_t_unit
+      real(DP), dimension(:), allocatable     :: v_t_mag, rmag
+      real(DP), dimension(2)                  :: Gam
 
-      allocate(v_r_unit, mold=v_frag) 
-      allocate(v_t_unit, mold=v_frag)
       allocate(v_t_mag, mold=m_frag)
+      allocate(rmag, mold=m_frag)
+      allocate(L_t_unit(2, nfrag))
+      allocate(v_t_unit, mold=v_frag)
       
       L_orb_old(:) = L_orb(:, 1) + L_orb(:, 2)
-      
-      h_unit(:) = L_orb_old(:) / norm2(L_orb_old(:))
    
       ! Divide up the pre-impact spin angular momentum equally between the various bodies by mass
       L_spin_new(:) = L_spin(:,1) + L_spin(:, 2) + f_spin * L_orb_old(:)
@@ -279,35 +279,53 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       do i = 1, nfrag
          rot_frag(:,i) = L_spin_frag(:) / (Ip_frag(:, i) * m_frag(i) * rad_frag(i)**2)
       end do
-      
-      L_orb_frag_mag = norm2((1._DP - f_spin) * L_orb_old(:)) 
+      L_orb_old(:) = L_orb_old(:) * (1.0_DP - f_spin)
+
+      ! Define a coordinate system aligned with the angular momentum
+      z_unit(:) = L_orb_old(:) / norm2(L_orb_old(:))
+      ! Arbitrarily choose the first fragment as a reference point for the x-axis
+      call util_crossproduct(z_unit(:), x_frag(:, 1), y_unit(:)) 
+      y_unit(:) = y_unit(:) / norm2(y_unit(:))
+      call util_crossproduct(z_unit(:), y_unit(:), x_unit(:))
+     
+      L_orb_frag_mag = norm2(L_orb_old(:)) 
       Gam(:) = 0.0_DP
       rho = 0.0_DP
+      ! The system angular momentum defines a plane. With some vector operations we can define the radial and tangential velocity unit vectors for each fragment
+      ! with respect to the angular momentum plane.
       do i = 1, nfrag
-         rmag = norm2(x_frag(:, i))
-         v_r_unit(:, i) = x_frag(:,i) / rmag
-         call util_crossproduct(h_unit(:), v_r_unit(:, i), v_t_unit(:, i))  ! make a unit vector in the tangential velocity direction wrt the angular momentum plane
-         if (i > 4) then  ! For the i>4 bodies, distribute the angular momentum equally amongs them
-            v_t_mag(i) = L_orb_frag_mag / nfrag / (m_frag(i) * rmag) 
-            rho = rho + m_frag(i) * rmag * v_t_mag(i)
-            Gam(:) = Gam(:) + m_frag(i) * v_t_mag(i) * v_t_unit(:, i)
+         call util_crossproduct(z_unit(:), x_frag(:, i), v_t_unit(:, i)) ! First get the vector projection of the position vector into the x-y plane, which will point in the radial direction
+         rmag(i) = norm2(v_t_unit(:, i))
+         v_t_unit(:, i) = v_t_unit(:, i) / rmag(i) ! Get the unit vector of the projected position vector, which 
+         L_t_unit(:, i) = [dot_product(v_t_unit(:, i), x_unit(:)), dot_product(v_t_unit(:, i), y_unit(:))]
+      
+         if (i > 3) then  ! For the i>4 bodies, distribute the angular momentum equally amongs them
+            v_t_mag(i) = L_orb_frag_mag / (m_frag(i) * rmag(i) * nfrag) 
+            rho = rho + m_frag(i) * rmag(i) * v_t_mag(i)
+            Gam(:) = Gam(:) + m_frag(i) * v_t_mag(i) * L_t_unit(:, i)
          end if
       end do
 
       ! For the i<=4 bodies, we will solve for the angular momentum constraint using Gaussian elimination
-      do i = 1, 4
-         do j = 1, 3
-            A(j, i) = m_frag(i) * v_t_unit(j, i)
+      do i = 1, 3
+         do j = 1, 2
+            A(j, i) = m_frag(i) * L_t_unit(j, i)
          end do
-         A(4, i) = m_frag(i) * norm2(x_frag(:, i))
+         A(3, i) = m_frag(i) * rmag(i)
       end do
-      b(1:3) = -Gam(:)
-      b(4) = L_orb_frag_mag - rho
-      v_t_mag(1:4) = solve_wbs(ge_wpp(A, b))
+      b(1:2) = -Gam(:)
+      b(3) = L_orb_frag_mag - rho
+      write(*,*) 'A = '
+      do i = 1, 3
+         write(*,*) A(i,:)
+      end do
+      write(*,*) 'b = '
+      write(*,*) b(:)
+      v_t_mag(1:3) = solve_wbs(ge_wpp(A, b))
       do i = 1, nfrag
          v_frag(:, i) = v_frag(:, i) + v_t_mag(i) * v_t_unit(:, i)
       end do
-      call symba_frag_pos_com_adjust(vcom, m_frag, v_frag)
+      !call symba_frag_pos_com_adjust(vcom, m_frag, v_frag)
       
       return 
    end subroutine symba_frag_pos_ang_mtm
@@ -510,7 +528,6 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 
       return
    end subroutine symba_frag_pos_energy_calc
-
  
    function solve_wbs(u) result(x) ! solve with backward substitution
       !! Based on code available on Rosetta Code: https://rosettacode.org/wiki/Gaussian_elimination#Fortran
@@ -549,6 +566,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       n = size(a, 1)
       allocate(u(n, (n + 1)))
       u = reshape([a, b], [n, n + 1])
+      write(*,*) 'u = ',u
       do j = 1, n
          p = maxloc(abs(u(j:n, j)), 1) + j - 1 ! maxloc returns indices between (1, n - j + 1)
          if (p /= j) u([p, j], j) = u([j, p], j)
