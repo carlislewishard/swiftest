@@ -332,16 +332,18 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       logical, intent(out)                    :: lmerge
 
       ! Internals
-      real(DP)                                :: v_r_mag, mtot, ke_frag
+      real(DP)                                ::  mtot, ke_frag
       integer(I4B)                            :: i, nfrag
       real(DP), dimension(:,:), allocatable   :: v_r_unit, v_t
       real(DP), dimension(NDIM)               :: v_t_unit, h_unit, L_orb_frag
+      real(DP), dimension(:), allocatable     :: v_r_mag
          
       nfrag = size(m_frag)
       mtot = sum(m_frag)
 
       allocate(v_r_unit, mold=v_frag) 
       allocate(v_t, mold=v_frag)
+      allocate(v_r_mag, mold=m_frag)
       call symba_frag_pos_com_adjust(xcom, m_frag, x_frag)
 
       ! Create the radial unit vectors pointing away from the collision center of mass, and subtract that off of the current
@@ -355,17 +357,18 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       do i = 1, nfrag
          ke_frag = ke_frag - 0.5_DP * m_frag(i) * dot_product(v_t(:, i), v_t(:, i))
       end do
-
       if (ke_frag > 0.0_DP) then
-         ke_frag = ke_frag / nfrag ! Equipartition the energy between all fragments
-         do i = 1, nfrag
-           v_r_mag = sqrt(2 * ke_frag / m_frag(i)) 
-           v_frag(:, i) = v_r_mag * v_r_unit(:, i) + v_t(:, i)
-         end do
          lmerge = .false.
+         call random_number(v_r_mag(:))
+         ! Our initial guess for the first 4 fragments and the values of will be based on an equipartition of KE with some random variation
+         ! We shift the random variate to the range 0.5, 1.5 to prevent any zero values for radial velocities
+         v_r_mag(:) = sqrt(2 * ke_frag / nfrag / m_frag(:)) * (v_r_mag(:) + 0.5_DP)
+         do i = 1, nfrag
+           v_frag(:, i) = v_r_mag(i) * v_r_unit(:, i) + v_t(:, i)
+         end do
       else
-         v_frag(:, :) = 0.0_DP
          lmerge = .true.
+         v_frag(:, :) = 0.0_DP
       end if
 
       return
