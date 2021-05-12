@@ -1,56 +1,24 @@
-!**********************************************************************************************************************************
-!
-!  Unit Name   : util_crossproduct
-!  Unit Type   : subroutine
-!  Project     : Swifter
-!  Package     : util
-!  Language    : Fortran 90/95
-!
-!  Description : Calculates cross product of two arrays
-!
-!
-!  Invocation  : CALL util_crossproduct(symba_plA, npl)
-!
-!**********************************************************************************************************************************
-pure SUBROUTINE util_crossproduct(ar1, ar2, ans)
+pure subroutine util_crossproduct(ar1, ar2, ans)
+   !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
+   !!
+   !! Calculates cross product of two arrays. Stores intermediate values in quad precision to improve accuracy when the two input
+   !! arrays are near alignment
+   use swiftest_globals
+   use module_interfaces, EXCEPT_THIS_ONE => util_crossproduct
+   implicit none
+   ! Arguments
+   real(DP),dimension(:),intent(in)  :: ar1,ar2
+   real(DP),dimension(:),intent(out) :: ans
+   ! Internals
+   real(QP), dimension(3) :: qar1, qar2, qans 
 
-! Modules
-     USE swiftest_globals
-     USE module_interfaces, EXCEPT_THIS_ONE => util_crossproduct
-     IMPLICIT NONE
+   qar1(:) = real(ar1(:), kind=QP)
+   qar2(:) = real(ar2(:), kind=QP)
+   qans(1) = qar1(2) * qar2(3) - qar1(3) * qar2(2)
+   qans(2) = qar1(3) * qar2(1) - qar1(1) * qar2(3)
+   qans(3) = qar1(1) * qar2(2) - qar1(2) * qar2(1)
+   ans(:) = real(qans(:), kind=DP)
+   
+  return
 
-! Arguments
-     real(DP),dimension(:),intent(in)  :: ar1,ar2
-     real(DP),dimension(:),intent(out) :: ans
-
-! Internals
-
-
-! Executable code
-
-
-     ans(1) = ar1(2) * ar2(3) - ar1(3) * ar2(2)
-     ans(2) = ar1(3) * ar2(1) - ar1(1) * ar2(3)
-     ans(3) = ar1(1) * ar2(2) - ar1(2) * ar2(1)
-     
-     RETURN
-
-END SUBROUTINE util_crossproduct
-!**********************************************************************************************************************************
-!
-!  Author(s)   : C.Wishard and J.Pouplin
-!
-!  Revision Control System (RCS) Information
-!
-!  Source File : $RCSfile$
-!  Full Path   : $Source$
-!  Revision    : $Revision$
-!  Date        : $Date$
-!  Programmer  : $Author$
-!  Locked By   : $Locker$
-!  State       : $State$
-!
-!  Modification History:
-!
-!  $Log$
-!**********************************************************************************************************************************
+end subroutine util_crossproduct
