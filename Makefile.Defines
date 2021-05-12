@@ -69,9 +69,10 @@ GMEM = -fsanitize=undefined -fsanitize=address -fsanitize=leak
 GWARNINGS = -Wall -Warray-bounds  -Wimplicit-interface -Wextra -Warray-temporaries
 
 #FFLAGS  = -init=snan,arrays -traceback -no-wrap-margin -O3 -g -CB -nogen-interfaces -no-pie -fp-speculation=safe $(SIMDVEC) $(PAR) #$(HEAPARR)
-#FFLAGS  = $(IDEBUG) 
-#FFLAGS  = -init=snan,arrays -no-wrap-margin -fp-model strict -fp-model no-except $(OPTIMIZE) -O3  $(SIMDVEC) $(PAR) #-g -traceback -CB
-#FORTRAN = ifort
+#FFLAGS  = $(IDEBUG) $(HEAPARR)
+FFLAGS  = -init=snan,arrays -no-wrap-margin -fp-model strict -fp-model no-except -traceback -g $(OPTIMIZE) -O3  $(SIMDVEC) $(PAR) $(HEAPARR) -debug all -fpe-all=0
+FORTRAN = ifort
+#AR     = xiar
 
 FORTRAN = gfortran
 FFLAGS =  -ffree-line-length-none -O3 #$(GDEBUG) $(GMEM)

@@ -338,7 +338,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       ! Internals
       real(DP)                                :: mtot           !! Total mass of fragments
       real(DP)                                :: Lambda         !! Sum of the radial kinetic energy of all fragments 
-      real(DP), dimension(NDIM)               :: Tau            !! Sum of the tangential momentum vector of all fragments
+      real(DP), dimension(NDIM)               :: tau            !! Sum of the tangential momentum vector of all fragments
       integer(I4B)                            :: i, nfrag
       real(DP), dimension(:,:), allocatable   :: v_r_unit, v_t
       real(DP), dimension(NDIM)               :: v_t_unit, h_unit, L_orb_frag
@@ -358,15 +358,15 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          v_t(:,i) = v_frag(:, i) - dot_product(v_frag(:,i), v_r_unit(:, i)) * v_r_unit(:, i)
       end do
 
-      Tau = 0.0_DP
+      tau = 0.0_DP
       Lambda = ke_target - 0.5_DP * mtot * dot_product(vcom(:), vcom(:))
       do i = 1, nfrag
          Lambda = Lambda - 0.5_DP * m_frag(i) * dot_product(v_t(:, i), v_t(:, i))
-         Tau = Tau + m_frag(i) * v_t(:, i)
+         tau = tau + m_frag(i) * v_t(:, i)
       end do
       if (Lambda > 0.0_DP) then
          lmerge = .false.
-         call symba_frag_pos_fragment_velocity(m_frag, x_frag, v_r_unit, Lambda, v_r_mag, Tau)
+         v_r_mag(:) = symba_frag_pos_fragment_velocity(nfrag, m_frag, x_frag, v_r_unit, Lambda, tau)
          do i = 1, nfrag
             v_frag(:, i) = v_r_mag(i) * v_r_unit(:, i) + v_t(:, i)
          end do
@@ -381,82 +381,71 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       return
    end subroutine symba_frag_pos_kinetic_energy
 
-   subroutine symba_frag_pos_fragment_velocity(m_frag, x_frag, v_r_unit, Lambda, v_r_mag, Tau)
+   function symba_frag_pos_fragment_velocity(nfrag, m_frag, x_frag, v_r_unit, Lambda, tau) result(v_r_mag)
       implicit none
       ! Arguments
+      integer(I4B),             intent(in)  :: nfrag
       real(DP), dimension(:),   intent(in)  :: m_frag                   !! Fragment masses
       real(DP), dimension(:,:), intent(in)  :: x_frag                   !! Fragment position in the center of mass frame 
       real(DP), dimension(:,:), intent(in)  :: v_r_unit                 !! Radial velocity unit vector for each fragment
       real(DP), intent(in)                  :: Lambda                   !! Sum of the radial kinetic energy of all fragments 
-      real(DP), dimension(:), intent(out)   :: v_r_mag                  !! Radial velocity magnitude (the intial guess values for i=1:4, and the final values for i=5:nfrag)
-      real(DP), dimension(NDIM)             :: Tau                      !! Sum of the tangential momentum vector of all fragments
+      real(DP), dimension(:), intent(in)    :: tau                      !! Sum of the tangential momentum vector of all fragments
+      ! Result
+      real(DP), dimension(nfrag)           :: v_r_mag                  !! Radial velocity magnitudes that satisfy the kinetic energy and momntum constraint
       ! Internals
-      integer(I4B)                          :: i, j, nfrag
+      integer(I4B)                          :: i, j
       real(DP), dimension(NDIM)             :: Gam                      !! Sum of the radial momentum vector of i>4 fragments
       real(DP)                              :: Beta                     !! Sum of the radial kinetic energy of i>4 fragments
       real(DP), dimension(4)                :: v_r_mag_01, v_r_mag_02   !! Two initial value guesses for the radial velocity magnitude of the first four fragments
       real(DP), dimension(4)                :: f_vec_01, f_vec_02       !! Equation vectors for initial value guesses 1 and 2
-      real(DP)                              :: f_1_01, f_1_02           !! Equation 1 for initial value guesses 1 and 2 : angular momentum in the x direction
-      real(DP)                              :: f_2_01, f_2_02           !! Equation 2 for initial value guesses 1 and 2 : angular momentum in the y direction
-      real(DP)                              :: f_3_01, f_3_02           !! Equation 3 for initial value guesses 1 and 2 : angular momentum in the z direction
-      real(DP)                              :: f_4_01, f_4_02           !! Equation 4 for initial value guesses 1 and 2 : kinetic energy
       real(DP)                              :: KE_after                 !! Radial kinetic energy of the four fragments given their new velocities
       integer(I4B), parameter               :: MAXITER = 50 
 
-      nfrag = size(m_frag(:))
+      ! Initialize the fragment radial velocities with random values. The first 4 serve as guesses that get updated with the secant method solver.
+      ! We shift the random variate to the range 0.5, 1.5 to prevent any zero values for radial velocities
+      call random_number(v_r_mag(:))
+      v_r_mag(:) = sqrt(2 * Lambda / nfrag / m_frag(:)) * (v_r_mag(:) + 0.5_DP)
 
+      ! Our initial guess for the first 4 fragments and the values of will be based on an equipartition of KE with some random variation
+      v_r_mag_01(:) = v_r_mag(1:4) 
+      ! The secant method requires two guesses, so we will use a small random variate to update the initial guesses
+      call random_number(v_r_mag_02(:))
+      v_r_mag_02(:) = v_r_mag_01 * (1._DP + 2e-2_DP * (v_r_mag_02 - 0.5_DP))
+
+      ! Set up the constant values (those invovling i>4 fragments)
       Gam = 0.0_DP
       Beta = 0.0_DP
-
-      do i = 4, nfrag
+      do i = 5, nfrag
          Gam = Gam + m_frag(i) * v_r_mag(i) * v_r_unit(:,i)
          Beta = Beta + m_frag(i) * v_r_mag(i)**2
       end do
 
-      f_1_01 = Gam(1) + Tau(1)
-      f_1_02 = Gam(1) + Tau(1)
-
-      f_2_01 = Gam(2) + Tau(2)
-      f_2_02 = Gam(2) + Tau(2)
-
-      f_3_01 = Gam(3) + Tau(3)
-      f_3_02 = Gam(3) + Tau(3)
-
-      f_4_01 = Beta - Lambda 
-      f_4_02 = Beta - Lambda 
-
-      ! Our initial guess for the first 4 fragments and the values of will be based on an equipartition of KE with some random variation
-      ! We shift the random variate to the range 0.5, 1.5 to prevent any zero values for radial velocities
-      call random_number(v_r_mag_01(:))
-      v_r_mag_01(:) = sqrt(2 * Lambda / nfrag / m_frag(:)) * (v_r_mag_01(:) + 0.5_DP)
-      call random_number(v_r_mag_02(:))
-      v_r_mag_02(:) = sqrt(2 * Lambda / nfrag / m_frag(:)) * (v_r_mag_02(:) + 0.5_DP)
+      f_vec_01(1:3) = Gam(:) + tau(:)
+      f_vec_01(4)   = Beta - Lambda 
+      f_vec_02(:)   = f_vec_01(:)
 
       do j = 1, MAXITER
          do i = 1, 4
-            f_1_01 = f_1_01 + m_frag(i) * v_r_mag_01(i) * x_frag(1,i)
-            f_1_02 = f_1_02 + m_frag(i) * v_r_mag_02(i) * x_frag(1,i)
-
-            f_2_01 = f_2_01 + m_frag(i) * v_r_mag_01(i) * x_frag(2,i)
-            f_2_02 = f_2_02 + m_frag(i) * v_r_mag_02(i) * x_frag(2,i)
-
-            f_3_01 = f_3_01 + m_frag(i) * v_r_mag_01(i) * x_frag(3,i)
-            f_3_02 = f_3_02 + m_frag(i) * v_r_mag_02(i) * x_frag(3,i)
-
-            f_4_01 = f_4_01 + m_frag(i) * v_r_mag_01(i)**2
-            f_4_02 = f_4_02 + m_frag(i) * v_r_mag_02(i)**2
+            f_vec_01(1:3) = f_vec_01(1:3) + m_frag(i) * v_r_mag_01(i) * x_frag(:,i)
+            f_vec_01(4)   = f_vec_01(4)   + m_frag(i) * v_r_mag_01(i)**2
          end do
 
-         f_vec_01 = (/f_1_01, f_2_01, f_3_01, f_4_01/)
-         f_vec_02 = (/f_1_02, f_2_02, f_3_02, f_4_02/)
-
          KE_after = 0.0_DP
+         write(*,*) 'Iteration: ',j
+         write(*,*) 'v_r_mag_01: ',v_r_mag_01(:)
+         write(*,*) 'v_r_mag_02: ',v_r_mag_02(:)
+         write(*,*) 'f_vec_01:   ',f_vec_01(:)
+         write(*,*) 'f_vec_02:   ',f_vec_02(:)
 
          do i = 1, 4
             v_r_mag(i) = v_r_mag_02(i) - f_vec_02(i) * (v_r_mag_02(i) - v_r_mag_01(i)) / (f_vec_02(i) - f_vec_01(i))
             KE_after = KE_after + 0.5_DP * m_frag(i) * v_r_mag(i)**2
          end do
 
+         write(*,*) 'v_r_mag:    ',v_r_mag(1:4)
+
+         write(*,*) 'KE_after:   ',KE_after
+         write(*,*) 'Lambda:     ',Lambda
          if (KE_after <= Lambda) then 
             exit
          else 
@@ -467,7 +456,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 
       return
 
-   end subroutine symba_frag_pos_fragment_velocity
+   end function symba_frag_pos_fragment_velocity
 
    subroutine symba_frag_pos_com_adjust(vec_com, m_frag, vec_frag)
       !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton

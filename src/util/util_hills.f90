@@ -1,7 +1,7 @@
 subroutine util_hills(npl, swiftest_plA)
    !! Author: David A. Minton
    !!
-   !! CoGMpute Hill sphere radii of planet. in the case of hyperbolic orbits, use the heliocentric radius instead of semimajor axis
+   !! Compute Hill sphere radii of planet. in the case of hyperbolic orbits, use the heliocentric radius instead of semimajor axis
    !!
    !! Adapted from David E. Kaufmann's Swifter routine util_hills.f90
    !! Adapted from Hal Levison's Swift routine util_hills.f
@@ -30,7 +30,7 @@ subroutine util_hills(npl, swiftest_plA)
                ap = -0.5_DP * mu / energy
             else
                ap = r ! use the heliocentric radius for the hill radius of hyperbolic orbits 
-                     !(this is probably good enough for most purposes, but probably worth investigating)
+                       !(this is probably good enough for most purposes, but probably worth investigating)
             end if
             rhill(i) = ap * (((GMp(i) / mu) / 3.0_DP)**(1.0_DP / 3.0_DP))
          else
