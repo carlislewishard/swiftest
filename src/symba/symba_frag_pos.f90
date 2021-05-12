@@ -398,7 +398,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       real(DP)                              :: Beta                     !! Sum of the radial kinetic energy of i>4 fragments
       real(DP), dimension(4)                :: v_r_mag_01, v_r_mag_02   !! Two initial value guesses for the radial velocity magnitude of the first four fragments
       real(DP), dimension(4)                :: f_vec_01, f_vec_02, f_vec_const   !! Equation vectors for initial value guesses 1 and 2
-      integer(I4B), parameter               :: MAXITER = 50 
+      integer(I4B), parameter               :: MAXITER = 500 
       real(DP), parameter                   :: TOL = 1e-8_DP
       real(DP)                              :: vmult
 
@@ -414,10 +414,11 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          Beta = 0.0_DP
          do i = 5, nfrag
             Gam = Gam + m_frag(i) * v_r_mag(i) * v_r_unit(:,i)
-            Beta = Beta + m_frag(i) * v_r_mag(i)**2
+            Beta = Beta + 0.5_DP * m_frag(i) * v_r_mag(i)**2
          end do
          if (Beta - Lambda > 0.0_DP) then
             vmult = 0.8_DP * vmult
+            write(*,*) 'preconditioning: ',vmult
          else
             exit
          end if
@@ -437,10 +438,10 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          do i = 1, 4
             if (j == 1) then
                f_vec_01(1:3) = f_vec_01(1:3) + m_frag(i) * v_r_mag_01(i) * v_r_unit(:, i)
-               f_vec_01(4)   = f_vec_01(4)   + m_frag(i) * v_r_mag_01(i)**2
+               f_vec_01(4)   = f_vec_01(4)   + 0.5_DP * m_frag(i) * v_r_mag_01(i)**2
             end if
             f_vec_02(1:3) = f_vec_02(1:3) + m_frag(i) * v_r_mag_02(i) * v_r_unit(:,i)
-            f_vec_02(4)   = f_vec_02(4)   + m_frag(i) * v_r_mag_02(i)**2
+            f_vec_02(4)   = f_vec_02(4)   + 0.5_DP * m_frag(i) * v_r_mag_02(i)**2
          end do
 
          write(*,*) 'Iteration: ',j
@@ -453,6 +454,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          do i = 1, 4
             v_r_mag(i) = v_r_mag_02(i) - f_vec_02(i) * (v_r_mag_02(i) - v_r_mag_01(i)) / (f_vec_02(i) - f_vec_01(i))
          end do
+         v_r_mag(:) = abs(v_r_mag(:))
 
          if (norm2(f_vec_02(:)) < TOL) exit
 
