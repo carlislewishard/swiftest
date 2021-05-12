@@ -452,7 +452,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
             exit
          else 
             v_r_mag_01(:) = v_r_mag_02(:)
-            v_r_mag_02(:) = v_r_mag(:)
+            v_r_mag_02(:) = v_r_mag(1:4)
          end if
       end do 
 
