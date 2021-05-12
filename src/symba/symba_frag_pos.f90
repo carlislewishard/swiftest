@@ -426,10 +426,8 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       f_vec_const(1:3) = Gam(:) + tau(:)
       f_vec_const(4)   = Beta - Lambda 
 
-      ! Our initial guess for the first 4 fragments and the values of will be based on an equipartition of KE with some random variation
+      ! The secant method requires two guesses, so we will use small values to start it off
       v_r_mag_01(:) = 0.0_DP
-      ! The secant method requires two guesses, so we will use a small random variate to update the initial guesses
-      !call random_number(v_r_mag_02(:))
       v_r_mag_02(:) = 1e-2_DP * sum(v_r_mag(:)) / (nfrag - 4)
 
       f_vec_01(:) = f_vec_const(:)
