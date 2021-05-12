@@ -391,7 +391,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       real(DP), dimension(:), intent(out)   :: v_r_mag                  !! Radial velocity magnitude (the intial guess values for i=1:4, and the final values for i=5:nfrag)
       real(DP), dimension(NDIM)             :: Tau                      !! Sum of the tangential momentum vector of all fragments
       ! Internals
-      integer(I4B)                          :: i, j, k, nfrag
+      integer(I4B)                          :: i, j, nfrag
       real(DP), dimension(NDIM)             :: Gam                      !! Sum of the radial momentum vector of i>4 fragments
       real(DP)                              :: Beta                     !! Sum of the radial kinetic energy of i>4 fragments
       real(DP), dimension(4)                :: v_r_mag_01, v_r_mag_02   !! Two initial value guesses for the radial velocity magnitude of the first four fragments
@@ -452,7 +452,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 
          KE_after = 0.0_DP
 
-         do i = 1, 4
+         do j = 1, 4
             v_r_mag(i) = v_r_mag_02(i) - f_vec_02(i) * (v_r_mag_02(i) - v_r_mag_01(i)) / (f_vec_02(i) - f_vec_01(i))
             KE_after = KE_after + 0.5_DP * m_frag(i) * v_r_mag(i)**2
          end do
