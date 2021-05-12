@@ -445,7 +445,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
             v_r_mag(i) = v_r_mag_02(i) - f_vec_02(i) * (v_r_mag_02(i) - v_r_mag_01(i)) / (f_vec_02(i) - f_vec_01(i))
          end do
 
-         if (norm2(f_vec_2(:)) < TOL) exit
+         if (norm2(f_vec_02(:)) < TOL) exit
 
          write(*,*) 'v_r_mag:    ',v_r_mag(1:4)
          write(*,*) 'KE_after:   ',KE_after
