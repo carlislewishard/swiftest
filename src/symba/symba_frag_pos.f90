@@ -399,8 +399,8 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       real(DP), dimension(4)                :: v_r_mag_01, v_r_mag_02   !! Two initial value guesses for the radial velocity magnitude of the first four fragments
       real(DP), dimension(4)                :: f_vec_01, f_vec_02, f_vec_const   !! Equation vectors for initial value guesses 1 and 2
       integer(I4B), parameter               :: MAXITER = 500 
-      real(DP), parameter                   :: TOL = 1e-8_DP
-      real(DP)                              :: vmult
+      real(DP), parameter                   :: TOL = 1e-9_DP
+      real(DP)                              :: err_rel, vmult
 
       ! Initialize the fragment radial velocities with random values. The first 4 serve as guesses that get updated with the secant method solver.
       ! We shift the random variate to the range 0.5, 1.5 to prevent any zero values for radial velocities
@@ -408,7 +408,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 
       vmult = 1.0_DP
       do j = 1, MAXITER
-         v_r_mag(:) = vmult * sqrt(2 * Lambda / nfrag / m_frag(:)) * (v_r_mag(:) + 0.1_DP)
+         v_r_mag(:) = vmult * sqrt(8 * Lambda / nfrag / m_frag(:)) * (v_r_mag(:) + 0.1_DP)
          ! Set up the constant values (those invovling i>4 fragments)
          Gam = 0.0_DP
          Beta = 0.0_DP
@@ -417,8 +417,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
             Beta = Beta + 0.5_DP * m_frag(i) * v_r_mag(i)**2
          end do
          if (Beta - Lambda > 0.0_DP) then
-            vmult = 0.8_DP * vmult
-            write(*,*) 'preconditioning: ',vmult
+            vmult = 0.9_DP * vmult
          else
             exit
          end if
@@ -429,7 +428,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 
       ! The secant method requires two guesses, so we will use small values to start it off
       v_r_mag_01(:) = 0.0_DP
-      v_r_mag_02(:) = 1e-2_DP * sum(v_r_mag(:)) / (nfrag - 4)
+      v_r_mag_02(:) = sum(v_r_mag(:)) / (nfrag - 4)
 
       f_vec_01(:) = f_vec_const(:)
 
@@ -443,20 +442,20 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
             f_vec_02(1:3) = f_vec_02(1:3) + m_frag(i) * v_r_mag_02(i) * v_r_unit(:,i)
             f_vec_02(4)   = f_vec_02(4)   + 0.5_DP * m_frag(i) * v_r_mag_02(i)**2
          end do
+         err_rel = norm2((f_vec_02(:) - f_vec_01(:)) / f_vec_01(:))
 
          write(*,*) 'Iteration: ',j
          write(*,*) 'v_r_mag_01: ',v_r_mag_01(:)
          write(*,*) 'v_r_mag_02: ',v_r_mag_02(:)
          write(*,*) 'f_vec_01:   ',f_vec_01(:)
          write(*,*) 'f_vec_02:   ',f_vec_02(:)
-         write(*,*) 'norm2(f):   ',norm2(f_vec_02(:))
+         write(*,*) 'err_rel:    ',err_rel
 
          do i = 1, 4
             v_r_mag(i) = v_r_mag_02(i) - f_vec_02(i) * (v_r_mag_02(i) - v_r_mag_01(i)) / (f_vec_02(i) - f_vec_01(i))
          end do
-         v_r_mag(:) = abs(v_r_mag(:))
 
-         if (norm2(f_vec_02(:)) < TOL) exit
+         if (err_rel < TOL) exit
 
          write(*,*) 'v_r_mag:    ',v_r_mag(1:4)
 
