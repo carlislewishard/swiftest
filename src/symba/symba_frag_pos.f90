@@ -395,7 +395,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       real(DP), dimension(NDIM)             :: Gam                      !! Sum of the radial momentum vector of i>4 fragments
       real(DP)                              :: Beta                     !! Sum of the radial kinetic energy of i>4 fragments
       real(DP), dimension(4)                :: v_r_mag_01, v_r_mag_02   !! Two initial value guesses for the radial velocity magnitude of the first four fragments
-      real(DP), dimension(4)                :: f_vec_01, v_vec_02       !! Equation vectors for initial value guesses 1 and 2
+      real(DP), dimension(4)                :: f_vec_01, f_vec_02       !! Equation vectors for initial value guesses 1 and 2
       real(DP)                              :: f_1_01, f_1_02           !! Equation 1 for initial value guesses 1 and 2 : angular momentum in the x direction
       real(DP)                              :: f_2_01, f_2_02           !! Equation 2 for initial value guesses 1 and 2 : angular momentum in the y direction
       real(DP)                              :: f_3_01, f_3_02           !! Equation 3 for initial value guesses 1 and 2 : angular momentum in the z direction
