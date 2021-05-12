@@ -432,7 +432,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       call random_number(v_r_mag_02(:))
       v_r_mag_02(:) = sqrt(2 * Lambda / nfrag / m_frag(:)) * (v_r_mag_02(:) + 0.5_DP)
 
-      do i = 1, MAXITER
+      do j = 1, MAXITER
          do i = 1, 4
             f_1_01 = f_1_01 + m_frag(i) * v_r_mag_01(i) * x_frag(1,i)
             f_1_02 = f_1_02 + m_frag(i) * v_r_mag_02(i) * x_frag(1,i)
@@ -452,7 +452,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 
          KE_after = 0.0_DP
 
-         do j = 1, 4
+         do i = 1, 4
             v_r_mag(i) = v_r_mag_02(i) - f_vec_02(i) * (v_r_mag_02(i) - v_r_mag_01(i)) / (f_vec_02(i) - f_vec_01(i))
             KE_after = KE_after + 0.5_DP * m_frag(i) * v_r_mag(i)**2
          end do
