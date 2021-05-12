@@ -398,8 +398,8 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       real(DP)                              :: Beta                     !! Sum of the radial kinetic energy of i>4 fragments
       real(DP), dimension(4)                :: v_r_mag_01, v_r_mag_02   !! Two initial value guesses for the radial velocity magnitude of the first four fragments
       real(DP), dimension(4)                :: f_vec_01, f_vec_02       !! Equation vectors for initial value guesses 1 and 2
-      real(DP)                              :: KE_after                 !! Radial kinetic energy of the four fragments given their new velocities
       integer(I4B), parameter               :: MAXITER = 50 
+      real(DP), parameter                   :: TOL = 1e-8_DP
 
       ! Initialize the fragment radial velocities with random values. The first 4 serve as guesses that get updated with the secant method solver.
       ! We shift the random variate to the range 0.5, 1.5 to prevent any zero values for radial velocities
@@ -424,15 +424,17 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       f_vec_01(4)   = Beta - Lambda 
       f_vec_02(:)   = f_vec_01(:)
 
+      do i = 1, 4
+         f_vec_01(1:3) = f_vec_01(1:3) + m_frag(i) * v_r_mag_01(i) * x_frag(:,i)
+         f_vec_01(4)   = f_vec_01(4)   + m_frag(i) * v_r_mag_01(i)**2
+      end do
+
       do j = 1, MAXITER
          do i = 1, 4
-            f_vec_01(1:3) = f_vec_01(1:3) + m_frag(i) * v_r_mag_01(i) * x_frag(:,i)
-            f_vec_01(4)   = f_vec_01(4)   + m_frag(i) * v_r_mag_01(i)**2
             f_vec_02(1:3) = f_vec_02(1:3) + m_frag(i) * v_r_mag_02(i) * x_frag(:,i)
             f_vec_02(4)   = f_vec_02(4)   + m_frag(i) * v_r_mag_02(i)**2
          end do
 
-         KE_after = 0.0_DP
          write(*,*) 'Iteration: ',j
          write(*,*) 'v_r_mag_01: ',v_r_mag_01(:)
          write(*,*) 'v_r_mag_02: ',v_r_mag_02(:)
@@ -441,19 +443,18 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 
          do i = 1, 4
             v_r_mag(i) = v_r_mag_02(i) - f_vec_02(i) * (v_r_mag_02(i) - v_r_mag_01(i)) / (f_vec_02(i) - f_vec_01(i))
-            KE_after = KE_after + 0.5_DP * m_frag(i) * v_r_mag(i)**2
          end do
 
-         write(*,*) 'v_r_mag:    ',v_r_mag(1:4)
+         if (norm2(f_vec_2(:)) < TOL) exit
 
+         write(*,*) 'v_r_mag:    ',v_r_mag(1:4)
          write(*,*) 'KE_after:   ',KE_after
          write(*,*) 'Lambda:     ',Lambda
-         if (KE_after <= Lambda) then 
-            exit
-         else 
-            v_r_mag_01(:) = v_r_mag_02(:)
-            v_r_mag_02(:) = v_r_mag(1:4)
-         end if
+
+         v_r_mag_01(:) = v_r_mag_02(:)
+         v_r_mag_02(:) = v_r_mag(1:4)
+         f_vec_01(:) = f_vec_02(:)
+
       end do 
 
       return
