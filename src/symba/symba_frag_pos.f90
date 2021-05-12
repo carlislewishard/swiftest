@@ -362,7 +362,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       Lambda = ke_target - 0.5_DP * mtot * dot_product(vcom(:), vcom(:))
       do i = 1, nfrag
          Lambda = Lambda - 0.5_DP * m_frag(i) * dot_product(v_t(:, i), v_t(:, i))
-         tau = tau + m_frag(i) * v_t(:, i)
+         tau(:) = tau(:) + m_frag(i) * v_t(:, i)
       end do
       if (Lambda > 0.0_DP) then
          lmerge = .false.
@@ -400,28 +400,37 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       real(DP), dimension(4)                :: f_vec_01, f_vec_02, f_vec_const   !! Equation vectors for initial value guesses 1 and 2
       integer(I4B), parameter               :: MAXITER = 50 
       real(DP), parameter                   :: TOL = 1e-8_DP
+      real(DP)                              :: vmult
 
       ! Initialize the fragment radial velocities with random values. The first 4 serve as guesses that get updated with the secant method solver.
       ! We shift the random variate to the range 0.5, 1.5 to prevent any zero values for radial velocities
       call random_number(v_r_mag(:))
-      v_r_mag(:) = sqrt(2 * Lambda / nfrag / m_frag(:)) * (v_r_mag(:) + 0.5_DP)
 
-      ! Our initial guess for the first 4 fragments and the values of will be based on an equipartition of KE with some random variation
-      v_r_mag_01(:) = v_r_mag(1:4) 
-      ! The secant method requires two guesses, so we will use a small random variate to update the initial guesses
-      call random_number(v_r_mag_02(:))
-      v_r_mag_02(:) = v_r_mag_01 * (1._DP + 2e-1_DP * (v_r_mag_02 - 0.5_DP))
-
-      ! Set up the constant values (those invovling i>4 fragments)
-      Gam = 0.0_DP
-      Beta = 0.0_DP
-      do i = 5, nfrag
-         Gam = Gam + m_frag(i) * v_r_mag(i) * v_r_unit(:,i)
-         Beta = Beta + m_frag(i) * v_r_mag(i)**2
+      vmult = 1.0_DP
+      do j = 1, MAXITER
+         v_r_mag(:) = vmult * sqrt(2 * Lambda / nfrag / m_frag(:)) * (v_r_mag(:) + 0.1_DP)
+         ! Set up the constant values (those invovling i>4 fragments)
+         Gam = 0.0_DP
+         Beta = 0.0_DP
+         do i = 5, nfrag
+            Gam = Gam + m_frag(i) * v_r_mag(i) * v_r_unit(:,i)
+            Beta = Beta + m_frag(i) * v_r_mag(i)**2
+         end do
+         if (Beta - Lambda > 0.0_DP) then
+            vmult = 0.8_DP * vmult
+         else
+            exit
+         end if
       end do
 
       f_vec_const(1:3) = Gam(:) + tau(:)
       f_vec_const(4)   = Beta - Lambda 
+
+      ! Our initial guess for the first 4 fragments and the values of will be based on an equipartition of KE with some random variation
+      v_r_mag_01(:) = 0.0_DP
+      ! The secant method requires two guesses, so we will use a small random variate to update the initial guesses
+      !call random_number(v_r_mag_02(:))
+      v_r_mag_02(:) = 1e-2_DP * sum(v_r_mag(:)) / (nfrag - 4)
 
       f_vec_01(:) = f_vec_const(:)
 
