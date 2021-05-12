@@ -410,7 +410,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       v_r_mag_01(:) = v_r_mag(1:4) 
       ! The secant method requires two guesses, so we will use a small random variate to update the initial guesses
       call random_number(v_r_mag_02(:))
-      v_r_mag_02(:) = v_r_mag_01 * (1._DP + 2e-2_DP * (v_r_mag_02 - 0.5_DP))
+      v_r_mag_02(:) = v_r_mag_01 * (1._DP + 2e-1_DP * (v_r_mag_02 - 0.5_DP))
 
       ! Set up the constant values (those invovling i>4 fragments)
       Gam = 0.0_DP
@@ -429,10 +429,10 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          f_vec_02(:) = f_vec_const(:)
          do i = 1, 4
             if (j == 1) then
-               f_vec_01(1:3) = f_vec_01(1:3) + m_frag(i) * v_r_mag_01(i) * x_frag(:,i)
+               f_vec_01(1:3) = f_vec_01(1:3) + m_frag(i) * v_r_mag_01(i) * v_r_unit(:, i)
                f_vec_01(4)   = f_vec_01(4)   + m_frag(i) * v_r_mag_01(i)**2
             end if
-            f_vec_02(1:3) = f_vec_02(1:3) + m_frag(i) * v_r_mag_02(i) * x_frag(:,i)
+            f_vec_02(1:3) = f_vec_02(1:3) + m_frag(i) * v_r_mag_02(i) * v_r_unit(:,i)
             f_vec_02(4)   = f_vec_02(4)   + m_frag(i) * v_r_mag_02(i)**2
          end do
 
