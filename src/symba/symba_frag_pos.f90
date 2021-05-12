@@ -254,21 +254,19 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       real(DP), dimension(:,:), intent(in)    :: Ip_frag, x_frag  !! Fragment prinicpal moments of inertia and position vectors
       real(DP), dimension(:,:), intent(out)   :: v_frag, rot_frag !! Fragment velocities and spin states
       ! Internals
-      real(DP), dimension(NDIM, 2)            :: rot, Ip
-      integer(I4B)                            :: i, j
-      real(DP)                                :: L_orb_frag_mag, rho
-      real(DP), dimension(NDIM)               :: x_unit, y_unit, z_unit
+      integer(I4B)                            :: i
+      real(DP)                                :: L_orb_mag
       real(DP), dimension(NDIM)               :: L_orb_old, L_spin_frag, L_spin_new
-      real(DP), parameter                     :: f_spin = 0.00_DP !! Fraction of pre-impact orbital angular momentum that is converted to fragment spin
-      real(DP), dimension(3,3)                :: A ! LHS of linear equation used to solve for momentum constraint in Gauss elimination code
-      real(DP), dimension(3)                  :: b, sol ! RHS of linear equation used to solve for momentum constraint in Gauss elimination code
-      real(DP), dimension(:,:), allocatable   :: v_t_unit, L_t_unit
+      real(DP), parameter                     :: f_spin = 0.20_DP !! Fraction of pre-impact orbital angular momentum that is converted to fragment spin
+      real(DP), dimension(2 * NDIM, 2 * NDIM) :: A ! LHS of linear equation used to solve for momentum constraint in Gauss elimination code
+      real(DP), dimension(2 * NDIM)           :: b  ! RHS of linear equation used to solve for momentum constraint in Gauss elimination code
+      real(DP), dimension(:,:), allocatable   :: v_t_unit, r_unit
       real(DP), dimension(:), allocatable     :: v_t_mag, rmag
-      real(DP), dimension(2)                  :: Gam
+      real(DP), dimension(NDIM)               :: L_lin_others, L_orb_others, L_unit, L_frag, L_sigma
 
       allocate(v_t_mag, mold=m_frag)
       allocate(rmag, mold=m_frag)
-      allocate(L_t_unit(2, nfrag))
+      allocate(r_unit, mold=v_frag)
       allocate(v_t_unit, mold=v_frag)
       
       L_orb_old(:) = L_orb(:, 1) + L_orb(:, 2)
@@ -280,44 +278,39 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          rot_frag(:,i) = L_spin_frag(:) / (Ip_frag(:, i) * m_frag(i) * rad_frag(i)**2)
       end do
       L_orb_old(:) = L_orb_old(:) * (1.0_DP - f_spin)
+      L_unit(:) = L_orb_old(:) / norm2(L_orb_old(:))
 
-      ! Define a coordinate system aligned with the angular momentum
-      z_unit(:) = L_orb_old(:) / norm2(L_orb_old(:))
-      ! Arbitrarily choose the first fragment as a reference point for the x-axis
-      call util_crossproduct(z_unit(:), x_frag(:, 1), y_unit(:)) 
-      y_unit(:) = y_unit(:) / norm2(y_unit(:))
-      call util_crossproduct(z_unit(:), y_unit(:), x_unit(:))
-     
-      L_orb_frag_mag = norm2(L_orb_old(:)) 
-      Gam(:) = 0.0_DP
-      rho = 0.0_DP
-      ! The system angular momentum defines a plane. With some vector operations we can define the radial and tangential velocity unit vectors for each fragment
-      ! with respect to the angular momentum plane.
+      L_orb_mag = norm2(L_orb_old(:)) 
+      ! We have 6 constraint equations (2 vector constraints in 3 dimensions each)
+      ! The first 3 are that the linear momentum of the fragments is zero with respect to the collisional barycenter
+      ! The second 3 are that the sum of the angular momentum of the fragments is conserved from the pre-impact state
+      L_lin_others(:) = 0.0_DP
+      L_orb_others(:) = 0.0_DP
       do i = 1, nfrag
-         call util_crossproduct(z_unit(:), x_frag(:, i), v_t_unit(:, i)) ! First get the vector projection of the position vector into the x-y plane, which will point in the radial direction
-         rmag(i) = norm2(v_t_unit(:, i))
-         v_t_unit(:, i) = v_t_unit(:, i) / rmag(i) ! Get the unit vector of the projected position vector, which 
-         L_t_unit(:, i) = [dot_product(v_t_unit(:, i), x_unit(:)), dot_product(v_t_unit(:, i), y_unit(:))]
-      
-         if (i > 3) then  ! For the i>4 bodies, distribute the angular momentum equally amongs them
-            v_t_mag(i) = L_orb_frag_mag / (m_frag(i) * rmag(i) * nfrag) 
-            rho = rho + m_frag(i) * rmag(i) * v_t_mag(i)
-            Gam(:) = Gam(:) + m_frag(i) * v_t_mag(i) * L_t_unit(:, i)
+         rmag(i) = norm2(x_frag(:, i))
+         r_unit(:, i) = x_frag(:, i) / rmag(i)
+         call random_number(L_sigma(:)) ! Randomize the tangential velocity direction. This helps to ensure that the tangential velocity doesn't completely line up with the angular momentum vector,
+                                        ! otherwise we can get an ill-conditioned system
+         L_frag(:) = L_unit(:) + 2e-3_DP * (L_sigma(:) - 0.5_DP)
+         L_frag(:) = L_frag(:) / norm2(L_frag(:)) 
+         call util_crossproduct(L_frag(:), r_unit(:, i), v_t_unit(:, i))
+         if (i <= 2 * NDIM) then ! The tangential velocities of the first set of bodies will be the unknowns we will solve for to satisfy the constraints
+            A(1:3, i) = m_frag(i) * v_t_unit(:, i) 
+            call util_crossproduct(r_unit(:, i), v_t_unit(:, i), L_frag(:))
+            A(4:6, i) = m_frag(i) * rmag(i) * L_frag(:)
+         else !For the remining bodies, distribute the angular momentum equally amongs them
+            v_t_mag(i) = L_orb_mag / (m_frag(i) * rmag(i) * nfrag)
+            v_frag(:, i) = v_t_mag(i) * v_t_unit(:, i)
+            L_lin_others(:) = L_lin_others(:) + m_frag(i) * v_frag(:, i)
+            call util_crossproduct(x_frag(:, i), v_frag(:, i), L_frag(:))
+            L_orb_others(:) = L_orb_others(:) + m_frag(i) * L_frag(:)
          end if
       end do
-
-      ! For the i<=4 bodies, we will solve for the angular momentum constraint using Gaussian elimination
-      do i = 1, 3
-         do j = 1, 2
-            A(j, i) = m_frag(i) * L_t_unit(j, i)
-         end do
-         A(3, i) = m_frag(i) * rmag(i)
-      end do
-      b(1:2) = -Gam(:)
-      b(3) = L_orb_frag_mag - rho
-      v_t_mag(1:3) = solve_wbs(ge_wpp(A, b))
-      do i = 1, nfrag
-         v_frag(:, i) = v_frag(:, i) + v_t_mag(i) * v_t_unit(:, i)
+      b(1:3) = -L_lin_others(:)
+      b(4:6) = L_orb_old(:) - L_orb_others(:)
+      v_t_mag(1:6) = solve_wbs(ge_wpp(A, b))
+      do i = 1, 6
+         v_frag(:, i) = v_t_mag(i) * v_t_unit(:, i)
       end do
 
       return 
@@ -356,7 +349,6 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       allocate(v_r_unit, mold=v_frag) 
       allocate(v_t, mold=v_frag)
       allocate(v_r_mag, mold=m_frag)
-      call symba_frag_pos_com_adjust(xcom, m_frag, x_frag)
 
       ! Create the radial unit vectors pointing away from the collision center of mass, and subtract that off of the current
       ! fragment velocities in order to create the tangential component 
@@ -375,6 +367,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          do i = 1, nfrag
             v_frag(:, i) = v_r_mag(i) * v_r_unit(:, i) + v_t(:, i)
          end do
+         call symba_frag_pos_com_adjust(vcom, m_frag, v_frag) ! Temporary until we can get the fragment velocity constraints fixed
       else
          ! No solution exists for this case, so we need to indicate that this should be a merge
          ! This may happen due to setting the tangential velocities too high when setting the angular momentum constraint
@@ -401,7 +394,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       ! Our initial guess for the first 4 fragments and the values of will be based on an equipartition of KE with some random variation
       ! We shift the random variate to the range 0.5, 1.5 to prevent any zero values for radial velocities
       call random_number(v_r_mag(:))
-      v_r_mag(:) = sqrt(2 * Lambda / nfrag / m_frag(:)) * (v_r_mag(:) + 0.5_DP)
+      v_r_mag(:) = sqrt(2 * Lambda / nfrag / m_frag(:)) * (1.0_DP + 0.02_DP * (v_r_mag(:) - 0.5_DP))
 
       return
 
