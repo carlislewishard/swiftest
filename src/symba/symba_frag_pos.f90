@@ -527,8 +527,8 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 
       n = size(u,1)
       allocate(x(n))
-      do concurrent(i = n:1:-1) 
-         x(i) = (u(i, n + 1) - sum(u(i, i + 1:n) * x (i + 1:n))) / u(i, i)
+      do i = n,1,-1 
+         x(i) = (u(i, n + 1) - sum(u(i, i + 1:n) * x(i + 1:n))) / u(i, i)
       end do
       return
     end function solve_wbs
