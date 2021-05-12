@@ -428,6 +428,8 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          do i = 1, 4
             f_vec_01(1:3) = f_vec_01(1:3) + m_frag(i) * v_r_mag_01(i) * x_frag(:,i)
             f_vec_01(4)   = f_vec_01(4)   + m_frag(i) * v_r_mag_01(i)**2
+            f_vec_02(1:3) = f_vec_02(1:3) + m_frag(i) * v_r_mag_02(i) * x_frag(:,i)
+            f_vec_02(4)   = f_vec_02(4)   + m_frag(i) * v_r_mag_02(i)**2
          end do
 
          KE_after = 0.0_DP
