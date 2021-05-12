@@ -1568,6 +1568,17 @@ END INTERFACE
          END FUNCTION
      END INTERFACE
 
+     interface
+         function util_solve_linear_system(n,A,b) result(x)
+            use swiftest_globals
+            implicit none
+            integer(I4B),             intent(in) :: n
+            real(DP), dimension(:,:), intent(in) :: A
+            real(DP), dimension(:),   intent(in) :: b
+            real(DP), dimension(n)               :: x
+         end function util_solve_linear_system
+      end interface
+
      INTERFACE
          FUNCTION collresolve_resolve(model,m1,m2,r1,r2,p1,p2,v1,v2,n,mres,rres,pres,vres)
          USE swiftest_globals
