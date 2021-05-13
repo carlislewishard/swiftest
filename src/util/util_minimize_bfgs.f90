@@ -74,7 +74,7 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
       conv = 0
       S(:) = 0._DP
       do k = 1, N
-         if (abs(grad(j)) > eps) conv = conv + 1
+         if (abs(grad(k)) > eps) conv = conv + 1
          S(k) = -sum(H(:,k) * grad(:))
       end do
       if (conv == 0)  return 
