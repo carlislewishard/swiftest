@@ -124,8 +124,15 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
 
          fnum = 0
          do i = 1, N
-            xp(:) = [((x1(j), j=1, k-1), x1(j) + dx, (x1(j), j=k+1, N), k=1, N)]
-            xm(:) = [((x1(j), j=1, k-1), x1(j) - dx, (x1(j), j=k+1, N), k=1, N)]
+            do j = 1, N
+               if (j == i) then
+                  xp(j) = x1(j) + dx
+                  xm(j) = x1(j) - dx
+               else
+                  xp(j) = x1(j)
+                  xm(j) = x1(j)
+               end if
+            end do
             grad(i) = (f%eval(xp) - f%eval(xm)) / (2 * dx)
             fnum = fnum + 2
          end do
