@@ -13,11 +13,11 @@ module lambda_function
    end type
 
    abstract interface
-      function lambda0(x)
+      function lambda0(x) result(y)
          ! Template for a 0 argument function
          import DP
          real(DP), intent(in) :: x
-         real(DP) :: lambda
+         real(DP) :: y
       end function
    end interface
 

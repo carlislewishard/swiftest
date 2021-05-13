@@ -370,7 +370,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       end do
       if (Lambda > 0.0_DP) then
          lmerge = .false.
-         v_r_mag(:) = symba_frag_pos_fragment_velocity(nfrag, m_frag, x_frag, v_r_unit, Lambda, tau)
+         v_r_mag(:) = symba_frag_pos_fragment_velocity(nfrag, m_frag, v_r_unit, Lambda, tau)
          do i = 1, nfrag
             v_frag(:, i) = v_r_mag(i) * v_r_unit(:, i) + v_t(:, i)
          end do
@@ -385,12 +385,12 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       return
    end subroutine symba_frag_pos_kinetic_energy
 
-   function symba_frag_pos_fragment_velocity(nfrag, m_frag, x_frag, v_r_unit, Lambda, tau) result(v_r_mag)
+
+   function symba_frag_pos_fragment_velocity(nfrag, m_frag, v_r_unit, Lambda, tau) result(v_r_mag)
       implicit none
       ! Arguments
       integer(I4B),             intent(in)  :: nfrag
       real(DP), dimension(:),   intent(in)  :: m_frag                   !! Fragment masses
-      real(DP), dimension(:,:), intent(in)  :: x_frag                   !! Fragment position in the center of mass frame 
       real(DP), dimension(:,:), intent(in)  :: v_r_unit                 !! Radial velocity unit vector for each fragment
       real(DP), intent(in)                  :: Lambda                   !! Sum of the radial kinetic energy of all fragments 
       real(DP), dimension(:), intent(in)    :: tau                      !! Sum of the tangential momentum vector of all fragments

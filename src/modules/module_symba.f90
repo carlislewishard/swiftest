@@ -27,6 +27,7 @@ MODULE module_symba
 
    USE swiftest_globals
    USE module_helio
+   use lambda_function
    IMPLICIT NONE
 
    INTEGER(I4B), PARAMETER :: NENMAX = 32767
@@ -101,6 +102,21 @@ MODULE module_symba
       type(swiftest_particle_info), dimension(:), allocatable :: info
 
    end type symba_merger 
+
+   type, public, extends(lambda_obj) :: symba_vel_lambda_obj
+      procedure(abstract_objective_func), pointer, nopass :: ke_objective_func_ptr => null()
+   end type symba_vel_lambda_obj
+
+   abstract interface
+      function abstract_objective_func(v, m, rhat, t, G, B, L) result(fnorm)
+         ! Template for the kinetic energy constraint function used for minimizing
+         import DP
+         real(DP), dimension(:),   intent(in) :: v, m, t, G
+         real(DP), dimension(:,:), intent(in) :: rhat
+         real(DP),                 intent(in) :: B, L      
+         real(DP)                             :: fnorm
+      end function
+   end interface
 END MODULE module_symba
 !**********************************************************************************************************************************
 !
