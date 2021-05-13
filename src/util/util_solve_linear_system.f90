@@ -1,4 +1,4 @@
-function util_solve_linear_system(n,A,b) result(x)
+function util_solve_linear_system(A,b,n,lerr) result(x)
    !! Author: David A. Minton
    !!
    !! Solves the linear equation of the form A*x = b for x. 
@@ -13,27 +13,32 @@ function util_solve_linear_system(n,A,b) result(x)
    integer(I4B),             intent(in) :: n
    real(DP), dimension(:,:), intent(in) :: A
    real(DP), dimension(:),   intent(in) :: b
+   logical,                  intent(out) :: lerr
    ! Result
    real(DP), dimension(n)  :: x
    ! Internals
    real(QP), dimension(:), allocatable :: qx
 
-   qx = solve_wbs(ge_wpp(real(A, kind=QP), real(b, kind=QP)))
+   qx = solve_wbs(ge_wpp(real(A, kind=QP), real(b, kind=QP)),lerr)
    x = real(qx, kind=DP)
    return
 
-
    contains
 
-      function solve_wbs(u) result(x) ! solve with backward substitution
+      function solve_wbs(u, lerr) result(x) ! solve with backward substitution
          !! Based on code available on Rosetta Code: https://rosettacode.org/wiki/Gaussian_elimination#Fortran
          implicit none
          ! Arguments
          real(QP), intent(in), dimension(:,:), allocatable  :: u
+         logical, intent(out)  :: lerr
          ! Result
          real(QP), dimension(:), allocatable :: x
          ! Internals
          integer(I4B)             :: i,n
+         real(DP), parameter :: epsilon = 10 * tiny(1._DP) 
+
+         lerr = any(abs(u(:,:)) < epsilon)
+         if (lerr) return
 
          n = size(u,1)
          allocate(x(n))
@@ -43,7 +48,7 @@ function util_solve_linear_system(n,A,b) result(x)
          return
       end function solve_wbs
 
-      function  ge_wpp(A, b) result(u) ! gaussian eliminate with partial pivoting
+      function ge_wpp(A, b) result(u) ! gaussian eliminate with partial pivoting
          !! Solve  Ax=b  using Gaussian elimination then backwards substitution.
          !!   A being an n by n matrix.
          !!   x and b are n by 1 vectors. 

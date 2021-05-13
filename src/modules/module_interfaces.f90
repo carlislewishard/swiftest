@@ -1569,16 +1569,17 @@ END INTERFACE
      END INTERFACE
 
      interface
-         function util_solve_linear_system(n,A,b) result(x)
+         function util_solve_linear_system(A,b,n,lerr) result(x)
             use swiftest_globals
             implicit none
-            integer(I4B),             intent(in) :: n
             real(DP), dimension(:,:), intent(in) :: A
             real(DP), dimension(:),   intent(in) :: b
+            integer(I4B),             intent(in) :: n
+            logical,                  intent(out) :: lerr
             real(DP), dimension(n)               :: x
          end function util_solve_linear_system
 
-         function util_bfgs(f, N, x1, eps) result(fnum)
+         function util_minimize_bfgs(f, N, x1, eps) result(fnum)
             use swiftest_globals
             implicit none
             integer(I4B), intent(in) :: N
@@ -1592,7 +1593,7 @@ END INTERFACE
             real(DP), dimension(:), intent(inout) :: x1
             real(DP), intent(in) :: eps
             integer(I4B) :: fnum
-         end function util_bfgs
+         end function util_minimize_bfgs
       end interface
 
      INTERFACE

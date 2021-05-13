@@ -1,4 +1,4 @@
-function util_bfgs(f, N, x1, eps) result(fnum)
+function util_minimize_bfgs(f, N, x1, eps) result(fnum)
    !! author: David A. Minton
    !! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  - 
    !! This function implements the Broyden-Fletcher-Goldfarb-Shanno method to determine the minimum of a function of N variables.  
@@ -15,7 +15,7 @@ function util_bfgs(f, N, x1, eps) result(fnum)
    !! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  - 
    use swiftest
    use swiftest_globals
-   use module_interfaces, EXCEPT_THIS_ONE => util_bfgs
+   use module_interfaces, EXCEPT_THIS_ONE => util_minimize_bfgs
    implicit none
    ! Arguments
    integer(I4B), intent(in) :: N
@@ -447,20 +447,20 @@ function util_bfgs(f, N, x1, eps) result(fnum)
       ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -   
 
       function quadfit(f, x0, S, N, lo, hi, eps) result(fnum)
-      ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  - 
-      !! This function uses a quadratic polynomial fit to  * locate the minimum of a function
-      !! to some accuracy eps.  It recieves as input:
-      !!   f(x) : function of one real(DP) :: variable as input
-      !!   lo    :  low bracket value
-      !!   hi    :  high bracket value
-      !!   eps   :  desired accuracy of final minimum location
-      !! The outputs include
-      !!   lo   :  final minimum location
-      !!   hi   :  final minimum location
-      !! Returns
-      !!   Number of function calls performed or
-      !!   0 = No miniumum found
-      !! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -   
+         ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  - 
+         !! This function uses a quadratic polynomial fit to  * locate the minimum of a function
+         !! to some accuracy eps.  It recieves as input:
+         !!   f(x) : function of one real(DP) :: variable as input
+         !!   lo    :  low bracket value
+         !!   hi    :  high bracket value
+         !!   eps   :  desired accuracy of final minimum location
+         !! The outputs include
+         !!   lo   :  final minimum location
+         !!   hi   :  final minimum location
+         !! Returns
+         !!   Number of function calls performed or
+         !!   0 = No miniumum found
+         !! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -   
          implicit none
          ! Arguments
          integer(I4B), intent(in) :: N
@@ -485,6 +485,7 @@ function util_bfgs(f, N, x1, eps) result(fnum)
          real(DP), dimension(3,3) :: lhs
          real(DP) :: d1, d2, d3, aold, denom
          integer(I4B) :: i
+         logical :: lerr
 
          ! Get initial a1, a2, a3 values   
          a1 =  lo
@@ -518,12 +519,13 @@ function util_bfgs(f, N, x1, eps) result(fnum)
             lhs(2, :) = row_2
             lhs(3, :) = row_3
             ! Solve system of equations   
-            if (gauss(lhs, rhs, soln, 3) /= 0) then
-               !write(*,*) "Could not solve polynomial on loop %d", i)
-               !write(*,*) "a1 = %9.6f f1 = %9.6f", a1, f1)
-               !write(*,*) "a2 = %9.6f f2 = %9.6f", a2, f2)
-               !write(*,*) "a3 = %9.6f f3 = %9.6f", a3, f3)
-               !write(*,*) "aold = %7.4f", aold)
+            soln(:) = util_solve_linear_system(lhs, rhs, 3, lerr)
+            if (lerr) then
+               write(*,*) "Could not solve polynomial on loop ", i
+               write(*,'("a1 = ",f9.6," f1 = ",f9.6f)') a1, f1
+               write(*,'("a2 = ",f9.6," f2 = ",f9.6f)') a2, f2
+               write(*,'("a3 = ",f9.6," f3 = ",f9.6f)') a3, f3
+               write(*,'("aold = ",f7.4)') aold
                fnum = 0
                return 
             end if
@@ -560,89 +562,5 @@ function util_bfgs(f, N, x1, eps) result(fnum)
          return 
       end function quadfit
 
-      ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -   
-      ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -   
 
-      function gauss(a1, b, soln, N) result(errcode)
-      ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  - 
-      !! Purpose: Subroutine to solve a set of n linear equations in n unknowns using
-      !!          Gaussian elimination and the maximum pivot techniques.
-      !!
-      !! From: Chapman, Stephen J., _Fortran 90 / 95 for Scientists and Engineers_, Firs
-      !!            Edition, WCB McGraw - Hill, 1998, pgs. 433 - 435
-      !!
-      !! Converted to C by David Minton
-      !!
-      !! Input
-      !!    a    :  NxN input array
-      !!    b    :  RHS vector
-      !!    n    :  number of equations
-      !! Output
-      !!    soln :  solution vector
-      !! Returns
-      !!    0    : No error
-      !!    1    : Singular matrix
-      !! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -   
-         implicit none
-         ! Arguments
-         integer(I4B), intent(in) :: N
-         interface 
-            pure function f(x) ! Objective function template
-               import DP
-               real(DP), dimension(:), intent(in) :: x
-               real(DP) :: f
-            end function f
-         end interface
-         real(DP), dimension(:,:), intent(inout) :: a1
-         real(DP), dimension(:), intent(in) :: b
-         real(DP), dimension(:), intent(out) :: soln
-         ! Result
-         integer(I4B) :: errcode
-         ! Internals
-         real(DP) :: factor, temp
-         real(DP), parameter :: epsilon = tiny(temp) ! A "small" number for comparison when determining singular matrix   
-         integer(I4B) :: irow, jrow, ipeak, kcol
-
-         soln(:) = b(:)
-         do irow = 1, N
-            ! Find peak pivot for column irow in rows irow to n   
-            ipeak = irow
-            do jrow = irow + 1, N
-               if (abs(a1(jrow, irow)) > abs(a1(ipeak, irow))) ipeak = jrow
-            end do 
-
-            ! Check for singular equations   
-            if (abs(a1(ipeak, irow)) < epsilon) then
-               errcode = 1
-               return 
-            end if
-
-            ! Otherwise, if ipeak ! =  irow, swap rows irow & ipeak   
-            if (ipeak /= irow) then
-               do kcol = 1, N 
-                  temp = a1(ipeak, kcol)
-                  a1(ipeak, kcol) = a1(irow, kcol)
-                  a1(irow, kcol) = temp
-               end do
-               temp = soln(ipeak)
-               soln(ipeak) = soln(irow)
-               soln(irow) = temp
-            end if
-
-            do jrow = 1, N 
-               if (jrow /= irow) then
-                  factor = -(a1(jrow,irow)) / (a1(irow, irow))
-                  a1(jrow, :) = a1(irow, :) * factor + a1(jrow, :)
-                  soln(jrow) = soln(irow) * factor + soln(jrow)
-               end if
-            end do
-         end do
-         do irow = 1, N 
-            soln(irow) = soln(irow) / (a1(irow, irow))
-         end do
-         errcode = 0
-         return 
-
-      end function gauss
-
-end function util_bfgs
+end function util_minimize_bfgs

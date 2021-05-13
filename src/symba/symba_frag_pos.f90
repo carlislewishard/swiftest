@@ -79,7 +79,8 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 
       nfrag = size(m_frag)
       ! Initialize  positions and velocities of fragments that conserve angular momentum
-      call symba_frag_pos_initialize_fragments(nfrag, xcom, vcom, x, v, L_orb, L_spin, mass, radius, m_frag, rad_frag, Ip_frag, x_frag, v_frag, rot_frag)
+      call symba_frag_pos_initialize_fragments(nfrag, xcom, vcom, x, v, L_orb, L_spin, mass, radius, m_frag, rad_frag, Ip_frag, x_frag, v_frag, rot_frag, lmerge)
+      if (lmerge) return
 
       ! Energy calculation requires the fragments to be in the system barcyentric frame, so we need to temporarily shift them
       do i = 1, nfrag
@@ -182,7 +183,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 
    contains
 
-   subroutine symba_frag_pos_initialize_fragments(nfrag, xcom, vcom, x, v, L_orb, L_spin, mass, radius, m_frag, rad_frag, Ip_frag, x_frag, v_frag, rot_frag)
+   subroutine symba_frag_pos_initialize_fragments(nfrag, xcom, vcom, x, v, L_orb, L_spin, mass, radius, m_frag, rad_frag, Ip_frag, x_frag, v_frag, rot_frag, lmerge)
       !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
       !!
       !! Initializes the orbits of the fragments around the center of mass. The fragments are initially placed on a plane defined by the 
@@ -197,6 +198,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       real(DP), dimension(:),   intent(in)    :: m_frag, rad_frag         !! Fragment masses and radii
       real(DP), dimension(:,:), intent(in)    :: Ip_frag                  !! Fragment prinicpal moments of inertia
       real(DP), dimension(:,:), intent(out)   :: x_frag, v_frag, rot_frag !! Fragment position, velocities, and spin states
+      logical, intent(out)                    :: lmerge
       ! Internals
       real(DP)                                :: mtot, theta, v_frag_norm, r_frag_norm, v_col_norm, r_col_norm
       real(DP), dimension(NDIM)               :: Ltot, delta_r, delta_v
@@ -236,12 +238,12 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       call symba_frag_pos_com_adjust(xcom, m_frag, x_frag)
       v_frag(:,:) = 0._DP
 
-      call symba_frag_pos_ang_mtm(nfrag, xcom, vcom, L_orb, L_spin, m_frag, rad_frag, Ip_frag, x_frag, v_frag, rot_frag)
+      call symba_frag_pos_ang_mtm(nfrag, xcom, vcom, L_orb, L_spin, m_frag, rad_frag, Ip_frag, x_frag, v_frag, rot_frag, lmerge)
 
       return
    end subroutine symba_frag_pos_initialize_fragments
 
-   subroutine symba_frag_pos_ang_mtm(nfrag, xcom, vcom, L_orb, L_spin, m_frag, rad_frag, Ip_frag, x_frag, v_frag, rot_frag)
+   subroutine symba_frag_pos_ang_mtm(nfrag, xcom, vcom, L_orb, L_spin, m_frag, rad_frag, Ip_frag, x_frag, v_frag, rot_frag, lmerge)
       !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
       !!
       !! Adjusts the positions, velocities, and spins of a collection of fragments such that they conserve angular momentum
@@ -253,6 +255,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       real(DP), dimension(:),   intent(in)    :: m_frag, rad_frag !! Fragment masses and radii
       real(DP), dimension(:,:), intent(in)    :: Ip_frag, x_frag  !! Fragment prinicpal moments of inertia and position vectors
       real(DP), dimension(:,:), intent(out)   :: v_frag, rot_frag !! Fragment velocities and spin states
+      logical, intent(out)                    :: lmerge
       ! Internals
       integer(I4B)                            :: i
       real(DP)                                :: L_orb_mag
@@ -308,7 +311,8 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       end do
       b(1:3) = -L_lin_others(:)
       b(4:6) = L_orb_old(:) - L_orb_others(:)
-      v_t_mag(1:6) = util_solve_linear_system(6, A, b)
+      v_t_mag(1:6) = util_solve_linear_system(A, b, 6, lmerge)
+      if (lmerge) return
       do i = 1, 6
          v_frag(:, i) = v_t_mag(i) * v_t_unit(:, i)
       end do
