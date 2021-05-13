@@ -1581,15 +1581,10 @@ END INTERFACE
 
          function util_minimize_bfgs(f, N, x1, eps) result(fnum)
             use swiftest_globals
+            use lambda_function
             implicit none
             integer(I4B), intent(in) :: N
-            interface 
-               pure function f(x) ! Objective function template
-                  import DP
-                  real(DP), dimension(:), intent(in) :: x
-                  real(DP) :: f
-               end function f
-            end interface
+            class(lambda_obj), intent(in) :: f
             real(DP), dimension(:), intent(inout) :: x1
             real(DP), intent(in) :: eps
             integer(I4B) :: fnum
