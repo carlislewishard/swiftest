@@ -1577,6 +1577,22 @@ END INTERFACE
             real(DP), dimension(:),   intent(in) :: b
             real(DP), dimension(n)               :: x
          end function util_solve_linear_system
+
+         function util_bfgs(f, N, x1, eps) result(fnum)
+            use swiftest_globals
+            implicit none
+            integer(I4B), intent(in) :: N
+            interface 
+               pure function f(x) ! Objective function template
+                  import DP
+                  real(DP), dimension(:), intent(in) :: x
+                  real(DP) :: f
+               end function f
+            end interface
+            real(DP), dimension(:), intent(inout) :: x1
+            real(DP), intent(in) :: eps
+            integer(I4B) :: fnum
+         end function util_bfgs
       end interface
 
      INTERFACE
