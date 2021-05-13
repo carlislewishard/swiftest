@@ -26,14 +26,14 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
    integer(I4B) :: fnum
    ! Internals
    integer(I4B) ::  i, j, k, l, conv, num
-   integer(I4B), parameter :: MAXLOOP = 2000  !! Maximum number of loops before method is determined to have failed 
-   real(DP), dimension(N) :: S                ! Direction vectors 
+   integer(I4B), parameter :: MAXLOOP = 2000 !! Maximum number of loops before method is determined to have failed 
+   real(DP), dimension(N) :: S               !! Direction vectors 
    real(DP), dimension(N) :: x0
-   real(DP), dimension(N) :: Snorm           ! normalized direction 
-   real(DP), dimension(N,N) :: H          ! Approximated inverse Hessian matrix 
-   real(DP), dimension(N) :: grad         ! gradient of f 
-   real(DP), dimension(N) :: grad0        ! old value of gradient 
-   real(DP) :: astar            ! 1 - D minimized value 
+   real(DP), dimension(N) :: Snorm           !! normalized direction 
+   real(DP), dimension(N,N) :: H             !! Approximated inverse Hessian matrix 
+   real(DP), dimension(N) :: grad            !! gradient of f 
+   real(DP), dimension(N) :: grad0           !! old value of gradient 
+   real(DP) :: astar                         !! 1D minimized value 
    real(DP), dimension(N) :: y, P
    real(DP), dimension(N,N) :: PP, PyH, HyP
    real(DP) :: yHy, Py
@@ -45,11 +45,11 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
    do i = 1, MAXLOOP 
       xmag = norm2(x1(:))
       grad0(:) = grad(:)
-      fnum = fnum + gradf(f, N, x1, grad, eps)
+      fnum = fnum + gradf(f, N, x1(1:N), grad, eps)
       if (i > 1) then
          ! set up factors for H matrix update 
          y(:) = grad(:) - grad0(:)
-         P(:) = x1(:) - x0(:)
+         P(:) = x1(1:N) - x0(:)
          Py = sum(P(:) * y(:))
          yHy = 0._DP
          do k = 1, N 
@@ -80,7 +80,7 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
       if (conv == 0)  return 
       ! normalize gradient 
       Snorm(:) = S(:) / norm2(S)
-      num = fnum + minimize1D(f, x1, Snorm, N, eps, astar)
+      num = fnum + minimize1D(f, x1(1:N), Snorm, N, eps, astar)
       if (num == fnum) then
          write(*,*) "Exiting BFGS"
          fnum = 0
@@ -88,8 +88,8 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
       end if
       fnum = num
       ! Get new x values 
-      x0(:) = x1(:)
-      x1(:) = x1(:) + astar * Snorm(:)
+      x0(:) = x1(1:N)
+      x1(1:N) = x1(1:N) + astar * Snorm(:)
    end do
    return 
 

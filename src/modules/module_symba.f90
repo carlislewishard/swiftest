@@ -95,8 +95,8 @@ MODULE module_symba
                                         !      number of fragments
       real(DP),   dimension(:,:),   allocatable :: xb     ! barycentric position
       real(DP),   dimension(:,:),   allocatable :: vb     ! barycentric velocity
-      real(DP),   dimension(:),   allocatable :: mass   ! mass
-      real(DP),   dimension(:),   allocatable :: radius   ! radius
+      real(DP),   dimension(:),     allocatable :: mass   ! mass
+      real(DP),   dimension(:),     allocatable :: radius   ! radius
       real(DP),   dimension(:,:),   allocatable :: IP     ! moment of intertia
       real(DP),   dimension(:,:),   allocatable :: rot    ! rotation
       type(swiftest_particle_info), dimension(:), allocatable :: info
@@ -105,7 +105,7 @@ MODULE module_symba
 
    type, public, extends(lambda_obj) :: symba_vel_lambda_obj
       procedure(abstract_objective_func), pointer, nopass :: ke_objective_func_ptr => null()
-      real(DP), dimension(:),   allocatable :: m_frag
+      real(DP), dimension(:),   allocatable :: m_frag, v_r_mag
       real(DP), dimension(:,:), allocatable :: v_r_unit
       real(DP), dimension(NDIM)             :: L_lin_tan
       real(DP)                              :: T_rad
@@ -117,10 +117,11 @@ MODULE module_symba
    end type symba_vel_lambda_obj
 
    abstract interface
-      function abstract_objective_func(v_r_mag, m_frag, v_r_unit, L_lin_tan, T_rad) result(fnorm)
+      function abstract_objective_func(v_r_mag_unknowns, v_r_mag_knowns, m_frag, v_r_unit, L_lin_tan, T_rad) result(fnorm)
          ! Template for the kinetic energy constraint function used for minimizing
          import DP
-         real(DP), dimension(:),   intent(in) :: v_r_mag   !! Radial velocity magnitude
+         real(DP), dimension(:),   intent(in) :: v_r_mag_unknowns   !! Unknown radial velocity magnitudes
+         real(DP), dimension(:),   intent(in) :: v_r_mag_knowns  !! Known Radial velocity magnitude
          real(DP), dimension(:),   intent(in) :: m_frag    !! Fragment masses
          real(DP), dimension(:,:), intent(in) :: v_r_unit  !! Radial unit vectors
          real(DP), dimension(:),   intent(in) :: L_lin_tan !! Tangential component of linear momentum
@@ -130,11 +131,12 @@ MODULE module_symba
    end interface
 
    contains
-      subroutine ke_objective_func_init(self, lambda, m_frag, v_r_unit, L_lin_tan, T_rad)
+      subroutine ke_objective_func_init(self, lambda, v_r_mag, m_frag, v_r_unit, L_lin_tan, T_rad)
          implicit none
          ! Arguments
          class(symba_vel_lambda_obj), intent(out) :: self
-         procedure(abstract_objective_func)       :: lambda
+         procedure(abstract_objective_func)       :: lambda  !! The lambda function
+         real(DP), dimension(:),      intent(in)  :: v_r_mag   !! Radial velocity magnitude
          real(DP), dimension(:),      intent(in)  :: m_frag    !! Fragment masses
          real(DP), dimension(:,:),    intent(in)  :: v_r_unit  !! Radial unit vectors
          real(DP), dimension(:),      intent(in)  :: L_lin_tan !! Tangential component of linear momentum
@@ -142,6 +144,7 @@ MODULE module_symba
    
          self%ke_objective_func_ptr  => lambda
          allocate(self%m_frag, source=m_frag)
+         allocate(self%v_r_mag, source=v_r_mag)
          allocate(self%v_r_unit, source=v_r_unit)
          self%L_lin_tan(:) = L_lin_tan(:)
          self%T_rad = T_rad
@@ -152,6 +155,7 @@ MODULE module_symba
          type(symba_vel_lambda_obj) :: self
          if (allocated(self%m_frag)) deallocate(self%m_frag)
          if (allocated(self%v_r_unit)) deallocate(self%v_r_unit)
+         if (allocated(self%v_r_mag)) deallocate(self%v_r_mag)
          if (associated(self%ke_objective_func_ptr)) nullify(self%ke_objective_func_ptr)
       end subroutine ke_objective_func_destroy 
 
@@ -162,29 +166,15 @@ MODULE module_symba
       real(DP), dimension(:),      intent(in) :: x
       ! Result
       real(DP)                      :: fnorm
+      ! Internals
+      integer(I4B) :: nfrag, nunknown
 
       if (associated(self%ke_objective_func_ptr)) then
-         fnorm = self%ke_objective_func_ptr(x, self%m_frag, self%v_r_unit, self%L_lin_tan, self%T_rad)
+         nfrag = size(self%v_r_mag)
+         nunknown = size(x)
+         fnorm = self%ke_objective_func_ptr(x, self%v_r_mag(nunknown + 1:nfrag), self%m_frag, self%v_r_unit, self%L_lin_tan, self%T_rad)
       else
          error stop "KE Objective function was not initialized."
       end if
    end function ke_objective_func_eval
 END MODULE module_symba
-!**********************************************************************************************************************************
-!
-!  Author(s)   : David E. Kaufmann
-!
-!  Revision Control System (RCS) Information
-!
-!  Source File : $RCSfile$
-!  Full Path   : $Source$
-!  Revision    : $Revision$
-!  Date      : $Date$
-!  Programmer  : $Author$
-!  Locked By   : $Locker$
-!  State     : $State$
-!
-!  Modification History:
-!
-!  $Log$
-!**********************************************************************************************************************************

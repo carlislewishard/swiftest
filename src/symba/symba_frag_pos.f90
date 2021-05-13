@@ -346,9 +346,9 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       integer(I4B)                          :: i, nfrag, neval
       real(DP), dimension(:,:), allocatable :: v_r_unit, v_t
       real(DP), dimension(NDIM)             :: v_t_unit, h_unit, L_orb_frag
-      real(DP), dimension(:), allocatable   :: v_r_mag
+      real(DP), dimension(:), allocatable   :: v_r_mag, v_r_mag_sol
       integer(I4B), parameter               :: MAXITER = 500 
-      real(DP), parameter                   :: TOL = 1e-5_DP
+      real(DP), parameter                   :: TOL = 1e-12_DP
       real(DP)                              :: vmult
       type(symba_vel_lambda_obj)            :: ke_objective_func
          
@@ -375,14 +375,13 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       if (T_rad > 0.0_DP) then
          lmerge = .false.
 
-         vmult = 1.0_DP
          call random_number(v_r_mag(:))
-         v_r_mag(:) = vmult * sqrt(2 * T_rad / nfrag / m_frag(:)) * (v_r_mag(:) + 0.1_DP)
+         v_r_mag(:) = sqrt(2 * T_rad / nfrag / m_frag(:)) * (v_r_mag(:) + 0.1_DP)
 
          ! Initialize the lambda function with all the parameters that stay constant during the minimization
-         call ke_objective_func%init(symba_frag_pos_ke_objective_function, m_frag, v_r_unit, L_lin_tan, T_rad)
+         call ke_objective_func%init(symba_frag_pos_ke_objective_function, v_r_mag, m_frag, v_r_unit, L_lin_tan, T_rad)
          ! Minimize error using the BFGS optimizer
-         neval = util_minimize_bfgs(ke_objective_func, nfrag, v_r_mag, TOL)
+         neval = util_minimize_bfgs(ke_objective_func, 4, v_r_mag(1:4), TOL)
 
          do i = 1, nfrag
             v_frag(:, i) = v_r_mag(i) * v_r_unit(:, i) + v_t(:, i)
@@ -397,11 +396,12 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       return
    end subroutine symba_frag_pos_kinetic_energy
 
-   function symba_frag_pos_ke_objective_function(v_r_mag, m_frag, v_r_unit, L_lin_tan, T_rad) result(fnorm)
+   function symba_frag_pos_ke_objective_function(v_r_mag_unknowns, v_r_mag_knowns, m_frag, v_r_unit, L_lin_tan, T_rad) result(fnorm)
       ! Objective function for evaluating how close our fragment velocities get to minimizing KE error from our required value
       implicit none
       ! Arguments
-      real(DP), dimension(:),   intent(in) :: v_r_mag   !! Radial velocity magnitude
+      real(DP), dimension(:),   intent(in) :: v_r_mag_unknowns !! Radial velocity magnitude
+      real(DP), dimension(:),   intent(in) :: v_r_mag_knowns   !! Radial velocity magnitude
       real(DP), dimension(:),   intent(in) :: m_frag    !! Fragment masses
       real(DP), dimension(:),   intent(in) :: L_lin_tan !! Tangential component of linear momentum
       real(DP), dimension(:,:), intent(in) :: v_r_unit  !! Radial unit vectors
@@ -410,15 +410,18 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       real(DP)                             :: fnorm     !! The objective function result: norm of the vector composed of the tangential momentum and energy
                                                         !! Minimizing this brings us closer to our objective
       ! Internals
-      real(DP), dimension(4)  :: f_vec
+      real(DP), dimension(4)  :: f_vec, f_vec_0
 
-      f_vec(1) = sum(m_frag(:) * v_r_mag(:) * v_r_unit(1,:))
-      f_vec(2) = sum(m_frag(:) * v_r_mag(:) * v_r_unit(2,:))
-      f_vec(3) = sum(m_frag(:) * v_r_mag(:) * v_r_unit(3,:))
-      f_vec(1:3) = f_vec(1:3) + L_lin_tan(1:3)
-      f_vec(4) = sum(m_frag(:) * v_r_mag(:)**2) - T_rad
+      f_vec_0(1:3) = L_lin_tan(1:3)
+      f_vec_0(4) = -T_rad
+      f_vec(1) = sum(m_frag(:) * [v_r_mag_unknowns(:), v_r_mag_knowns(:)] * v_r_unit(1,:))
+      f_vec(2) = sum(m_frag(:) * [v_r_mag_unknowns(:), v_r_mag_knowns(:)] * v_r_unit(2,:))
+      f_vec(3) = sum(m_frag(:) * [v_r_mag_unknowns(:), v_r_mag_knowns(:)] * v_r_unit(3,:))
+      f_vec(4) = sum(m_frag(:) * [v_r_mag_unknowns(:), v_r_mag_knowns(:)] **2) 
 
-      fnorm = norm2(f_vec(:))
+      f_vec(:) = f_vec(:) + f_vec_0(:)
+
+      fnorm = norm2(f_vec(:) / f_vec_0(:))
 
       return
 
