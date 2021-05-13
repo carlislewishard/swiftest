@@ -3,7 +3,7 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
    !! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  - 
    !! This function implements the Broyden-Fletcher-Goldfarb-Shanno method to determine the minimum of a function of N variables.  
    !! It recieves as input:
-   !!   f(x) : function of one real(DP) array variable as input
+   !!   f%eval(x) : lambda function object containing the objective function as the eval metho
    !!   N    :  Number of variables of function f
    !!   x1   :  Initial starting value of x
    !!   eps  :  Accuracy of 1 - dimensional minimization at each step
@@ -19,13 +19,7 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
    implicit none
    ! Arguments
    integer(I4B), intent(in) :: N
-   interface 
-      pure function f(x) ! Objective function template
-         import DP
-         real(DP), dimension(:), intent(in) :: x
-         real(DP) :: f
-      end function 
-   end interface
+   class(lambda_obj), intent(in) :: f
    real(DP), dimension(:), intent(inout) :: x1
    real(DP), intent(in) :: eps
    ! Result
@@ -106,7 +100,7 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
          !! Purpose:  Estimates the gradient of a function using a central difference
          !! approximation
          !! Inputs:
-         !!   f(x) :  function of a real array of x(N) as input
+         !!   f%eval(x) : lambda function object containing the objective function as the eval metho
          !!   N    :  number of variables N
          !!   x1   :  x value array
          !!   dx   :  step size to use when calculating derivatives
@@ -118,13 +112,7 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
          implicit none
          ! Arguments
          integer(I4B), intent(in) :: N
-         interface 
-            pure function f(x) 
-               import DP
-               real(DP), dimension(:), intent(in) :: x
-               real(DP) :: f
-            end function f
-         end interface
+         class(lambda_obj), intent(in) :: f
          real(DP), dimension(:), intent(in) :: x1
          real(DP), dimension(:), intent(out) :: grad
          real(DP), intent(in) :: dx
@@ -138,7 +126,7 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
          do i = 1, N
             xp(:) = [((x1(j), j=1, k-1), x1(j) + dx, (x1(j), j=k+1, N), k=1, N)]
             xm(:) = [((x1(j), j=1, k-1), x1(j) - dx, (x1(j), j=k+1, N), k=1, N)]
-            grad(i) = (f(xp) - f(xm)) / (2 * dx)
+            grad(i) = (f%eval(xp) - f%eval(xm)) / (2 * dx)
             fnum = fnum + 2
          end do
          return 
@@ -152,7 +140,7 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
          !!    2.  The golden section method
          !!    3.  A quadratic polynomial fit
          !! Inputs
-         !!   f(x) : function of one real(DP) array variable as input
+         !!   f%eval(x) : lambda function object containing the objective function as the eval metho
          !!   x0   :  Array of size N of initial x values
          !!   S    :  Array of size N that determines the direction of minimization
          !!   N    :  Number of variables of function f
@@ -166,13 +154,7 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
          implicit none
          ! Arguments
          integer(I4B),           intent(in) :: N
-         interface 
-            pure function f(x) ! Objective function template
-               import DP
-               real(DP), dimension(:), intent(in) :: x
-               real(DP) :: f
-            end function f
-         end interface
+         class(lambda_obj), intent(in) :: f
          real(DP), dimension(:), intent(in) :: x0, S
          real(DP),               intent(in) :: eps
          real(DP),               intent(out) :: astar
@@ -226,13 +208,7 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
          implicit none
          ! Arguments
          integer(I4B),           intent(in) :: N
-         interface 
-            pure function f(x) ! Objective function template
-               import DP
-               real(DP), dimension(:), intent(in) :: x
-               real(DP) :: f
-            end function f
-         end interface
+         class(lambda_obj), intent(in) :: f
          real(DP), dimension(:), intent(in) :: x0, S
          real(DP), intent(in) :: a
          ! Return
@@ -242,7 +218,7 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
          integer(I4B) :: i
          
          xnew(:) = x0(:) + a * S(:)
-         fnew = f(xnew(:))
+         fnew = f%eval(xnew(:))
          return 
       end function n2one
 
@@ -252,7 +228,7 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
       function bracket(f, x0, S, N, lo, hi, gam, step) result(fnum)
          ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  - 
          !! This function brackets the minimum.  It recieves as input:
-         !!   f(x) : function of one real(DP) array variable as input
+         !!   f%eval(x) : lambda function object containing the objective function as the eval metho
          !!   x0   :  Array of size N of initial x values
          !!   S    :  Array of size N that determines the direction of minimization
          !!   lo  :  initial guess of lo bracket value
@@ -268,13 +244,7 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
          implicit none
          ! Arguments
          integer(I4B),           intent(in)  :: N
-         interface 
-            pure function f(x) ! Objective function template
-               import DP
-               real(DP), dimension(:), intent(in) :: x
-               real(DP) :: f
-            end function f
-         end interface
+         class(lambda_obj), intent(in) :: f
          real(DP), dimension(:), intent(in)    :: x0, S
          real(DP),               intent(inout) :: lo, hi
          real(DP),               intent(in)    :: gam, step
@@ -377,7 +347,7 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
          ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  - 
          !! This function uses the golden section method to reduce the starting interval lo, hi by some amount sigma.  
          !! It recieves as input:
-         !!   f(x) : function of one real(DP) array variable as input
+         !!   f%eval(x) : lambda function object containing the objective function as the eval metho
          !!   x0   :  Array of size N of initial x values
          !!   S    :  Array of size N that determines the direction of minimization
          !!   lo   :  initial guess of lo bracket value
@@ -394,13 +364,7 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
          implicit none
          ! Arguments
          integer(I4B), intent(in) :: N
-         interface 
-            pure function f(x) ! Objective function template
-               import DP
-               real(DP), dimension(:), intent(in) :: x
-               real(DP) :: f
-            end function f
-         end interface
+         class(lambda_obj), intent(in) :: f
          real(DP), dimension(:), intent(in)    :: x0, S
          real(DP),               intent(inout) :: lo, hi
          real(DP),               intent(in)    :: eps
@@ -450,7 +414,7 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
          ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  - 
          !! This function uses a quadratic polynomial fit to  * locate the minimum of a function
          !! to some accuracy eps.  It recieves as input:
-         !!   f(x) : function of one real(DP) :: variable as input
+         !!   f%eval(x) : lambda function object containing the objective function as the eval metho
          !!   lo    :  low bracket value
          !!   hi    :  high bracket value
          !!   eps   :  desired accuracy of final minimum location
@@ -464,13 +428,7 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
          implicit none
          ! Arguments
          integer(I4B), intent(in) :: N
-         interface 
-            pure function f(x) ! Objective function template
-               import DP
-               real(DP), dimension(:), intent(in) :: x
-               real(DP) :: f
-            end function f
-         end interface
+         class(lambda_obj), intent(in) :: f
          real(DP), dimension(:), intent(in)    :: x0, S
          real(DP),               intent(inout) :: lo, hi
          real(DP),               intent(in)    :: eps
