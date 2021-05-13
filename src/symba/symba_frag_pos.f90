@@ -410,8 +410,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       real(DP)                             :: fnorm     !! The objective function result: norm of the vector composed of the tangential momentum and energy
                                                         !! Minimizing this brings us closer to our objective
       ! Internals
-      integer(I4B), parameter              :: Neqs = 4
-      real(DP), dimension(:), allocatable  :: f_vec
+      real(DP), dimension(4)  :: f_vec
 
       f_vec(1) = sum(m_frag(:) * v_r_mag(:) * v_r_unit(1,:))
       f_vec(2) = sum(m_frag(:) * v_r_mag(:) * v_r_unit(2,:))
