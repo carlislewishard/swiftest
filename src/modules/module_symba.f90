@@ -105,10 +105,10 @@ MODULE module_symba
 
    type, public, extends(lambda_obj) :: symba_vel_lambda_obj
       procedure(abstract_objective_func), pointer, nopass :: ke_objective_func_ptr => null()
-      real(DP), dimension(:), allocatable :: m_frag
+      real(DP), dimension(:),   allocatable :: m_frag
       real(DP), dimension(:,:), allocatable :: v_r_unit
-      real(DP), dimension(NDIM)           :: tau, Gam 
-      real(DP) :: Beta, Lam
+      real(DP), dimension(NDIM)             :: L_lin_tan
+      real(DP)                              :: T_rad
    contains
       generic   :: init => ke_objective_func_init
       procedure :: eval => ke_objective_func_eval
@@ -117,33 +117,34 @@ MODULE module_symba
    end type symba_vel_lambda_obj
 
    abstract interface
-      function abstract_objective_func(v_r_mag, m_frag, v_r_unit, tau, Gam, Beta, Lam) result(fnorm)
+      function abstract_objective_func(v_r_mag, m_frag, v_r_unit, L_lin_tan, T_rad) result(fnorm)
          ! Template for the kinetic energy constraint function used for minimizing
          import DP
-         real(DP), dimension(:),   intent(in) :: v_r_mag, m_frag, tau, Gam
-         real(DP), dimension(:,:), intent(in) :: v_r_unit
-         real(DP),                 intent(in) :: Beta, Lam      
-         real(DP)                             :: fnorm
+         real(DP), dimension(:),   intent(in) :: v_r_mag   !! Radial velocity magnitude
+         real(DP), dimension(:),   intent(in) :: m_frag    !! Fragment masses
+         real(DP), dimension(:,:), intent(in) :: v_r_unit  !! Radial unit vectors
+         real(DP), dimension(:),   intent(in) :: L_lin_tan !! Tangential component of linear momentum
+         real(DP),                 intent(in) :: T_rad     !! Target radial kinetic energ
+         real(DP)                             :: fnorm     !! The objective function result: norm of the vector composed of the tangential momentum and energy
       end function
    end interface
 
    contains
-      subroutine ke_objective_func_init(self, lambda, m_frag, v_r_unit, tau, Gam, Beta, Lam)
+      subroutine ke_objective_func_init(self, lambda, m_frag, v_r_unit, L_lin_tan, T_rad)
          implicit none
          ! Arguments
          class(symba_vel_lambda_obj), intent(out) :: self
-         procedure(abstract_objective_func)     :: lambda
-         real(DP), dimension(:),   intent(in) :: m_frag, tau, Gam
-         real(DP), dimension(:,:), intent(in) :: v_r_unit
-         real(DP),                 intent(in) :: Beta, Lam   
+         procedure(abstract_objective_func)       :: lambda
+         real(DP), dimension(:),      intent(in)  :: m_frag    !! Fragment masses
+         real(DP), dimension(:,:),    intent(in)  :: v_r_unit  !! Radial unit vectors
+         real(DP), dimension(:),      intent(in)  :: L_lin_tan !! Tangential component of linear momentum
+         real(DP),                    intent(in)  :: T_rad     !! Target radial kinetic ener
    
          self%ke_objective_func_ptr  => lambda
          allocate(self%m_frag, source=m_frag)
          allocate(self%v_r_unit, source=v_r_unit)
-         self%tau(:) = tau(:)
-         self%Gam(:) = Gam(:)
-         self%Beta = Beta
-         self%Lam = Lam
+         self%L_lin_tan(:) = L_lin_tan(:)
+         self%T_rad = T_rad
       end subroutine ke_objective_func_init
 
       subroutine ke_objective_func_destroy(self)
@@ -163,7 +164,7 @@ MODULE module_symba
       real(DP)                      :: fnorm
 
       if (associated(self%ke_objective_func_ptr)) then
-         fnorm = self%ke_objective_func_ptr(x, self%m_frag, self%v_r_unit, self%tau, self%Gam, self%Beta, self%Lam)
+         fnorm = self%ke_objective_func_ptr(x, self%m_frag, self%v_r_unit, self%L_lin_tan, self%T_rad)
       else
          error stop "KE Objective function was not initialized."
       end if

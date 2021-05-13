@@ -324,7 +324,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
       !!
       !! 
-      !! Adjust the fragment velocities to set the fragment orbital kinent 
+      !! Adjust the fragment velocities to set the fragment orbital kinetic energy.
       !! It will check that we don't end up with negative energy (bound system). If so, we'll set the fragment velocities to
       !! zero in the center of mass frame and indicate the the fragmentation should instead by a merger.
       !! It takes in the initial "guess" of velocities and solve for the a scaling factor applied to the radial component wrt the
@@ -340,13 +340,17 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       logical, intent(out)                    :: lmerge
 
       ! Internals
-      real(DP)                                :: mtot           !! Total mass of fragments
-      real(DP)                                :: Lambda         !! Sum of the radial kinetic energy of all fragments 
-      real(DP), dimension(NDIM)               :: tau            !! Sum of the tangential momentum vector of all fragments
-      integer(I4B)                            :: i, nfrag
-      real(DP), dimension(:,:), allocatable   :: v_r_unit, v_t
-      real(DP), dimension(NDIM)               :: v_t_unit, h_unit, L_orb_frag
-      real(DP), dimension(:), allocatable     :: v_r_mag
+      real(DP)                              :: mtot           !! Total mass of fragments
+      real(DP)                              :: T_rad          !! Sum of the radial kinetic energy of all fragments 
+      real(DP), dimension(NDIM)             :: L_lin_tan            !! Sum of the tangential momentum vector of all fragments
+      integer(I4B)                          :: i, nfrag, neval
+      real(DP), dimension(:,:), allocatable :: v_r_unit, v_t
+      real(DP), dimension(NDIM)             :: v_t_unit, h_unit, L_orb_frag
+      real(DP), dimension(:), allocatable   :: v_r_mag
+      integer(I4B), parameter               :: MAXITER = 500 
+      real(DP), parameter                   :: TOL = 1e-5_DP
+      real(DP)                              :: vmult
+      type(symba_vel_lambda_obj)            :: ke_objective_func
          
       nfrag = size(m_frag)
       mtot = sum(m_frag)
@@ -362,19 +366,27 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          v_t(:,i) = v_frag(:, i) - dot_product(v_frag(:,i), v_r_unit(:, i)) * v_r_unit(:, i)
       end do
 
-      tau = 0.0_DP
-      Lambda = ke_target - 0.5_DP * mtot * dot_product(vcom(:), vcom(:))
+      L_lin_tan = 0.0_DP
+      T_rad = ke_target - 0.5_DP * mtot * dot_product(vcom(:), vcom(:))
       do i = 1, nfrag
-         Lambda = Lambda - 0.5_DP * m_frag(i) * dot_product(v_t(:, i), v_t(:, i))
-         tau(:) = tau(:) + m_frag(i) * v_t(:, i)
+         T_rad = T_rad - 0.5_DP * m_frag(i) * dot_product(v_t(:, i), v_t(:, i))
+         L_lin_tan(:) = L_lin_tan(:) + m_frag(i) * v_t(:, i)
       end do
-      if (Lambda > 0.0_DP) then
+      if (T_rad > 0.0_DP) then
          lmerge = .false.
-         v_r_mag(:) = symba_frag_pos_fragment_velocity(nfrag, m_frag, v_r_unit, Lambda, tau)
+
+         vmult = 1.0_DP
+         call random_number(v_r_mag(:))
+         v_r_mag(:) = vmult * sqrt(2 * T_rad / nfrag / m_frag(:)) * (v_r_mag(:) + 0.1_DP)
+
+         ! Initialize the lambda function with all the parameters that stay constant during the minimization
+         call ke_objective_func%init(symba_frag_pos_ke_objective_function, m_frag, v_r_unit, L_lin_tan, T_rad)
+         ! Minimize error using the BFGS optimizer
+         neval = util_minimize_bfgs(ke_objective_func, nfrag, v_r_mag, TOL)
+
          do i = 1, nfrag
             v_frag(:, i) = v_r_mag(i) * v_r_unit(:, i) + v_t(:, i)
          end do
-         call symba_frag_pos_com_adjust(vcom, m_frag, v_frag) ! Temporary until we can get the fragment velocity constraints fixed
       else
          ! No solution exists for this case, so we need to indicate that this should be a merge
          ! This may happen due to setting the tangential velocities too high when setting the angular momentum constraint
@@ -385,93 +397,33 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       return
    end subroutine symba_frag_pos_kinetic_energy
 
-
-   function symba_frag_pos_fragment_velocity(nfrag, m_frag, v_r_unit, Lambda, tau) result(v_r_mag)
+   function symba_frag_pos_ke_objective_function(v_r_mag, m_frag, v_r_unit, L_lin_tan, T_rad) result(fnorm)
+      ! Objective function for evaluating how close our fragment velocities get to minimizing KE error from our required value
       implicit none
       ! Arguments
-      integer(I4B),             intent(in)  :: nfrag
-      real(DP), dimension(:),   intent(in)  :: m_frag                   !! Fragment masses
-      real(DP), dimension(:,:), intent(in)  :: v_r_unit                 !! Radial velocity unit vector for each fragment
-      real(DP), intent(in)                  :: Lambda                   !! Sum of the radial kinetic energy of all fragments 
-      real(DP), dimension(:), intent(in)    :: tau                      !! Sum of the tangential momentum vector of all fragments
+      real(DP), dimension(:),   intent(in) :: v_r_mag   !! Radial velocity magnitude
+      real(DP), dimension(:),   intent(in) :: m_frag    !! Fragment masses
+      real(DP), dimension(:),   intent(in) :: L_lin_tan !! Tangential component of linear momentum
+      real(DP), dimension(:,:), intent(in) :: v_r_unit  !! Radial unit vectors
+      real(DP),                 intent(in) :: T_rad     !! Target radial kinetic energy
       ! Result
-      real(DP), dimension(nfrag)           :: v_r_mag                  !! Radial velocity magnitudes that satisfy the kinetic energy and momntum constraint
+      real(DP)                             :: fnorm     !! The objective function result: norm of the vector composed of the tangential momentum and energy
+                                                        !! Minimizing this brings us closer to our objective
       ! Internals
-      integer(I4B)                          :: i, j
-      real(DP), dimension(NDIM)             :: Gam                      !! Sum of the radial momentum vector of i>4 fragments
-      real(DP)                              :: Beta                     !! Sum of the radial kinetic energy of i>4 fragments
-      real(DP), dimension(4)                :: v_r_mag_01, v_r_mag_02   !! Two initial value guesses for the radial velocity magnitude of the first four fragments
-      real(DP), dimension(4)                :: f_vec_01, f_vec_02, f_vec_const   !! Equation vectors for initial value guesses 1 and 2
-      integer(I4B), parameter               :: MAXITER = 500 
-      real(DP), parameter                   :: TOL = 1e-9_DP
-      real(DP)                              :: err_rel, vmult
+      integer(I4B), parameter              :: Neqs = 4
+      real(DP), dimension(:), allocatable  :: f_vec
 
-      ! Initialize the fragment radial velocities with random values. The first 4 serve as guesses that get updated with the secant method solver.
-      ! We shift the random variate to the range 0.5, 1.5 to prevent any zero values for radial velocities
-      call random_number(v_r_mag(:))
+      f_vec(1) = sum(m_frag(:) * v_r_mag(:) * v_r_unit(1,:))
+      f_vec(2) = sum(m_frag(:) * v_r_mag(:) * v_r_unit(2,:))
+      f_vec(3) = sum(m_frag(:) * v_r_mag(:) * v_r_unit(3,:))
+      f_vec(1:3) = f_vec(1:3) + L_lin_tan(1:3)
+      f_vec(4) = sum(m_frag(:) * v_r_mag(:)**2) - T_rad
 
-      vmult = 1.0_DP
-      do j = 1, MAXITER
-         v_r_mag(:) = vmult * sqrt(8 * Lambda / nfrag / m_frag(:)) * (v_r_mag(:) + 0.1_DP)
-         ! Set up the constant values (those invovling i>4 fragments)
-         Gam = 0.0_DP
-         Beta = 0.0_DP
-         do i = 5, nfrag
-            Gam = Gam + m_frag(i) * v_r_mag(i) * v_r_unit(:,i)
-            Beta = Beta + 0.5_DP * m_frag(i) * v_r_mag(i)**2
-         end do
-         if (Beta - Lambda > 0.0_DP) then
-            vmult = 0.9_DP * vmult
-         else
-            exit
-         end if
-      end do
-
-      f_vec_const(1:3) = Gam(:) + tau(:)
-      f_vec_const(4)   = Beta - Lambda 
-
-      ! The secant method requires two guesses, so we will use small values to start it off
-      v_r_mag_01(:) = 0.0_DP
-      v_r_mag_02(:) = sum(v_r_mag(:)) / (nfrag - 4)
-
-      f_vec_01(:) = f_vec_const(:)
-
-      do j = 1, MAXITER
-         f_vec_02(:) = f_vec_const(:)
-         do i = 1, 4
-            if (j == 1) then
-               f_vec_01(1:3) = f_vec_01(1:3) + m_frag(i) * v_r_mag_01(i) * v_r_unit(:, i)
-               f_vec_01(4)   = f_vec_01(4)   + 0.5_DP * m_frag(i) * v_r_mag_01(i)**2
-            end if
-            f_vec_02(1:3) = f_vec_02(1:3) + m_frag(i) * v_r_mag_02(i) * v_r_unit(:,i)
-            f_vec_02(4)   = f_vec_02(4)   + 0.5_DP * m_frag(i) * v_r_mag_02(i)**2
-         end do
-         err_rel = norm2((f_vec_02(:) - f_vec_01(:)) / f_vec_01(:))
-
-         write(*,*) 'Iteration: ',j
-         write(*,*) 'v_r_mag_01: ',v_r_mag_01(:)
-         write(*,*) 'v_r_mag_02: ',v_r_mag_02(:)
-         write(*,*) 'f_vec_01:   ',f_vec_01(:)
-         write(*,*) 'f_vec_02:   ',f_vec_02(:)
-         write(*,*) 'err_rel:    ',err_rel
-
-         do i = 1, 4
-            v_r_mag(i) = v_r_mag_02(i) - f_vec_02(i) * (v_r_mag_02(i) - v_r_mag_01(i)) / (f_vec_02(i) - f_vec_01(i))
-         end do
-
-         if (err_rel < TOL) exit
-
-         write(*,*) 'v_r_mag:    ',v_r_mag(1:4)
-
-         v_r_mag_01(:) = v_r_mag_02(:)
-         v_r_mag_02(:) = v_r_mag(1:4)
-         f_vec_01(:) = f_vec_02(:)
-
-      end do 
+      fnorm = norm2(f_vec(:))
 
       return
 
-   end function symba_frag_pos_fragment_velocity
+   end function symba_frag_pos_ke_objective_function
 
    subroutine symba_frag_pos_com_adjust(vec_com, m_frag, vec_frag)
       !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
