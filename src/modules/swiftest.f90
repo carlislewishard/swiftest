@@ -7,6 +7,7 @@ module swiftest
    use swiftest_data_structures
    use io
    use user
+   use lambda_function
    !$ use omp_lib
    implicit none
    public

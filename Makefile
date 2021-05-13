@@ -54,6 +54,7 @@ SWIFTEST_MODULES =   swiftest_globals.f90 \
                      module_swiftestalloc.f90 \
                      io.f90 \
                      module_interfaces.f90 \
+							lambda_function.f90\
                      swiftest.f90 
 
 include Makefile.Defines
