@@ -10,13 +10,14 @@ module lambda_function
       generic   :: init => lambda_init_0
       procedure :: eval => lambda_eval_0
       procedure :: lambda_init_0
+      final     :: lambda_destroy
    end type
 
    abstract interface
       function lambda0(x) result(y)
          ! Template for a 0 argument function
          import DP
-         real(DP), intent(in) :: x
+         real(DP), dimension(:), intent(in) :: x
          real(DP) :: y
       end function
    end interface
@@ -34,17 +35,23 @@ module lambda_function
       function lambda_eval_0(self, x) result(y)
          implicit none
          ! Arguments
-         class(lambda_obj), intent(in) :: self
-         real(DP),          intent(in) :: x
+         class(lambda_obj),      intent(in) :: self
+         real(DP), dimension(:), intent(in) :: x
          ! Result
          real(DP)                      :: y
    
          if (associated(self%lambdaptr)) then
             y = self%lambdaptr(x)
          else
-            error stop "Initialize the object (call init) before computing values (call exec)!"
+            error stop "Lambda function was not initialized"
          end if
       end function lambda_eval_0
+
+      subroutine lambda_destroy(self)
+         implicit none
+         type(lambda_obj) :: self
+         if (associated(self%lambdaptr)) nullify(self%lambdaptr)
+      end subroutine lambda_destroy
 
 end module lambda_function
 

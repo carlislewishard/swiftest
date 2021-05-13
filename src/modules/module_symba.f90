@@ -105,18 +105,69 @@ MODULE module_symba
 
    type, public, extends(lambda_obj) :: symba_vel_lambda_obj
       procedure(abstract_objective_func), pointer, nopass :: ke_objective_func_ptr => null()
+      real(DP), dimension(:), allocatable :: m_frag
+      real(DP), dimension(:,:), allocatable :: v_r_unit
+      real(DP), dimension(NDIM)           :: tau, Gam 
+      real(DP) :: Beta, Lam
+   contains
+      generic   :: init => ke_objective_func_init
+      procedure :: eval => ke_objective_func_eval
+      procedure :: ke_objective_func_init
+      final     :: ke_objective_func_destroy
    end type symba_vel_lambda_obj
 
    abstract interface
-      function abstract_objective_func(v, m, rhat, t, G, B, L) result(fnorm)
+      function abstract_objective_func(v_r_mag, m_frag, v_r_unit, tau, Gam, Beta, Lam) result(fnorm)
          ! Template for the kinetic energy constraint function used for minimizing
          import DP
-         real(DP), dimension(:),   intent(in) :: v, m, t, G
-         real(DP), dimension(:,:), intent(in) :: rhat
-         real(DP),                 intent(in) :: B, L      
+         real(DP), dimension(:),   intent(in) :: v_r_mag, m_frag, tau, Gam
+         real(DP), dimension(:,:), intent(in) :: v_r_unit
+         real(DP),                 intent(in) :: Beta, Lam      
          real(DP)                             :: fnorm
       end function
    end interface
+
+   contains
+      subroutine ke_objective_func_init(self, lambda, m_frag, v_r_unit, tau, Gam, Beta, Lam)
+         implicit none
+         ! Arguments
+         class(symba_vel_lambda_obj), intent(out) :: self
+         procedure(abstract_objective_func)     :: lambda
+         real(DP), dimension(:),   intent(in) :: m_frag, tau, Gam
+         real(DP), dimension(:,:), intent(in) :: v_r_unit
+         real(DP),                 intent(in) :: Beta, Lam   
+   
+         self%ke_objective_func_ptr  => lambda
+         allocate(self%m_frag, source=m_frag)
+         allocate(self%v_r_unit, source=v_r_unit)
+         self%tau(:) = tau(:)
+         self%Gam(:) = Gam(:)
+         self%Beta = Beta
+         self%Lam = Lam
+      end subroutine ke_objective_func_init
+
+      subroutine ke_objective_func_destroy(self)
+         implicit none
+         type(symba_vel_lambda_obj) :: self
+         if (allocated(self%m_frag)) deallocate(self%m_frag)
+         if (allocated(self%v_r_unit)) deallocate(self%v_r_unit)
+         if (associated(self%ke_objective_func_ptr)) nullify(self%ke_objective_func_ptr)
+      end subroutine ke_objective_func_destroy 
+
+   function ke_objective_func_eval(self, x) result(fnorm)
+      implicit none
+      ! Arguments
+      class(symba_vel_lambda_obj), intent(in) :: self
+      real(DP), dimension(:),      intent(in) :: x
+      ! Result
+      real(DP)                      :: fnorm
+
+      if (associated(self%ke_objective_func_ptr)) then
+         fnorm = self%ke_objective_func_ptr(x, self%m_frag, self%v_r_unit, self%tau, self%Gam, self%Beta, self%Lam)
+      else
+         error stop "KE Objective function was not initialized."
+      end if
+   end function ke_objective_func_eval
 END MODULE module_symba
 !**********************************************************************************************************************************
 !
