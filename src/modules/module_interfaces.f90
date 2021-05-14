@@ -1572,11 +1572,11 @@ END INTERFACE
          function util_solve_linear_system(A,b,n,lerr) result(x)
             use swiftest_globals
             implicit none
-            real(DP), dimension(:,:), intent(in) :: A
-            real(DP), dimension(:),   intent(in) :: b
-            integer(I4B),             intent(in) :: n
+            real(DP), dimension(:,:), intent(in)  :: A
+            real(DP), dimension(:),   intent(in)  :: b
+            integer(I4B),             intent(in)  :: n
             logical,                  intent(out) :: lerr
-            real(DP), dimension(n)               :: x
+            real(DP), dimension(n)                :: x
          end function util_solve_linear_system
 
          function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
