@@ -489,9 +489,9 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
             row_2 = [1.0_DP, a2, a2**2]
             row_3 = [1.0_DP, a3, a3**2]
             rhs = [f1, f2, f3]
-            lhs(:, 1) = row_1
-            lhs(:, 2) = row_2
-            lhs(:, 3) = row_3
+            lhs(1, :) = row_1
+            lhs(2, :) = row_2
+            lhs(3, :) = row_3
             ! Solve system of equations   
             soln(:) = util_solve_linear_system(lhs, rhs, 3, lerr)
             if (lerr) then
@@ -504,8 +504,8 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
                return 
             end if
             aold = astar
-            if (abs(soln(2)) < small) soln(2) = small
-            astar =  -soln(1) / (2 * soln(2))
+            if (abs(soln(3)) < small) soln(3) = small
+            astar =  -soln(2) / (2 * soln(3))
             fstar = n2one(f, x0, S, N, astar)
             fnum = fnum + 1
             ! keep the three closest a values to astar and discard the fourth  
