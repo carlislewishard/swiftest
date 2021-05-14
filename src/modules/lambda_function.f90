@@ -4,33 +4,36 @@ module lambda_function
    implicit none
 
    type, public :: lambda_obj 
-      private
       procedure(lambda0), pointer, nopass :: lambdaptr => null()
+
    contains
       generic   :: init => lambda_init_0
       procedure :: eval => lambda_eval_0
-      procedure :: lambda_init_0
+      procedure, nopass :: lambda_init_0
       final     :: lambda_destroy
    end type
+   interface lambda_obj
+      module procedure lambda_init_0
+   end interface
 
    abstract interface
       function lambda0(x) result(y)
          ! Template for a 0 argument function
          import DP
          real(DP), dimension(:), intent(in) :: x
-         real(DP) :: y
+         real(DP)                           :: y
       end function
    end interface
 
    contains
-      subroutine lambda_init_0(self, lambda)
+      type(lambda_obj) function lambda_init_0(lambda)
          implicit none
          ! Arguments
-         class(lambda_obj), intent(out) :: self
          procedure(lambda0)             :: lambda
    
-         self%lambdaptr => lambda
-      end subroutine lambda_init_0
+         lambda_init_0%lambdaptr => lambda
+         return
+      end function lambda_init_0
    
       function lambda_eval_0(self, x) result(y)
          implicit none

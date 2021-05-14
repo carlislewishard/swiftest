@@ -1,16 +1,16 @@
-function util_minimize_bfgs(f, N, x1, eps) result(fnum)
+function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
    !! author: David A. Minton
    !! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  - 
    !! This function implements the Broyden-Fletcher-Goldfarb-Shanno method to determine the minimum of a function of N variables.  
    !! It recieves as input:
    !!   f%eval(x) : lambda function object containing the objective function as the eval metho
    !!   N    :  Number of variables of function f
-   !!   x1   :  Initial starting value of x
+   !!   x0   :  Initial starting value of x
    !!   eps  :  Accuracy of 1 - dimensional minimization at each step
    !! The outputs include
-   !!   x    :  Final minimum (all 0 if none found)
+   !!   lerr :  Returns .true. if it could not find the minimum
    !! Returns
-   !!   Number of function calls performed or
+   !!   x1   :  Final minimum (all 0 if none found)
    !!   0 = No miniumum found
    !! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  - 
    use swiftest
@@ -18,79 +18,85 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
    use module_interfaces, EXCEPT_THIS_ONE => util_minimize_bfgs
    implicit none
    ! Arguments
-   integer(I4B), intent(in) :: N
-   class(lambda_obj), intent(in) :: f
-   real(DP), dimension(:), intent(inout) :: x1
-   real(DP), intent(in) :: eps
+   integer(I4B),           intent(in)    :: N
+   class(lambda_obj),      intent(in)    :: f
+   real(DP), dimension(:), intent(in)    :: x0
+   real(DP),               intent(in)    :: eps
+   logical,                intent(out)   :: lerr
    ! Result
-   integer(I4B) :: fnum
+   real(DP), dimension(:), allocatable :: x1
    ! Internals
-   integer(I4B) ::  i, j, k, l, conv, num
+   integer(I4B) ::  i, j, k, l, conv, num, fnum
    integer(I4B), parameter :: MAXLOOP = 2000 !! Maximum number of loops before method is determined to have failed 
    real(DP), dimension(N) :: S               !! Direction vectors 
-   real(DP), dimension(N) :: x0
    real(DP), dimension(N) :: Snorm           !! normalized direction 
    real(DP), dimension(N,N) :: H             !! Approximated inverse Hessian matrix 
-   real(DP), dimension(N) :: grad            !! gradient of f 
+   real(DP), dimension(N) :: grad1           !! gradient of f 
    real(DP), dimension(N) :: grad0           !! old value of gradient 
    real(DP) :: astar                         !! 1D minimized value 
    real(DP), dimension(N) :: y, P
    real(DP), dimension(N,N) :: PP, PyH, HyP
    real(DP) :: yHy, Py
-   real(DP) :: xmag
 
    fnum = 0
+   lerr = .false.
+   ! Initialize approximate Hessian with the identity matrix (i.e. begin with method of steepest descent) 
    H(:,:) = reshape([((0._DP, i=1, j-1), 1._DP, (0._DP, i=j+1, N), j=1, N)], [N,N])  
-   grad(:) = 0.0_DP
+   ! Get initial gradient and initialize arrays for updated values of gradient and x
+   fnum = fnum + gradf(f, N, x0(:), grad0, eps)
+   allocate(x1, source=x0)
+   grad1(:) = grad0(:)
    do i = 1, MAXLOOP 
-      xmag = norm2(x1(:))
-      grad0(:) = grad(:)
-      fnum = fnum + gradf(f, N, x1(1:N), grad, eps)
-      if (i > 1) then
-         ! set up factors for H matrix update 
-         y(:) = grad(:) - grad0(:)
-         P(:) = x1(1:N) - x0(:)
-         Py = sum(P(:) * y(:))
-         yHy = 0._DP
-         do k = 1, N 
-            yHy = yHy + y(k) * sum(H(:,k) * y(:))
-         end do
-         ! prevent divide by zero (convergence) 
-         if (abs(Py) < tiny(Py)) return
-         ! set up update 
-         PyH(:,:) = 0._DP
-         HyP(:,:) = 0._DP
-         do k = 1, N 
-            do j = 1, N
-               PP(j, k) = P(j) * P(k)
-               PyH(j, k) = P(j) * sum(y(:) * H(:,k))
-               HyP(j, k) = P(k) * sum(y(:) * H(j,:))
-            end do
-         end do
-         ! update H matrix 
-         H(:,:) = H(:,:) + ((1._DP - yHy / Py) * PP(:, :) - PyH(:, :) - HyP(:, :)) / Py
-      end if
       !check for convergence
       conv = 0
       S(:) = 0._DP
       do k = 1, N
-         if (abs(grad(k)) > eps) conv = conv + 1
-         S(k) = -sum(H(:,k) * grad(:))
+         if (abs(grad1(k)) > eps) conv = conv + 1
+         S(k) = -sum(H(:,k) * grad1(:))
       end do
       if (conv == 0)  return 
       ! normalize gradient 
       Snorm(:) = S(:) / norm2(S)
-      num = fnum + minimize1D(f, x1(1:N), Snorm, N, eps, astar)
+      num = fnum + minimize1D(f, x1, Snorm, N, eps, astar)
       if (num == fnum) then
-         write(*,*) "Exiting BFGS"
-         fnum = 0
+         write(*,*) "Exiting BFGS with error in minimize1D step"
+         lerr = .true.
          return 
       end if
       fnum = num
       ! Get new x values 
-      x0(:) = x1(1:N)
-      x1(1:N) = x1(1:N) + astar * Snorm(:)
+      P(:) = astar * Snorm(:) 
+      x1(:) = x1(:) + P(:)
+      ! Calculate new gradient
+      grad0(:) = grad1(:)
+      fnum = fnum + gradf(f, N, x1, grad1, eps)
+      y(:) = grad1(:) - grad0(:)
+      Py = sum(P(:) * y(:))
+      ! set up factors for H matrix update 
+      yHy = 0._DP
+      do k = 1, N 
+         do j = 1, N
+            yHy = yHy + y(j) * H(j,k) * y(k)
+         end do
+      end do
+      ! prevent divide by zero (convergence) 
+      if (abs(Py) < tiny(Py)) return
+      ! set up update 
+      PyH(:,:) = 0._DP
+      HyP(:,:) = 0._DP
+      do k = 1, N 
+         do j = 1, N
+            PP(j, k) = P(j) * P(k)
+            do l = 1, N
+               PyH(j, k) = PyH(j, k) + P(j) * y(l) * H(l,k)
+               HyP(j, k) = HyP(j, k) + P(k) * y(l) * H(j,l)
+            end do
+         end do
+      end do
+      ! update H matrix 
+      H(:,:) = H(:,:) + ((1._DP - yHy / Py) * PP(:,:) - PyH(:,:) - HyP(:,:)) / Py
    end do
+
    return 
 
    contains
@@ -111,16 +117,17 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
          !! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -   
          implicit none
          ! Arguments
-         integer(I4B), intent(in) :: N
-         class(lambda_obj), intent(in) :: f
-         real(DP), dimension(:), intent(in) :: x1
+         integer(I4B),           intent(in)  :: N
+         class(lambda_obj),      intent(in)  :: f
+         real(DP), dimension(:), intent(in)  :: x1
          real(DP), dimension(:), intent(out) :: grad
-         real(DP), intent(in) :: dx
+         real(DP),               intent(in)  :: dx
          ! Result
          integer(I4B) :: fnum
          ! Internals
          integer(I4B) :: i, j, k
          real(DP), dimension(N) :: xp, xm
+         real(DP) :: fp, fm
 
          fnum = 0
          do i = 1, N
@@ -133,7 +140,9 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
                   xm(j) = x1(j)
                end if
             end do
-            grad(i) = (f%eval(xp) - f%eval(xm)) / (2 * dx)
+            fp = f%eval(xp)
+            fm = f%eval(xm)
+            grad(i) = (fp - fm) / (2 * dx)
             fnum = fnum + 2
          end do
          return 
@@ -160,10 +169,10 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
          !! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -   
          implicit none
          ! Arguments
-         integer(I4B),           intent(in) :: N
-         class(lambda_obj), intent(in) :: f
-         real(DP), dimension(:), intent(in) :: x0, S
-         real(DP),               intent(in) :: eps
+         integer(I4B),           intent(in)  :: N
+         class(lambda_obj),      intent(in)  :: f
+         real(DP), dimension(:), intent(in)  :: x0, S
+         real(DP),               intent(in)  :: eps
          real(DP),               intent(out) :: astar
          ! Result
          integer(I4B) :: fnum 
@@ -215,9 +224,9 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
          implicit none
          ! Arguments
          integer(I4B),           intent(in) :: N
-         class(lambda_obj), intent(in) :: f
+         class(lambda_obj),      intent(in) :: f
          real(DP), dimension(:), intent(in) :: x0, S
-         real(DP), intent(in) :: a
+         real(DP),               intent(in) :: a
          ! Return
          real(DP) :: fnew
          ! Internals
@@ -251,7 +260,7 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
          implicit none
          ! Arguments
          integer(I4B),           intent(in)  :: N
-         class(lambda_obj), intent(in) :: f
+         class(lambda_obj),      intent(in)    :: f
          real(DP), dimension(:), intent(in)    :: x0, S
          real(DP),               intent(inout) :: lo, hi
          real(DP),               intent(in)    :: gam, step
@@ -370,8 +379,8 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
          !! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -   
          implicit none
          ! Arguments
-         integer(I4B), intent(in) :: N
-         class(lambda_obj), intent(in) :: f
+         integer(I4B),           intent(in) :: N
+         class(lambda_obj),      intent(in)    :: f
          real(DP), dimension(:), intent(in)    :: x0, S
          real(DP),               intent(inout) :: lo, hi
          real(DP),               intent(in)    :: eps
@@ -419,7 +428,7 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
 
       function quadfit(f, x0, S, N, lo, hi, eps) result(fnum)
          ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  - 
-         !! This function uses a quadratic polynomial fit to  * locate the minimum of a function
+         !! This function uses a quadratic polynomial fit to locate the minimum of a function
          !! to some accuracy eps.  It recieves as input:
          !!   f%eval(x) : lambda function object containing the objective function as the eval metho
          !!   lo    :  low bracket value
@@ -434,8 +443,8 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
          !! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -   
          implicit none
          ! Arguments
-         integer(I4B), intent(in) :: N
-         class(lambda_obj), intent(in) :: f
+         integer(I4B),           intent(in) :: N
+         class(lambda_obj),      intent(in)    :: f
          real(DP), dimension(:), intent(in)    :: x0, S
          real(DP),               intent(inout) :: lo, hi
          real(DP),               intent(in)    :: eps
@@ -480,16 +489,16 @@ function util_minimize_bfgs(f, N, x1, eps) result(fnum)
             row_2 = [1.0_DP, a2, a2**2]
             row_3 = [1.0_DP, a3, a3**2]
             rhs = [f1, f2, f3]
-            lhs(1, :) = row_1
-            lhs(2, :) = row_2
-            lhs(3, :) = row_3
+            lhs(:, 1) = row_1
+            lhs(:, 2) = row_2
+            lhs(:, 3) = row_3
             ! Solve system of equations   
             soln(:) = util_solve_linear_system(lhs, rhs, 3, lerr)
             if (lerr) then
                write(*,*) "Could not solve polynomial on loop ", i
-               write(*,'("a1 = ",f9.6," f1 = ",f9.6f)') a1, f1
-               write(*,'("a2 = ",f9.6," f2 = ",f9.6f)') a2, f2
-               write(*,'("a3 = ",f9.6," f3 = ",f9.6f)') a3, f3
+               write(*,'("a1 = ",f9.6," f1 = ",f9.6)') a1, f1
+               write(*,'("a2 = ",f9.6," f2 = ",f9.6)') a2, f2
+               write(*,'("a3 = ",f9.6," f3 = ",f9.6)') a3, f3
                write(*,'("aold = ",f7.4)') aold
                fnum = 0
                return 

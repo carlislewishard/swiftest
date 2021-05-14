@@ -1579,15 +1579,16 @@ END INTERFACE
             real(DP), dimension(n)               :: x
          end function util_solve_linear_system
 
-         function util_minimize_bfgs(f, N, x1, eps) result(fnum)
+         function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
             use swiftest_globals
             use lambda_function
             implicit none
-            integer(I4B), intent(in) :: N
-            class(lambda_obj), intent(in) :: f
-            real(DP), dimension(:), intent(inout) :: x1
-            real(DP), intent(in) :: eps
-            integer(I4B) :: fnum
+            integer(I4B),           intent(in)  :: N
+            class(lambda_obj),      intent(in)  :: f
+            real(DP), dimension(:), intent(in)  :: x0
+            real(DP),               intent(in)  :: eps
+            logical,                intent(out) :: lerr
+            real(DP), dimension(:), allocatable :: x1
          end function util_minimize_bfgs
       end interface
 

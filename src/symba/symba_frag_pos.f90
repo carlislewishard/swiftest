@@ -25,7 +25,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
    real(DP), dimension(:,:), allocatable   :: x_frag, v_frag ! Fragment positions and velocities in the collision center of mass frame
    real(DP), dimension(NDIM, 2)            :: rot, L_orb 
    integer(I4B)                            :: i, j, nfrag, fam_size, istart
-   real(DP), dimension(NDIM)               :: xcom, vcom, Ltot_before, Ltot_after, L_residual, L_spin_frag
+   real(DP), dimension(NDIM)               :: xcom, vcom, Ltot_before, Ltot_after, L_residual, L_spin_frag, L_target, L_frag
    real(DP)                                :: mtot, Lmag_before, Lmag_after
    real(DP)                                :: Etot_before, Etot_after, ke_before, pe_before
    real(DP)                                :: pe_after, ke_spin_before, ke_spin_after, ke_after, ke_family, ke_target, ke_frag
@@ -115,7 +115,12 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       
       ! Set the "target" ke_after (the value of the orbital kinetic energy that the fragments ought to have)
       ke_target = ke_family + (ke_spin_before - ke_spin_after) + (pe_before - pe_after) - Qloss
-      call symba_frag_pos_kinetic_energy(xcom, vcom, L_orb, L_spin, m_frag, x_frag, v_frag, ke_target, lmerge)
+      L_target(:) = 0.0_DP
+      do i = 1, nfrag
+         call util_crossproduct(x_frag(:, i), v_frag(:, i), L_frag(:))
+         L_target(:) = L_target(:) + L_frag(:)
+      end do
+      call symba_frag_pos_kinetic_energy(m_frag, ke_target, L_target, x_frag, v_frag, lmerge)
       
       write(*,        "(' ---------------------------------------------------------------------------')")
       write(*,fmtlabel) ' T_family    |',ke_family / abs(Etot_before)
@@ -320,7 +325,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       return 
    end subroutine symba_frag_pos_ang_mtm
 
-   subroutine symba_frag_pos_kinetic_energy(xcom, vcom, L_orb, L_spin, m_frag, x_frag, v_frag, ke_target, lmerge)
+   subroutine symba_frag_pos_kinetic_energy(m_frag, ke_target, L_target, x_frag, v_frag, lmerge)
       !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
       !!
       !! 
@@ -332,96 +337,82 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       !! the target kinetic energy required to satisfy the constraints.
       implicit none
       ! Arguments
-      real(DP), dimension(:),   intent(in)    :: xcom, vcom      !! Center of mass position and velocity in the system barycenter frame
-      real(DP), dimension(:,:), intent(in)    :: L_orb, L_spin   !! Pre-impact orbital and spin angular momentum
-      real(DP), dimension(:),   intent(in)    :: m_frag          !! Fragment masses
-      real(DP), dimension(:,:), intent(inout) :: x_frag, v_frag  !! Fragment position and velocities in the center of mass frame   
-      real(DP), intent(in)                    :: ke_target        !! Target kinetic energy 
-      logical, intent(out)                    :: lmerge
+      real(DP), dimension(:),   intent(in)    :: m_frag     !! Fragment masses
+      real(DP), dimension(:,:), intent(in)    :: x_frag     !! Fragment position vectors
+      real(DP),                 intent(in)    :: ke_target  !! Target kinetic energy 
+      real(DP), dimension(:),   intent(in)    :: L_target   !! Target kinetic energy 
+      real(DP), dimension(:,:), intent(inout) :: v_frag      !! Fragment position and velocities in the center of mass frame   
+      logical,                  intent(out)   :: lmerge
 
       ! Internals
       real(DP)                              :: mtot           !! Total mass of fragments
-      real(DP)                              :: T_rad          !! Sum of the radial kinetic energy of all fragments 
-      real(DP), dimension(NDIM)             :: L_lin_tan            !! Sum of the tangential momentum vector of all fragments
       integer(I4B)                          :: i, nfrag, neval
-      real(DP), dimension(:,:), allocatable :: v_r_unit, v_t
-      real(DP), dimension(NDIM)             :: v_t_unit, h_unit, L_orb_frag
-      real(DP), dimension(:), allocatable   :: v_r_mag, v_r_mag_sol
-      integer(I4B), parameter               :: MAXITER = 500 
-      real(DP), parameter                   :: TOL = 1e-12_DP
-      real(DP)                              :: vmult
-      type(symba_vel_lambda_obj)            :: ke_objective_func
+      real(DP), parameter                   :: TOL = 1e-9_DP
+      real(DP), dimension(:), allocatable   :: vflat
+      logical                               :: lerr
+
          
       nfrag = size(m_frag)
       mtot = sum(m_frag)
 
-      allocate(v_r_unit, mold=v_frag) 
-      allocate(v_t, mold=v_frag)
-      allocate(v_r_mag, mold=m_frag)
-
-      ! Create the radial unit vectors pointing away from the collision center of mass, and subtract that off of the current
-      ! fragment velocities in order to create the tangential component 
-      do i = 1, nfrag
-         v_r_unit(:, i) = x_frag(:,i) / norm2(x_frag(:, i))
-         v_t(:,i) = v_frag(:, i) - dot_product(v_frag(:,i), v_r_unit(:, i)) * v_r_unit(:, i)
-      end do
-
-      L_lin_tan = 0.0_DP
-      T_rad = ke_target - 0.5_DP * mtot * dot_product(vcom(:), vcom(:))
-      do i = 1, nfrag
-         T_rad = T_rad - 0.5_DP * m_frag(i) * dot_product(v_t(:, i), v_t(:, i))
-         L_lin_tan(:) = L_lin_tan(:) + m_frag(i) * v_t(:, i)
-      end do
-      if (T_rad > 0.0_DP) then
-         lmerge = .false.
-
-         call random_number(v_r_mag(:))
-         v_r_mag(:) = sqrt(2 * T_rad / nfrag / m_frag(:)) * (v_r_mag(:) + 0.1_DP)
-
-         ! Initialize the lambda function with all the parameters that stay constant during the minimization
-         call ke_objective_func%init(symba_frag_pos_ke_objective_function, v_r_mag, m_frag, v_r_unit, L_lin_tan, T_rad)
-         ! Minimize error using the BFGS optimizer
-         neval = util_minimize_bfgs(ke_objective_func, 4, v_r_mag(1:4), TOL)
-
-         do i = 1, nfrag
-            v_frag(:, i) = v_r_mag(i) * v_r_unit(:, i) + v_t(:, i)
-         end do
-      else
+      ! Initialize the lambda function using a structure constructor that calls the init method
+      ! Minimize error using the BFGS optimizer
+      vflat = util_minimize_bfgs(symba_frag_lambda(lambda=symba_frag_pos_ke_objective_function, v_frag=v_frag, x_frag=x_frag, m_frag=m_frag, L_target=L_target, ke_target=ke_target), &
+                                 NDIM*nfrag, reshape(v_frag,[NDIM*nfrag]), TOL, lerr)
+      if (lerr) then
          ! No solution exists for this case, so we need to indicate that this should be a merge
          ! This may happen due to setting the tangential velocities too high when setting the angular momentum constraint
          lmerge = .true.
-         v_frag(:, :) = 0.0_DP
+         v_frag(:,:) = 0.0_DP
+      else
+         v_frag(:,:) = reshape(vflat,shape(v_frag))
       end if
 
       return
    end subroutine symba_frag_pos_kinetic_energy
 
-   function symba_frag_pos_ke_objective_function(v_r_mag_unknowns, v_r_mag_knowns, m_frag, v_r_unit, L_lin_tan, T_rad) result(fnorm)
+   function symba_frag_pos_ke_objective_function(vflat, v_frag, x_frag, m_frag, L_target, ke_target) result(fnorm)
       ! Objective function for evaluating how close our fragment velocities get to minimizing KE error from our required value
       implicit none
       ! Arguments
-      real(DP), dimension(:),   intent(in) :: v_r_mag_unknowns !! Radial velocity magnitude
-      real(DP), dimension(:),   intent(in) :: v_r_mag_knowns   !! Radial velocity magnitude
-      real(DP), dimension(:),   intent(in) :: m_frag    !! Fragment masses
-      real(DP), dimension(:),   intent(in) :: L_lin_tan !! Tangential component of linear momentum
-      real(DP), dimension(:,:), intent(in) :: v_r_unit  !! Radial unit vectors
-      real(DP),                 intent(in) :: T_rad     !! Target radial kinetic energy
+      real(DP), dimension(:),   intent(in) :: vflat          !! Unrolled unknown velocity vectors
+      real(DP), dimension(:,:), intent(in) :: v_frag, x_frag !! Velocity and position vectors
+      real(DP), dimension(:),   intent(in) :: m_frag         !! Fragment masses
+      real(DP), dimension(:),   intent(in) :: L_target       !! Target orbital momentum
+      real(DP),                 intent(in) :: ke_target      !! Target kinetic energ
       ! Result
       real(DP)                             :: fnorm     !! The objective function result: norm of the vector composed of the tangential momentum and energy
                                                         !! Minimizing this brings us closer to our objective
       ! Internals
-      real(DP), dimension(4)  :: f_vec, f_vec_0
+      real(DP), dimension(7)  :: f_vec
+      integer(I4B) :: i, nfrag, nsol
+      real(DP), dimension(NDIM) :: L
+      real(DP), dimension(:,:), allocatable :: v_sol
 
-      f_vec_0(1:3) = L_lin_tan(1:3)
-      f_vec_0(4) = -T_rad
-      f_vec(1) = sum(m_frag(:) * [v_r_mag_unknowns(:), v_r_mag_knowns(:)] * v_r_unit(1,:))
-      f_vec(2) = sum(m_frag(:) * [v_r_mag_unknowns(:), v_r_mag_knowns(:)] * v_r_unit(2,:))
-      f_vec(3) = sum(m_frag(:) * [v_r_mag_unknowns(:), v_r_mag_knowns(:)] * v_r_unit(3,:))
-      f_vec(4) = sum(m_frag(:) * [v_r_mag_unknowns(:), v_r_mag_knowns(:)] **2) 
+      nfrag = size(m_frag)
+      nsol = size(vflat) / NDIM
+      allocate(v_sol(NDIM,nsol))
+      v_sol = reshape(vflat, shape(v_sol))
 
-      f_vec(:) = f_vec(:) + f_vec_0(:)
+      ! Linear momentum constraint
+      f_vec(1) = sum(m_frag(:) * [v_sol(1, 1:nsol), v_frag(1, nsol + 1:nfrag)])
+      f_vec(2) = sum(m_frag(:) * [v_sol(2, 1:nsol), v_frag(2, nsol + 1:nfrag)])
+      f_vec(3) = sum(m_frag(:) * [v_sol(3, 1:nsol), v_frag(3, nsol + 1:nfrag)])
+      ! Angular momentum and kinetic energy constraints
+      f_vec(4:6) = -L_target(:)
+      f_vec(7) = -ke_target
+      do i = 1, nsol
+         call util_crossproduct(x_frag(:,i), v_sol(:, i), L(:))
+         f_vec(4:6) = f_vec(4:6) + m_frag(i) * L(:)
+         f_vec(7)   = f_vec(7)   + 0.5_DP * m_frag(i) * dot_product(v_sol(:,i), v_sol(:, i))
+      end do
+      do i = nsol + 1, nfrag
+         call util_crossproduct(x_frag(:,i), v_frag(:, i), L(:))
+         f_vec(4:6) = f_vec(4:6) + m_frag(i) * L(:)
+         f_vec(7)   = f_vec(7) + 0.5_DP * m_frag(i) * dot_product(v_frag(:,i), v_frag(:, i))
+      end do
 
-      fnorm = norm2(f_vec(:) / f_vec_0(:))
+      fnorm = norm2(f_vec(:)) 
 
       return
 
