@@ -38,9 +38,9 @@ function util_solve_linear_system(A,b,n,lerr) result(x)
          integer(I4B)             :: i,n
          real(DP), parameter :: epsilon = 10 * tiny(1._DP) 
 
-         if (allocated(x)) deallocate(x)
-         allocate(x(n))
-
+         n = size(u, 1)
+         if (allocated(x) .and. (size(x) /= n))  deallocate(x)
+         if (.not.allocated(x)) allocate(x(n))
          lerr = any(abs(u(:,:)) < epsilon)
          if (lerr) then
             x(:) = 0._DP

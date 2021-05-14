@@ -28,6 +28,7 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
    ! Internals
    integer(I4B) ::  i, j, k, l, conv, num, fnum
    integer(I4B), parameter :: MAXLOOP = 2000 !! Maximum number of loops before method is determined to have failed 
+   real(DP), parameter     :: gradeps = 1e-4_DP !! Tolerance for gradient calculations
    real(DP), dimension(N) :: S               !! Direction vectors 
    real(DP), dimension(N) :: Snorm           !! normalized direction 
    real(DP), dimension(N,N) :: H             !! Approximated inverse Hessian matrix 
@@ -43,7 +44,7 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
    ! Initialize approximate Hessian with the identity matrix (i.e. begin with method of steepest descent) 
    H(:,:) = reshape([((0._DP, i=1, j-1), 1._DP, (0._DP, i=j+1, N), j=1, N)], [N,N])  
    ! Get initial gradient and initialize arrays for updated values of gradient and x
-   fnum = fnum + gradf(f, N, x0(:), grad0, eps)
+   fnum = fnum + gradf(f, N, x0(:), grad0, gradeps)
    allocate(x1, source=x0)
    grad1(:) = grad0(:)
    do i = 1, MAXLOOP 
@@ -69,7 +70,7 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
       x1(:) = x1(:) + P(:)
       ! Calculate new gradient
       grad0(:) = grad1(:)
-      fnum = fnum + gradf(f, N, x1, grad1, eps)
+      fnum = fnum + gradf(f, N, x1, grad1, gradeps)
       y(:) = grad1(:) - grad0(:)
       Py = sum(P(:) * y(:))
       ! set up factors for H matrix update 
