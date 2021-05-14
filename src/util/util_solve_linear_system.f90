@@ -20,6 +20,7 @@ function util_solve_linear_system(A,b,n,lerr) result(x)
    real(QP), dimension(:), allocatable :: qx
 
    qx = solve_wbs(ge_wpp(real(A, kind=QP), real(b, kind=QP)),lerr)
+   where(abs(qx(:)) < tiny(1._DP)) qx(:) = 0._QP
    x = real(qx, kind=DP)
    return
 
@@ -37,11 +38,15 @@ function util_solve_linear_system(A,b,n,lerr) result(x)
          integer(I4B)             :: i,n
          real(DP), parameter :: epsilon = 10 * tiny(1._DP) 
 
-         lerr = any(abs(u(:,:)) < epsilon)
-         if (lerr) return
-
-         n = size(u,1)
+         if (allocated(x)) deallocate(x)
          allocate(x(n))
+
+         lerr = any(abs(u(:,:)) < epsilon)
+         if (lerr) then
+            x(:) = 0._DP
+            return
+         end if
+
          do i = n,1,-1 
             x(i) = (u(i, n + 1) - sum(u(i, i + 1:n) * x(i + 1:n))) / u(i, i)
          end do
