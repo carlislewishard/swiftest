@@ -350,7 +350,12 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       logical,                  intent(out)   :: lmerge
 
       ! Internals
+<<<<<<< HEAD
       integer(I4B)                          :: i,  neval
+=======
+      real(DP)                              :: mtot           !! Total mass of fragments
+      integer(I4B)                          :: i, nfrag, neval
+>>>>>>> Fragmentation
       real(DP), parameter                   :: TOL = 1e-12_DP
       real(DP), dimension(:), allocatable   :: vflat
       logical                               :: lerr
