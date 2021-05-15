@@ -27,13 +27,8 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
    real(DP), dimension(:), allocatable :: x1
    ! Internals
    integer(I4B) ::  i, j, k, l, conv, num, fnum
-<<<<<<< HEAD
-   integer(I4B), parameter :: MAXLOOP = 100 !! Maximum number of loops before method is determined to have failed 
+   integer(I4B), parameter :: MAXLOOP = 200 !! Maximum number of loops before method is determined to have failed 
    real(DP), parameter     :: gradeps = 1e-5_DP !! Tolerance for gradient calculations
-=======
-   integer(I4B), parameter :: MAXLOOP = 2000 !! Maximum number of loops before method is determined to have failed 
-   real(DP), parameter     :: gradeps = 1e-4_DP !! Tolerance for gradient calculations
->>>>>>> Fragmentation
    real(DP), dimension(N) :: S               !! Direction vectors 
    real(DP), dimension(N) :: Snorm           !! normalized direction 
    real(DP), dimension(N,N) :: H             !! Approximated inverse Hessian matrix 
@@ -60,7 +55,10 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
          if (abs(grad1(k)) > eps) conv = conv + 1
          S(k) = -sum(H(:,k) * grad1(:))
       end do
-      if (conv == 0)  return 
+      if (conv == 0) then
+         write(*,*) "Converged on gradient after ",i," iterations" 
+         return 
+      end if
       ! normalize gradient 
       Snorm(:) = S(:) / norm2(S)
       num = fnum + minimize1D(f, x1, Snorm, N, eps, astar)
@@ -86,7 +84,10 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
          end do
       end do
       ! prevent divide by zero (convergence) 
-      if (abs(Py) < tiny(Py)) return
+      if (abs(Py) < tiny(Py)) then
+         write(*,*) "Converged on tiny Py"
+         return
+      end if
       ! set up update 
       PyH(:,:) = 0._DP
       HyP(:,:) = 0._DP
@@ -102,7 +103,7 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
       ! update H matrix 
       H(:,:) = H(:,:) + ((1._DP - yHy / Py) * PP(:,:) - PyH(:,:) - HyP(:,:)) / Py
    end do
-
+   write(*,*) "Did not converge!"
    return 
 
    contains

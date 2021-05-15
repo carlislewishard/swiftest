@@ -163,7 +163,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       end do
       write(*,        "(' ---------------------------------------------------------------------------')")
       write(*,fmtlabel) ' T_frag calc |',ke_frag / abs(Etot_before)
-      write(*,fmtlabel) ' residual    |',1.0_DP - ke_frag / ke_target
+      write(*,fmtlabel) ' residual    |',(ke_frag - ke_target) / abs(Etot_before)
 
       ! Calculate the new energy of the system of fragments
       call symba_frag_pos_energy_calc(npl, symba_plA, lexclude, ke_after, ke_spin_after, pe_after, Ltot_after,&
@@ -350,12 +350,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       logical,                  intent(out)   :: lmerge
 
       ! Internals
-<<<<<<< HEAD
       integer(I4B)                          :: i,  neval
-=======
-      real(DP)                              :: mtot           !! Total mass of fragments
-      integer(I4B)                          :: i, nfrag, neval
->>>>>>> Fragmentation
       real(DP), parameter                   :: TOL = 1e-12_DP
       real(DP), dimension(:), allocatable   :: vflat
       logical                               :: lerr
