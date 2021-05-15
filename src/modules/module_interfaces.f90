@@ -723,8 +723,8 @@ MODULE module_interfaces
          integer(I4B), dimension(:), intent(in)    :: family
          integer(I4B), intent(inout)               :: nmergeadd
          type(symba_merger), intent(inout)         :: mergeadd_list
-         real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
-         real(DP), dimension(:),   intent(in)      :: mass, radius, mass_res
+         real(DP), dimension(:,:), intent(inout)   :: x, v, L_spin, Ip
+         real(DP), dimension(:),   intent(inout)   :: mass, radius, mass_res
          type(user_input_parameters),intent(inout) :: param
          real(DP), intent(in)                      :: Qloss
          integer(I4B)                              :: status
@@ -741,8 +741,8 @@ MODULE module_interfaces
          integer(I4B), intent(inout)               :: nmergeadd
          type(symba_merger), intent(inout)         :: mergeadd_list
          integer(I4B), dimension(:), intent(in)    :: name
-         real(DP), dimension(:,:), intent(in)      :: x, v, Lspin, Ip
-         real(DP), dimension(:), intent(in)        :: mass, radius, mass_res
+         real(DP), dimension(:,:), intent(inout)   :: x, v, Lspin, Ip
+         real(DP), dimension(:), intent(inout)     :: mass, radius, mass_res
          type(user_input_parameters),intent(inout) :: param
          real(DP), intent(in)                      :: Qloss
          integer(I4B)                              :: status
@@ -757,8 +757,8 @@ MODULE module_interfaces
          integer(I4B), dimension(:), intent(in)    :: family
          integer(I4B), intent(inout)               :: nmergeadd
          type(symba_merger), intent(inout)         :: mergeadd_list
-         real(DP), dimension(:,:), intent(in)      :: x, v, lspin, Ip
-         real(DP), dimension(:), intent(in)        :: mass, radius
+         real(DP), dimension(:,:), intent(inout)   :: x, v, lspin, Ip
+         real(DP), dimension(:), intent(inout)     :: mass, radius
          type(user_input_parameters),intent(inout) :: param
          integer(I4B)                              :: status
       end function symba_casemerge
@@ -930,9 +930,9 @@ MODULE module_interfaces
             type(symba_pl), intent(inout)             :: symba_plA
             integer(I4B), dimension(:), intent(in)    :: family
             real(DP), intent(in)                      :: Qloss
-            real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
-            real(DP), dimension(:), intent(in)        :: mass, radius, m_frag, rad_frag
-            real(DP), dimension(:,:), intent(in)      :: Ip_frag
+            real(DP), dimension(:,:), intent(inout)   :: x, v, L_spin, Ip
+            real(DP), dimension(:), intent(inout)     :: mass, radius, m_frag, rad_frag
+            real(DP), dimension(:,:), intent(inout)   :: Ip_frag
             real(DP), dimension(:,:), intent(out)     :: xb_frag, vb_frag, rot_frag
             logical, intent(out)                      :: lmerge
          end subroutine symba_frag_pos

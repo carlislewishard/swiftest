@@ -16,8 +16,8 @@ function symba_casehitandrun(symba_plA, family, nmergeadd, mergeadd_list, id, x,
    integer(I4B), intent(inout)               :: nmergeadd
    type(symba_merger), intent(inout)         :: mergeadd_list
    integer(I4B), dimension(:), intent(in)    :: id
-   real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
-   real(DP), dimension(:),   intent(in)      :: mass, radius, mass_res
+   real(DP), dimension(:,:), intent(inout)   :: x, v, L_spin, Ip
+   real(DP), dimension(:),   intent(inout)   :: mass, radius, mass_res
    type(user_input_parameters),intent(inout) :: param
    real(DP), intent(inout)                   :: Qloss
    ! Result
