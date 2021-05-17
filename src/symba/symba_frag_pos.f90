@@ -506,7 +506,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
             call util_crossproduct(v_r_unit(:, i), v_t_unit(:, i), L(:))
             A(4:6, i) = m_frag(i) * rmag(i) * L(:)
          else !For the remining bodies, distribute the angular momentum equally amongs them
-            v_t_mag(i) = 0.25_DP * L_orb_mag / (m_frag(i) * rmag(i) * nfrag)
+            v_t_mag(i) = 0.9_DP * L_orb_mag / (m_frag(i) * rmag(i) * nfrag)
             v_frag(:, i) = v_t_mag(i) * v_t_unit(:, i)
             L_lin_others(:) = L_lin_others(:) + m_frag(i) * v_frag(:, i)
             call util_crossproduct(x_frag(:, i), v_frag(:, i), L(:))
