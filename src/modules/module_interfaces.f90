@@ -726,7 +726,7 @@ MODULE module_interfaces
          real(DP), dimension(:,:), intent(inout)   :: x, v, L_spin, Ip
          real(DP), dimension(:),   intent(inout)   :: mass, radius, mass_res
          type(user_input_parameters),intent(inout) :: param
-         real(DP), intent(in)                      :: Qloss
+         real(DP), intent(inout)                   :: Qloss
          integer(I4B)                              :: status
       end function symba_casedisruption
 
@@ -744,7 +744,7 @@ MODULE module_interfaces
          real(DP), dimension(:,:), intent(inout)   :: x, v, Lspin, Ip
          real(DP), dimension(:), intent(inout)     :: mass, radius, mass_res
          type(user_input_parameters),intent(inout) :: param
-         real(DP), intent(in)                      :: Qloss
+         real(DP), intent(inout)                   :: Qloss
          integer(I4B)                              :: status
       end function symba_casehitandrun
 
@@ -776,7 +776,7 @@ MODULE module_interfaces
          real(DP), dimension(:,:), intent(in)      :: x, v, lspin, Ip
          real(DP), dimension(:), intent(in)        :: mass, radius, mass_res
          type(user_input_parameters),intent(inout) :: param
-         real(DP), intent(in)                      :: Qloss
+         real(DP), intent(inout)                   :: Qloss
          integer(I4B)                              :: status
       end function symba_casesupercatastrophic
      end interface
@@ -929,7 +929,7 @@ MODULE module_interfaces
             type(user_input_parameters), intent(in)   :: param 
             type(symba_pl), intent(inout)             :: symba_plA
             integer(I4B), dimension(:), intent(in)    :: family
-            real(DP), intent(in)                      :: Qloss
+            real(DP), intent(inout)                   :: Qloss
             real(DP), dimension(:,:), intent(inout)   :: x, v, L_spin, Ip
             real(DP), dimension(:), intent(inout)     :: mass, radius, m_frag, rad_frag
             real(DP), dimension(:,:), intent(inout)   :: Ip_frag
