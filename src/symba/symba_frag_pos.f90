@@ -506,7 +506,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
             call util_crossproduct(v_r_unit(:, i), v_t_unit(:, i), L(:))
             A(4:6, i) = m_frag(i) * rmag(i) * L(:)
          else !For the remining bodies, distribute the angular momentum equally amongs them
-            v_t_mag(i) = 0.9_DP * L_orb_mag / (m_frag(i) * rmag(i) * nfrag)
+            v_t_mag(i) = L_orb_mag / (m_frag(i) * rmag(i) * nfrag)
             v_frag(:, i) = v_t_mag(i) * v_t_unit(:, i)
             L_lin_others(:) = L_lin_others(:) + m_frag(i) * v_frag(:, i)
             call util_crossproduct(x_frag(:, i), v_frag(:, i), L(:))
@@ -552,8 +552,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       real(DP), dimension(:,:), allocatable :: v_r
 
       ! Set the "target" ke_orb_after (the value of the orbital kinetic energy that the fragments ought to have)
-      ke_tangential = 0.5_DP * sum(m_frag(:) * v_t_mag(:)**2)
-      ke_target = ke_family - ke_tangential + (ke_spin_before - ke_spin_after) + (pe_before - pe_after) - Qloss
+      ke_target = ke_family + (ke_spin_before - ke_spin_after) + (pe_before - pe_after) - Qloss
       if (ke_target < 0.0_DP) then
          lmerge = .true.
          return
@@ -612,22 +611,20 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       ! Internals
       integer(I4B)                        :: i, nfrag, nsol
       real(DP), dimension(NDIM)           :: L
-      real(DP), dimension(:), allocatable :: v_r_mag_shift
-      real(DP), dimension(:,:), allocatable :: v_r
+      real(DP), dimension(:,:), allocatable :: v_shift
 
       nfrag = size(m_frag)
-      allocate(v_r, mold=v_r_unit)
+      allocate(v_shift, mold=v_r_unit)
       ! In order to keep satisfying the kinetic energy constraint, we must shift the origin of the radial component of the velocities to the center of mass
       do i = 1, nfrag
-         v_r(:,i) = v_r_mag(i) * v_r_unit(:, i)
+         v_shift(:,i) = v_r_mag(i) * v_r_unit(:, i)
       end do
-      call shift_vector_to_origin(m_frag, v_r)
-      allocate(v_r_mag_shift, mold=v_r_mag)
+      call shift_vector_to_origin(m_frag, v_shift)
+      fval = 0.0_DP
       do i = 1, nfrag
-         v_r_mag_shift(i) = dot_product(v_r(:, i), v_r_unit(:, i))
+         v_shift(:, i) = v_shift(:, i) + v_t_mag(i) * v_t_unit(:, i)
+         fval = fval + 0.5 * m_frag(i) * dot_product(v_shift(:, i), v_shift(:, i))
       end do
-
-      fval = 0.5_DP * sum(m_frag(:) * v_r_mag_shift(:)**2) - ke_target
 
       return
 
