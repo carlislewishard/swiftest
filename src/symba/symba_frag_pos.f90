@@ -225,9 +225,9 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       vcom(:) = (mass(1) * v(:,1) + mass(2) * v(:,2)) / mtot
 
       ! Set scale factors
-      mscale = mtot
+      mscale = mtot !! Because of the implied G, mass is actually G*mass with units of distance**3 / time**2
       rscale = norm2(x(:,2) - x(:,1))
-      vscale = norm2(v(:,2) - v(:,1))
+      vscale = sqrt(mscale / rscale)
       tscale = rscale / vscale
       Lscale = mscale * rscale * vscale
       Escale = mscale * vscale**2
