@@ -543,7 +543,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       ! Arguments
       logical,                  intent(out)   :: lmerge
       ! Internals
-      real(DP), parameter                   :: TOL = 1e-6_DP
+      real(DP), parameter                   :: TOL = epsilon(1._DP)
       real(DP), dimension(:), allocatable   :: vflat 
       logical                               :: lerr
       integer(I4B)                          :: i
@@ -561,7 +561,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       ! Initialize radial velocity magnitudes with a random value:
       allocate(v_r_initial, source=v_r_mag)
       call random_number(v_r_initial(:))
-      v_r_initial(:) = v_r_initial(:) * sqrt(2 * ke_target / nfrag / m_frag(:)) 
+      v_r_initial(:) = 3 * v_r_initial(:) * sqrt(2 * ke_target / nfrag / m_frag(:)) 
       ! Initialize the lambda function using a structure constructor that calls the init method
       ! Minimize error using the BFGS optimizer
       v_r_mag(:) = util_minimize_bfgs(ke_constraint(ke_objective_function, v_r_unit, v_t_mag, v_t_unit, x_frag, m_frag, L_frag_orb, ke_target), nfrag, v_r_initial, TOL, lerr)
@@ -584,7 +584,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
             v_r_mag(i) = dot_product(v_r(:,i), v_r_unit(:, i))
             v_frag(:, i) = v_r_mag(i) * v_r_unit(:, i) + v_t_mag(i) * v_t_unit(:, i)
          end do
-         !call shift_vector_to_origin(m_frag, v_frag)
+         call shift_vector_to_origin(m_frag, v_frag)
       end if
 
       do i = 1, nfrag
@@ -620,11 +620,14 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          v_shift(:,i) = v_r_mag(i) * v_r_unit(:, i)
       end do
       call shift_vector_to_origin(m_frag, v_shift)
-      fval = 0.0_DP
+      
+      fval = -ke_target
       do i = 1, nfrag
-         v_shift(:, i) = v_shift(:, i) + v_t_mag(i) * v_t_unit(:, i)
-         fval = fval + 0.5 * m_frag(i) * dot_product(v_shift(:, i), v_shift(:, i))
+         v_shift(:, i) = v_shift(:, i) + v_t_mag(i) * v_t_unit(:, i) + vcom(:)
+         fval = fval + 0.5_DP * m_frag(i) * dot_product(v_shift(:, i), v_shift(:, i))
       end do
+      !write(*,*) 'fval: ',fval 
+      fval = fval**2
 
       return
 

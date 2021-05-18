@@ -1,4 +1,4 @@
-function util_minimize_bfgs(f, N, x0, eps1, lerr) result(x1)
+function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
    !! author: David A. Minton
    !! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  - 
    !! This function implements the Broyden-Fletcher-Goldfarb-Shanno method to determine the minimum of a function of N variables.  
@@ -21,16 +21,14 @@ function util_minimize_bfgs(f, N, x0, eps1, lerr) result(x1)
    integer(I4B),           intent(in)    :: N
    class(lambda_obj),      intent(in)    :: f
    real(DP), dimension(:), intent(in)    :: x0
-   real(DP),               intent(in)    :: eps1
+   real(DP),               intent(in)    :: eps
    logical,                intent(out)   :: lerr
    ! Result
    real(DP), dimension(:), allocatable :: x1
    ! Internals
    integer(I4B) ::  i, j, k, l, conv, num, fnum
-   !integer(I4B), parameter :: MAXLOOP = 10 !! Maximum number of loops before method is determined to have failed 
-   integer(I4B) :: MAXLOOP
-   !real(DP), parameter     :: gradeps = 1e-5_DP !! Tolerance for gradient calculations
-   real(DP)   :: gradeps, eps  !! Tolerance for gradient calculations
+   integer(I4B), parameter :: MAXLOOP = 500 !! Maximum number of loops before method is determined to have failed 
+   real(DP), parameter     :: gradeps = 1e-6_DP !! Tolerance for gradient calculations
    real(DP), dimension(N) :: S               !! Direction vectors 
    real(DP), dimension(N) :: Snorm           !! normalized direction 
    real(DP), dimension(N,N) :: H             !! Approximated inverse Hessian matrix 
@@ -41,11 +39,6 @@ function util_minimize_bfgs(f, N, x0, eps1, lerr) result(x1)
    real(DP), dimension(N,N) :: PP, PyH, HyP
    real(DP) :: yHy, Py
 
-   open(unit=42,file='input.txt',status='old')
-   read(42,*) MAXLOOP
-   read(42,*) gradeps
-   read(42,*) eps
-   close(42)
    fnum = 0
    lerr = .false.
    ! Initialize approximate Hessian with the identity matrix (i.e. begin with method of steepest descent) 
@@ -109,14 +102,12 @@ function util_minimize_bfgs(f, N, x0, eps1, lerr) result(x1)
       end do
       ! update H matrix 
       H(:,:) = H(:,:) + ((1._DP - yHy / Py) * PP(:,:) - PyH(:,:) - HyP(:,:)) / Py
+      if (any(H(:,:) > sqrt(huge(1._DP)) / N)) then
+         write(*,*) 'Did not converge after ',i,'iterations: H too big'
+         return
+      end if
    end do
-   write(*,*) "Did not converge!"
-   write(*,*) "Py: ",Py
-   do k = 1, N
-      write(*,'("grad(",I0.2,") = ",ES12.4)') k, grad1(k)
-   end do
-   write(*,*) "|grad|: Min Mean Max"
-   write(*,*) minval(abs(grad1(:))), sum(abs(grad1(:))) / N, maxval(abs(grad1(:)))
+   write(*,*) "Did not converge! Ran out of loops"
    return 
 
    contains
