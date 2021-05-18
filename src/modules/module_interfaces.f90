@@ -1568,8 +1568,9 @@ END INTERFACE
          END FUNCTION
      END INTERFACE
 
+     
      interface
-         function util_solve_linear_system(A,b,n,lerr) result(x)
+         function util_solve_linear_system_d(A,b,n,lerr) result(x)
             use swiftest_globals
             implicit none
             real(DP), dimension(:,:), intent(in)  :: A
@@ -1577,18 +1578,50 @@ END INTERFACE
             integer(I4B),             intent(in)  :: n
             logical,                  intent(out) :: lerr
             real(DP), dimension(n)                :: x
-         end function util_solve_linear_system
+         end function util_solve_linear_system_d
 
-         function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
+         function util_solve_linear_system_q(A,b,n,lerr) result(x)
+            use swiftest_globals
+            implicit none
+            real(QP), dimension(:,:), intent(in)  :: A
+            real(QP), dimension(:),   intent(in)  :: b
+            integer(I4B),             intent(in)  :: n
+            logical,                  intent(out) :: lerr
+            real(QP), dimension(n)                :: x
+         end function util_solve_linear_system_q
+
+         function solve_wbs(u, lerr) result(x) 
+            use swiftest_globals
+            implicit none
+            real(QP), intent(in), dimension(:,:), allocatable  :: u
+            logical, intent(out)  :: lerr
+            real(QP), dimension(:), allocatable :: x
+         end function solve_wbs
+
+         function ge_wpp(A, b) result(u) 
+            use swiftest_globals
+            implicit none
+            real(QP), dimension(:,:), intent(in) :: A
+            real(QP), dimension(:),   intent(in) :: b
+            real(QP), dimension(:,:), allocatable :: u
+         end function ge_wpp
+      end interface
+
+      interface util_solve_linear_system
+         procedure util_solve_linear_system_d, util_solve_linear_system_q
+      end interface
+
+      interface
+         function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
             use swiftest_globals
             use lambda_function
             implicit none
             integer(I4B),           intent(in)  :: N
             class(lambda_obj),      intent(in)  :: f
-            real(DP), dimension(:), intent(in)  :: x0
-            real(DP),               intent(in)  :: eps
+            real(DP), dimension(:), intent(in)  :: x0_d
+            real(DP),               intent(in)  :: eps_d
             logical,                intent(out) :: lerr
-            real(DP), dimension(:), allocatable :: x1
+            real(DP), dimension(:), allocatable :: x1_d
          end function util_minimize_bfgs
       end interface
 
