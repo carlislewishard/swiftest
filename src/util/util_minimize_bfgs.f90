@@ -13,6 +13,7 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
    !!   x1   :  Final minimum (all 0 if none found)
    !!   0 = No miniumum found
    !! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  - 
+   use, intrinsic :: ieee_exceptions
    use swiftest
    use swiftest_globals
    use module_interfaces, EXCEPT_THIS_ONE => util_minimize_bfgs
@@ -38,6 +39,12 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
    real(QP), dimension(N) :: y, P, x0, x1
    real(QP), dimension(N,N) :: PP, PyH, HyP
    real(QP) :: yHy, Py, eps
+   type(ieee_status_type) :: original_fpe_status
+   logical, dimension(:), allocatable :: fpe_flag 
+
+   call ieee_get_status(original_fpe_status) ! Save the original floating point exception status
+   call ieee_set_flag(ieee_all, .false.) ! Set all flags to quiet
+   allocate(fpe_flag(size(ieee_usual)))
 
    lerr = .false.
    eps = real(eps_d, kind=QP)
@@ -59,16 +66,14 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
       end do
       if (conv == 0) then
          write(*,*) "Converged on gradient after ",i," iterations" 
-         x1_d = x1
-         return 
+         exit 
       end if
       ! normalize gradient 
       Snorm(:) = S(:) / norm2(S)
       astar = minimize1D(f, x1, Snorm, N, gradeps, lerr)
       if (lerr) then
          write(*,*) "Exiting BFGS with error in minimize1D step"
-         x1_d = x1
-         return 
+         exit
       end if
       ! Get new x values 
       P(:) = astar * Snorm(:) 
@@ -88,8 +93,7 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
       ! prevent divide by zero (convergence) 
       if (abs(Py) < tiny(Py)) then
          write(*,*) "Converged on tiny Py after ",i," iterations"
-         x1_d = x1
-         return
+         exit
       end if
       ! set up update 
       PyH(:,:) = 0._QP
@@ -107,12 +111,16 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
       H(:,:) = H(:,:) + ((1._QP - yHy / Py) * PP(:,:) - PyH(:,:) - HyP(:,:)) / Py
       if (any(H(:,:) > sqrt(huge(1._QP)) / N)) then
          write(*,*) 'Did not converge after ',i,'iterations: H too big'
-         x1_d = x1
          return
       end if
+      if (i == MAXLOOP) write(*,*) "BFGS ran out of loops!"
    end do
-   write(*,*) "Did not converge! Ran out of loops"
    x1_d = x1
+   call ieee_get_flag(ieee_usual, fpe_flag)
+   lerr = lerr .or. any(fpe_flag)  
+   if (lerr) write(*,*) "BFGS did not converge!"
+   call ieee_set_status(original_fpe_status)
+
    return 
 
    contains
@@ -439,9 +447,7 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
          !! The outputs include
          !!   lo   :  final minimum location
          !!   hi   :  final minimum location
-         !! Returns
-         !!   Number of function calls performed or
-         !!   0 = No miniumum found
+         !! Notes: Uses the ieee_exceptions intrinsic module to allow for graceful failure due to floating point exceptions, which won't terminate the run.
          !! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -   
          implicit none
          ! Arguments
@@ -454,12 +460,11 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
          logical,                intent(out)   :: lerr
          ! Internals 
          integer(I4B), parameter :: MAXLOOP = 20 ! maximum number of loops before method is determined to have failed.   
-         real(QP), parameter :: small = epsilon(eps) ! small number to prevent divide by zero errors   
          real(QP) :: a1, a2, a3, astar   ! three points for the polynomial fit and polynomial minimum   
          real(QP) :: f1, f2, f3, fstar   ! three function values for the polynomial and polynomial minimum   
          real(QP), dimension(3) :: row_1, row_2, row_3, rhs, soln        ! matrix for 3 equation solver (gaussian elimination)   
          real(QP), dimension(3,3) :: lhs
-         real(QP) :: d1, d2, d3, aold, denom
+         real(QP) :: d1, d2, d3, aold, denom, errval
          integer(I4B) :: i
 
          lerr = .false.
@@ -474,15 +479,16 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
          f3 = n2one(f, x0, S, N, a3)
          do i = 1, MAXLOOP 
             ! check to see if convergence is reached and exit   
-            if (abs(astar) < small) then
-               denom = small 
-            else 
-               denom = astar
+            errval = abs((astar - aold) / astar)
+            call ieee_get_flag(ieee_usual, fpe_flag)
+            if (any(fpe_flag)) then
+               lerr = .true.
+               exit
             end if
-            if (abs((astar - aold) / denom) < eps) then
+            if (errval < eps) then
                lo = astar
                hi = astar
-               return 
+               exit
             end if
             ! Set up system for gaussian elimination equation solver   
             row_1 = [1.0_QP, a1, a1**2]
@@ -494,12 +500,14 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
             lhs(3, :) = row_3
             ! Solve system of equations   
             soln(:) = util_solve_linear_system(lhs, rhs, 3, lerr)
-            if (lerr) then
-               return 
-            end if
+            if (lerr) exit
             aold = astar
-            if (abs(soln(3)) < small) soln(3) = small
             astar =  -soln(2) / (2 * soln(3))
+            call ieee_get_flag(ieee_usual, fpe_flag)
+            if (any(fpe_flag)) then
+               lerr = .true.
+               exit
+            end if
             fstar = n2one(f, x0, S, N, astar)
             ! keep the three closest a values to astar and discard the fourth  
             d1 = abs(a1 - astar)
@@ -524,6 +532,7 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
                end if
             end if
          end do
+         if (lerr) return
          lo = a1
          hi = a3
          return 

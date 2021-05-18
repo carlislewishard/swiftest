@@ -1590,11 +1590,10 @@ END INTERFACE
             real(QP), dimension(n)                :: x
          end function util_solve_linear_system_q
 
-         function solve_wbs(u, lerr) result(x) 
+         function solve_wbs(u) result(x) 
             use swiftest_globals
             implicit none
             real(QP), intent(in), dimension(:,:), allocatable  :: u
-            logical, intent(out)  :: lerr
             real(QP), dimension(:), allocatable :: x
          end function solve_wbs
 

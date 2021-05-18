@@ -6,6 +6,7 @@ function util_solve_linear_system_d(A,b,n,lerr) result(x)
    !!   x and b are (n) arrays
    !! Uses Gaussian elimination, so will have issues if system is ill-conditioned.
    !! Uses quad precision intermidiate values, so works best on small arrays.
+   use, intrinsic :: ieee_exceptions
    use swiftest
    use module_interfaces, EXCEPT_THIS_ONE => util_solve_linear_system_d
    implicit none
@@ -18,10 +19,23 @@ function util_solve_linear_system_d(A,b,n,lerr) result(x)
    real(DP), dimension(n)                :: x
    ! Internals
    real(QP), dimension(:), allocatable :: qx
+   type(ieee_status_type) :: original_fpe_status
+   logical, dimension(:), allocatable :: fpe_flag 
 
-   qx = solve_wbs(ge_wpp(real(A, kind=QP), real(b, kind=QP)),lerr)
-   where(abs(qx(:)) < tiny(1._DP)) qx(:) = 0._QP
-   x = real(qx, kind=DP)
+   call ieee_get_status(original_fpe_status) ! Save the original floating point exception status
+   call ieee_set_flag(ieee_all, .false.) ! Set all flags to quiet
+   allocate(fpe_flag(size(ieee_usual)))
+
+   qx = solve_wbs(ge_wpp(real(A, kind=QP), real(b, kind=QP)))
+
+   call ieee_get_flag(ieee_usual, fpe_flag)
+   lerr = any(fpe_flag) 
+   if (lerr) then
+      x = 0.0_DP
+   else
+      x = real(qx, kind=DP)
+   end if
+   call ieee_set_status(original_fpe_status)
 
    return
 end function util_solve_linear_system_d
@@ -34,6 +48,7 @@ function util_solve_linear_system_q(A,b,n,lerr) result(x)
    !!   x and b are (n) arrays
    !! Uses Gaussian elimination, so will have issues if system is ill-conditioned.
    !! Uses quad precision intermidiate values, so works best on small arrays.
+   use, intrinsic :: ieee_exceptions
    use swiftest
    use module_interfaces, EXCEPT_THIS_ONE => util_solve_linear_system_q
    implicit none
@@ -44,35 +59,37 @@ function util_solve_linear_system_q(A,b,n,lerr) result(x)
    logical,                  intent(out) :: lerr
    ! Result
    real(QP), dimension(n)  :: x
+   type(ieee_status_type) :: original_fpe_status
+   logical, dimension(:), allocatable :: fpe_flag 
 
-   x = solve_wbs(ge_wpp(A, b),lerr)
-   where(abs(x(:)) < tiny(1._QP)) x(:) = 0._QP
+   call ieee_get_status(original_fpe_status) ! Save the original floating point exception status
+   call ieee_set_flag(ieee_all, .false.) ! Set all flags to quiet
+   allocate(fpe_flag(size(ieee_usual)))
+
+   x = solve_wbs(ge_wpp(A, b))
+
+   call ieee_get_flag(ieee_usual, fpe_flag)
+   lerr = any(fpe_flag) 
+   if (lerr) x = 0.0_DP
+   call ieee_set_status(original_fpe_status) 
 
    return
 end function util_solve_linear_system_q
 
-function solve_wbs(u, lerr) result(x) ! solve with backward substitution
+function solve_wbs(u) result(x) ! solve with backward substitution
    !! Based on code available on Rosetta Code: https://rosettacode.org/wiki/Gaussian_elimination#Fortran
    use swiftest
    implicit none
    ! Arguments
    real(QP), intent(in), dimension(:,:), allocatable  :: u
-   logical, intent(out)  :: lerr
    ! Result
    real(QP), dimension(:), allocatable :: x
    ! Internals
    integer(I4B)             :: i,n
-   real(QP), parameter :: epsilon = tiny(1._QP) 
 
    n = size(u, 1)
    if (allocated(x) .and. (size(x) /= n))  deallocate(x)
    if (.not.allocated(x)) allocate(x(n))
-   lerr = any(abs(u(:,:)) <= epsilon)
-   if (lerr) then
-      x(:) = 0._QP
-      return
-   end if
-
    do i = n, 1, -1 
       x(i) = (u(i, n + 1) - sum(u(i, i + 1:n) * x(i + 1:n))) / u(i, i)
    end do
