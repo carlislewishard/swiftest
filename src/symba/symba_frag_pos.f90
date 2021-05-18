@@ -581,10 +581,8 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
         
          ! Recombine the tangential and radial components into the final velocity vector
          do i = 1, nfrag
-            v_r_mag(i) = dot_product(v_r(:,i), v_r_unit(:, i))
-            v_frag(:, i) = v_r_mag(i) * v_r_unit(:, i) + v_t_mag(i) * v_t_unit(:, i)
+            v_frag(:, i) = v_r(:, i) + v_t_mag(i) * v_t_unit(:, i)
          end do
-         call shift_vector_to_origin(m_frag, v_frag)
       end if
 
       do i = 1, nfrag
