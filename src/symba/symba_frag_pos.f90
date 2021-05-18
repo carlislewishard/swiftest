@@ -626,8 +626,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          v_shift(:, i) = v_shift(:, i) + v_t_mag(i) * v_t_unit(:, i) + vcom(:)
          fval = fval + 0.5_DP * m_frag(i) * dot_product(v_shift(:, i), v_shift(:, i))
       end do
-      !write(*,*) 'fval: ',fval 
-      fval = fval**2
+      fval = fval**4
 
       return
 
