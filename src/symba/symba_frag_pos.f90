@@ -161,12 +161,14 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
    write(*,        "('              Energy normalized by |Etot_before|')")
    write(*,        "('             |    T_orb    T_spin         T         pe      Etot      Ltot')")
    write(*,        "(' ---------------------------------------------------------------------------')")
+   write(*,fmtlabel) ' Qloss      |',-Qloss / abs(Etot_before) 
    write(*,        "(' ---------------------------------------------------------------------------')")
    write(*,        "('  First pass to get angular momentum ')")
    write(*,        "(' ---------------------------------------------------------------------------')")
+   
 
    call set_fragment_tangential_velocities()
-   
+
    call calculate_system_energy(ke_orb_after, ke_spin_after, pe_after, Ltot_after, linclude_fragments=.true.)
    Etot_after = ke_orb_after + ke_spin_after + pe_after
    Lmag_after = norm2(Ltot_after(:))
@@ -182,7 +184,6 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
    write(*,        "(' ---------------------------------------------------------------------------')")
    write(*,        "('  Second pass to get energy ')")
    write(*,        "(' ---------------------------------------------------------------------------')")
-   write(*,fmtlabel) ' Qloss      |',-Qloss / abs(Etot_before)
    write(*,        "(' ---------------------------------------------------------------------------')")
    write(*,fmtlabel) ' T_family    |',ke_family / abs(Etot_before)
    write(*,fmtlabel) ' T_frag targ |',ke_target / abs(Etot_before)
@@ -282,6 +283,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       ke_spin_before = ke_spin_before * Escale
       pe_before = pe_before * Escale
       Etot_before = Etot_before * Escale
+      Qloss = Qloss * Escale
       mscale = 1.0_DP
       rscale = 1.0_DP
       vscale = 1.0_DP
