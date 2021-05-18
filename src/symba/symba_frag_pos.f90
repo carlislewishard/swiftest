@@ -117,17 +117,20 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
    logical, intent(out)                    :: lmerge ! Answers the question: Should this have been a merger instead?
    ! Internals
    real(DP), parameter                     :: f_spin = 0.20_DP !! Fraction of pre-impact orbital angular momentum that is converted to fragment spin
-   real(DP)                                :: mscale, rscale, vscale, Lscale, tscale ! Scale factors that reduce quantities to O(~1) in the collisional system
+   real(DP)                                :: mscale, rscale, vscale, tscale, Lscale, Escale ! Scale factors that reduce quantities to O(~1) in the collisional system
+   real(DP)                                :: mtot
+   real(DP), dimension(NDIM)               :: xcom, vcom
    integer(I4B)                            :: i, j, nfrag, fam_size
    logical, dimension(:), allocatable      :: lexclude
    real(DP), dimension(NDIM, 2)            :: rot, L_orb 
    real(DP), dimension(:,:), allocatable   :: x_frag, v_frag, v_r_unit, v_t_unit
    real(DP), dimension(:), allocatable     :: rmag, v_r_mag, v_t_mag
-   real(DP), dimension(NDIM)               :: xcom, vcom, Ltot_before, Ltot_after, L_residual
+   real(DP), dimension(NDIM)               :: Ltot_before
+   real(DP), dimension(NDIM)               :: Ltot_after
+   real(DP)                                :: Etot_before, ke_orb_before, ke_spin_before, pe_before, Lmag_before
+   real(DP)                                :: Etot_after,  ke_orb_after,  ke_spin_after,  pe_after,  Lmag_after
    real(DP), dimension(NDIM)               :: L_frag_spin, L_frag_tot, L_frag_orb
-   real(DP)                                :: mtot, Lmag_before, Lmag_after
-   real(DP)                                :: Etot_before, Etot_after, ke_orb_before, pe_before
-   real(DP)                                :: pe_after, ke_spin_before, ke_spin_after, ke_orb_after, ke_family, ke_target, ke_frag
+   real(DP)                                :: ke_family, ke_target, ke_frag
    real(DP), dimension(NDIM)               :: x_col_unit, y_col_unit, z_col_unit
    character(len=*), parameter             :: fmtlabel = "(A14,10(ES9.2,1X,:))"
 
@@ -187,9 +190,11 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
    write(*,fmtlabel) ' T_frag calc |',ke_frag / abs(Etot_before)
    write(*,fmtlabel) ' residual    |',(ke_frag - ke_target) / abs(Etot_before)
 
+   call restore_scale_factors()
    call calculate_system_energy(ke_orb_after, ke_spin_after, pe_after, Ltot_after, linclude_fragments=.true.)
    Etot_after = ke_orb_after + ke_spin_after + pe_after
    Lmag_after = norm2(Ltot_after(:))
+   
 
    write(*,        "(' ---------------------------------------------------------------------------')")
    write(*,fmtlabel) ' change      |',(ke_orb_after - ke_orb_before) / abs(Etot_before), &
@@ -200,8 +205,6 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
                                        norm2(Ltot_after - Ltot_before) / Lmag_before
 
    lmerge = lmerge .or. ((Etot_after - Etot_before) / abs(Etot_before) > 0._DP) 
-
-   call restore_scale_factors()
 
    return 
 
@@ -216,15 +219,23 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       !! to converge on a solution
       implicit none
 
-      mtot = 1.0_DP
+      ! Find the center of mass of the collisional system	
+      mtot = sum(mass(:)) 
+      xcom(:) = (mass(1) * x(:,1) + mass(2) * x(:,2)) / mtot
+      vcom(:) = (mass(1) * v(:,1) + mass(2) * v(:,2)) / mtot
 
       ! Set scale factors
-      mscale = sum(mass(:)) 
+      mscale = mtot
       rscale = norm2(x(:,2) - x(:,1))
-      tscale = rscale / norm2(v(:,2) - v(:,1))
-      vscale = rscale / tscale
+      vscale = norm2(v(:,2) - v(:,1))
+      tscale = rscale / vscale
       Lscale = mscale * rscale * vscale
+      Escale = mscale * vscale**2
 
+      xcom(:) = xcom(:) / rscale
+      vcom(:) = vcom(:) / vscale
+
+      mtot = mtot / mscale
       mass = mass / mscale
       radius = radius / rscale
       x = x / rscale
@@ -233,7 +244,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 
       m_frag = m_frag / mscale
       rad_frag = rad_frag / rscale
-      Qloss = Qloss / (mscale * vscale**2) 
+      Qloss = Qloss / Escale
       return
    end subroutine set_scale_factors
 
@@ -242,17 +253,42 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       !!
       !! Restores dimenional quantities back to the system units
       implicit none
+      integer(I4B) :: i
+
+      mtot = mscale
       mass = mass * mscale
       radius = radius * rscale
       x = x * rscale
       v = v * vscale
       L_spin = L_spin * Lscale
 
-      xb_frag = xb_frag * rscale
-      vb_frag = vb_frag * vscale
+      x_frag = x_frag * rscale
+      v_frag = v_frag * vscale
       m_frag = m_frag * mscale
       rot_frag = rot_frag / tscale
       rad_frag = rad_frag * rscale
+      ! Convert the final result to the system units
+      xcom(:) = xcom(:) * rscale
+      vcom(:) = vcom(:) * vscale
+      do i = 1, nfrag
+         xb_frag(:, i) = x_frag(:, i) + xcom(:)
+         vb_frag(:, i) = v_frag(:, i) + vcom(:)
+      end do
+
+      ! Set the scale factors to 1.0 for any additional energy calculations so that they can be done in the system units
+      Ltot_before(:) = Ltot_before(:) * Lscale
+      Lmag_before = Lmag_before * Lscale
+      ke_orb_before = ke_orb_before * Escale
+      ke_spin_before = ke_spin_before * Escale
+      pe_before = pe_before * Escale
+      Etot_before = Etot_before * Escale
+      mscale = 1.0_DP
+      rscale = 1.0_DP
+      vscale = 1.0_DP
+      tscale = 1.0_DP
+      Lscale = 1.0_DP
+      Escale = 1.0_DP
+
       return
    end subroutine restore_scale_factors
 
@@ -264,10 +300,6 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       integer(I4B) :: i
       real(DP), dimension(NDIM) ::  x_cross_v, xc, vc, delta_r, delta_v
       real(DP)   :: r_col_norm, v_col_norm
-
-      ! Find the center of mass of the collisional system	
-      xcom(:) = (mass(1) * x(:,1) + mass(2) * x(:,2)) / mtot
-      vcom(:) = (mass(1) * v(:,1) + mass(2) * v(:,2)) / mtot
 
       L_orb(:, :) = 0.0_DP
       ! Compute orbital angular momentum of pre-impact system
@@ -312,7 +344,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
             ke_family = ke_family + Mpl(family(i)) * dot_product(vbpl(:,family(i)), vbpl(:,family(i)))
             lexclude(family(i)) = .true. ! For all subsequent energy calculations the pre-impact family members will be replaced by the fragments
          end do
-         ke_family = 0.5_DP * ke_family / (mscale * vscale**2)
+         ke_family = 0.5_DP * ke_family / Escale
       end associate
       return
    end subroutine define_pre_collisional_family
@@ -361,7 +393,6 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          symba_plwksp%helio%swiftest%radius(1:npl) = symba_plA%helio%swiftest%radius(1:npl) / rscale
          symba_plwksp%helio%swiftest%xh(:,1:npl) = symba_plA%helio%swiftest%xh(:,1:npl) / rscale
          symba_plwksp%helio%swiftest%vh(:,1:npl) = symba_plA%helio%swiftest%vh(:,1:npl) / vscale
-         symba_plwksp%helio%swiftest%rhill(1:npl) = symba_plA%helio%swiftest%rhill(1:npl) / rscale
          symba_plwksp%helio%swiftest%xb(:,1:npl) = symba_plA%helio%swiftest%xb(:,1:npl) / rscale
          symba_plwksp%helio%swiftest%vb(:,1:npl) = symba_plA%helio%swiftest%vb(:,1:npl) / vscale
          symba_plwksp%helio%swiftest%rot(:,1:npl) = symba_plA%helio%swiftest%rot(:,1:npl) * tscale
