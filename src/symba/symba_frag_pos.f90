@@ -116,9 +116,9 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
    real(DP), dimension(:,:), intent(inout) :: xb_frag, vb_frag, rot_frag
    logical, intent(out)                    :: lmerge ! Answers the question: Should this have been a merger instead?
    ! Internals
-   real(DP), parameter                     :: f_spin = 0.20_DP !! Fraction of pre-impact orbital angular momentum that is converted to fragment spin
-   real(DP)                                :: mscale, rscale, vscale, tscale, Lscale, Escale ! Scale factors that reduce quantities to O(~1) in the collisional system
-   real(DP)                                :: mtot
+   real(DP), parameter                     :: f_spin = 0.00_DP !! Fraction of pre-impact orbital angular momentum that is converted to fragment spin
+   real(DP)                                :: mscale = 1.0_DP, rscale = 1.0_DP, vscale = 1.0_DP, tscale = 1.0_DP, Lscale = 1.0_DP, Escale = 1.0_DP! Scale factors that reduce quantities to O(~1) in the collisional system
+   real(DP)                                :: mtot 
    real(DP), dimension(NDIM)               :: xcom, vcom
    integer(I4B)                            :: i, j, nfrag, fam_size
    logical, dimension(:), allocatable      :: lexclude
@@ -129,14 +129,23 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
    real(DP), dimension(NDIM)               :: Ltot_after
    real(DP)                                :: Etot_before, ke_orb_before, ke_spin_before, pe_before, Lmag_before
    real(DP)                                :: Etot_after,  ke_orb_after,  ke_spin_after,  pe_after,  Lmag_after
-   real(DP), dimension(NDIM)               :: L_frag_spin, L_frag_tot, L_frag_orb
-   real(DP)                                :: ke_family, ke_target, ke_frag
+   real(DP), dimension(NDIM)               :: L_frag_spin, L_frag_tot, L_frag_orb, L_offset
+   real(DP)                                :: ke_family, ke_target, ke_frag, ke_offset
    real(DP), dimension(NDIM)               :: x_col_unit, y_col_unit, z_col_unit
    character(len=*), parameter             :: fmtlabel = "(A14,10(ES9.2,1X,:))"
+   integer(I4B), dimension(:), allocatable :: seed
+   integer(I4B)                            :: nseed
+
+   ! Temporary until we get random number stuff settled for the whole project
+   call random_seed(size=nseed)
+   allocate(seed(nseed))
+   seed = [(12*i, i=1, nseed)]
+   call random_seed(put=seed)
 
    allocate(x_frag, source=xb_frag)
    allocate(v_frag, source=vb_frag)
    nfrag = size(m_frag)
+   mtot = sum(m_frag)
 
    associate(npl => symba_plA%helio%swiftest%nbody, status => symba_plA%helio%swiftest%status) 
       allocate(lexclude(npl))
@@ -147,32 +156,31 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       end where
    end associate
 
-   call set_scale_factors()
-   call define_coordinate_system()
-
    call calculate_system_energy(ke_orb_before, ke_spin_before, pe_before, Ltot_before, linclude_fragments=.false.)
    Lmag_before = norm2(Ltot_before(:))
    Etot_before = ke_orb_before + ke_spin_before + pe_before
 
-   call define_pre_collisional_family()
-   call set_fragment_position_vectors()
-
    write(*,        "(' ---------------------------------------------------------------------------')")
    write(*,        "('              Energy normalized by |Etot_before|')")
-   write(*,        "('             |    T_orb    T_spin         T         pe      Etot      Ltot')")
    write(*,        "(' ---------------------------------------------------------------------------')")
    write(*,fmtlabel) ' Qloss      |',-Qloss / abs(Etot_before) 
+
+   call set_scale_factors()
+   call define_coordinate_system()
+   call define_pre_collisional_family()
+
    write(*,        "(' ---------------------------------------------------------------------------')")
    write(*,        "('  First pass to get angular momentum ')")
-   write(*,        "(' ---------------------------------------------------------------------------')")
-   
 
+   call set_fragment_position_vectors()
    call set_fragment_tangential_velocities()
-
    call calculate_system_energy(ke_orb_after, ke_spin_after, pe_after, Ltot_after, linclude_fragments=.true.)
    Etot_after = ke_orb_after + ke_spin_after + pe_after
    Lmag_after = norm2(Ltot_after(:))
 
+   write(*,        "(' ---------------------------------------------------------------------------')")
+   write(*,        "('             |    T_orb    T_spin         T         pe      Etot      Ltot')")
+   write(*,        "(' ---------------------------------------------------------------------------')")
    write(*,fmtlabel) ' change      |',(ke_orb_after - ke_orb_before) / abs(Etot_before), &
                                        (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
                                        (ke_orb_after + ke_spin_after - ke_orb_before - ke_spin_before)/ abs(Etot_before), &
@@ -180,23 +188,21 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
                                        (Etot_after - Etot_before) / abs(Etot_before), &
                                        norm2(Ltot_after - Ltot_before) / Lmag_before
 
-   call set_fragment_radial_velocities(lmerge)
    write(*,        "(' ---------------------------------------------------------------------------')")
    write(*,        "('  Second pass to get energy ')")
    write(*,        "(' ---------------------------------------------------------------------------')")
-   write(*,        "(' ---------------------------------------------------------------------------')")
-   write(*,fmtlabel) ' T_family    |',ke_family / abs(Etot_before)
-   write(*,fmtlabel) ' T_frag targ |',ke_target / abs(Etot_before)
-   write(*,        "(' ---------------------------------------------------------------------------')")
-   write(*,fmtlabel) ' T_frag calc |',ke_frag / abs(Etot_before)
-   write(*,fmtlabel) ' residual    |',(ke_frag - ke_target) / abs(Etot_before)
+
+   call set_fragment_radial_velocities(lmerge)
 
    call restore_scale_factors()
    call calculate_system_energy(ke_orb_after, ke_spin_after, pe_after, Ltot_after, linclude_fragments=.true.)
    Etot_after = ke_orb_after + ke_spin_after + pe_after
    Lmag_after = norm2(Ltot_after(:))
-   
 
+   write(*,fmtlabel) ' T_frag calc |',ke_frag / abs(Etot_before)
+   write(*,fmtlabel) ' residual    |',(ke_frag - ke_target) / abs(Etot_before)
+   write(*,        "(' ---------------------------------------------------------------------------')")
+   write(*,        "('             |    T_orb    T_spin         T         pe      Etot      Ltot')")
    write(*,        "(' ---------------------------------------------------------------------------')")
    write(*,fmtlabel) ' change      |',(ke_orb_after - ke_orb_before) / abs(Etot_before), &
                                        (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
@@ -246,6 +252,13 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       m_frag = m_frag / mscale
       rad_frag = rad_frag / rscale
       Qloss = Qloss / Escale
+
+      ke_orb_before = ke_orb_before / Escale
+      ke_spin_before = ke_spin_before / Escale
+      pe_before = pe_before * rscale / mscale**2
+      Etot_before = ke_orb_before + ke_spin_before + pe_before 
+      Ltot_before(:) = Ltot_before(:) / Lscale
+      Lmag_before = norm2(Ltot_before(:))
       return
    end subroutine set_scale_factors
 
@@ -281,8 +294,9 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       Lmag_before = Lmag_before * Lscale
       ke_orb_before = ke_orb_before * Escale
       ke_spin_before = ke_spin_before * Escale
-      pe_before = pe_before * Escale
-      Etot_before = Etot_before * Escale
+      pe_before = pe_before * mscale**2 / rscale
+      Etot_before = ke_orb_before + ke_spin_before + pe_before 
+      Lmag_before = norm2(Ltot_before(:))
       Qloss = Qloss * Escale
       mscale = 1.0_DP
       rscale = 1.0_DP
@@ -414,11 +428,6 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
             ltmp(1:npl) = lexclude(1:npl)
             ltmp(npl+1:npl_new) = .false.
             call move_alloc(ltmp, lexclude)
-   
-            ke_frag = 0._DP
-            do i = 1, nfrag
-               ke_frag = ke_frag + 0.5_DP * m_frag(i) * dot_product(vb_frag(:, i), vb_frag(:, i))
-            end do
          end if
    
          where (lexclude(1:npl))
@@ -433,6 +442,17 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          deallocate(symba_plwksp%helio%swiftest%k_plpl) 
          nplm = count(symba_plA%helio%swiftest%mass > param%mtiny)
          if (lk_plpl) call util_dist_index_plpl(npl, nplm, symba_plA)
+
+         ! Calculate the current fragment energy and momentum balances
+         if (linclude_fragments) then
+            ke_frag = 0._DP
+            do i = 1, nfrag
+               ke_frag = ke_frag + 0.5_DP * m_frag(i) * dot_product(vb_frag(:, i), vb_frag(:, i))
+            end do
+            ke_target = ke_family + (ke_spin_before - ke_spin) + (pe_before - pe) - Qloss
+            ke_offset = ke_frag - ke_target
+            L_offset(:) = Ltot_before(:) - Ltot(:)
+         end if
       end associate
    return
    end subroutine calculate_system_energy
@@ -483,19 +503,19 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       allocate(v_r_unit(NDIM,nfrag))
       allocate(v_t_unit(NDIM,nfrag))
 
-      ! Re-normalize position and velocity vectors by the fragment number so that for our initial guess we weight each
-      ! fragment position by the mass and assume equipartition of energy for the velocity
-      r_max = 1.5_DP * sum(rad_frag(:)) / PI
+      ! Place the fragments into a region that is big enough that we should usually not have overlapping bodies
+      ! An overlapping bodies will collide in the next time step, so it's not a major problem if they do (it just slows the run down)
+      r_max = 4 * sum(rad_frag(:)) / PI
 
-      ! We will treat the first fragment of the list as a special case.
-      x_frag(:, 1) = -z_col_unit(:) 
+      ! We will treat the first fragment of the list as a special case. It gets initialized the maximum distance along the original impactor distance vector.
+      ! This is done because in a regular disruption, the first body is the largest fragment.
+      x_frag(:, 1) = -y_col_unit(:) * r_max 
       call random_number(x_frag(:,2:nfrag)) 
       
       x_frag(:, :) = x_frag(:, :) * r_max
       call shift_vector_to_origin(m_frag, x_frag)
 
       do i = 1, nfrag
-         xb_frag(:,i) = x_frag(:,i) + xcom(:)
          rmag(i) = norm2(x_frag(:, i))
          v_r_unit(:, i) = x_frag(:, i) / rmag(i)
          call random_number(L_sigma(:)) ! Randomize the tangential velocity direction. This helps to ensure that the tangential velocity doesn't completely line up with the angular momentum vector,
@@ -503,6 +523,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          L(:) = z_col_unit(:) + 2e-3_DP * (L_sigma(:) - 0.5_DP)
          L(:) = L(:) / norm2(L(:)) 
          call util_crossproduct(L(:), v_r_unit(:, i), v_t_unit(:, i))
+         xb_frag(:,i) = x_frag(:,i) + xcom(:)
       end do
 
       return
@@ -539,7 +560,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
             call util_crossproduct(v_r_unit(:, i), v_t_unit(:, i), L(:))
             A(4:6, i) = m_frag(i) * rmag(i) * L(:)
          else !For the remining bodies, distribute the angular momentum equally amongs them
-            v_t_mag(i) = L_orb_mag / (m_frag(i) * rmag(i) * nfrag)
+            v_t_mag(i) = L_orb_mag / (m_frag(i) * rmag(i) * nfrag) 
             v_frag(:, i) = v_t_mag(i) * v_t_unit(:, i)
             L_lin_others(:) = L_lin_others(:) + m_frag(i) * v_frag(:, i)
             call util_crossproduct(x_frag(:, i), v_frag(:, i), L(:))
@@ -574,19 +595,18 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       use symba_frag_pos_lambda_implementation
       implicit none
       ! Arguments
-      logical,                  intent(out)   :: lmerge
+      logical,                intent(out)   :: lmerge
       ! Internals
-      real(DP), parameter                   :: TOL = epsilon(1.0_DP)
+      real(DP), parameter                   :: TOL = 1e-10_DP
       real(DP), dimension(:), allocatable   :: vflat 
       logical                               :: lerr
       integer(I4B)                          :: i
-      real(DP)                              :: ke_tangential
       real(DP), dimension(:), allocatable   :: v_r_initial
       real(DP), dimension(:,:), allocatable :: v_r
 
       ! Set the "target" ke_orb_after (the value of the orbital kinetic energy that the fragments ought to have)
-      ke_target = ke_family + (ke_spin_before - ke_spin_after) + (pe_before - pe_after) - Qloss
-      if (ke_target < 0.0_DP) then
+      
+      if ((ke_target < 0.0_DP) .or. (ke_offset > 0.0_DP)) then
          lmerge = .true.
          return
       end if
@@ -594,7 +614,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       ! Initialize radial velocity magnitudes with a random value:
       allocate(v_r_initial, source=v_r_mag)
       call random_number(v_r_initial(:))
-      v_r_initial(:) = 3 * v_r_initial(:) * sqrt(2 * ke_target / nfrag / m_frag(:)) 
+      v_r_initial(:) = v_r_initial(:) * sqrt(2 * ke_target / nfrag / m_frag(:)) 
       ! Initialize the lambda function using a structure constructor that calls the init method
       ! Minimize error using the BFGS optimizer
       v_r_mag(:) = util_minimize_bfgs(ke_constraint(ke_objective_function, v_r_unit, v_t_mag, v_t_unit, x_frag, m_frag, L_frag_orb, ke_target), nfrag, v_r_initial, TOL, lerr)
@@ -608,7 +628,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          ! Shift the radial velocity vectors to align with the center of mass of the collisional system (the origin)
          allocate(v_r, mold=v_frag)
          do i = 1, nfrag
-            v_r(:, i) = v_r_mag(i) * v_r_unit(:, i)
+            v_r(:, i) = abs(v_r_mag(i)) * v_r_unit(:, i)
          end do
          call shift_vector_to_origin(m_frag, v_r)
         
@@ -637,8 +657,8 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       real(DP), dimension(:),   intent(in)  :: L_target  !! Target orbital momentum
       real(DP),                 intent(in)  :: ke_target !! Target kinetic energ
       ! Result
-      real(DP)                              :: fval           !! The objective function result: norm of the vector composed of the tangential momentum and energy
-                                                                          !! Minimizing this brings us closer to our objective
+      real(DP)                              :: fval      !! The objective function result, which is the square of the difference between the calculated fragment kinetic energy and our target
+                                                         !! Minimizing this brings us closer to our objective
       ! Internals
       integer(I4B)                        :: i, nfrag, nsol
       real(DP), dimension(NDIM)           :: L
@@ -646,10 +666,11 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 
       nfrag = size(m_frag)
       allocate(v_shift, mold=v_r_unit)
-      ! In order to keep satisfying the kinetic energy constraint, we must shift the origin of the radial component of the velocities to the center of mass
+      ! Make sure the velocity magnitude stays positive
       do i = 1, nfrag
-         v_shift(:,i) = v_r_mag(i) * v_r_unit(:, i)
+         v_shift(:,i) = abs(v_r_mag(i)) * v_r_unit(:, i)
       end do
+      ! In order to keep satisfying the kinetic energy constraint, we must shift the origin of the radial component of the velocities to the center of mass
       call shift_vector_to_origin(m_frag, v_shift)
       
       fval = -ke_target
@@ -657,12 +678,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          v_shift(:, i) = v_shift(:, i) + v_t_mag(i) * v_t_unit(:, i) + vcom(:)
          fval = fval + 0.5_DP * m_frag(i) * dot_product(v_shift(:, i), v_shift(:, i))
       end do
-      if (fval < 0.0_DP) then
-         fval = fval**8
-      else
-         fval = fval**2
-      end if
-
+      fval = fval**2 ! This ensures that fval = 0 is a local minimum, which is what the BFGS method is searching for
 
       return
 
