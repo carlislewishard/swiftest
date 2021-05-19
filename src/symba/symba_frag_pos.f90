@@ -502,7 +502,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 
       ! Place the fragments into a region that is big enough that we should usually not have overlapping bodies
       ! An overlapping bodies will collide in the next time step, so it's not a major problem if they do (it just slows the run down)
-      r_max = 3.0_DP
+      r_max = 1.5_DP
 
       ! We will treat the first fragment of the list as a special case. It gets initialized the maximum distance along the original impactor distance vector.
       ! This is done because in a regular disruption, the first body is the largest fragment.

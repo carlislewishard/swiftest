@@ -28,7 +28,7 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
    real(DP), dimension(:), allocatable :: x1_d
    ! Internals
    integer(I4B) ::  i, j, k, l, conv, num
-   integer(I4B), parameter :: MAXLOOP = 10000 !! Maximum number of loops before method is determined to have failed 
+   integer(I4B), parameter :: MAXLOOP = 100 !! Maximum number of loops before method is determined to have failed 
    real(QP), parameter     :: gradeps = 1e-5_QP !! Tolerance for gradient calculations
    real(QP), dimension(N) :: S               !! Direction vectors 
    real(QP), dimension(N) :: Snorm           !! normalized direction 
