@@ -116,7 +116,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
    real(DP), dimension(:,:), intent(inout) :: xb_frag, vb_frag, rot_frag
    logical, intent(out)                    :: lmerge ! Answers the question: Should this have been a merger instead?
    ! Internals
-   real(DP), parameter                     :: f_spin = 0.00_DP !! Fraction of pre-impact orbital angular momentum that is converted to fragment spin
+   real(DP), parameter                     :: f_spin = 0.20_DP !! Fraction of pre-impact orbital angular momentum that is converted to fragment spin
    real(DP)                                :: mscale = 1.0_DP, rscale = 1.0_DP, vscale = 1.0_DP, tscale = 1.0_DP, Lscale = 1.0_DP, Escale = 1.0_DP! Scale factors that reduce quantities to O(~1) in the collisional system
    real(DP)                                :: mtot 
    real(DP), dimension(NDIM)               :: xcom, vcom
@@ -155,6 +155,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
          lexclude(1:npl) = .false. 
       end where
    end associate
+   call set_scale_factors()
 
    call calculate_system_energy(ke_orb_before, ke_spin_before, pe_before, Ltot_before, linclude_fragments=.false.)
    Lmag_before = norm2(Ltot_before(:))
@@ -165,7 +166,6 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
    write(*,        "(' ---------------------------------------------------------------------------')")
    write(*,fmtlabel) ' Qloss      |',-Qloss / abs(Etot_before) 
 
-   call set_scale_factors()
    call define_coordinate_system()
    call define_pre_collisional_family()
 
@@ -253,12 +253,6 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       rad_frag = rad_frag / rscale
       Qloss = Qloss / Escale
 
-      ke_orb_before = ke_orb_before / Escale
-      ke_spin_before = ke_spin_before / Escale
-      pe_before = pe_before * rscale / mscale**2
-      Etot_before = ke_orb_before + ke_spin_before + pe_before 
-      Ltot_before(:) = Ltot_before(:) / Lscale
-      Lmag_before = norm2(Ltot_before(:))
       return
    end subroutine set_scale_factors
 
@@ -508,7 +502,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
 
       ! Place the fragments into a region that is big enough that we should usually not have overlapping bodies
       ! An overlapping bodies will collide in the next time step, so it's not a major problem if they do (it just slows the run down)
-      r_max = 2 * sum(rad_frag(:)) / PI
+      r_max = 3.0_DP
 
       ! We will treat the first fragment of the list as a special case. It gets initialized the maximum distance along the original impactor distance vector.
       ! This is done because in a regular disruption, the first body is the largest fragment.
