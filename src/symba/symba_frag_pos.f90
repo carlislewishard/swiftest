@@ -494,23 +494,43 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
       !! The initial positions do not conserve energy or momentum, so these need to be adjusted later.
 
       implicit none
-      real(DP)   :: r_max
+      real(DP)   :: r_max, dis
       real(DP), dimension(NDIM) ::  L, L_sigma
+      logical, dimension(:), allocatable :: loverlap
+      integer(I4B) :: i, j
 
       allocate(rmag(nfrag))
       allocate(v_r_mag(nfrag))
       allocate(v_t_mag(nfrag))
       allocate(v_r_unit(NDIM,nfrag))
       allocate(v_t_unit(NDIM,nfrag))
+      allocate(loverlap(nfrag))
 
       ! Place the fragments into a region that is big enough that we should usually not have overlapping bodies
       ! An overlapping bodies will collide in the next time step, so it's not a major problem if they do (it just slows the run down)
-      r_max = 4 * sum(rad_frag(:)) / PI
+      r_max = 2 * sum(rad_frag(:)) / PI
 
       ! We will treat the first fragment of the list as a special case. It gets initialized the maximum distance along the original impactor distance vector.
       ! This is done because in a regular disruption, the first body is the largest fragment.
-      x_frag(:, 1) = -y_col_unit(:) * r_max 
-      call random_number(x_frag(:,2:nfrag)) 
+      x_frag(:, 1) = -y_col_unit(:) * r_max  
+
+      call random_number(x_frag(:,2:nfrag))
+      loverlap(:) = .true.
+      do while (any(loverlap(2:nfrag)))
+         do i = 2, nfrag
+            if (loverlap(i)) then
+               call random_number(x_frag(:,i))
+               x_frag(:, i) = 2 * (x_frag(:, i) - 0.5_DP) * r_max
+            end if
+         end do
+         loverlap(:) = .false.
+         do j = 1, nfrag
+            do i = j+1, nfrag
+               dis = norm2(x_frag(:,j) - x_frag(:,i))
+               loverlap(i) = loverlap(i) .or. (dis <= (rad_frag(i) + rad_frag(j))) 
+            end do
+         end do
+      end do
       
       x_frag(:, :) = x_frag(:, :) * r_max
       call shift_vector_to_origin(m_frag, x_frag)
