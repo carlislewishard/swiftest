@@ -199,8 +199,6 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
    Etot_after = ke_orb_after + ke_spin_after + pe_after
    Lmag_after = norm2(Ltot_after(:))
 
-   write(*,fmtlabel) ' T_frag calc |',ke_frag / abs(Etot_before)
-   write(*,fmtlabel) ' residual    |',(ke_frag - ke_target) / abs(Etot_before)
    write(*,        "(' ---------------------------------------------------------------------------')")
    write(*,        "('             |    T_orb    T_spin         T         pe      Etot      Ltot')")
    write(*,        "(' ---------------------------------------------------------------------------')")
