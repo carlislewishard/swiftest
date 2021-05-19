@@ -434,7 +434,7 @@ subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, rad
             symba_plwksp%helio%swiftest%status(1:npl) = INACTIVE
          end where
    
-         nplm = count(symba_plwksp%helio%swiftest%mass > param%mtiny)
+         nplm = count(symba_plwksp%helio%swiftest%mass > param%mtiny / mscale)
          call util_dist_index_plpl(npl_new, nplm, symba_plwksp)
          call symba_energy_eucl(npl_new, symba_plwksp, param%j2rp2, param%j4rp4, ke_orb, ke_spin, pe, te, Ltot)
    
