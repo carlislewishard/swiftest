@@ -1,4 +1,4 @@
-function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
+function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
    !! author: David A. Minton
    !! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  - 
    !! This function implements the Broyden-Fletcher-Goldfarb-Shanno method to determine the minimum of a function of N variables.  
@@ -21,23 +21,23 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
    ! Arguments
    integer(I4B),           intent(in)    :: N
    class(lambda_obj),      intent(in)    :: f
-   real(DP), dimension(:), intent(in)    :: x0_d
-   real(DP),               intent(in)    :: eps_d
+   real(DP), dimension(:), intent(in)    :: x0
+   real(DP),               intent(in)    :: eps
    logical,                intent(out)   :: lerr
    ! Result
-   real(DP), dimension(:), allocatable :: x1_d
+   real(DP), dimension(:), allocatable :: x1
    ! Internals
    integer(I4B) ::  i, j, k, l, conv, num
-   integer(I4B), parameter :: MAXLOOP = 500 !! Maximum number of loops before method is determined to have failed 
-   real(QP), parameter     :: gradeps = 1e-6_QP !! Tolerance for gradient calculations
-   real(QP), dimension(N) :: S               !! Direction vectors 
-   real(QP), dimension(N,N) :: H             !! Approximated inverse Hessian matrix 
-   real(QP), dimension(N) :: grad1           !! gradient of f 
-   real(QP), dimension(N) :: grad0           !! old value of gradient 
-   real(QP) :: astar                         !! 1D minimized value 
-   real(QP), dimension(N) :: y, P, x0, x1
-   real(QP), dimension(N,N) :: PP, PyH, HyP
-   real(QP) :: yHy, Py, eps
+   integer(I4B), parameter :: MAXLOOP = 1000 !! Maximum number of loops before method is determined to have failed 
+   real(DP), parameter     :: gradeps = 1e-6_DP !! Tolerance for gradient calculations
+   real(DP), dimension(N) :: S               !! Direction vectors 
+   real(DP), dimension(N,N) :: H             !! Approximated inverse Hessian matrix 
+   real(DP), dimension(N) :: grad1           !! gradient of f 
+   real(DP), dimension(N) :: grad0           !! old value of gradient 
+   real(DP) :: astar                         !! 1D minimized value 
+   real(DP), dimension(N) :: y, P
+   real(DP), dimension(N,N) :: PP, PyH, HyP
+   real(DP) :: yHy, Py
    type(ieee_status_type) :: original_fpe_status
    logical, dimension(:), allocatable :: fpe_flag 
 
@@ -46,13 +46,10 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
    allocate(fpe_flag(size(ieee_usual)))
 
    lerr = .false.
-   eps = real(eps_d, kind=QP)
-   x0 = real(x0_d, kind=QP)
-   allocate(x1_d, source=x0_d)
-   x1 = x0_d
+   allocate(x1, source=x0)
    ! Initialize approximate Hessian with the identity matrix (i.e. begin with method of steepest descent) 
    ! Get initial gradient and initialize arrays for updated values of gradient and x
-   H(:,:) = reshape([((0._QP, i=1, j-1), 1._QP, (0._QP, i=j+1, N), j=1, N)], [N,N])  
+   H(:,:) = reshape([((0._DP, i=1, j-1), 1._DP, (0._DP, i=j+1, N), j=1, N)], [N,N])  
    grad0 = gradf(f, N, x0(:), gradeps)
    grad1(:) = grad0(:)
    do i = 1, MAXLOOP 
@@ -77,7 +74,7 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
       y(:) = grad1(:) - grad0(:)
       Py = sum(P(:) * y(:))
       ! set up factors for H matrix update 
-      yHy = 0._QP
+      yHy = 0._DP
       do k = 1, N 
          do j = 1, N
             yHy = yHy + y(j) * H(j,k) * y(k)
@@ -89,8 +86,8 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
          exit
       end if
       ! set up update 
-      PyH(:,:) = 0._QP
-      HyP(:,:) = 0._QP
+      PyH(:,:) = 0._DP
+      HyP(:,:) = 0._DP
       do k = 1, N 
          do j = 1, N
             PP(j, k) = P(j) * P(k)
@@ -101,7 +98,7 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
          end do
       end do
       ! update H matrix 
-      H(:,:) = H(:,:) + ((1._QP - yHy / Py) * PP(:,:) - PyH(:,:) - HyP(:,:)) / Py
+      H(:,:) = H(:,:) + ((1._DP - yHy / Py) * PP(:,:) - PyH(:,:) - HyP(:,:)) / Py
       ! Normalize to prevent it from blowing up if it takes many iterations to find a solution
       H(:,:) = H(:,:) / norm2(H(:,:))
       ! Stop everything if there are any exceptions to allow the routine to fail gracefully
@@ -112,7 +109,6 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
          write(*,*) "BFGS ran out of loops!"
       end if
    end do
-   x1_d = x1
    call ieee_get_flag(ieee_usual, fpe_flag)
    lerr = lerr .or. any(fpe_flag)  
    if (lerr) write(*,*) "BFGS did not converge!"
@@ -138,31 +134,27 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
          ! Arguments
          integer(I4B),           intent(in)  :: N
          class(lambda_obj),      intent(in)  :: f
-         real(QP), dimension(:), intent(in)  :: x1
-         real(QP),               intent(in)  :: dx
+         real(DP), dimension(:), intent(in)  :: x1
+         real(DP),               intent(in)  :: dx
          ! Result
-         real(QP), dimension(N)              :: grad
+         real(DP), dimension(N)              :: grad
          ! Internals
          integer(I4B) :: i, j
          real(DP), dimension(N) :: xp, xm
-         real(DP) :: fp_d, fm_d, dx_d
-         real(QP) :: fp, fm
+         real(DP) :: fp, fm
 
-         dx_d = dx
          do i = 1, N
             do j = 1, N
                if (j == i) then
-                  xp(j) = x1(j) + dx_d
-                  xm(j) = x1(j) - dx_d
+                  xp(j) = x1(j) + dx
+                  xm(j) = x1(j) - dx
                else
                   xp(j) = x1(j)
                   xm(j) = x1(j)
                end if
             end do
-            fp_d = f%eval(xp)
-            fm_d = f%eval(xm)
-            fp = real(fp_d, kind=QP)
-            fm = real(fm_d, kind=QP)
+            fp = f%eval(xp)
+            fm = f%eval(xm)
             grad(i) = (fp - fm) / (2 * dx)
          end do
          return 
@@ -190,19 +182,19 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
          ! Arguments
          integer(I4B),           intent(in)  :: N
          class(lambda_obj),      intent(in)  :: f
-         real(QP), dimension(:), intent(in)  :: x0, S
-         real(QP),               intent(in)  :: eps
+         real(DP), dimension(:), intent(in)  :: x0, S
+         real(DP),               intent(in)  :: eps
          logical,                intent(out) :: lerr
          ! Result
-         real(QP)                            :: astar
+         real(DP)                            :: astar
          ! Internals
          integer(I4B) :: num = 0
-         real(QP), parameter :: step = 0.7_QP     !! Bracketing method step size   
-         real(QP), parameter :: gam = 1.2_QP      !! Bracketing method expansion parameter   
-         real(QP), parameter :: greduce = 0.2_QP  !! Golden section method reduction factor   
-         real(QP), parameter :: greduce2 = 0.1_QP ! Secondary golden section method reduction factor   
-         real(QP) :: alo, ahi                     !! High and low values for 1 - D minimization routines   
-         real(QP), parameter :: a0 = epsilon(1.0_QP)       !! Initial guess of alpha   
+         real(DP), parameter :: step = 0.7_DP     !! Bracketing method step size   
+         real(DP), parameter :: gam = 1.2_DP      !! Bracketing method expansion parameter   
+         real(DP), parameter :: greduce = 0.2_DP  !! Golden section method reduction factor   
+         real(DP), parameter :: greduce2 = 0.1_DP ! Secondary golden section method reduction factor   
+         real(DP) :: alo, ahi                     !! High and low values for 1 - D minimization routines   
+         real(DP), parameter :: a0 = epsilon(1.0_DP)       !! Initial guess of alpha   
         
          alo = a0
          call bracket(f, x0, S, N, gam, step, alo, ahi, lerr)
@@ -237,7 +229,7 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
          end if 
          ! Quadratic fit method won't converge, so finish off with another golden section   
          call golden(f, x0, S, N, greduce2, alo, ahi, lerr)
-         if (.not. lerr) astar = (alo + ahi) / 2.0_QP
+         if (.not. lerr) astar = (alo + ahi) / 2.0_DP
          return 
       end function minimize1D
 
@@ -246,16 +238,16 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
          ! Arguments
          integer(I4B),           intent(in) :: N
          class(lambda_obj),      intent(in) :: f
-         real(QP), dimension(:), intent(in) :: x0, S
-         real(QP),               intent(in) :: a
+         real(DP), dimension(:), intent(in) :: x0, S
+         real(DP),               intent(in) :: a
          ! Return
-         real(QP) :: fnew
+         real(DP) :: fnew
          ! Internals
          real(DP), dimension(N) :: xnew
          integer(I4B) :: i
          
-         xnew(:) = real(x0(:) + a * S(:), kind=DP)
-         fnew = real(f%eval(xnew(:)), kind=QP)
+         xnew(:) = x0(:) + a * S(:)
+         fnew = f%eval(xnew(:))
          return 
       end function n2one
 
@@ -280,18 +272,18 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
          ! Arguments
          integer(I4B),           intent(in)    :: N
          class(lambda_obj),      intent(in)    :: f
-         real(QP), dimension(:), intent(in)    :: x0, S
-         real(QP),               intent(in)    :: gam, step
-         real(QP),               intent(inout) :: lo
-         real(QP),               intent(out)   :: hi
+         real(DP), dimension(:), intent(in)    :: x0, S
+         real(DP),               intent(in)    :: gam, step
+         real(DP),               intent(inout) :: lo
+         real(DP),               intent(out)   :: hi
          logical,                intent(out)   :: lerr
          ! Internals
-         real(QP) :: a0, a1, a2, a3, da
-         real(QP) :: f0, f1, f2, fcon
+         real(DP) :: a0, a1, a2, a3, da
+         real(DP) :: f0, f1, f2, fcon
          integer(I4B) :: i
          integer(I4B), parameter :: MAXLOOP = 1000 ! maximum number of loops before method is determined to have failed   
-         real(QP), parameter :: eps = epsilon(lo) ! small number precision to test floating point equality   
-         real(QP), parameter :: dela = 12.4423_QP ! arbitrary number to test if function is constant   
+         real(DP), parameter :: eps = epsilon(lo) ! small number precision to test floating point equality   
+         real(DP), parameter :: dela = 12.4423_DP ! arbitrary number to test if function is constant   
 
          ! set up initial bracket points   
          lerr = .false.
@@ -351,13 +343,13 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
                   lerr = .true.
                   return ! function is constant   
                end if
-               a3 = a0 + 0.5_QP * (a1 - a0)
+               a3 = a0 + 0.5_DP * (a1 - a0)
                a0 = a1
                a1 = a2
                a2 = a3
                f0 = f1
                f1 = f2     
-               a3 = a0 + 0.5_QP * (a1 - a0)
+               a3 = a0 + 0.5_DP * (a1 - a0)
                a1 = a2
                a2 = a3
                f1 = f2
@@ -391,17 +383,17 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
          ! Arguments
          integer(I4B),           intent(in)    :: N
          class(lambda_obj),      intent(in)    :: f
-         real(QP), dimension(:), intent(in)    :: x0, S
-         real(QP),               intent(in)    :: eps
-         real(QP),               intent(inout) :: lo
-         real(QP),               intent(out)   :: hi
+         real(DP), dimension(:), intent(in)    :: x0, S
+         real(DP),               intent(in)    :: eps
+         real(DP),               intent(inout) :: lo
+         real(DP),               intent(out)   :: hi
          logical,                intent(out)   :: lerr
          ! Internals 
-         real(QP), parameter :: tau = 0.5_QP * (sqrt(5.0_QP) - 1.0_QP)  ! Golden section constant   
+         real(DP), parameter :: tau = 0.5_DP * (sqrt(5.0_DP) - 1.0_DP)  ! Golden section constant   
          integer(I4B), parameter :: MAXLOOP = 40 ! maximum number of loops before method is determined to have failed (unlikely, but could occur if no minimum exists between lo and hi)   
-         real(QP) :: i0 ! Initial interval value   
-         real(QP) :: a1, a2
-         real(QP) :: f1, f2
+         real(DP) :: i0 ! Initial interval value   
+         real(DP) :: a1, a2
+         real(DP) :: f1, f2
          integer(I4B) :: i, j
 
          i0 =  hi - lo
@@ -422,7 +414,7 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
                lo = a1
                a1 = a2
                f2 = f1
-               a2 = hi - (1.0_QP - tau) * (hi - lo)
+               a2 = hi - (1.0_DP - tau) * (hi - lo)
                f2 = n2one(f, x0, S, N, a2)
             end if
          end do
@@ -450,24 +442,24 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
          ! Arguments
          integer(I4B),           intent(in)    :: N
          class(lambda_obj),      intent(in)    :: f
-         real(QP), dimension(:), intent(in)    :: x0, S
-         real(QP),               intent(in)    :: eps
-         real(QP),               intent(inout) :: lo
-         real(QP),               intent(out)   :: hi
+         real(DP), dimension(:), intent(in)    :: x0, S
+         real(DP),               intent(in)    :: eps
+         real(DP),               intent(inout) :: lo
+         real(DP),               intent(out)   :: hi
          logical,                intent(out)   :: lerr
          ! Internals 
          integer(I4B), parameter :: MAXLOOP = 20 ! maximum number of loops before method is determined to have failed.   
-         real(QP) :: a1, a2, a3, astar   ! three points for the polynomial fit and polynomial minimum   
-         real(QP) :: f1, f2, f3, fstar   ! three function values for the polynomial and polynomial minimum   
-         real(QP), dimension(3) :: row_1, row_2, row_3, rhs, soln        ! matrix for 3 equation solver (gaussian elimination)   
-         real(QP), dimension(3,3) :: lhs
-         real(QP) :: d1, d2, d3, aold, denom, errval
+         real(DP) :: a1, a2, a3, astar   ! three points for the polynomial fit and polynomial minimum   
+         real(DP) :: f1, f2, f3, fstar   ! three function values for the polynomial and polynomial minimum   
+         real(DP), dimension(3) :: row_1, row_2, row_3, rhs, soln        ! matrix for 3 equation solver (gaussian elimination)   
+         real(DP), dimension(3,3) :: lhs
+         real(DP) :: d1, d2, d3, aold, denom, errval
          integer(I4B) :: i
 
          lerr = .false.
          ! Get initial a1, a2, a3 values   
          a1 =  lo
-         a2 =  lo + 0.5_QP * (hi - lo)
+         a2 =  lo + 0.5_DP * (hi - lo)
          a3 =  hi
          aold = a1
          astar = a2
@@ -488,9 +480,9 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
                exit
             end if
             ! Set up system for gaussian elimination equation solver   
-            row_1 = [1.0_QP, a1, a1**2]
-            row_2 = [1.0_QP, a2, a2**2]
-            row_3 = [1.0_QP, a3, a3**2]
+            row_1 = [1.0_DP, a1, a1**2]
+            row_2 = [1.0_DP, a2, a2**2]
+            row_3 = [1.0_DP, a3, a3**2]
             rhs = [f1, f2, f3]
             lhs(1, :) = row_1
             lhs(2, :) = row_2
@@ -502,7 +494,7 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
             if (lerr) exit
             aold = astar
             if (soln(2) == soln(3)) then ! Handles the case where they are both 0. 0/0 is an unhandled exception
-               astar = 0.5_QP
+               astar = 0.5_DP
             else
                astar =  -soln(2) / (2 * soln(3))
             end if
