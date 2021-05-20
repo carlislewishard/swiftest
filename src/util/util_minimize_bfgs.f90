@@ -63,8 +63,6 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
          exit 
       end if
       S(:) = -matmul(H(:,:), grad1(:))
-      ! normalize gradient 
-      !S(:) = S(:) / norm2(S(:))
       astar = minimize1D(f, x1, S, N, gradeps, lerr)
       if (lerr) then
          write(*,*) "Exiting BFGS with error in minimize1D step"
@@ -104,11 +102,8 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
       end do
       ! update H matrix 
       H(:,:) = H(:,:) + ((1._QP - yHy / Py) * PP(:,:) - PyH(:,:) - HyP(:,:)) / Py
-      if (any(H(:,:) > sqrt(huge(1._QP)) / N)) then
-         lerr = .true.
-         write(*,*) 'BFGS did not converge after ',i,'iterations: H too big'
-         exit
-      end if
+      ! Normalize to prevent it from blowing up if it takes many iterations to find a solution
+      H(:,:) = H(:,:) / norm2(H(:,:))
       ! Stop everything if there are any exceptions to allow the routine to fail gracefully
       call ieee_get_flag(ieee_usual, fpe_flag)
       if (any(fpe_flag)) exit 
