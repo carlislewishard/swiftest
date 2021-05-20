@@ -29,9 +29,8 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
    ! Internals
    integer(I4B) ::  i, j, k, l, conv, num
    integer(I4B), parameter :: MAXLOOP = 500 !! Maximum number of loops before method is determined to have failed 
-   real(QP), parameter     :: gradeps = 1e-5_QP !! Tolerance for gradient calculations
+   real(QP), parameter     :: gradeps = 1e-6_QP !! Tolerance for gradient calculations
    real(QP), dimension(N) :: S               !! Direction vectors 
-   real(QP), dimension(N) :: Snorm           !! normalized direction 
    real(QP), dimension(N,N) :: H             !! Approximated inverse Hessian matrix 
    real(QP), dimension(N) :: grad1           !! gradient of f 
    real(QP), dimension(N) :: grad0           !! old value of gradient 
@@ -58,25 +57,21 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
    grad1(:) = grad0(:)
    do i = 1, MAXLOOP 
       !check for convergence
-      conv = 0
-      S(:) = 0._QP
-      do k = 1, N
-         if (abs(grad1(k)) > eps) conv = conv + 1
-         S(k) = -sum(H(:,k) * grad1(:))
-      end do
+      conv = count(abs(grad1(:)) > eps)
       if (conv == 0) then
          write(*,*) "BFGS converged on gradient after ",i," iterations" 
          exit 
       end if
+      S(:) = -matmul(H(:,:), grad1(:))
       ! normalize gradient 
-      Snorm(:) = S(:) / norm2(S)
-      astar = minimize1D(f, x1, Snorm, N, gradeps, lerr)
+      !S(:) = S(:) / norm2(S(:))
+      astar = minimize1D(f, x1, S, N, gradeps, lerr)
       if (lerr) then
          write(*,*) "Exiting BFGS with error in minimize1D step"
          exit
       end if
       ! Get new x values 
-      P(:) = astar * Snorm(:) 
+      P(:) = astar * S(:) 
       x1(:) = x1(:) + P(:)
       ! Calculate new gradient
       grad0(:) = grad1(:)
