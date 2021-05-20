@@ -751,6 +751,8 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       !! Author: David A. Minton
       !!
       !! We failed to find a set of positions and velocities that satisfy all the constraints, and so we will alter the fragments and try again.
+      !! Currently, this code will take the last fragment in the list and merge it with the first or second, alternating back and forth each time 
+      !! it is called. 
       implicit none
       integer(I4B) :: i
       integer(I4B), save :: iflip = 1
