@@ -12,17 +12,17 @@ subroutine symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit, ke_spin, pe
    implicit none
 
 ! arguments
-   integer(I4B), intent(in)                 :: npl
-   real(DP), intent(in)                     :: j2rp2, j4rp4
-   real(DP), intent(out)                    :: ke_orbit, ke_spin, pe, te
-   real(DP), dimension(:), intent(out)      :: Ltot
-   type(symba_pl), intent(inout)         :: symba_plA
+   integer(I4B), intent(in)            :: npl
+   real(DP), intent(in)                :: j2rp2, j4rp4
+   real(DP), intent(out)               :: ke_orbit, ke_spin, pe, te
+   real(DP), dimension(:), intent(out) :: Ltot
+   type(symba_pl), intent(inout)       :: symba_plA
 
 ! internals
-   integer(I4B)              :: i, j
-   integer(I8B)              :: k
-   real(DP)                  :: rmag, v2, rot2, oblpot, hx, hy, hz, hsx, hsy, hsz
-   real(DP), dimension(npl)  :: irh, kepl, kespinpl, pecb
+   integer(I4B) :: i, j
+   integer(I8B) :: k
+   real(DP) :: rmag, v2, rot2, oblpot, hx, hy, hz, hsx, hsy, hsz
+   real(DP), dimension(npl) :: irh, kepl, kespinpl, pecb
    real(DP), dimension(npl) :: Lplx, Lply, Lplz
    real(DP), dimension(symba_plA%helio%swiftest%num_plpl_comparisons) :: pepl 
    logical, dimension(symba_plA%helio%swiftest%num_plpl_comparisons) :: lstatpl

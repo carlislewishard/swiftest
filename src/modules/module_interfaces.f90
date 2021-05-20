@@ -757,8 +757,8 @@ MODULE module_interfaces
          integer(I4B), dimension(:), intent(in)    :: family
          integer(I4B), intent(inout)               :: nmergeadd
          type(symba_merger), intent(inout)         :: mergeadd_list
-         real(DP), dimension(:,:), intent(inout)   :: x, v, lspin, Ip
-         real(DP), dimension(:), intent(inout)     :: mass, radius
+         real(DP), dimension(:,:), intent(in)      :: x, v, lspin, Ip
+         real(DP), dimension(:), intent(in)        :: mass, radius
          type(user_input_parameters),intent(inout) :: param
          integer(I4B)                              :: status
       end function symba_casemerge
@@ -773,8 +773,8 @@ MODULE module_interfaces
          integer(I4B), dimension(:), intent(in)    :: family
          integer(I4B), intent(inout)               :: nmergeadd
          type(symba_merger), intent(inout)         :: mergeadd_list
-         real(DP), dimension(:,:), intent(in)      :: x, v, lspin, Ip
-         real(DP), dimension(:), intent(in)        :: mass, radius, mass_res
+         real(DP), dimension(:,:), intent(inout)   :: x, v, lspin, Ip
+         real(DP), dimension(:), intent(inout)     :: mass, radius, mass_res
          type(user_input_parameters),intent(inout) :: param
          real(DP), intent(inout)                   :: Qloss
          integer(I4B)                              :: status
@@ -846,20 +846,21 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE symba_discard_pl(t, npl, ntp, symba_plA, symba_tpA, rmin, rmax, rmaxu, qmin, qmin_coord,          &
-               qmin_alo, qmin_ahi, ldiscard)
-               USE swiftest_globals
-               USE swiftest_data_structures
-               USE module_helio
-               USE module_symba
-               IMPLICIT NONE
-               INTEGER(I4B), INTENT(INOUT)    :: npl, ntp
-               REAL(DP), INTENT(IN)           :: t, rmin, rmax, rmaxu, qmin, qmin_alo, qmin_ahi
-               CHARACTER(*), INTENT(IN)       :: qmin_coord
-               TYPE(symba_pl), INTENT(INOUT)  :: symba_plA
-               TYPE(symba_tp), INTENT(INOUT)  :: symba_tpA
-               LOGICAL(LGT), INTENT(INOUT)    :: ldiscard
-          END SUBROUTINE symba_discard_pl
+      subroutine symba_discard_pl(t, npl, ntp, symba_pla, symba_tpa, rmin, rmax, rmaxu, qmin, qmin_coord, &
+                                    qmin_alo, qmin_ahi, discard_l_pl, discard_stat_list)
+         use swiftest_globals
+         use swiftest_data_structures
+         use module_helio
+         use module_symba
+         implicit none
+         integer(I4B), intent(inout)    :: npl, ntp
+         real(DP), intent(in)           :: t, rmin, rmax, rmaxu, qmin, qmin_alo, qmin_ahi
+         character(*), intent(in)       :: qmin_coord
+         type(symba_pl), intent(inout)  :: symba_pla
+         type(symba_tp), intent(inout)  :: symba_tpa
+         logical, dimension(:), intent(out) :: discard_l_pl
+         integer(I4B), dimension(:), allocatable, intent(out) :: discard_stat_list
+      end subroutine symba_discard_pl
      END INTERFACE
 
      INTERFACE
@@ -934,7 +935,7 @@ MODULE module_interfaces
             integer(I4B),             intent(inout)   :: nfrag
             real(DP), dimension(:),   intent(inout)   :: m_frag, rad_frag
             real(DP), dimension(:,:), intent(inout)   :: Ip_frag
-            real(DP), dimension(:,:), intent(out)     :: xb_frag, vb_frag, rot_frag
+            real(DP), dimension(:,:), intent(inout)   :: xb_frag, vb_frag, rot_frag
             real(DP), intent(inout)                   :: Qloss
             logical, intent(out)                      :: lmerge
          end subroutine symba_frag_pos
@@ -952,7 +953,7 @@ MODULE module_interfaces
                INTEGER(I4B), INTENT(IN)                      :: npl, nplm, nplplenc
                REAL(DP), INTENT(IN)                          :: t, j2rp2, j4rp4
                TYPE(symba_pl), INTENT(INOUT)                 :: symba_plA
-               TYPE(symba_plplenc), INTENT(IN)               :: plplenc_list
+               TYPE(symba_plplenc), INTENT(INOUT)            :: plplenc_list
           END SUBROUTINE symba_getacch
      END INTERFACE
 
@@ -1077,7 +1078,7 @@ MODULE module_interfaces
 
      INTERFACE
       subroutine symba_rearray(t, npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
-                              discard_tpA, ldiscard_pl, ldiscard_tp, mtiny, param)
+                              discard_tpA, ldiscard_pl, ldiscard_tp, mtiny, param, discard_l_pl, discard_stat_list)
          use swiftest_globals
          use swiftest_data_structures
          use module_symba
@@ -1093,6 +1094,8 @@ MODULE module_interfaces
          logical(LGT),                intent(in)    :: ldiscard_pl, ldiscard_tp 
          real(DP),                    intent(in)    :: mtiny
          type(user_input_parameters), intent(in)    :: param
+         logical, dimension(:), allocatable, intent(inout) :: discard_l_pl
+         integer(I4B), dimension(:), allocatable, intent(inout) :: discard_stat_list
       end subroutine symba_rearray
 
      END INTERFACE  
@@ -1308,7 +1311,7 @@ MODULE module_interfaces
                INTEGER(I4B), INTENT(IN)                      :: npl, nplplenc
                REAL(DP), INTENT(IN)                          :: t, j2rp2, j4rp4
                TYPE(symba_pl), INTENT(INOUT)                 :: symba_plA
-               TYPE(symba_plplenc), INTENT(IN)               :: plplenc_list
+               TYPE(symba_plplenc), INTENT(INOUT)            :: plplenc_list
           END SUBROUTINE symba_getacch_eucl
      END INTERFACE
 
@@ -1649,19 +1652,15 @@ END INTERFACE
       END INTERFACE
 
      INTERFACE
-         SUBROUTINE symba_regime(Mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2, regime, Mlr, Mslr, mtiny, Qloss)
-          USE swiftest_globals
-          USE module_symba
-          USE swiftest_data_structures
-          USE module_helio
-          USE module_nrutil
-          USE module_swiftestalloc
-         IMPLICIT NONE
-          INTEGER(I4B), INTENT(OUT)              :: regime
-          REAL(DP), INTENT(INOUT)                :: Mcb, Mlr, Mslr, m1, m2, rad1, rad2, den1, den2, mtiny
-          REAL(DP), DIMENSION(:), INTENT(IN)     :: xh1, xh2, vb1, vb2
-          real(DP), intent(out)                  :: Qloss
-         END SUBROUTINE symba_regime
+      subroutine symba_regime(mcb, m1, m2, rad1, rad2, xh1, xh2, vb1, vb2, den1, den2, regime, mlr, mslr, mtiny, qloss)
+         use swiftest_globals
+         implicit none
+         integer(I4B), intent(out)         :: regime
+         real(DP), intent(out)          :: Mlr, Mslr
+         real(DP), intent(in)           :: Mcb, m1, m2, rad1, rad2, den1, den2, mtiny 
+         real(DP), dimension(:), intent(in)   :: xh1, xh2, vb1, vb2
+         real(DP), intent(out)          :: Qloss 
+      end subroutine symba_regime
      END INTERFACE
 
 END MODULE module_interfaces

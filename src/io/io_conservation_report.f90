@@ -15,8 +15,8 @@ contains
       type(user_input_parameters), intent(in)    :: param        !! Input colleciton of user-defined parameters
       logical,                     intent(in)    :: lterminal    !! Indicates whether to output information to the terminal screen
       ! Internals
-      real(DP), dimension(NDIM), save :: Ltot_orig
-      real(DP), save                  :: Eorbit_orig, Mtot_orig, Lmag_orig
+      real(DP), dimension(NDIM), save :: Ltot_orig, Ltot_last
+      real(DP), save                  :: Eorbit_orig, Mtot_orig, Lmag_orig, ke_orb_last, ke_spin_last, pe_last, Eorbit_last
       real(DP)                        :: ke_orbit, ke_spin, pe, Eorbit
       real(DP), dimension(NDIM)       :: Ltot_now
       real(DP)                        :: Eorbit_error, Etotal_error, Ecoll_error
@@ -62,7 +62,21 @@ contains
             Etotal_error = (Eorbit - (Eorbit_orig - Ecollisions)) / abs(Eorbit_orig)
             Merror = (Mtot_now - Mtot_orig) / Mtot_orig
             write(*, egytermfmt) Lerror, Ecoll_error, Etotal_error, Merror
+            if (Ecoll_error > 0.0_DP) then
+               write(*,*) 'Something has gone wrong! Collisional energy should not be positive!'
+               write(*,*) 'Comparisons with last time: '
+               write(*,*) 'ke_orb : ',ke_orbit - ke_orb_last, (ke_orbit - ke_orb_last) / abs(Eorbit_last)
+               write(*,*) 'ke_spin: ',ke_spin - ke_spin_last, (ke_spin - ke_spin_last) / abs(Eorbit_last)
+               write(*,*) 'pe     : ',pe - pe_last, (pe - pe_last) / abs(Eorbit_last)
+               write(*,*) 'Etot   : ',Eorbit - Eorbit_last, (Eorbit - Eorbit_last) / abs(Eorbit_last)
+               write(*,*)
+            end if
          end if
+         ke_orb_last = ke_orbit
+         ke_spin_last = ke_spin
+         pe_last = pe
+         Ltot_last(:) = Ltot_now(:)
+         Eorbit_last = Eorbit
       end associate
       return
 

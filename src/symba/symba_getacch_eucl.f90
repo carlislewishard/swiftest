@@ -24,7 +24,6 @@ subroutine symba_getacch_eucl(lextra_force, t, npl, symba_plA, j2rp2, j4rp4, npl
    type(symba_pl), intent(inout)               :: symba_plA
    type(symba_plplenc), intent(inout)          :: plplenc_list
 
-
 ! internals
    integer(I8B)                                 :: i, j, k, kn
    real(DP)                                     :: rji2, irij3, faci, facj, r2, rlim2

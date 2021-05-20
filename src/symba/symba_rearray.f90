@@ -1,5 +1,5 @@
 subroutine symba_rearray(t, npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA,&
-   discard_tpA, ldiscard_pl, ldiscard_tp, mtiny, param)
+   discard_tpA, ldiscard_pl, ldiscard_tp, mtiny, param, discard_l_pl, discard_stat_list)
    !! Author: the Purdue Swiftest Team -  David A. Minton, Carlisle A. Wishard, Jennifer L.L. Pouplin, and Jacob R. Elliott
    !!
    !! Clean up tp and pl arrays to remove discarded bodies and add new bodies
@@ -23,30 +23,43 @@ subroutine symba_rearray(t, npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, 
    logical,                     intent(in)    :: ldiscard_pl, ldiscard_tp 
    real(DP),                    intent(in)    :: mtiny
    type(user_input_parameters), intent(in)    :: param
+   logical, dimension(:), allocatable, intent(inout) :: discard_l_pl
+   integer(I4B), dimension(:), allocatable, intent(inout) :: discard_stat_list
 
    ! Internals
-   integer(I4B)                           :: i, j, nkpl, nktp, ntot, dlo
-   logical, dimension(:), allocatable     :: discard_l_pl, add_l_pl
-   logical, dimension(ntp)                :: discard_l_tp
-   logical                                :: lescape
+   integer(I4B)                            :: i, j, nkpl, nktp, ntot, dlo, ndiscard, dstat
+   logical, dimension(:), allocatable      :: add_l_pl
+   logical, dimension(ntp)                 :: discard_l_tp
+   logical                                 :: lescape
+   integer(I4B), dimension(:), allocatable :: discard_index_list
+   real(DP)                                :: msys
 
-   if (any(symba_plA%helio%swiftest%status(1:npl) /= ACTIVE)) then 
-
-      ! Deal with the central body/system discards if there are any
-      do i = 1, npl
-         if ((symba_plA%helio%swiftest%status(i) == DISCARDED_RMIN) .or. (symba_plA%helio%swiftest%status(i) == DISCARDED_PERI)) then
+   ! First resolve the central body/system discards if there are any and mark them for discard
+   if (any(discard_l_pl(1:npl))) then 
+      call coord_h2b(npl, symba_plA%helio%swiftest, msys)
+      ndiscard = count(discard_l_pl(1:npl))
+      allocate(discard_index_list(ndiscard))
+      discard_index_list(:) = pack([(i, i = 1, npl)], discard_l_pl(1:npl))
+      do i = 1, ndiscard
+         dstat = discard_stat_list(i)
+         if ((dstat == DISCARDED_RMIN) .or. (dstat == DISCARDED_PERI)) then
             lescape = .false.
-         else if ((symba_plA%helio%swiftest%status(i) == DISCARDED_RMAX) .or. (symba_plA%helio%swiftest%status(i) == DISCARDED_RMAXU)) then
+         else if ((dstat == DISCARDED_RMAX) .or. (dstat == DISCARDED_RMAXU)) then
             lescape = .true.
          else 
             cycle
          end if
-         call symba_discard_conserve_mtm(symba_plA%helio%swiftest, i, lescape)
+         ! Resolve the discard
+         call symba_discard_conserve_mtm(symba_plA%helio%swiftest, discard_index_list(i), lescape)
+         ! Flip the main status flag to the discard state
       end do
+      symba_plA%helio%swiftest%status(discard_index_list(:)) = discard_stat_list(:)
+   end if
 
-      allocate(discard_l_pl(npl))
-      nkpl = count(symba_plA%helio%swiftest%status(:) == ACTIVE)
-      nsppl = npl - nkpl
+   ! Next, remove all the bodies marked for discard from the main symba_plA structure and pack them into the discard_plA structure
+   nkpl = count(symba_plA%helio%swiftest%status(:) == ACTIVE)
+   nsppl = npl - nkpl
+   if (nsppl > 0) then
       dlo = 1
       if (allocated(discard_plA%helio%swiftest%id)) then ! We alredy made a discard list in this step, so we need to append to it
          nsppl = nsppl + discard_plA%helio%swiftest%nbody
@@ -59,7 +72,7 @@ subroutine symba_rearray(t, npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, 
       discard_l_pl(:) = (symba_plA%helio%swiftest%status(1:npl) /= ACTIVE) 
 
       ! Spill discarded bodies into discard list
-      discard_plA%helio%swiftest%id(dlo:nsppl)   = pack(symba_plA%helio%swiftest%id(1:npl),   discard_l_pl)
+      discard_plA%helio%swiftest%id(dlo:nsppl)     = pack(symba_plA%helio%swiftest%id(1:npl),   discard_l_pl)
       discard_plA%helio%swiftest%status(dlo:nsppl) = pack(symba_plA%helio%swiftest%status(1:npl), discard_l_pl)
       discard_plA%helio%swiftest%mass(dlo:nsppl)   = pack(symba_plA%helio%swiftest%mass(1:npl),   discard_l_pl)
       discard_plA%helio%swiftest%radius(dlo:nsppl) = pack(symba_plA%helio%swiftest%radius(1:npl), discard_l_pl)
@@ -120,8 +133,8 @@ subroutine symba_rearray(t, npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, 
       allocate(add_l_pl(npl))
       
       where ((symba_plA%helio%swiftest%status(:) == DISRUPTION) .or. &
-             (symba_plA%helio%swiftest%status(:) == SUPERCATASTROPHIC) .or. &
-             (symba_plA%helio%swiftest%status(:) == HIT_AND_RUN))
+            (symba_plA%helio%swiftest%status(:) == SUPERCATASTROPHIC) .or. &
+            (symba_plA%helio%swiftest%status(:) == HIT_AND_RUN))
          symba_plA%helio%swiftest%info(:)%origin_time = t
          symba_plA%helio%swiftest%info(:)%origin_xh(1) = symba_plA%helio%swiftest%xh(1,:)
          symba_plA%helio%swiftest%info(:)%origin_xh(2) = symba_plA%helio%swiftest%xh(2,:)
@@ -151,9 +164,8 @@ subroutine symba_rearray(t, npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, 
       
       call util_hills(npl, symba_plA%helio%swiftest)
 
-      nplm = count(symba_plA%helio%swiftest%mass > mtiny)
+      nplm = count(symba_plA%helio%swiftest%mass(1:npl) > mtiny)
       CALL util_dist_index_plpl(npl, nplm, symba_plA)
-
 
    end if
 

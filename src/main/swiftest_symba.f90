@@ -42,6 +42,8 @@ program swiftest_symba
    character(len=*), parameter   :: endwallfmt = '("Wall time to complete run (s): ", es12.5)'
    integer(I4B), allocatable :: seed(:)
    integer(I4B) :: nseeds
+   integer(I4B), dimension(:), allocatable :: discard_stat_list
+   logical, dimension(:), allocatable :: discard_l_pl
 
 ! Executable code
    ! temporary until the conversion to the derived type argument list is complete
@@ -160,10 +162,13 @@ program swiftest_symba
          call symba_step_eucl(t, dt, param,npl,ntp,symba_plA, symba_tpA, nplplenc, npltpenc,&
                plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list)
                
-         ldiscard_pl = .false. 
+         if (allocated(discard_l_pl)) deallocate(discard_l_pl)
+         allocate(discard_l_pl(npl))
+         discard_l_pl(:) = .false.
          ldiscard_tp = .false.
          lfrag_add = .false.
-         call symba_discard_pl(t, npl, ntp, symba_plA, symba_tpA, rmin, rmax, rmaxu, qmin, qmin_coord, qmin_alo, qmin_ahi, ldiscard_pl)
+         call symba_discard_pl(t, npl, ntp, symba_plA, symba_tpA, rmin, rmax, rmaxu, qmin, qmin_coord, qmin_alo, qmin_ahi, discard_l_pl, discard_stat_list)
+         ldiscard_pl = any(discard_l_pl(:))
          call symba_discard_tp(t, npl, ntp, symba_plA, symba_tpA, dt, rmin, rmax, rmaxu, qmin, qmin_coord, &    
                                 qmin_alo, qmin_ahi, param%lrhill_present, ldiscard_tp)
          call symba_collision(t, symba_plA, nplplenc, plplenc_list, lfrag_add, mergeadd_list, nmergeadd, param)
@@ -173,7 +178,7 @@ program swiftest_symba
          if (ldiscard_pl .or. ldiscard_tp) then
             if (param%lenergy) call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit_before, ke_spin_before, pe_before, Eorbit_before, Ltot)
             call symba_rearray(t, npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, nmergeadd, mergeadd_list, discard_plA, &
-                               discard_tpA, ldiscard_pl, ldiscard_tp, mtiny, param)
+                               discard_tpA, ldiscard_pl, ldiscard_tp, mtiny, param, discard_l_pl, discard_stat_list)
             call io_discard_write_symba(t, mtiny, npl, nsppl, nsptp, nmergesub, symba_plA, &
                                         discard_plA%helio%swiftest, discard_tpA%helio%swiftest, mergeadd_list, mergesub_list, discard_file, param%lbig_discard) 
             nmergeadd = 0

@@ -16,7 +16,7 @@ subroutine symba_discard_conserve_mtm(swiftest_plA, ipl, lescape)
    associate(npl => swiftest_plA%nbody, xb => swiftest_plA%xb, vb => swiftest_plA%vb, &
       rot => swiftest_plA%rot, Ip => swiftest_plA%Ip, rad => swiftest_plA%radius, mass => swiftest_plA%mass, &
       statipl => swiftest_plA%status(ipl), xbpl => swiftest_plA%xb(:,ipl), xbcb => swiftest_plA%xb(:,1))
-   
+
       xcom(:) = (mass(ipl) * xb(:, ipl) + mass(1) * xb(:,1)) / (mass(1) + mass(ipl))
       vcom(:) = (mass(ipl) * vb(:, ipl) + mass(1) * vb(:,1)) / (mass(1) + mass(ipl))
 
