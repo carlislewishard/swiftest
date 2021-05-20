@@ -9,7 +9,6 @@ module symba_frag_pos_lambda_implementation
       real(DP), dimension(:),   allocatable :: v_t_mag
       real(DP), dimension(:,:), allocatable :: v_r_unit, v_t_unit
       real(DP), dimension(:),   allocatable :: m_frag
-      real(DP), dimension(:,:), allocatable :: x_frag
       real(DP), dimension(NDIM)             :: vcom
       real(DP)                              :: ke_target
    contains
@@ -23,14 +22,13 @@ module symba_frag_pos_lambda_implementation
    end interface
 
    abstract interface
-      function abstract_objective_func(v_r_mag, v_r_unit, v_t_mag, v_t_unit, x_frag, m_frag, vcom, ke_target) result(fnorm)
+      function abstract_objective_func(v_r_mag, v_r_unit, v_t_mag, v_t_unit, m_frag, vcom, ke_target) result(fnorm)
          ! Template for the kinetic energy constraint function used for minimizing
          import DP
          real(DP), dimension(:),   intent(in) :: v_r_mag   !! Radial velocity mangitude
          real(DP), dimension(:,:), intent(in) :: v_r_unit  !! Radial velocity unit vector
          real(DP), dimension(:),   intent(in) :: v_t_mag   !! Tangential velocity magnitude
          real(DP), dimension(:,:), intent(in) :: v_t_unit  !! Tangential velocity unit vector
-         real(DP), dimension(:,:), intent(in) :: x_frag    !! Position vectors
          real(DP), dimension(:),   intent(in) :: m_frag    !! Fragment masses
          real(DP), dimension(:),   intent(in) :: vcom      !! Barycentric velocity of collisional system center of mass
          real(DP),                 intent(in) :: ke_target !! Target kinetic energ
@@ -39,14 +37,13 @@ module symba_frag_pos_lambda_implementation
    end interface
 
    contains
-      type(ke_constraint) function ke_objective_func_init(lambda, v_r_unit, v_t_mag, v_t_unit, x_frag, m_frag, vcom, ke_target)
+      type(ke_constraint) function ke_objective_func_init(lambda, v_r_unit, v_t_mag, v_t_unit, m_frag, vcom, ke_target)
          implicit none
          ! Arguments
          procedure(abstract_objective_func)   :: lambda    !! The lambda function
          real(DP), dimension(:,:), intent(in) :: v_r_unit  !! Radial velocity unit vector
          real(DP), dimension(:),   intent(in) :: v_t_mag   !! Tangential velocity magnitude
          real(DP), dimension(:,:), intent(in) :: v_t_unit  !! Tangential velocity unit vector
-         real(DP), dimension(:,:), intent(in) :: x_frag    !! Position vectors
          real(DP), dimension(:),   intent(in) :: m_frag    !! Fragment masses
          real(DP), dimension(:),   intent(in) :: vcom      !! Barycentric velocity of collisional system center of mass
          real(DP),                 intent(in) :: ke_target !! Target kinetic energ
@@ -57,7 +54,6 @@ module symba_frag_pos_lambda_implementation
             allocate(self%v_t_mag, source=v_t_mag)
             allocate(self%v_t_unit, source=v_t_unit)
             allocate(self%m_frag, source=m_frag)
-            allocate(self%x_frag, source=x_frag)
             self%vcom(:) = vcom(:)
             self%ke_target = ke_target
          end associate
@@ -70,7 +66,6 @@ module symba_frag_pos_lambda_implementation
          if (allocated(self%v_r_unit)) deallocate(self%v_r_unit)
          if (allocated(self%v_t_mag)) deallocate(self%v_t_mag)
          if (allocated(self%v_t_unit)) deallocate(self%v_t_unit)
-         if (allocated(self%x_frag)) deallocate(self%x_frag)
          if (allocated(self%m_frag)) deallocate(self%m_frag)
          if (associated(self%ke_objective_func_ptr)) nullify(self%ke_objective_func_ptr)
       end subroutine ke_objective_func_destroy 
@@ -84,7 +79,7 @@ module symba_frag_pos_lambda_implementation
       real(DP)                           :: fval
 
       if (associated(self%ke_objective_func_ptr)) then
-         fval = self%ke_objective_func_ptr(x, self%v_r_unit, self%v_t_mag, self%v_t_unit, self%x_frag, self%m_frag, self%vcom, self%ke_target)
+         fval = self%ke_objective_func_ptr(x, self%v_r_unit, self%v_t_mag, self%v_t_unit, self%m_frag, self%vcom, self%ke_target)
       else
          error stop "KE Objective function was not initialized."
       end if
@@ -118,7 +113,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    logical, intent(out)                    :: lmerge ! Answers the question: Should this have been a merger instead?
    real(DP), intent(inout)                 :: Qloss
    ! Internals
-   real(DP), parameter                     :: f_spin = 0.20_DP !! Fraction of pre-impact orbital angular momentum that is converted to fragment spin
+   real(DP), parameter                     :: f_spin = 0.00_DP !! Fraction of pre-impact orbital angular momentum that is converted to fragment spin
    real(DP)                                :: mscale = 1.0_DP, rscale = 1.0_DP, vscale = 1.0_DP, tscale = 1.0_DP, Lscale = 1.0_DP, Escale = 1.0_DP! Scale factors that reduce quantities to O(~1) in the collisional system
    real(DP)                                :: mtot 
    real(DP), dimension(NDIM)               :: xcom, vcom
@@ -146,7 +141,6 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
    allocate(x_frag, source=xb_frag)
    allocate(v_frag, source=vb_frag)
-   mtot = sum(m_frag)
 
    associate(npl => symba_plA%helio%swiftest%nbody, status => symba_plA%helio%swiftest%status) 
       allocate(lexclude(npl))
@@ -195,11 +189,12 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
    call set_fragment_radial_velocities(lmerge)
 
-   call restore_scale_factors()
    call calculate_system_energy(ke_orb_after, ke_spin_after, pe_after, Ltot_after, linclude_fragments=.true.)
    Etot_after = ke_orb_after + ke_spin_after + pe_after
    Lmag_after = norm2(Ltot_after(:))
 
+   write(*,fmtlabel) ' T_frag calc |',ke_frag / abs(Etot_before)
+   write(*,fmtlabel) ' residual    |',(ke_frag - ke_target) / abs(Etot_before)
    write(*,        "(' ---------------------------------------------------------------------------')")
    write(*,        "('             |    T_orb    T_spin         T         pe      Etot      Ltot')")
    write(*,        "(' ---------------------------------------------------------------------------')")
@@ -211,6 +206,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
                                        norm2(Ltot_after - Ltot_before) / Lmag_before
 
    lmerge = lmerge .or. ((Etot_after - Etot_before) / abs(Etot_before) > 0._DP) 
+   call restore_scale_factors()
 
    return 
 
@@ -252,6 +248,12 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       rad_frag = rad_frag / rscale
       Qloss = Qloss / Escale
 
+      !ke_orb_before = ke_orb_before / Escale
+      !ke_spin_before = ke_spin_before / Escale
+      !pe_before = pe_before * rscale / mscale**2
+      !Etot_before = ke_orb_before + ke_spin_before + pe_before 
+      !Ltot_before(:) = Ltot_before(:) / Lscale
+      !Lmag_before = norm2(Ltot_before(:))
       return
    end subroutine set_scale_factors
 
@@ -283,13 +285,13 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       end do
 
       ! Set the scale factors to 1.0 for any additional energy calculations so that they can be done in the system units
-      Ltot_before(:) = Ltot_before(:) * Lscale
-      Lmag_before = Lmag_before * Lscale
-      ke_orb_before = ke_orb_before * Escale
-      ke_spin_before = ke_spin_before * Escale
-      pe_before = pe_before * mscale**2 / rscale
-      Etot_before = ke_orb_before + ke_spin_before + pe_before 
-      Lmag_before = norm2(Ltot_before(:))
+      !Ltot_before(:) = Ltot_before(:) * Lscale
+      !Lmag_before = Lmag_before * Lscale
+      !ke_orb_before = ke_orb_before * Escale
+      !ke_spin_before = ke_spin_before * Escale
+      !pe_before = pe_before * mscale**2 / rscale
+      !Etot_before = ke_orb_before + ke_spin_before + pe_before 
+      !Lmag_before = norm2(Ltot_before(:))
       Qloss = Qloss * Escale
       mscale = 1.0_DP
       rscale = 1.0_DP
@@ -627,45 +629,39 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       v_r_initial(:) = v_r_initial(:) * sqrt(2 * ke_target / nfrag / m_frag(:)) 
       ! Initialize the lambda function using a structure constructor that calls the init method
       ! Minimize error using the BFGS optimizer
-      v_r_mag(:) = util_minimize_bfgs(ke_constraint(ke_objective_function, v_r_unit, v_t_mag, v_t_unit, x_frag, m_frag, L_frag_orb, ke_target), nfrag, v_r_initial, TOL, lerr)
+      v_r_mag(:) = util_minimize_bfgs(ke_constraint(ke_objective_function, v_r_unit, v_t_mag, v_t_unit, m_frag, vcom, ke_target), nfrag, v_r_initial, TOL, lerr)
       if (lerr) then
          ! No solution exists for this case, so we need to indicate that this should be a merge
          ! This may happen due to setting the tangential velocities too high when setting the angular momentum constraint
          lmerge = .true.
          v_frag(:,:) = 0.0_DP
+         do i = 1, nfrag
+            vb_frag(:, i) = vcom(:)
+         end do
       else
          lmerge = .false.
          ! Shift the radial velocity vectors to align with the center of mass of the collisional system (the origin)
-         allocate(v_r, mold=v_frag)
+         vb_frag(:,:) =  vmag_to_vb(v_r_mag, v_r_unit, v_t_mag, v_t_unit, m_frag, vcom) 
          do i = 1, nfrag
-            v_r(:, i) = abs(v_r_mag(i)) * v_r_unit(:, i)
-         end do
-         call shift_vector_to_origin(m_frag, v_r)
-        
-         ! Recombine the tangential and radial components into the final velocity vector
-         do i = 1, nfrag
-            v_frag(:, i) = v_r(:, i) + v_t_mag(i) * v_t_unit(:, i)
+            v_frag(:, i) = vb_frag(:, i) - vcom(:)
          end do
       end if
-
-      do i = 1, nfrag
-         vb_frag(:,i) = v_frag(:,i) + vcom(:)
-      end do
 
       return
    end subroutine set_fragment_radial_velocities
 
-   function ke_objective_function(v_r_mag, v_r_unit, v_t_mag, v_t_unit, x_frag, m_frag, vcom, ke_target) result(fval) 
-      ! Objective function for evaluating how close our fragment velocities get to minimizing KE error from our required value
+   function ke_objective_function(v_r_mag, v_r_unit, v_t_mag, v_t_unit, m_frag, vcom, ke_target) result(fval) 
+      !! Author: David A. Minton
+      !!
+      !! Objective function for evaluating how close our fragment velocities get to minimizing KE error from our required value
       implicit none
       ! Arguments
       real(DP), dimension(:),   intent(in)  :: v_r_mag   !! Unknown radial component of fragment velocity vector
       real(DP), dimension(:),   intent(in)  :: v_t_mag   !! Tangential component of velocity vector set previously by angular momentum constraint
       real(DP), dimension(:,:), intent(in)  :: v_r_unit, v_t_unit !! Radial and tangential unit vectors for each fragment
-      real(DP), dimension(:,:), intent(in)  :: x_frag    !! Velocity and position vectors
       real(DP), dimension(:),   intent(in)  :: m_frag    !! Fragment masses
       real(DP), dimension(:),   intent(in)  :: vcom      !! Barycentric velocity of collisional system center of mass
-      real(DP),                 intent(in)  :: ke_target !! Target kinetic energ
+      real(DP),                 intent(in)  :: ke_target !! Target kinetic energy
       ! Result
       real(DP)                              :: fval      !! The objective function result, which is the square of the difference between the calculated fragment kinetic energy and our target
                                                          !! Minimizing this brings us closer to our objective
@@ -674,17 +670,10 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       real(DP), dimension(NDIM)           :: L
       real(DP), dimension(:,:), allocatable :: v_shift
 
-      allocate(v_shift, mold=v_r_unit)
-      ! Make sure the velocity magnitude stays positive
-      do i = 1, nfrag
-         v_shift(:,i) = abs(v_r_mag(i)) * v_r_unit(:, i)
-      end do
-      ! In order to keep satisfying the kinetic energy constraint, we must shift the origin of the radial component of the velocities to the center of mass
-      call shift_vector_to_origin(m_frag, v_shift)
-      
+      allocate(v_shift, mold=vb_frag)
+      v_shift(:,:) = vmag_to_vb(v_r_mag, v_r_unit, v_t_mag, v_t_unit, m_frag, vcom) 
       fval = -ke_target
       do i = 1, nfrag
-         v_shift(:, i) = v_shift(:, i) + v_t_mag(i) * v_t_unit(:, i) + vcom(:)
          fval = fval + 0.5_DP * m_frag(i) * dot_product(v_shift(:, i), v_shift(:, i))
       end do
       fval = fval**2 ! This ensures that fval = 0 is a local minimum, which is what the BFGS method is searching for
@@ -692,6 +681,36 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       return
 
    end function ke_objective_function
+
+   function vmag_to_vb(v_r_mag, v_r_unit, v_t_mag, v_t_unit, m_frag, vcom) result(vb) 
+      !! Author: David A. Minton
+      !!
+      !! Converts radial and tangential velocity magnitudes into barycentric velocity
+      implicit none
+      ! Arguments
+      real(DP), dimension(:),   intent(in)  :: v_r_mag   !! Unknown radial component of fragment velocity vector
+      real(DP), dimension(:),   intent(in)  :: v_t_mag   !! Tangential component of velocity vector set previously by angular momentum constraint
+      real(DP), dimension(:,:), intent(in)  :: v_r_unit, v_t_unit !! Radial and tangential unit vectors for each fragment
+      real(DP), dimension(:),   intent(in)  :: m_frag    !! Fragment masses
+      real(DP), dimension(:),   intent(in)  :: vcom      !! Barycentric velocity of collisional system center of mass
+      ! Result
+      real(DP), dimension(:,:), allocatable   :: vb
+      ! Internals
+      integer(I4B) :: i
+
+      allocate(vb, mold=v_r_unit)
+      ! Make sure the velocity magnitude stays positive
+      do i = 1, nfrag
+         vb(:,i) = abs(v_r_mag(i)) * v_r_unit(:, i)
+      end do
+      ! In order to keep satisfying the kinetic energy constraint, we must shift the origin of the radial component of the velocities to the center of mass
+      call shift_vector_to_origin(m_frag, vb)
+      
+      do i = 1, nfrag
+         vb(:, i) = vb(:, i) + v_t_mag(i) * v_t_unit(:, i) + vcom(:)
+      end do
+
+   end function vmag_to_vb
 
 
 end subroutine symba_frag_pos
