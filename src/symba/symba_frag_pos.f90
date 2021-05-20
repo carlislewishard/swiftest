@@ -134,6 +134,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    integer(I4B)                            :: nseed
    integer(I4B)                            :: try, ntry
    integer(I4B), parameter                 :: NFRAG_MIN = 6 !! The minimum allowable number of fragments (set to 6 because that's how many unknowns are needed in the tangential velocity calculation)
+   real(DP)                                :: r_max_start = 1.0_DP
    logical, save                           :: lfirst = .true.
 
    if (nfrag < NFRAG_MIN) then
@@ -526,7 +527,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
       ! Place the fragments into a region that is big enough that we should usually not have overlapping bodies
       ! An overlapping bodies will collide in the next time step, so it's not a major problem if they do (it just slows the run down)
-      r_max = 1.0_DP
+      r_max = r_max_start
 
       ! We will treat the first fragment of the list as a special case. It gets initialized the maximum distance along the original impactor distance vector.
       ! This is done because in a regular disruption, the first body is the largest fragment.
@@ -768,6 +769,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       else
          iflip = 1
       end if
+      if (ke_offset > 0.0_DP) r_max_start = r_max_start + 1.0_DP ! The larger lever arm can help if the problem is in the angular momentum step
    end subroutine restructure_failed_fragments
 
 
