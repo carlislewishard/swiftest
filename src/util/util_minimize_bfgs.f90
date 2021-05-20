@@ -28,7 +28,7 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
    real(DP), dimension(:), allocatable :: x1_d
    ! Internals
    integer(I4B) ::  i, j, k, l, conv, num
-   integer(I4B), parameter :: MAXLOOP = 100 !! Maximum number of loops before method is determined to have failed 
+   integer(I4B), parameter :: MAXLOOP = 500 !! Maximum number of loops before method is determined to have failed 
    real(QP), parameter     :: gradeps = 1e-5_QP !! Tolerance for gradient calculations
    real(QP), dimension(N) :: S               !! Direction vectors 
    real(QP), dimension(N) :: Snorm           !! normalized direction 
@@ -110,13 +110,17 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
       ! update H matrix 
       H(:,:) = H(:,:) + ((1._QP - yHy / Py) * PP(:,:) - PyH(:,:) - HyP(:,:)) / Py
       if (any(H(:,:) > sqrt(huge(1._QP)) / N)) then
+         lerr = .true.
          write(*,*) 'BFGS did not converge after ',i,'iterations: H too big'
          exit
       end if
       ! Stop everything if there are any exceptions to allow the routine to fail gracefully
       call ieee_get_flag(ieee_usual, fpe_flag)
       if (any(fpe_flag)) exit 
-      if (i == MAXLOOP) write(*,*) "BFGS ran out of loops!"
+      if (i == MAXLOOP) then
+         lerr = .true.
+         write(*,*) "BFGS ran out of loops!"
+      end if
    end do
    x1_d = x1
    call ieee_get_flag(ieee_usual, fpe_flag)
