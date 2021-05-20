@@ -644,7 +644,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ! Arguments
       logical,                intent(out)   :: lmerge
       ! Internals
-      real(DP), parameter                   :: TOL = 1e-10_DP
+      real(DP), parameter                   :: TOL = 1e-8_DP
       real(DP), dimension(:), allocatable   :: vflat 
       logical                               :: lerr
       integer(I4B)                          :: i
