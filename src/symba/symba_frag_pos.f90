@@ -125,7 +125,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    real(DP), dimension(NDIM)               :: Ltot_before
    real(DP), dimension(NDIM)               :: Ltot_after
    real(DP)                                :: Etot_before, ke_orb_before, ke_spin_before, pe_before, Lmag_before
-   real(DP)                                :: Etot_after,  ke_orb_after,  ke_spin_after,  pe_after,  Lmag_after
+   real(DP)                                :: Etot_after,  ke_orb_after,  ke_spin_after,  pe_after,  Lmag_after, dEtot, dLmag
    real(DP), dimension(NDIM)               :: L_frag_spin, L_frag_tot, L_frag_orb, L_offset
    real(DP)                                :: ke_family, ke_target, ke_frag, ke_offset
    real(DP), dimension(NDIM)               :: x_col_unit, y_col_unit, z_col_unit
@@ -166,9 +166,8 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    end associate
    call set_scale_factors()
 
-   call calculate_system_energy(ke_orb_before, ke_spin_before, pe_before, Ltot_before, linclude_fragments=.false.)
-   Lmag_before = norm2(Ltot_before(:))
-   Etot_before = ke_orb_before + ke_spin_before + pe_before
+   call calculate_system_energy(linclude_fragments=.false.)
+
 
    write(*,        "(' -------------------------------------------------------------------------------------')")
    write(*,        "('              Energy normalized by |Etot_before|')")
@@ -184,9 +183,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    
       call set_fragment_position_vectors()
       call set_fragment_tangential_velocities()
-      call calculate_system_energy(ke_orb_after, ke_spin_after, pe_after, Ltot_after, linclude_fragments=.true.)
-      Etot_after = ke_orb_after + ke_spin_after + pe_after
-      Lmag_after = norm2(Ltot_after(:))
+      call calculate_system_energy(linclude_fragments=.true.)
    
       write(*,        "(' -------------------------------------------------------------------------------------')")
       write(*,        "('             |      T_orb      T_spin           T          pe        Etot        Ltot')")
@@ -195,8 +192,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
                                           (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
                                           (ke_orb_after + ke_spin_after - ke_orb_before - ke_spin_before)/ abs(Etot_before), &
                                           (pe_after - pe_before) / abs(Etot_before), &
-                                          (Etot_after - Etot_before) / abs(Etot_before), &
-                                          norm2(Ltot_after - Ltot_before) / Lmag_before
+                                          dEtot, dLmag
    
       write(*,        "(' -------------------------------------------------------------------------------------')")
       write(*,        "(' If T_offset > 0, this will be a merge')") 
@@ -204,9 +200,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    
       call set_fragment_radial_velocities(lmerge)
    
-      call calculate_system_energy(ke_orb_after, ke_spin_after, pe_after, Ltot_after, linclude_fragments=.true.)
-      Etot_after = ke_orb_after + ke_spin_after + pe_after
-      Lmag_after = norm2(Ltot_after(:))
+      call calculate_system_energy(linclude_fragments=.true.)
    
       if (.not.lmerge) then
          write(*,        "(' -------------------------------------------------------------------------------------')")
@@ -223,8 +217,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
                                              (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
                                              (ke_orb_after + ke_spin_after - ke_orb_before - ke_spin_before)/ abs(Etot_before), &
                                              (pe_after - pe_before) / abs(Etot_before), &
-                                             (Etot_after - Etot_before) / abs(Etot_before), &
-                                             norm2(Ltot_after - Ltot_before) / Lmag_before
+                                             dEtot, dLmag
       end if
    
       lmerge = lmerge .or. ((Etot_after - Etot_before) / abs(Etot_before) > 0._DP) 
@@ -235,9 +228,9 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    write(*,        "('  Final diagnostic')")
    write(*,        "(' -------------------------------------------------------------------------------------')")
    write(*,        "(' dL_tot:       Should be very small' )")
-   write(*,fmtlabel) ' dL_tot      |', norm2(Ltot_after - Ltot_before) / Lmag_before
+   write(*,fmtlabel) ' dL_tot      |', dLmag
    write(*,        "(' dE_tot:       If not a merge, should be negative and equal to Qloss' )")
-   write(*,fmtlabel) ' dE_tot      |', (Etot_after - Etot_before) / abs(Etot_before)
+   write(*,fmtlabel) ' dE_tot      |', dEtot
    write(*,fmtlabel) ' Qloss       |', -Qloss / abs(Etot_before)
    write(*,fmtlabel) ' dE - Qloss  |', (Etot_after - Etot_before + Qloss) / abs(Etot_before)
    write(*,        "(' -------------------------------------------------------------------------------------')")
@@ -391,7 +384,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       return
    end subroutine define_pre_collisional_family
 
-   subroutine calculate_system_energy(ke_orb, ke_spin, pe, Ltot, linclude_fragments)
+   subroutine calculate_system_energy(linclude_fragments)
       !! Author: David A. Minton
       !!
       !! Calculates total system energy, including all bodies in the symba_plA list that do not have a corresponding value of the lexclude array that is true
@@ -399,10 +392,10 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       use module_swiftestalloc
       implicit none
       ! Arguments
-      real(DP),               intent(out) :: ke_orb, ke_spin, pe
-      real(DP), dimension(:), intent(out) :: Ltot
       logical,                intent(in) :: linclude_fragments
       ! Internals
+      real(DP) :: ke_orb, ke_spin, pe
+      real(DP), dimension(NDIM)  :: Ltot
       integer(I4B) :: i, npl_new, nplm
       logical, dimension(:), allocatable :: ltmp
       logical :: lk_plpl
@@ -471,6 +464,14 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
          ! Calculate the current fragment energy and momentum balances
          if (linclude_fragments) then
+            Ltot_after(:) = Ltot(:)
+            Lmag_after = norm2(Ltot(:))
+            ke_orb_after = ke_orb
+            ke_spin_after = ke_spin
+            pe_after = pe
+            Etot_after = ke_orb_after + ke_spin_after + pe_after
+            dEtot = (Etot_after - Etot_before) / abs(Etot_before)
+            dLmag = norm2(Ltot_after(:) - Ltot_before(:)) / Lmag_before
             ke_frag = 0._DP
             do i = 1, nfrag
                ke_frag = ke_frag + 0.5_DP * m_frag(i) * dot_product(vb_frag(:, i), vb_frag(:, i))
@@ -478,6 +479,13 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
             ke_target = ke_family + (ke_spin_before - ke_spin) + (pe_before - pe) - Qloss
             ke_offset = ke_frag - ke_target
             L_offset(:) = Ltot_before(:) - Ltot(:)
+         else
+            Ltot_before(:) = Ltot(:)
+            Lmag_before = norm2(Ltot(:))
+            ke_orb_before = ke_orb
+            ke_spin_before = ke_spin
+            pe_before = pe
+            Etot_before = ke_orb_before + ke_spin_before + pe_before
          end if
       end associate
    return
