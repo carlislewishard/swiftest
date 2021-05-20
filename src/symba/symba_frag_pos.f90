@@ -176,48 +176,48 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    call define_pre_collisional_family()
    
    do try = 1, ntry
-      write(*,        "(' -------------------------------------------------------------------------------------')")
-      write(*,*) "Try number: ",try, ' of ',ntry
-      write(*,        "(' -------------------------------------------------------------------------------------')")
-      write(*,        "('  First pass to get angular momentum ')")
+      !write(*,        "(' -------------------------------------------------------------------------------------')")
+      !write(*,*) "Try number: ",try, ' of ',ntry
+      !write(*,        "(' -------------------------------------------------------------------------------------')")
+      !write(*,        "('  First pass to get angular momentum ')")
    
       call set_fragment_position_vectors()
       call set_fragment_tangential_velocities()
       call calculate_system_energy(linclude_fragments=.true.)
    
-      write(*,        "(' -------------------------------------------------------------------------------------')")
-      write(*,        "('             |      T_orb      T_spin           T          pe        Etot        Ltot')")
-      write(*,        "(' -------------------------------------------------------------------------------------')")
-      write(*,fmtlabel) ' change      |',(ke_orb_after - ke_orb_before) / abs(Etot_before), &
-                                          (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
-                                          (ke_orb_after + ke_spin_after - ke_orb_before - ke_spin_before)/ abs(Etot_before), &
-                                          (pe_after - pe_before) / abs(Etot_before), &
-                                          dEtot, dLmag
-   
-      write(*,        "(' -------------------------------------------------------------------------------------')")
-      write(*,        "(' If T_offset > 0, this will be a merge')") 
-      write(*,fmtlabel) ' T_offset  |',ke_offset / abs(Etot_before)
+      !write(*,        "(' -------------------------------------------------------------------------------------')")
+      !write(*,        "('             |      T_orb      T_spin           T          pe        Etot        Ltot')")
+      !write(*,        "(' -------------------------------------------------------------------------------------')")
+      !write(*,fmtlabel) ' change      |',(ke_orb_after - ke_orb_before) / abs(Etot_before), &
+      !                                    (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
+      !                                    (ke_orb_after + ke_spin_after - ke_orb_before - ke_spin_before)/ abs(Etot_before), &
+      !                                    (pe_after - pe_before) / abs(Etot_before), &
+      !                                    dEtot, dLmag
+  ! 
+  !    write(*,        "(' -------------------------------------------------------------------------------------')")
+  !    write(*,        "(' If T_offset > 0, this will be a merge')") 
+  !    write(*,fmtlabel) ' T_offset  |',ke_offset / abs(Etot_before)
    
       call set_fragment_radial_velocities(lmerge)
    
       call calculate_system_energy(linclude_fragments=.true.)
    
       if (.not.lmerge) then
-         write(*,        "(' -------------------------------------------------------------------------------------')")
-         write(*,        "('  Second pass to get energy ')")
-         write(*,        "(' -------------------------------------------------------------------------------------')")
-         write(*,fmtlabel) ' T_frag targ |',ke_target / abs(Etot_before)
-         write(*,fmtlabel) ' T_frag calc |',ke_frag / abs(Etot_before)
-         write(*,        "(' T_offset should now be small')") 
-         write(*,fmtlabel) ' T_offset    |',ke_offset / abs(Etot_before)
-         write(*,        "(' -------------------------------------------------------------------------------------')")
-         write(*,        "('             |      T_orb      T_spin           T          pe        Etot        Ltot')")
-         write(*,        "(' -------------------------------------------------------------------------------------')")
-         write(*,fmtlabel) ' change      |',(ke_orb_after - ke_orb_before) / abs(Etot_before), &
-                                             (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
-                                             (ke_orb_after + ke_spin_after - ke_orb_before - ke_spin_before)/ abs(Etot_before), &
-                                             (pe_after - pe_before) / abs(Etot_before), &
-                                             dEtot, dLmag
+         !write(*,        "(' -------------------------------------------------------------------------------------')")
+         !write(*,        "('  Second pass to get energy ')")
+         !write(*,        "(' -------------------------------------------------------------------------------------')")
+         !write(*,fmtlabel) ' T_frag targ |',ke_target / abs(Etot_before)
+         !write(*,fmtlabel) ' T_frag calc |',ke_frag / abs(Etot_before)
+         !write(*,        "(' T_offset should now be small')") 
+         !write(*,fmtlabel) ' T_offset    |',ke_offset / abs(Etot_before)
+         !write(*,        "(' -------------------------------------------------------------------------------------')")
+         !write(*,        "('             |      T_orb      T_spin           T          pe        Etot        Ltot')")
+         !write(*,        "(' -------------------------------------------------------------------------------------')")
+         !write(*,fmtlabel) ' change      |',(ke_orb_after - ke_orb_before) / abs(Etot_before), &
+         !                                    (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
+         !                                    (ke_orb_after + ke_spin_after - ke_orb_before - ke_spin_before)/ abs(Etot_before), &
+         !                                    (pe_after - pe_before) / abs(Etot_before), &
+         !                                    dEtot, dLmag
       end if
    
       lmerge = lmerge .or. ((Etot_after - Etot_before) / abs(Etot_before) > 0._DP) 
@@ -227,14 +227,16 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    write(*,        "(' -------------------------------------------------------------------------------------')")
    write(*,        "('  Final diagnostic')")
    write(*,        "(' -------------------------------------------------------------------------------------')")
-   write(*,        "(' dL_tot:       Should be very small' )")
-   write(*,fmtlabel) ' dL_tot      |', dLmag
-   write(*,        "(' dE_tot:       If not a merge, should be negative and equal to Qloss' )")
-   write(*,fmtlabel) ' dE_tot      |', dEtot
-   write(*,fmtlabel) ' Qloss       |', -Qloss / abs(Etot_before)
-   write(*,fmtlabel) ' dE - Qloss  |', (Etot_after - Etot_before + Qloss) / abs(Etot_before)
-   write(*,        "(' -------------------------------------------------------------------------------------')")
-   write(*,*) "Flag as merge?", lmerge
+   if (lmerge) then
+      write(*,*) "symba_frag_pos can't find a solution, so this collision is flagged as a merge"
+   else
+      write(*,        "(' dL_tot should be very small' )")
+      write(*,fmtlabel) ' dL_tot      |', dLmag
+      write(*,        "(' dE_tot should be negative and equal to Qloss' )")
+      write(*,fmtlabel) ' dE_tot      |', dEtot
+      write(*,fmtlabel) ' Qloss       |', -Qloss / abs(Etot_before)
+      write(*,fmtlabel) ' dE - Qloss  |', (Etot_after - Etot_before + Qloss) / abs(Etot_before)
+   end if
    write(*,        "(' -------------------------------------------------------------------------------------')")
 
    call restore_scale_factors()
