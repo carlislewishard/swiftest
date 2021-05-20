@@ -4,18 +4,10 @@ module swiftest_globals
    !!
    !! Basic parameters, definitions, and global type definitions used throughout the Swiftest project
    !! Adapted from David E. Kaufmann's Swifter modules: module_parameters.f90 and module_swifter.f90
-   use, intrinsic :: iso_fortran_env  ! Use the intrinsic kind definitions
+   use, intrinsic :: iso_fortran_env, only : I1B => int8, I2B => int16, I4B => int32,  I8B => int64, &
+                                             SP => real32, DP => real64, QP => real128
    implicit none
    public
-
-   integer, parameter :: I8B = int64 !! Symbolic name for kind types of 8-byte integers
-   integer, parameter :: I4B = int32 !! Symbolic name for kind types of 4-byte integers
-   integer, parameter :: I2B = int16 !! Symbolic name for kind types of 2-byte integers
-   integer, parameter :: I1B = int8  !! Symbolic name for kind types of 1-byte integers
-
-   integer, parameter :: SP = real32  !! Symbolic name for kind types of single-precision reals
-   integer, parameter :: DP = real64  !! Symbolic name for kind types of double-precision reals
-   integer, parameter :: QP = real128 !! Symbolic name for kind types of quad-precision reals
 
    integer, parameter :: LGT = KIND(.TRUE.)
       !! Symbolic name for kind type of default logical
