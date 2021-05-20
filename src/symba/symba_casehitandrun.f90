@@ -80,7 +80,7 @@ function symba_casehitandrun(symba_plA, family, nmergeadd, mergeadd_list, id, x,
 
       ! Put the fragments on the circle surrounding the center of mass of the system
       call symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radius, &
-                           Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, lpure, Qloss)
+                          nfrag, Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, Qloss, lpure)
       if (lpure) then
          write(*,*) 'Should have been a pure hit and run instead'
          nfrag = 0

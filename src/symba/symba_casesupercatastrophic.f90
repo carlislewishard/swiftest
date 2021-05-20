@@ -68,11 +68,11 @@ function symba_casesupercatastrophic (symba_plA, family, nmergeadd, mergeadd_lis
 
    ! Put the fragments on the circle surrounding the center of mass of the system
    call symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radius, &
-                        Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, lmerge, Qloss)
+                       nfrag, Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, Qloss, lmerge)
 
    if (lmerge) then
       write(*,*) 'Should have been a merge instead.'
-      status = symba_casemerge (symba_plA, family, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, param)
+      status = symba_casemerge(symba_plA, family, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, param)
    else
       write(*,'("Generating ",I2.0," fragments")') nfrag
       status = SUPERCATASTROPHIC
