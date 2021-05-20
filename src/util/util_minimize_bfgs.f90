@@ -498,6 +498,7 @@ function util_minimize_bfgs(f, N, x0_d, eps_d, lerr) result(x1_d)
             ! Solve system of equations   
             soln(:) = util_solve_linear_system(lhs, rhs, 3, lerr)
             call ieee_set_flag(ieee_all, .false.) ! Set all flags back to quiet
+            call ieee_set_halting_mode(ieee_divide_by_zero, .false.)
             if (lerr) exit
             aold = astar
             if (soln(2) == soln(3)) then ! Handles the case where they are both 0. 0/0 is an unhandled exception

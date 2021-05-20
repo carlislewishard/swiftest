@@ -78,6 +78,7 @@ end function util_solve_linear_system_q
 
 function solve_wbs(u) result(x) ! solve with backward substitution
    !! Based on code available on Rosetta Code: https://rosettacode.org/wiki/Gaussian_elimination#Fortran
+   use, intrinsic :: ieee_exceptions
    use swiftest
    implicit none
    ! Arguments
@@ -90,6 +91,7 @@ function solve_wbs(u) result(x) ! solve with backward substitution
    n = size(u, 1)
    if (allocated(x) .and. (size(x) /= n))  deallocate(x)
    if (.not.allocated(x)) allocate(x(n))
+   call ieee_set_halting_mode(ieee_divide_by_zero, .false.)
    do i = n, 1, -1 
       x(i) = (u(i, n + 1) - sum(u(i, i + 1:n) * x(i + 1:n))) / u(i, i)
    end do
@@ -101,6 +103,7 @@ function ge_wpp(A, b) result(u) ! gaussian eliminate with partial pivoting
    !!   A being an n by n matrix.
    !!   x and b are n by 1 vectors. 
    !! Based on code available on Rosetta Code: https://rosettacode.org/wiki/Gaussian_elimination#Fortran
+   use, intrinsic :: ieee_exceptions
    use swiftest
    implicit none
    ! Arguments
@@ -115,6 +118,7 @@ function ge_wpp(A, b) result(u) ! gaussian eliminate with partial pivoting
    n = size(a, 1)
    allocate(u(n, (n + 1)))
    u = reshape([A, b], [n, n + 1])
+   call ieee_set_halting_mode(ieee_divide_by_zero, .false.)
    do j = 1, n
       p = maxloc(abs(u(j:n, j)), 1) + j - 1 ! maxloc returns indices between (1, n - j + 1)
       if (p /= j) u([p, j], j) = u([j, p], j)
