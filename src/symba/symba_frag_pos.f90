@@ -93,7 +93,7 @@ module symba_frag_pos_lambda_implementation
 end module symba_frag_pos_lambda_implementation
 
 subroutine symba_frag_pos (param, symba_plA, family, x, v, L_spin, Ip, mass, radius, &
-                           nfrag, Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, lmerge, Qloss)
+                            nfrag, Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, Qloss, lmerge)
    !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
    !! Places the collision fragments on a circle oriented with a plane defined
