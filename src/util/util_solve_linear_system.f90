@@ -89,7 +89,7 @@ function solve_wbs(u) result(x) ! solve with backward substitution
    integer(I4B)             :: i,n
 
    n = size(u, 1)
-   if (allocated(x) .and. (size(x) /= n))  deallocate(x)
+   if (allocated(x)) deallocate(x)
    if (.not.allocated(x)) allocate(x(n))
    call ieee_set_halting_mode(ieee_divide_by_zero, .false.)
    do i = n, 1, -1 
