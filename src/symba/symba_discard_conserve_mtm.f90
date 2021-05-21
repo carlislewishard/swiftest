@@ -33,13 +33,10 @@ subroutine symba_discard_conserve_mtm(param, swiftest_plA, ipl, lescape)
          ! Add the potential and kinetic energy of the lost body to the records
          pe = -mass(1) * mass(ipl) / norm2(xb(:, ipl) - xb(:, 1))
          ke = 0.5_DP * mass(ipl) * dot_product(vb(:, ipl), vb(:, ipl))
-         swiftest_plA%Elost_bodies = swiftest_plA%Elost_bodies + pe + ke
-         swiftest_plA%Mescape = swiftest_plA%Mescape + mass(ipl)
       else
          ! Add the potential energy of the lost body to the records
          pe = -mass(1) * mass(ipl) / norm2(xb(:, ipl) - xb(:, 1))
          ke = 0.0_DP
-         swiftest_plA%Elost_bodies = swiftest_plA%Elost_bodies + pe
          swiftest_plA%dMcb = swiftest_plA%dMcb + mass(ipl)
          swiftest_plA%dRcb = swiftest_plA%dRcb + 1.0_DP / 3.0_DP * (radius(ipl) / radius(1))**3 - 2.0_DP / 9.0_DP * (radius(ipl) / radius(1))**6
          ! Update mass of central body to be consistent with its total mass
