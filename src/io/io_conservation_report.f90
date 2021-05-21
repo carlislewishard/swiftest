@@ -59,13 +59,12 @@ contains
             Lerror = norm2(Ltot_now - Ltot_orig) / Lmag_orig
             Eorbit_error = (Eorbit - Eorbit_orig) / abs(Eorbit_orig)
             Ecoll_error = -Ecollisions / abs(Eorbit_orig)
-            Etotal_error = (Eorbit - (Eorbit_orig - Ecollisions)) / abs(Eorbit_orig)
+            Etotal_error = (Eorbit - (Eorbit_orig + Ecollisions)) / abs(Eorbit_orig)
             Merror = (Mtot_now - Mtot_orig) / Mtot_orig
             write(*, egytermfmt) Lerror, Ecoll_error, Etotal_error, Merror
             if (Ecoll_error > 0.0_DP) then
                write(*,*) 'Something has gone wrong! Collisional energy should not be positive!'
             end if
-         
          end if
          ke_orb_last = ke_orbit
          ke_spin_last = ke_spin
