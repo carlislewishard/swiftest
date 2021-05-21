@@ -56,13 +56,13 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
       !check for convergence
       conv = count(abs(grad1(:)) > eps)
       if (conv == 0) then
-         write(*,*) "BFGS converged on gradient after ",i," iterations" 
+         !write(*,*) "BFGS converged on gradient after ",i," iterations" 
          exit 
       end if
       S(:) = -matmul(H(:,:), grad1(:))
       astar = minimize1D(f, x1, S, N, gradeps, lerr)
       if (lerr) then
-         write(*,*) "Exiting BFGS with error in minimize1D step"
+         !write(*,*) "Exiting BFGS with error in minimize1D step"
          exit
       end if
       ! Get new x values 
@@ -82,7 +82,7 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
       end do
       ! prevent divide by zero (convergence) 
       if (abs(Py) < tiny(Py)) then
-         write(*,*) "BFGS Converged on tiny Py after ",i," iterations"
+         !write(*,*) "BFGS Converged on tiny Py after ",i," iterations"
          exit
       end if
       ! set up update 
@@ -106,12 +106,12 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
       if (any(fpe_flag)) exit 
       if (i == MAXLOOP) then
          lerr = .true.
-         write(*,*) "BFGS ran out of loops!"
+         !write(*,*) "BFGS ran out of loops!"
       end if
    end do
    call ieee_get_flag(ieee_usual, fpe_flag)
    lerr = lerr .or. any(fpe_flag)  
-   if (lerr) write(*,*) "BFGS did not converge!"
+   !if (lerr) write(*,*) "BFGS did not converge!"
    call ieee_set_status(original_fpe_status)
 
    return 
@@ -199,7 +199,7 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
          alo = a0
          call bracket(f, x0, S, N, gam, step, alo, ahi, lerr)
          if (lerr) then
-            write(*,*) "BFGS bracketing step failed!"
+            !write(*,*) "BFGS bracketing step failed!"
             return 
          end if
          if (abs(alo - ahi) < eps) then
@@ -209,7 +209,7 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
          end if
          call golden(f, x0, S, N, greduce, alo, ahi, lerr)
          if (lerr) then
-            write(*,*) "BFGS golden section step failed!"
+            !write(*,*) "BFGS golden section step failed!"
             return 
          end if
          if (abs(alo - ahi) < eps) then
@@ -219,7 +219,7 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
          end if
          call quadfit(f, x0, S, N, eps, alo, ahi, lerr)
          if (lerr) then
-            write(*,*) "BFGS quadfit failed!"
+            !write(*,*) "BFGS quadfit failed!"
             return 
          end if
          if (abs(alo - ahi) < eps) then

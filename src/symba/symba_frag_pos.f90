@@ -169,8 +169,8 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    call calculate_system_energy(linclude_fragments=.false.)
 
 
-   write(*,        "(' -------------------------------------------------------------------------------------')")
-   write(*,        "('              Energy normalized by |Etot_before|')")
+   !write(*,        "(' -------------------------------------------------------------------------------------')")
+   !write(*,        "('              Energy normalized by |Etot_before|')")
    
    call define_coordinate_system()
    call define_pre_collisional_family()
@@ -224,20 +224,20 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       if (.not.lmerge) exit
       call restructure_failed_fragments()
    end do
-   write(*,        "(' -------------------------------------------------------------------------------------')")
-   write(*,        "('  Final diagnostic')")
-   write(*,        "(' -------------------------------------------------------------------------------------')")
+   !write(*,        "(' -------------------------------------------------------------------------------------')")
+   !write(*,        "('  Final diagnostic')")
+   !write(*,        "(' -------------------------------------------------------------------------------------')")
    if (lmerge) then
       write(*,*) "symba_frag_pos can't find a solution, so this collision is flagged as a merge"
    else
-      write(*,        "(' dL_tot should be very small' )")
-      write(*,fmtlabel) ' dL_tot      |', dLmag
-      write(*,        "(' dE_tot should be negative and equal to Qloss' )")
-      write(*,fmtlabel) ' dE_tot      |', dEtot
-      write(*,fmtlabel) ' Qloss       |', -Qloss / abs(Etot_before)
-      write(*,fmtlabel) ' dE - Qloss  |', (Etot_after - Etot_before + Qloss) / abs(Etot_before)
+   !   write(*,        "(' dL_tot should be very small' )")
+   !   write(*,fmtlabel) ' dL_tot      |', dLmag
+   !   write(*,        "(' dE_tot should be negative and equal to Qloss' )")
+   !   write(*,fmtlabel) ' dE_tot      |', dEtot
+   !   write(*,fmtlabel) ' Qloss       |', -Qloss / abs(Etot_before)
+   !   write(*,fmtlabel) ' dE - Qloss  |', (Etot_after - Etot_before + Qloss) / abs(Etot_before)
    end if
-   write(*,        "(' -------------------------------------------------------------------------------------')")
+   !write(*,        "(' -------------------------------------------------------------------------------------')")
 
    call restore_scale_factors()
 
@@ -767,7 +767,6 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       implicit none
       integer(I4B) :: i
       integer(I4B), save :: iflip = 1
-      write(*,*) 'Failed to find a solution. Trying again'
 
       m_frag(iflip) = m_frag(iflip) + m_frag(nfrag)
       rad_frag(iflip) = (rad_frag(iflip)**3 + rad_frag(nfrag)**3)**(1._DP / 3._DP) 
