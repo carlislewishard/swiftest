@@ -877,12 +877,13 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-            subroutine symba_discard_conserve_mtm(swiftest_plA, ipl, lescape)
+            subroutine symba_discard_conserve_mtm(param, swiftest_plA, ipl, lescape)
             use swiftest_globals
             use swiftest_data_structures
             implicit none
-            integer(I4B), intent(in)    :: ipl
+            type(user_input_parameters), intent(inout) :: param
             type(swiftest_pl), intent(inout) :: swiftest_plA
+            integer(I4B), intent(in)    :: ipl
             logical, intent(in)        :: lescape
             end subroutine
       END INTERFACE
@@ -1093,7 +1094,7 @@ MODULE module_interfaces
          type(symba_merger),          intent(inout) :: mergeadd_list 
          logical(LGT),                intent(in)    :: ldiscard_pl, ldiscard_tp 
          real(DP),                    intent(in)    :: mtiny
-         type(user_input_parameters), intent(in)    :: param
+         type(user_input_parameters), intent(inout) :: param
          logical, dimension(:), allocatable, intent(inout) :: discard_l_pl
          integer(I4B), dimension(:), allocatable, intent(inout) :: discard_stat_list
       end subroutine symba_rearray

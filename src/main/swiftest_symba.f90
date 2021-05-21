@@ -146,6 +146,7 @@ program swiftest_symba
 
       ! Save initial mass and angular momentum of the central body
       symba_plA%helio%swiftest%Mcb_initial = symba_plA%helio%swiftest%mass(1)
+      symba_plA%helio%swiftest%Rcb_initial = symba_plA%helio%swiftest%radius(1)
       symba_plA%helio%swiftest%Lcb_initial(:) = symba_plA%helio%swiftest%Ip(3,1) * symba_plA%helio%swiftest%mass(1) * &
                                                 symba_plA%helio%swiftest%radius(1)**2 * symba_plA%helio%swiftest%rot(:,1)
 
@@ -189,7 +190,7 @@ program swiftest_symba
 
             if (param%lenergy)  then
                call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit_after, ke_spin_after, pe_after, Eorbit_after, Ltot)
-               Ecollision = Eorbit_before - Eorbit_after    ! Energy change resulting in this collisional event Total running energy offset from collision in this step
+               Ecollision = Eorbit_before - Eorbit_after   ! Energy change resulting in this collisional event Total running energy offset from collision in this step
                symba_plA%helio%swiftest%Ecollisions = symba_plA%helio%swiftest%Ecollisions + Ecollision
             end if
             !if (ntp > 0) call util_dist_index_pltp(nplm, ntp, symba_plA, symba_tpA)

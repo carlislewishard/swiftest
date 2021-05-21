@@ -64,18 +64,12 @@ contains
             write(*, egytermfmt) Lerror, Ecoll_error, Etotal_error, Merror
             if (Ecoll_error > 0.0_DP) then
                write(*,*) 'Something has gone wrong! Collisional energy should not be positive!'
-               write(*,*) 'Comparisons with last time: '
-               write(*,*) 'ke_orb : ',ke_orbit - ke_orb_last, (ke_orbit - ke_orb_last) / abs(Eorbit_last)
-               write(*,*) 'ke_spin: ',ke_spin - ke_spin_last, (ke_spin - ke_spin_last) / abs(Eorbit_last)
-               write(*,*) 'pe     : ',pe - pe_last, (pe - pe_last) / abs(Eorbit_last)
-               write(*,*) 'Etot   : ',Eorbit - Eorbit_last, (Eorbit - Eorbit_last) / abs(Eorbit_last)
-               write(*,*)
             end if
+         
          end if
          ke_orb_last = ke_orbit
          ke_spin_last = ke_spin
          pe_last = pe
-         Ltot_last(:) = Ltot_now(:)
          Eorbit_last = Eorbit
       end associate
       return

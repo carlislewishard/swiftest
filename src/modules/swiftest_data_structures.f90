@@ -44,11 +44,13 @@ module swiftest_data_structures
       real(DP),     dimension(:,:),   allocatable :: Ip     !! Unitless principal moments of inertia (I1, I2, I3) / (MR**2). Principal axis rotation assumed. 
       real(DP),     dimension(:,:),   allocatable :: rot    !! Body rotation vector in inertial coordinate frame 
       real(DP),     dimension(NDIM)               :: Lcb_initial  !! Initial angular momentum of the central body
-      real(DP),     dimension(NDIM)               :: dLcb = (/0.0_DP, 0.0_DP, 0.0_DP/) !! Change in angular momentum of the central body
-      real(DP)                                    :: Mcb_initial !! Initial mass and change in mass of the central body
+      real(DP),     dimension(NDIM)               :: dLcb = [0.0_DP, 0.0_DP, 0.0_DP] !! Change in angular momentum of the central body
+      real(DP),     dimension(NDIM)               :: Lescape = [0.0_DP, 0.0_DP, 0.0_DP] !! Angular momentum of bodies that escaped the system (used for bookeeping)
+      real(DP)                                    :: Mcb_initial !! Initial mass of the central body
       real(DP)                                    :: dMcb = 0.0_DP !! Change in mass of the central body
-      real(DP),     dimension(NDIM)               :: Lescape = (/0.0_DP, 0.0_DP, 0.0_DP/)!! Angular momentum of bodies that escaped the system (used for bookeeping)
       real(DP)                                    :: Mescape = 0.0_DP !! Mass of bodies that escaped the system (used for bookeeping)
+      real(DP)                                    :: Rcb_initial !! Initial radius of the central body
+      real(DP)                                    :: dRcb = 0.0_DP!! Change in the radius of the central body
       real(DP)                                    :: Ecollisions = 0.0_DP !! Energy lost from system due to collisions
       integer(I4B), dimension(:,:), allocatable   :: k_plpl
       integer(I8B)                                :: num_plpl_comparisons

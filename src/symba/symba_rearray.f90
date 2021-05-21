@@ -22,7 +22,7 @@ subroutine symba_rearray(t, npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, 
    type(symba_merger),          intent(inout) :: mergeadd_list 
    logical,                     intent(in)    :: ldiscard_pl, ldiscard_tp 
    real(DP),                    intent(in)    :: mtiny
-   type(user_input_parameters), intent(in)    :: param
+   type(user_input_parameters), intent(inout) :: param
    logical, dimension(:), allocatable, intent(inout) :: discard_l_pl
    integer(I4B), dimension(:), allocatable, intent(inout) :: discard_stat_list
 
@@ -50,7 +50,7 @@ subroutine symba_rearray(t, npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, 
             cycle
          end if
          ! Resolve the discard
-         call symba_discard_conserve_mtm(symba_plA%helio%swiftest, discard_index_list(i), lescape)
+         call symba_discard_conserve_mtm(param, symba_plA%helio%swiftest, discard_index_list(i), lescape)
          ! Flip the main status flag to the discard state
       end do
       symba_plA%helio%swiftest%status(discard_index_list(:)) = discard_stat_list(:)
