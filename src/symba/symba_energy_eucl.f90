@@ -48,8 +48,9 @@ subroutine symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit, ke_spin, pe
          hy = xb(3,i) * vb(1,i) - xb(1,i) * vb(3,i)
          hz = xb(1,i) * vb(2,i) - xb(2,i) * vb(1,i)
 
-         hsx = Ip(1,i) * radius(i)**2 * rot(1,i) 
-         hsy = Ip(2,i) * radius(i)**2 * rot(2,i) 
+         ! For simplicity, we always assume that the rotation pole is the 3rd principal axis
+         hsx = Ip(3,i) * radius(i)**2 * rot(1,i) 
+         hsy = Ip(3,i) * radius(i)**2 * rot(2,i) 
          hsz = Ip(3,i) * radius(i)**2 * rot(3,i) 
 
          ! Angular momentum from orbit and spin
@@ -59,7 +60,7 @@ subroutine symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit, ke_spin, pe
 
          ! Kinetic energy from orbit and spin
          kepl(i) = mass(i) * v2
-         kespinpl(i) = mass(i) * (hsx * rot(1, i) + hsy * rot(2, i) + hsz * rot(3, i))
+         kespinpl(i) = mass(i) * Ip(3, i) * radius(i)**2 * rot2
       end do
 
       ke_orbit = 0.5_DP * sum(kepl(1:npl), lstatus(:))
