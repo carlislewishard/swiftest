@@ -136,6 +136,8 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    integer(I4B), parameter                 :: NFRAG_MIN = 6 !! The minimum allowable number of fragments (set to 6 because that's how many unknowns are needed in the tangential velocity calculation)
    real(DP)                                :: r_max_start = 1.0_DP
    logical, save                           :: lfirst = .true.
+   real(DP), parameter                     :: Ltol = 2 * epsilon(1.0_DP)
+   real(DP), parameter                     :: Etol = 1e-8_DP
 
    if (nfrag < NFRAG_MIN) then
       write(*,*) "symba_frag_pos needs at least ",NFRAG_MIN," fragments, but only ",nfrag," were given."
@@ -174,8 +176,9 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    
    call define_coordinate_system()
    call define_pre_collisional_family()
-   
-   do try = 1, ntry
+  
+   try = 1
+   do while (nfrag >= NFRAG_MIN)
       !write(*,        "(' -------------------------------------------------------------------------------------')")
       !write(*,*) "Try number: ",try, ' of ',ntry
       !write(*,        "(' -------------------------------------------------------------------------------------')")
@@ -203,6 +206,16 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       call calculate_system_energy(linclude_fragments=.true.)
    
       if (.not.lmerge) then
+         if (dEtot > 0.0_DP)  then
+            write(*,*) 'Failed try ',try,': Positive energy'
+            lmerge = .true.
+         else if (abs((Etot_after - Etot_before + Qloss) / Etot_before) > Etol) then
+            write(*,*) 'Failed try ',try,': Energy error too big: ',dEtot
+            lmerge = .true.
+         else if (abs(dLmag) > Ltol) then
+            write(*,*) 'Failed try ',try,': Angular momentum error too big: ',dLmag
+         end if
+
          !write(*,        "(' -------------------------------------------------------------------------------------')")
          !write(*,        "('  Second pass to get energy ')")
          !write(*,        "(' -------------------------------------------------------------------------------------')")
@@ -218,9 +231,10 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
          !                                    (ke_orb_after + ke_spin_after - ke_orb_before - ke_spin_before)/ abs(Etot_before), &
          !                                    (pe_after - pe_before) / abs(Etot_before), &
          !                                    dEtot, dLmag
+      else
+         write(*,*) 'Failed try ',try,': Could not find radial velocities.'
       end if
-   
-      lmerge = lmerge .or. ((Etot_after - Etot_before) / abs(Etot_before) > 0._DP) 
+ 
       if (.not.lmerge) exit
       call restructure_failed_fragments()
    end do
@@ -646,7 +660,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ! Arguments
       logical,                intent(out)   :: lmerge
       ! Internals
-      real(DP), parameter                   :: TOL = 1e-8_DP
+      real(DP), parameter                   :: TOL = 1e-6_DP
       real(DP), dimension(:), allocatable   :: vflat 
       logical                               :: lerr
       integer(I4B)                          :: i
@@ -768,17 +782,18 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       integer(I4B) :: i
       integer(I4B), save :: iflip = 1
 
-      m_frag(iflip) = m_frag(iflip) + m_frag(nfrag)
-      rad_frag(iflip) = (rad_frag(iflip)**3 + rad_frag(nfrag)**3)**(1._DP / 3._DP) 
-      m_frag(nfrag) = 0.0_DP
-      rad_frag(nfrag) = 0.0_DP
-      nfrag = nfrag - 1
       if (iflip == 1) then
          iflip = 2
       else
          iflip = 1
+         m_frag(iflip) = m_frag(iflip) + m_frag(nfrag)
+         rad_frag(iflip) = (rad_frag(iflip)**3 + rad_frag(nfrag)**3)**(1._DP / 3._DP) 
+         m_frag(nfrag) = 0.0_DP
+         rad_frag(nfrag) = 0.0_DP
+         nfrag = nfrag - 1
       end if
-      if (ke_offset > 0.0_DP) r_max_start = r_max_start + 1.0_DP ! The larger lever arm can help if the problem is in the angular momentum step
+      try = try + 1
+      r_max_start = r_max_start + 1.0_DP ! The larger lever arm can help if the problem is in the angular momentum step
    end subroutine restructure_failed_fragments
 
 
