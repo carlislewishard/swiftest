@@ -113,7 +113,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    logical, intent(out)                    :: lmerge ! Answers the question: Should this have been a merger instead?
    real(DP), intent(inout)                 :: Qloss
    ! Internals
-   real(DP), parameter                     :: f_spin = 0.03_DP !! Fraction of pre-impact orbital angular momentum that is converted to fragment spin
+   real(DP), parameter                     :: f_spin = 0.20_DP !! Fraction of pre-impact orbital angular momentum that is converted to fragment spin
    real(DP)                                :: mscale = 1.0_DP, rscale = 1.0_DP, vscale = 1.0_DP, tscale = 1.0_DP, Lscale = 1.0_DP, Escale = 1.0_DP! Scale factors that reduce quantities to O(~1) in the collisional system
    real(DP)                                :: mtot 
    real(DP), dimension(NDIM)               :: xcom, vcom
@@ -231,19 +231,21 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
          !                                    (ke_orb_after + ke_spin_after - ke_orb_before - ke_spin_before)/ abs(Etot_before), &
          !                                    (pe_after - pe_before) / abs(Etot_before), &
          !                                    dEtot, dLmag
-      else
-         write(*,*) 'Failed try ',try,': Could not find radial velocities.'
+      !else
+         !write(*,*) 'Failed try ',try,': Could not find radial velocities.'
       end if
  
       if (.not.lmerge) exit
       call restructure_failed_fragments()
+      try = try + 1
    end do
    !write(*,        "(' -------------------------------------------------------------------------------------')")
    !write(*,        "('  Final diagnostic')")
    !write(*,        "(' -------------------------------------------------------------------------------------')")
    if (lmerge) then
-      write(*,*) "symba_frag_pos can't find a solution, so this collision is flagged as a merge"
+      write(*,*) "symba_frag_pos failed after: ",try," tries"
    else
+      write(*,*) "symba_frag_pos succeeded after: ",try," tries"
    !   write(*,        "(' dL_tot should be very small' )")
    !   write(*,fmtlabel) ' dL_tot      |', dLmag
    !   write(*,        "(' dE_tot should be negative and equal to Qloss' )")
@@ -660,7 +662,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ! Arguments
       logical,                intent(out)   :: lmerge
       ! Internals
-      real(DP), parameter                   :: TOL = 1e-10_DP
+      real(DP), parameter                   :: TOL = 1e-9_DP
       real(DP), dimension(:), allocatable   :: vflat 
       logical                               :: lerr
       integer(I4B)                          :: i
@@ -670,6 +672,8 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ! Set the "target" ke_orb_after (the value of the orbital kinetic energy that the fragments ought to have)
       
       if ((ke_target < 0.0_DP) .or. (ke_offset > 0.0_DP)) then
+         !if (ke_target < 0.0_DP) write(*,*) 'Negative ke_target: ',ke_target
+         !if (ke_offset > 0.0_DP) write(*,*) 'Positive ke_offset: ',ke_offset
          lmerge = .true.
          return
       end if
@@ -678,8 +682,8 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ! Initialize radial velocity magnitudes with a random value that is approximately 10% of that found by distributing the kinetic energy equally
       allocate(v_r_sigma, source=v_r_mag)
       call random_number(v_r_sigma(1:nfrag))
-      v_r_sigma(1:nfrag) = 1.0_DP + 2 * (v_r_sigma(1:nfrag) - 0.5_DP) * 1e-1_DP
-      v_r_initial(1:nfrag) = v_r_sigma(1:nfrag) * abs(ke_offset) / (m_frag(1:nfrag) * nfrag)  
+      v_r_sigma(1:nfrag) = sqrt((1.0_DP + 2 * (v_r_sigma(1:nfrag) - 0.5_DP) * 1e-3_DP)) 
+      v_r_initial(1:nfrag) = v_r_sigma(1:nfrag) * sqrt(abs(ke_offset) / (2 * m_frag(1:nfrag) * nfrag)) 
 
       ! Initialize the lambda function using a structure constructor that calls the init method
       ! Minimize the ke objective function using the BFGS optimizer
@@ -782,17 +786,18 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       integer(I4B) :: i
       integer(I4B), save :: iflip = 1
 
-      if (iflip == 1) then
-         iflip = 2
-      else
-         iflip = 1
+      if (ke_offset < 0.0_DP) then 
+         if (iflip == 1) then
+            iflip = 2
+         else
+            iflip = 1
+         end if
          m_frag(iflip) = m_frag(iflip) + m_frag(nfrag)
          rad_frag(iflip) = (rad_frag(iflip)**3 + rad_frag(nfrag)**3)**(1._DP / 3._DP) 
          m_frag(nfrag) = 0.0_DP
          rad_frag(nfrag) = 0.0_DP
          nfrag = nfrag - 1
       end if
-      try = try + 1
       r_max_start = r_max_start + 1.0_DP ! The larger lever arm can help if the problem is in the angular momentum step
    end subroutine restructure_failed_fragments
 

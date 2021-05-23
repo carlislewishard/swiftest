@@ -111,6 +111,7 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
    end do
    call ieee_get_flag(ieee_usual, fpe_flag)
    lerr = lerr .or. any(fpe_flag)  
+   !if (any(fpe_flag)) write(*,*) 'BFGS did not converge due to fpe'
    !if (lerr) write(*,*) "BFGS did not converge!"
    call ieee_set_status(original_fpe_status)
 
@@ -283,7 +284,7 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
          integer(I4B) :: i
          integer(I4B), parameter :: MAXLOOP = 1000 ! maximum number of loops before method is determined to have failed   
          real(DP), parameter :: eps = epsilon(lo) ! small number precision to test floating point equality   
-         real(DP), parameter :: dela = 12.4423_DP ! arbitrary number to test if function is constant   
+         real(DP), parameter :: dela = 2.0324_DP ! arbitrary number to test if function is constant   
 
          ! set up initial bracket points   
          lerr = .false.
@@ -338,9 +339,10 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
                f0 = n2one(f, x0, S, N, a0)
             else  ! all values equal stops if there is no minimum or takes RHS min if it exists   
                ! test if function itself is constant   
-               fcon = n2one(f, x0, S, N, a2 + dela) !add by an arbitrary number to see if constant  
+               fcon = n2one(f, x0, S, N, a2 * dela) !change a2 by an arbitrary number to see if constant  
                if (abs(f2 - fcon) < eps) then   
                   lerr = .true.
+                  !write(*,*) 'bracket determined function is constant'
                   return ! function is constant   
                end if
                a3 = a0 + 0.5_DP * (a1 - a0)
@@ -471,6 +473,9 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
             errval = abs((astar - aold) / astar)
             call ieee_get_flag(ieee_usual, fpe_flag)
             if (any(fpe_flag)) then
+               !write(*,*) 'quadfit fpe'
+               !write(*,*) 'aold : ',aold
+               !write(*,*) 'astar: ',astar
                lerr = .true.
                exit
             end if
@@ -491,7 +496,11 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
             soln(:) = util_solve_linear_system(lhs, rhs, 3, lerr)
             call ieee_set_flag(ieee_all, .false.) ! Set all flags back to quiet
             call ieee_set_halting_mode(ieee_divide_by_zero, .false.)
-            if (lerr) exit
+            if (lerr) then
+               !write(*,*) 'quadfit fpe:'
+               !write(*,*) 'uttil_solve_linear_system failed'
+               exit
+            end if
             aold = astar
             if (soln(2) == soln(3)) then ! Handles the case where they are both 0. 0/0 is an unhandled exception
                astar = 0.5_DP
@@ -500,6 +509,8 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
             end if
             call ieee_get_flag(ieee_usual, fpe_flag)
             if (any(fpe_flag)) then
+               !write(*,*) 'quadfit fpe'
+               !write(*,*) 'soln(2:3): ',soln(2:3)
                lerr = .true.
                exit
             end if

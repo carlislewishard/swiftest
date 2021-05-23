@@ -32,7 +32,7 @@ contains
                                                          "; DM/M0 = ", ES12.5)'
 
       associate(Ecollisions => symba_plA%helio%swiftest%Ecollisions, Lescape => symba_plA%helio%swiftest%Lescape, Mescape => symba_plA%helio%swiftest%Mescape, &
-                Eescape => symba_plA%helio%swiftest%Eescape, mass => symba_plA%helio%swiftest%mass, dMcb => symba_plA%helio%swiftest%dMcb, &
+                Euntracked => symba_plA%helio%swiftest%Euntracked, mass => symba_plA%helio%swiftest%mass, dMcb => symba_plA%helio%swiftest%dMcb, &
                  Mcb_initial => symba_plA%helio%swiftest%Mcb_initial)
          if (lfirst) then
             if (param%out_stat == "OLD") then
@@ -60,11 +60,15 @@ contains
             Lerror = norm2(Ltot_now - Ltot_orig) / Lmag_orig
             Eorbit_error = (Eorbit - Eorbit_orig) / abs(Eorbit_orig)
             Ecoll_error = Ecollisions / abs(Eorbit_orig)
-            Etotal_error = (Eorbit - Ecollisions - Eorbit_orig - Eescape) / abs(Eorbit_orig)
+            Etotal_error = (Eorbit - Ecollisions - Eorbit_orig - Euntracked) / abs(Eorbit_orig)
             Merror = (Mtot_now - Mtot_orig) / Mtot_orig
             write(*, egytermfmt) Lerror, Ecoll_error, Etotal_error, Merror
             if (Ecoll_error > 0.0_DP) then
                write(*,*) 'Something has gone wrong! Collisional energy should not be positive!'
+               write(*,*) 'dke_orbit: ',(ke_orbit - ke_orb_last) / abs(Eorbit_orig)
+               write(*,*) 'dke_spin : ',(ke_spin - ke_spin_last) / abs(Eorbit_orig)
+               write(*,*) 'dpe      : ',(pe - pe_last) / abs(Eorbit_orig)
+               write(*,*)
             end if
          end if
          ke_orb_last = ke_orbit

@@ -22,7 +22,7 @@ subroutine symba_discard_conserve_mtm(param, swiftest_plA, ipl, lescape_body)
       Lcb_initial => swiftest_plA%Lcb_initial, dLcb => swiftest_plA%dLcb, Ecollisions => swiftest_plA%Ecollisions, &
       Rcb_initial => swiftest_plA%Rcb_initial, dRcb => swiftest_plA%dRcb, &
       Mcb_initial => swiftest_plA%Mcb_initial, dMcb => swiftest_plA%dMcb, &
-      Mescape => swiftest_plA%Mescape, Lescape => swiftest_plA%Lescape, Eescape => swiftest_plA%Eescape)
+      Mescape => swiftest_plA%Mescape, Lescape => swiftest_plA%Lescape, Euntracked => swiftest_plA%Euntracked)
 
       ! Add the potential and kinetic energy of the lost body to the records
       pe = -mass(1) * mass(ipl) / norm2(xb(:, ipl) - xb(:, 1))
@@ -71,10 +71,10 @@ subroutine symba_discard_conserve_mtm(param, swiftest_plA, ipl, lescape_body)
       ! We must do this for proper book-keeping, since we can no longer track this body's contribution to energy directly
       if (lescape_body) then
          Ecollisions  = Ecollisions + ke_orbit + ke_spin + pe
-         Eescape  = Eescape - (ke_orbit + ke_spin + pe)
+         Euntracked  = Euntracked - (ke_orbit + ke_spin + pe)
       else
          Ecollisions  = Ecollisions + pe 
-         Eescape = Eescape - pe
+         Euntracked = Euntracked - pe
       end if
 
       ! Update the heliocentric coordinates of everything else
