@@ -138,7 +138,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    logical, save                           :: lfirst = .true.
    real(DP), parameter                     :: Ltol = 2 * epsilon(1.0_DP)
    real(DP), parameter                     :: Etol = 1e-8_DP
-   integer(I4B), parameter                 :: MAXTRY = 200
+   integer(I4B), parameter                 :: MAXTRY = 1000
 
    if (nfrag < NFRAG_MIN) then
       write(*,*) "symba_frag_pos needs at least ",NFRAG_MIN," fragments, but only ",nfrag," were given."
@@ -181,6 +181,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    try = 1
    lmerge = .false.
    do while (nfrag >= NFRAG_MIN .and. try <= MAXTRY)
+      lmerge = .false.
       !write(*,        "(' -------------------------------------------------------------------------------------')")
       !write(*,*) "Try number: ",try, ' of ',ntry
       !write(*,        "(' -------------------------------------------------------------------------------------')")
@@ -241,7 +242,6 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       if (.not.lmerge) exit
       call restructure_failed_fragments()
       try = try + 1
-      lmerge = .false.
    end do
    !write(*,        "(' -------------------------------------------------------------------------------------')")
    !write(*,        "('  Final diagnostic')")
