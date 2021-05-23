@@ -32,7 +32,8 @@ contains
                                                          "; DM/M0 = ", ES12.5)'
 
       associate(Ecollisions => symba_plA%helio%swiftest%Ecollisions, Lescape => symba_plA%helio%swiftest%Lescape, Mescape => symba_plA%helio%swiftest%Mescape, &
-                  mass => symba_plA%helio%swiftest%mass, dMcb => symba_plA%helio%swiftest%dMcb, Mcb_initial => symba_plA%helio%swiftest%Mcb_initial)
+                Eescape => symba_plA%helio%swiftest%Eescape, mass => symba_plA%helio%swiftest%mass, dMcb => symba_plA%helio%swiftest%dMcb, &
+                 Mcb_initial => symba_plA%helio%swiftest%Mcb_initial)
          if (lfirst) then
             if (param%out_stat == "OLD") then
                open(unit = egyiu, file = energy_file, form = "formatted", status = "old", action = "write", position = "append")
@@ -58,8 +59,8 @@ contains
             Lmag_now = norm2(Ltot_now)
             Lerror = norm2(Ltot_now - Ltot_orig) / Lmag_orig
             Eorbit_error = (Eorbit - Eorbit_orig) / abs(Eorbit_orig)
-            Ecoll_error = -Ecollisions / abs(Eorbit_orig)
-            Etotal_error = (Eorbit - (Eorbit_orig + Ecollisions)) / abs(Eorbit_orig)
+            Ecoll_error = Ecollisions / abs(Eorbit_orig)
+            Etotal_error = (Eorbit - Ecollisions - Eorbit_orig - Eescape) / abs(Eorbit_orig)
             Merror = (Mtot_now - Mtot_orig) / Mtot_orig
             write(*, egytermfmt) Lerror, Ecoll_error, Etotal_error, Merror
             if (Ecoll_error > 0.0_DP) then

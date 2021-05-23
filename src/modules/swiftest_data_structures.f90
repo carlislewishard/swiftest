@@ -52,6 +52,7 @@ module swiftest_data_structures
       real(DP)                                    :: Rcb_initial !! Initial radius of the central body
       real(DP)                                    :: dRcb = 0.0_DP!! Change in the radius of the central body
       real(DP)                                    :: Ecollisions = 0.0_DP !! Energy lost from system due to collisions
+      real(DP)                                    :: Eescape = 0.0_DP !! Energy gained from system due to escaped bodies
       integer(I4B), dimension(:,:), allocatable   :: k_plpl
       integer(I8B)                                :: num_plpl_comparisons
    contains

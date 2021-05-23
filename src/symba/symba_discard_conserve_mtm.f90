@@ -1,4 +1,4 @@
-subroutine symba_discard_conserve_mtm(param, swiftest_plA, ipl, lescape)
+subroutine symba_discard_conserve_mtm(param, swiftest_plA, ipl, lescape_body)
    !! author: David A. Minton
    !! 
    !! Conserves system momentum when a body is lost from the system or collides with central body
@@ -10,26 +10,19 @@ subroutine symba_discard_conserve_mtm(param, swiftest_plA, ipl, lescape)
    type(swiftest_pl), intent(inout) :: swiftest_plA
    type(user_input_parameters), intent(inout) :: param
    integer(I4B), intent(in)    :: ipl
-   logical, intent(in)         :: lescape
+   logical, intent(in)         :: lescape_body
    ! Internals
    real(DP), dimension(NDIM) :: Lpl, Lcb, xcom, vcom
    real(DP)                  :: pe, ke_orbit, ke_spin
+   integer(I4B)              :: i
 
 
    associate(npl => swiftest_plA%nbody, xb => swiftest_plA%xb, vb => swiftest_plA%vb, &
       rot => swiftest_plA%rot, Ip => swiftest_plA%Ip, radius => swiftest_plA%radius, mass => swiftest_plA%mass, &
       Lcb_initial => swiftest_plA%Lcb_initial, dLcb => swiftest_plA%dLcb, Ecollisions => swiftest_plA%Ecollisions, &
       Rcb_initial => swiftest_plA%Rcb_initial, dRcb => swiftest_plA%dRcb, &
-      Mcb_initial => swiftest_plA%Mcb_initial, dMcb => swiftest_plA%dMcb, Mescape => swiftest_plA%Mescape)
-
-      xcom(:) = (mass(ipl) * xb(:, ipl) + mass(1) * xb(:,1)) / (mass(1) + mass(ipl))
-      vcom(:) = (mass(ipl) * vb(:, ipl) + mass(1) * vb(:,1)) / (mass(1) + mass(ipl))
-
-      call util_crossproduct(xb(:,ipl) - xcom(:), vb(:,ipl) - vcom(:), Lpl)
-      Lpl(:) = mass(ipl) * (Lpl(:) + radius(ipl)**2 * Ip(3,ipl) * rot(:, ipl))
-
-      call util_crossproduct(xb(:, 1) - xcom(:), vb(:, 1) - vcom(:), Lcb)
-      Lcb(:) = mass(1) * Lcb(:) 
+      Mcb_initial => swiftest_plA%Mcb_initial, dMcb => swiftest_plA%dMcb, &
+      Mescape => swiftest_plA%Mescape, Lescape => swiftest_plA%Lescape, Eescape => swiftest_plA%Eescape)
 
       ! Add the potential and kinetic energy of the lost body to the records
       pe = -mass(1) * mass(ipl) / norm2(xb(:, ipl) - xb(:, 1))
@@ -37,36 +30,52 @@ subroutine symba_discard_conserve_mtm(param, swiftest_plA, ipl, lescape)
       ke_spin  = 0.5_DP * mass(ipl) * radius(ipl)**2 * Ip(3, ipl) * dot_product(rot(:, ipl), rot(:, ipl))
 
       ! Add the pre-collision ke of the central body to the records
-      ke_spin  = 0.5_DP * mass(1) * radius(1)**2 * Ip(3, 1) * dot_product(rot(:, 1), rot(:, 1)) + ke_spin
       ! Add planet mass to central body accumulator
-      if (lescape) then
+      if (lescape_body) then
          Mescape = Mescape + mass(ipl)
-         ke_orbit = 0.0_DP
+         call util_crossproduct(xb(:,ipl), vb(:,ipl), Lpl)
+         Lpl(:) = mass(ipl) * (Lpl(:) + radius(ipl)**2 * Ip(3,ipl) * rot(:, ipl))
+         Lescape(:) = Lescape(:)  + Lpl(:) 
+         do i = 2, npl
+            if (i == ipl) cycle
+            pe = pe - mass(i) * mass(ipl) / norm2(xb(:, ipl) - xb(:, i))
+         end do
       else
+         xcom(:) = (mass(ipl) * xb(:, ipl) + mass(1) * xb(:,1)) / (mass(1) + mass(ipl))
+         vcom(:) = (mass(ipl) * vb(:, ipl) + mass(1) * vb(:,1)) / (mass(1) + mass(ipl))
+   
+         call util_crossproduct(xb(:,ipl) - xcom(:), vb(:,ipl) - vcom(:), Lpl)
+         Lpl(:) = mass(ipl) * (Lpl(:) + radius(ipl)**2 * Ip(3,ipl) * rot(:, ipl))
+   
+         call util_crossproduct(xb(:, 1) - xcom(:), vb(:, 1) - vcom(:), Lcb)
+         Lcb(:) = mass(1) * Lcb(:) 
          ke_orbit = 0.5_DP * mass(1) * dot_product(vb(:, 1), vb(:, 1)) + ke_orbit
+         ke_spin = ke_spin + 0.5_DP * mass(1) * radius(1)**2 * Ip(3, 1) * dot_product(rot(:, 1), rot(:, 1))
          ! Update mass of central body to be consistent with its total mass
          dMcb = dMcb + mass(ipl)
          dRcb = dRcb + 1.0_DP / 3.0_DP * (radius(ipl) / radius(1))**3 - 2.0_DP / 9.0_DP * (radius(ipl) / radius(1))**6
          mass(1) = Mcb_initial + dMcb
          radius(1) = Rcb_initial + dRcb
          param%rmin = radius(1)
-         ! Update position and velocity of central body
+         ! Add planet angular momentum to central body accumulator
+         dLcb(:) = Lpl(:) + Lcb(:) + dLcb(:)
+         ! Update rotation of central body to by consistent with its angular momentum 
+         rot(:,1) = (Lcb_initial(:) + dLcb(:)) / (Ip(3, 1) * mass(1) * radius(1)**2)        
+         ke_spin  = ke_spin - 0.5_DP * mass(1) * radius(1)**2 * Ip(3, 1) * dot_product(rot(:, 1), rot(:, 1)) 
          xb(:, 1) = xcom(:)
          vb(:, 1) = vcom(:)
          ke_orbit = ke_orbit - 0.5_DP * mass(1) * dot_product(vb(:, 1), vb(:, 1)  ) 
       end if
-   
-      ! Add planet angular momentum to central body accumulator
-      dLcb(:) = Lpl(:) + Lcb(:) + dLcb(:)
-
-      ! Update rotation of central body to by consistent with its angular momentum 
-      rot(:,1) = (Lcb_initial(:) + dLcb(:)) / (Ip(3, 1) * mass(1) * radius(1)**2)        
-      
-      ! Remove the new kinetic energy of the central body from the records
-      ke_spin  = ke_spin - 0.5_DP * mass(1) * radius(1)**2 * Ip(3, 1) * dot_product(rot(:, 1), rot(:, 1)) 
+      ! Update position and velocity of central body
 
       ! We must do this for proper book-keeping, since we can no longer track this body's contribution to energy directly
-      Ecollisions  = Ecollisions - 2 * (ke_orbit + ke_spin + pe)
+      if (lescape_body) then
+         Ecollisions  = Ecollisions + ke_orbit + ke_spin + pe
+         Eescape  = Eescape - (ke_orbit + ke_spin + pe)
+      else
+         Ecollisions  = Ecollisions + pe 
+         Eescape = Eescape - pe
+      end if
 
       ! Update the heliocentric coordinates of everything else
       call coord_b2h(npl, swiftest_plA)

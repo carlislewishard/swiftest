@@ -877,14 +877,14 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-            subroutine symba_discard_conserve_mtm(param, swiftest_plA, ipl, lescape)
+            subroutine symba_discard_conserve_mtm(param, swiftest_plA, ipl, lescape_body)
             use swiftest_globals
             use swiftest_data_structures
             implicit none
             type(user_input_parameters), intent(inout) :: param
             type(swiftest_pl), intent(inout) :: swiftest_plA
             integer(I4B), intent(in)    :: ipl
-            logical, intent(in)        :: lescape
+            logical, intent(in)        :: lescape_body
             end subroutine
       END INTERFACE
 
