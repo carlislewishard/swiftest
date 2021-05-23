@@ -178,6 +178,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    call define_pre_collisional_family()
   
    try = 1
+   lmerge = .false.
    do while (nfrag >= NFRAG_MIN)
       !write(*,        "(' -------------------------------------------------------------------------------------')")
       !write(*,*) "Try number: ",try, ' of ',ntry
@@ -214,6 +215,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
             lmerge = .true.
          else if (abs(dLmag) > Ltol) then
             write(*,*) 'Failed try ',try,': Angular momentum error too big: ',dLmag
+            lmerge = .true.
          end if
 
          !write(*,        "(' -------------------------------------------------------------------------------------')")
@@ -238,6 +240,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       if (.not.lmerge) exit
       call restructure_failed_fragments()
       try = try + 1
+      lmerge = .false.
    end do
    !write(*,        "(' -------------------------------------------------------------------------------------')")
    !write(*,        "('  Final diagnostic')")
