@@ -64,7 +64,7 @@ subroutine symba_discard_conserve_mtm(param, swiftest_plA, ipl, lescape_body)
          ke_spin  = ke_spin - 0.5_DP * mass(1) * radius(1)**2 * Ip(3, 1) * dot_product(rot(:, 1), rot(:, 1)) 
          xb(:, 1) = xcom(:)
          vb(:, 1) = vcom(:)
-         ke_orbit = ke_orbit - 0.5_DP * mass(1) * dot_product(vb(:, 1), vb(:, 1)  ) 
+         ke_orbit = ke_orbit - 0.5_DP * mass(1) * dot_product(vb(:, 1), vb(:, 1)) 
       end if
       ! Update position and velocity of central body
 
