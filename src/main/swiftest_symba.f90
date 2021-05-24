@@ -164,7 +164,7 @@ program swiftest_symba
       do while ((t < tstop) .and. ((ntp0 == 0) .or. (ntp > 0)))
          call symba_step_eucl(t, dt, param,npl,ntp,symba_plA, symba_tpA, nplplenc, npltpenc,&
                plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list)
-               
+
          if (allocated(discard_l_pl)) deallocate(discard_l_pl)
          allocate(discard_l_pl(npl))
          discard_l_pl(:) = .false.
@@ -286,10 +286,6 @@ program swiftest_symba
          if (allocated(discard_tpA%helio%swiftest%id)) call symba_tp_deallocate(discard_tpA)
 
       end do
-
-      call param%dump_to_file(t)
-      call io_dump_pl(npl, symba_plA%helio%swiftest, param)
-      call io_dump_tp(ntp, symba_tpA%helio%swiftest)
 
       call symba_pl_deallocate(symba_plA)
       call symba_merger_deallocate(mergeadd_list)

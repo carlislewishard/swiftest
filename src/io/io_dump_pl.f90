@@ -48,7 +48,7 @@ SUBROUTINE io_dump_pl(npl, swiftest_plA, param)
 ! Internals
    INTEGER(I4B)                     :: ierr
    INTEGER(I4B), SAVE               :: idx = 1
-   integer(I4B),parameter             :: LUN = 7
+   integer(I4B),parameter           :: LUN = 7
 
    open(unit = LUN, file = DUMP_PL_FILE(idx), form = "UNFORMATTED", status = 'REPLACE', iostat = ierr)
    if (ierr /= 0) then
@@ -68,8 +68,11 @@ SUBROUTINE io_dump_pl(npl, swiftest_plA, param)
       write(LUN) swiftest_plA%rot(:,1:npl)
    end if
    close(LUN)
-   idx = idx + 1
-   if (idx > 2) idx = 1
+   if (idx == 1) then
+      idx = 2
+   else
+      idx = 1
+   end if
 
    return
 
