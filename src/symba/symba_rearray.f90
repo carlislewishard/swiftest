@@ -132,19 +132,19 @@ subroutine symba_rearray(t, npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, 
       ! Create the particle information and set the status flags of all new particles
       allocate(add_l_pl(npl))
       
-      where ((symba_plA%helio%swiftest%status(:) == DISRUPTION) .or. &
-            (symba_plA%helio%swiftest%status(:) == SUPERCATASTROPHIC) .or. &
-            (symba_plA%helio%swiftest%status(:) == HIT_AND_RUN))
-         symba_plA%helio%swiftest%info(:)%origin_time = t
-         symba_plA%helio%swiftest%info(:)%origin_xh(1) = symba_plA%helio%swiftest%xh(1,:)
-         symba_plA%helio%swiftest%info(:)%origin_xh(2) = symba_plA%helio%swiftest%xh(2,:)
-         symba_plA%helio%swiftest%info(:)%origin_xh(3) = symba_plA%helio%swiftest%xh(3,:)
-         symba_plA%helio%swiftest%info(:)%origin_vh(1) = symba_plA%helio%swiftest%vh(1,:)
-         symba_plA%helio%swiftest%info(:)%origin_vh(2) = symba_plA%helio%swiftest%vh(2,:)
-         symba_plA%helio%swiftest%info(:)%origin_vh(3) = symba_plA%helio%swiftest%vh(3,:)
-         add_l_pl(:) = .true.
+      where ((symba_plA%helio%swiftest%status(1:npl) == DISRUPTION) .or. &
+            (symba_plA%helio%swiftest%status(1:npl) == SUPERCATASTROPHIC) .or. &
+            (symba_plA%helio%swiftest%status(1:npl) == HIT_AND_RUN))
+         symba_plA%helio%swiftest%info(1:npl)%origin_time = t
+         symba_plA%helio%swiftest%info(1:npl)%origin_xh(1) = symba_plA%helio%swiftest%xh(1,1:npl)
+         symba_plA%helio%swiftest%info(1:npl)%origin_xh(2) = symba_plA%helio%swiftest%xh(2,1:npl)
+         symba_plA%helio%swiftest%info(1:npl)%origin_xh(3) = symba_plA%helio%swiftest%xh(3,1:npl)
+         symba_plA%helio%swiftest%info(1:npl)%origin_vh(1) = symba_plA%helio%swiftest%vh(1,1:npl)
+         symba_plA%helio%swiftest%info(1:npl)%origin_vh(2) = symba_plA%helio%swiftest%vh(2,1:npl)
+         symba_plA%helio%swiftest%info(1:npl)%origin_vh(3) = symba_plA%helio%swiftest%vh(3,1:npl)
+         add_l_pl(1:npl) = .true.
       elsewhere
-         add_l_pl(:) = .false.
+         add_l_pl(1:npl) = .false.
       end where
 
       ! check for duplicate names and fix if ncessary

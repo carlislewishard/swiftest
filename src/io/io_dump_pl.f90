@@ -64,8 +64,8 @@ SUBROUTINE io_dump_pl(npl, swiftest_plA, param)
    write(LUN) swiftest_plA%xh(:,1:npl)
    write(LUN) swiftest_plA%vh(:,1:npl)
    if (param%lrotation) THEN
-      write(LUN) swiftest_plA%Ip(:,:)
-      write(LUN) swiftest_plA%rot(:,:)
+      write(LUN) swiftest_plA%Ip(:,1:npl)
+      write(LUN) swiftest_plA%rot(:,1:npl)
    end if
    close(LUN)
    idx = idx + 1
