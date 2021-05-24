@@ -77,13 +77,6 @@ contains
                write(*,*)
             end if
          end if
-         write(*,*) 'Angular momentum changes since last time'
-         write(*,*) ' dLorbit : ',(Lorbit_now(:) - Lorbit_last(:)) / Lmag_orig
-         write(*,*) '|dLorbit|: ',norm2(Lorbit_now(:) - Lorbit_last(:)) / Lmag_orig
-         write(*,*) ' dLspin  : ',(Lspin_now(:) - Lspin_last(:)) / Lmag_orig
-         write(*,*) '|dLspin| : ',norm2(Lspin_now(:) - Lspin_last(:)) / Lmag_orig
-         write(*,*) ' dLtot   : ',(Ltot_now(:) - Ltot_last(:)) / Lmag_orig
-         write(*,*) '|dLtot|  : ',norm2(Ltot_now(:) - Ltot_last(:)) / Lmag_orig
          ke_orbit_last = ke_orbit_now
          ke_spin_last = ke_spin_now
          pe_last = pe_now
