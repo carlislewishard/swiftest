@@ -120,8 +120,6 @@ contains
          case ("ENERGY")
             call util_toupper(param_value)
             if (param_value == "YES" .or. param_value == 'T') param%lenergy = .true.
-         case ("EUCL_THRESHOLD")
-            read(param_value, *) param%eucl_threshold
          case ("ROTATION")
             call util_toupper(param_value)
             if (param_value == "YES" .or. param_value == 'T') param%lrotation = .true.
