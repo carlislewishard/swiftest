@@ -83,7 +83,6 @@ contains
       write(unit, Lfmt) "RHILL_PRESENT",param%lrhill_present
       write(unit, Lfmt) "CHK_CLOSE",param%lclose
       write(unit, Lfmt) "FRAGMENTATION", param%lfragmentation
-      write(unit, Ifmt) "EUCL_THRESHOLD", param%eucl_threshold
       write(unit, Lfmt) "ENERGY", param%lenergy
       write(unit, Lfmt) "ROTATION", param%lrotation
       write(unit, Lfmt) "TIDES", param%ltides
