@@ -124,8 +124,8 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    real(DP), dimension(:), allocatable     :: rmag, v_r_mag, v_t_mag
    real(DP), dimension(NDIM)               :: Ltot_before
    real(DP), dimension(NDIM)               :: Ltot_after
-   real(DP)                                :: Etot_before, ke_orb_before, ke_spin_before, pe_before, Lmag_before
-   real(DP)                                :: Etot_after,  ke_orb_after,  ke_spin_after,  pe_after,  Lmag_after, dEtot, dLmag
+   real(DP)                                :: Etot_before, ke_orbit_before, ke_spin_before, pe_before, Lmag_before
+   real(DP)                                :: Etot_after,  ke_orbit_after,  ke_spin_after,  pe_after,  Lmag_after, dEtot, dLmag
    real(DP), dimension(NDIM)               :: L_frag_spin, L_frag_tot, L_frag_orb, L_offset
    real(DP)                                :: ke_family, ke_target, ke_frag, ke_offset
    real(DP), dimension(NDIM)               :: x_col_unit, y_col_unit, z_col_unit
@@ -194,9 +194,9 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       !write(*,        "(' -------------------------------------------------------------------------------------')")
       !write(*,        "('             |      T_orb      T_spin           T          pe        Etot        Ltot')")
       !write(*,        "(' -------------------------------------------------------------------------------------')")
-      !write(*,fmtlabel) ' change      |',(ke_orb_after - ke_orb_before) / abs(Etot_before), &
+      !write(*,fmtlabel) ' change      |',(ke_orbit_after - ke_orbit_before) / abs(Etot_before), &
       !                                    (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
-      !                                    (ke_orb_after + ke_spin_after - ke_orb_before - ke_spin_before)/ abs(Etot_before), &
+      !                                    (ke_orbit_after + ke_spin_after - ke_orbit_before - ke_spin_before)/ abs(Etot_before), &
       !                                    (pe_after - pe_before) / abs(Etot_before), &
       !                                    dEtot, dLmag
   ! 
@@ -230,9 +230,9 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
          !write(*,        "(' -------------------------------------------------------------------------------------')")
          !write(*,        "('             |      T_orb      T_spin           T          pe        Etot        Ltot')")
          !write(*,        "(' -------------------------------------------------------------------------------------')")
-         !write(*,fmtlabel) ' change      |',(ke_orb_after - ke_orb_before) / abs(Etot_before), &
+         !write(*,fmtlabel) ' change      |',(ke_orbit_after - ke_orbit_before) / abs(Etot_before), &
          !                                    (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
-         !                                    (ke_orb_after + ke_spin_after - ke_orb_before - ke_spin_before)/ abs(Etot_before), &
+         !                                    (ke_orbit_after + ke_spin_after - ke_orbit_before - ke_spin_before)/ abs(Etot_before), &
          !                                    (pe_after - pe_before) / abs(Etot_before), &
          !                                    dEtot, dLmag
       !else
@@ -243,21 +243,21 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       call restructure_failed_fragments()
       try = try + 1
    end do
-   !write(*,        "(' -------------------------------------------------------------------------------------')")
-   !write(*,        "('  Final diagnostic')")
-   !write(*,        "(' -------------------------------------------------------------------------------------')")
+   write(*,        "(' -------------------------------------------------------------------------------------')")
+   write(*,        "('  Final diagnostic')")
+   write(*,        "(' -------------------------------------------------------------------------------------')")
    if (lmerge) then
       write(*,*) "symba_frag_pos failed after: ",try," tries"
    else
       write(*,*) "symba_frag_pos succeeded after: ",try," tries"
-   !   write(*,        "(' dL_tot should be very small' )")
-   !   write(*,fmtlabel) ' dL_tot      |', dLmag
-   !   write(*,        "(' dE_tot should be negative and equal to Qloss' )")
-   !   write(*,fmtlabel) ' dE_tot      |', dEtot
-   !   write(*,fmtlabel) ' Qloss       |', -Qloss / abs(Etot_before)
-   !   write(*,fmtlabel) ' dE - Qloss  |', (Etot_after - Etot_before + Qloss) / abs(Etot_before)
+      write(*,        "(' dL_tot should be very small' )")
+      write(*,fmtlabel) ' dL_tot      |', dLmag
+      write(*,        "(' dE_tot should be negative and equal to Qloss' )")
+      write(*,fmtlabel) ' dE_tot      |', dEtot
+      write(*,fmtlabel) ' Qloss       |', -Qloss / abs(Etot_before)
+      write(*,fmtlabel) ' dE - Qloss  |', (Etot_after - Etot_before + Qloss) / abs(Etot_before)
    end if
-   !write(*,        "(' -------------------------------------------------------------------------------------')")
+   write(*,        "(' -------------------------------------------------------------------------------------')")
 
    call restore_scale_factors()
 
@@ -416,12 +416,11 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ! Arguments
       logical,                intent(in) :: linclude_fragments
       ! Internals
-      real(DP) :: ke_orb, ke_spin, pe
-      real(DP), dimension(NDIM)  :: Ltot
+      real(DP) :: ke_orbit, ke_spin, pe, te
+      real(DP), dimension(NDIM)  :: Ltot, Lorbit, Lspin
       integer(I4B) :: i, npl_new, nplm
       logical, dimension(:), allocatable :: ltmp
       logical :: lk_plpl
-      real(DP) :: te
       type(symba_pl) :: symba_plwksp
 
       ! Because we're making a copy of symba_pl with the excludes/fragments appended, we need to deallocate the
@@ -477,7 +476,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    
          nplm = count(symba_plwksp%helio%swiftest%mass > param%mtiny / mscale)
          call util_dist_index_plpl(npl_new, nplm, symba_plwksp)
-         call symba_energy_eucl(npl_new, symba_plwksp, param%j2rp2, param%j4rp4, ke_orb, ke_spin, pe, te, Ltot)
+         call symba_energy_eucl(npl_new, symba_plwksp, param%j2rp2, param%j4rp4, ke_orbit, ke_spin, pe, Lorbit, Lspin)
    
          ! Restore the big array
          deallocate(symba_plwksp%helio%swiftest%k_plpl) 
@@ -486,12 +485,12 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
          ! Calculate the current fragment energy and momentum balances
          if (linclude_fragments) then
-            Ltot_after(:) = Ltot(:)
-            Lmag_after = norm2(Ltot(:))
-            ke_orb_after = ke_orb
+            Ltot_after(:) = Lorbit(:) + Lspin(:)
+            Lmag_after = norm2(Ltot_after(:))
+            ke_orbit_after = ke_orbit
             ke_spin_after = ke_spin
             pe_after = pe
-            Etot_after = ke_orb_after + ke_spin_after + pe_after
+            Etot_after = ke_orbit_after + ke_spin_after + pe_after
             dEtot = (Etot_after - Etot_before) / abs(Etot_before)
             dLmag = norm2(Ltot_after(:) - Ltot_before(:)) / Lmag_before
             ke_frag = 0._DP
@@ -502,12 +501,12 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
             ke_offset = ke_frag - ke_target
             L_offset(:) = Ltot_before(:) - Ltot(:)
          else
-            Ltot_before(:) = Ltot(:)
-            Lmag_before = norm2(Ltot(:))
-            ke_orb_before = ke_orb
+            Ltot_before(:) = Lorbit(:) + Lspin(:)
+            Lmag_before = norm2(Ltot_before(:))
+            ke_orbit_before = ke_orbit
             ke_spin_before = ke_spin
             pe_before = pe
-            Etot_before = ke_orb_before + ke_spin_before + pe_before
+            Etot_before = ke_orbit_before + ke_spin_before + pe_before
          end if
       end associate
    return
@@ -673,7 +672,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       real(DP), dimension(:), allocatable   :: v_r_initial, v_r_sigma
       real(DP), dimension(:,:), allocatable :: v_r
 
-      ! Set the "target" ke_orb_after (the value of the orbital kinetic energy that the fragments ought to have)
+      ! Set the "target" ke_orbit_after (the value of the orbital kinetic energy that the fragments ought to have)
       
       if ((ke_target < 0.0_DP) .or. (ke_offset > 0.0_DP)) then
          !if (ke_target < 0.0_DP) write(*,*) 'Negative ke_target: ',ke_target

@@ -15,10 +15,12 @@ contains
       type(user_input_parameters), intent(in)    :: param        !! Input colleciton of user-defined parameters
       logical,                     intent(in)    :: lterminal    !! Indicates whether to output information to the terminal screen
       ! Internals
-      real(DP), dimension(NDIM), save :: Ltot_orig, Ltot_last
-      real(DP), save                  :: Eorbit_orig, Mtot_orig, Lmag_orig, ke_orb_last, ke_spin_last, pe_last, Eorbit_last
-      real(DP)                        :: ke_orbit, ke_spin, pe, Eorbit
-      real(DP), dimension(NDIM)       :: Ltot_now
+      real(DP), dimension(NDIM)       :: Ltot_now,  Lorbit_now,  Lspin_now
+      real(DP), dimension(NDIM), save :: Ltot_orig, Lorbit_orig, Lspin_orig
+      real(DP), dimension(NDIM), save :: Ltot_last, Lorbit_last, Lspin_last
+      real(DP), save                  :: Eorbit_orig, Mtot_orig, Lmag_orig
+      real(DP), save                  :: ke_orbit_last, ke_spin_last, pe_last, Eorbit_last
+      real(DP)                        :: ke_orbit_now,  ke_spin_now,  pe_now,  Eorbit_now
       real(DP)                        :: Eorbit_error, Etotal_error, Ecoll_error
       real(DP)                        :: Mtot_now, Merror
       real(DP)                        :: Lmag_now, Lerror
@@ -42,39 +44,53 @@ contains
                write(egyiu,egyheader)
             end if
          end if
-         call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit, ke_spin, pe, Eorbit, Ltot_now)
+         call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit_now, ke_spin_now, pe_now, Lorbit_now, Lspin_now)
+         Eorbit_now = ke_orbit_now + ke_spin_now + pe_now
+         Ltot_now(:) = Lorbit_now(:) + Lspin_now(:) + Lescape(:)
          Mtot_now = dMcb + sum(mass(2:npl)) + Mcb_initial + Mescape
          Ltot_now(:) = Lescape(:) + Ltot_now(:)
          if (lfirst) then
-            Eorbit_orig = Eorbit
+            Eorbit_orig = Eorbit_now
             Mtot_orig = Mtot_now
+            Lorbit_orig(:) = Lorbit_now(:)
+            Lspin_orig(:) = Lspin_now(:)
             Ltot_orig(:) = Ltot_now(:)
             Lmag_orig = norm2(Ltot_orig(:))
             lfirst = .false.
          end if
 
-         write(egyiu,egyfmt) t, Eorbit, Ecollisions, Ltot_now, Mtot_now
+         write(egyiu,egyfmt) t, Eorbit_now, Ecollisions, Ltot_now, Mtot_now
          flush(egyiu)
          if (.not.lfirst .and. lterminal) then 
             Lmag_now = norm2(Ltot_now)
             Lerror = norm2(Ltot_now - Ltot_orig) / Lmag_orig
-            Eorbit_error = (Eorbit - Eorbit_orig) / abs(Eorbit_orig)
+            Eorbit_error = (Eorbit_now - Eorbit_orig) / abs(Eorbit_orig)
             Ecoll_error = Ecollisions / abs(Eorbit_orig)
-            Etotal_error = (Eorbit - Ecollisions - Eorbit_orig - Euntracked) / abs(Eorbit_orig)
+            Etotal_error = (Eorbit_now - Ecollisions - Eorbit_orig - Euntracked) / abs(Eorbit_orig)
             Merror = (Mtot_now - Mtot_orig) / Mtot_orig
             write(*, egytermfmt) Lerror, Ecoll_error, Etotal_error, Merror
             if (Ecoll_error > 0.0_DP) then
                write(*,*) 'Something has gone wrong! Collisional energy should not be positive!'
-               write(*,*) 'dke_orbit: ',(ke_orbit - ke_orb_last) / abs(Eorbit_orig)
-               write(*,*) 'dke_spin : ',(ke_spin - ke_spin_last) / abs(Eorbit_orig)
-               write(*,*) 'dpe      : ',(pe - pe_last) / abs(Eorbit_orig)
+               write(*,*) 'dke_orbit: ',(ke_orbit_now - ke_orbit_last) / abs(Eorbit_orig)
+               write(*,*) 'dke_spin : ',(ke_spin_now - ke_spin_last) / abs(Eorbit_orig)
+               write(*,*) 'dpe      : ',(pe_now - pe_last) / abs(Eorbit_orig)
                write(*,*)
             end if
          end if
-         ke_orb_last = ke_orbit
-         ke_spin_last = ke_spin
-         pe_last = pe
-         Eorbit_last = Eorbit
+         write(*,*) 'Angular momentum changes since last time'
+         write(*,*) ' dLorbit : ',(Lorbit_now(:) - Lorbit_last(:)) / Lmag_orig
+         write(*,*) '|dLorbit|: ',norm2(Lorbit_now(:) - Lorbit_last(:)) / Lmag_orig
+         write(*,*) ' dLspin  : ',(Lspin_now(:) - Lspin_last(:)) / Lmag_orig
+         write(*,*) '|dLspin| : ',norm2(Lspin_now(:) - Lspin_last(:)) / Lmag_orig
+         write(*,*) ' dLtot   : ',(Ltot_now(:) - Ltot_last(:)) / Lmag_orig
+         write(*,*) '|dLtot|  : ',norm2(Ltot_now(:) - Ltot_last(:)) / Lmag_orig
+         ke_orbit_last = ke_orbit_now
+         ke_spin_last = ke_spin_now
+         pe_last = pe_now
+         Eorbit_last = Eorbit_now
+         Lorbit_last(:) = Lorbit_now(:)
+         Lspin_last(:) = Lspin_now(:)
+         Ltot_last(:) = Ltot_now(:)
       end associate
       return
 

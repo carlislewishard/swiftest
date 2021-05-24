@@ -1260,7 +1260,7 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-         SUBROUTINE symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit, ke_spin, pe, te, Ltot)
+         SUBROUTINE symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit, ke_spin, pe, Lorbit, Lspin)
                USE swiftest_globals
                USE swiftest_data_structures
                use module_symba
@@ -1268,8 +1268,8 @@ MODULE module_interfaces
                integer(I4B), intent(in)              :: npl
                type(symba_pl), intent(inout)         :: symba_plA
                real(DP), intent(in)                  :: j2rp2, j4rp4
-               real(DP), intent(out)                 :: ke_orbit, ke_spin, pe, te
-               real(DP), dimension(:), intent(out)   :: Ltot
+               real(DP), intent(out)                 :: ke_orbit, ke_spin, pe
+               real(DP), dimension(:), intent(out)   :: Lorbit, Lspin
          END SUBROUTINE symba_energy_eucl
      END INTERFACE
 
