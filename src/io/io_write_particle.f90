@@ -1,19 +1,17 @@
 submodule (io) s_io_write_particle
 
 contains
-   module procedure io_write_particle_pl !(swiftest_plA, idx, param)
+   module subroutine io_write_particle_pl(swiftest_plA, idx, param)
       !! author: David A. Minton
       !!
       !! Writes particle information to a file.
       !!
-      use module_interfaces
-      use module_symba
-      use swiftest
+      use swiftest, except_this_one => io_write_particle_pl
       implicit none
       ! Arguments
-      !class(swiftest_pl),          intent(in) :: swiftest_plA   !! Swiftest massive body structure
-      !integer(I4B), dimension(:),  intent(in) :: idx  !! Array of particle indices to append to the particle file
-      !type(user_input_parameters), intent(in) :: param   !! Input colleciton of user-defined parameters
+      class(swiftest_pl),          intent(in) :: swiftest_plA !! Swiftest massive body structure
+      integer(I4B), dimension(:),  intent(in) :: idx       !! Array of particle indices to append to the particle file
+      type(user_input_parameters), intent(in) :: param     !! Input colleciton of user-defined parameters
       ! Internals
       logical, save             :: lfirst = .true.
       integer(I4B), parameter   :: lun = 22
@@ -62,5 +60,5 @@ contains
       end associate
       return
 
-      end procedure io_write_particle_pl
+      end subroutine io_write_particle_pl
 end submodule s_io_write_particle

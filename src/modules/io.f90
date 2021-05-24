@@ -47,6 +47,13 @@ module io
          integer(I4B), dimension(:),  intent(in) :: idx       !! Array of particle indices to append to the particle file
          type(user_input_parameters), intent(in) :: param     !! Input colleciton of user-defined parameters
       end subroutine io_write_particle_pl
+
+      module subroutine io_read_particle_pl(swiftest_plA, param)
+         implicit none
+         class(swiftest_pl),          intent(inout) :: swiftest_plA !! Swiftest massive body structure
+         type(user_input_parameters), intent(in) :: param     !! Input colleciton of user-defined parameters
+      end subroutine io_read_particle_pl
+         
          
          
    end interface
