@@ -70,6 +70,7 @@ contains
       write(*,*) "EXTRA_FORCE    = ",param%lextra_force
       write(*,*) "BIG_DISCARD    = ",param%lbig_discard
       write(*,*) "RHILL_PRESENT  = ",param%lrhill_present
+      write(*,*) "SEED           = ",size(param%seed), param%seed(:)
       ierr = 0
 
       ! Added by D. Minton

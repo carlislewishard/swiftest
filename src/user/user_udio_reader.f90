@@ -27,17 +27,16 @@ contains
       logical                 :: t0_set = .false.        !! Is the initial time set in the input file?
       logical                 :: tstop_set = .false.     !! Is the final time set in the input file?
       logical                 :: dt_set = .false.        !! Is the step size set in the input file?
+      logical                 :: seed_set = .false.      !! Is the random seed set in the input file?
       integer(I4B)            :: ilength, ifirst, ilast  !! Variables used to parse input file
       character(STRMAX)       :: line                    !! Line of the input file
       character (len=:), allocatable :: line_trim,param_name, param_value
       character(*),parameter :: linefmt = '(A)'
-      integer(I4B) :: nseeds
+      integer(I4B) :: nseeds, nseeds_from_file, i
 
       call random_seed(size = nseeds)
       if (allocated(param%seed)) deallocate(param%seed)
       allocate(param%seed(nseeds))
-      !seed(:) = [(i * 1, i = 1, nseeds)]
-      !call random_seed(put = seed)
 
       ! Parse the file line by line, extracting tokens then matching them up with known parameters if possible
       do
@@ -145,7 +144,6 @@ contains
                if (param_value == "YES" .or. param_value == 'T') param%lringmoons = .true.
             case ("RING_OUTFILE")
                param%ring_outfile = param_value
-   
             case ("TIDES")
                call util_toupper(param_value)
                if (param_value == "YES" .or. param_value == 'T') param%ltides = .true. 
@@ -159,7 +157,24 @@ contains
                call util_toupper(param_value)
                if (param_value == "YES" .or. param_value == 'T') param%lyorp = .true. 
             case("SEED")
-               read(param_value, *) param%qmin
+               read(param_value, *) nseeds_from_file
+               ! Because the number of seeds can vary between compilers/systems, we need to make sure we can handle cases in which the input file has a different
+               ! number of seeds than the current system. If the number of seeds in the file is smaller than required, we will use them as a source to fill in the missing elements.
+               ! If the number of seeds in the file is larger than required, we will truncate the seed array.
+               if (nseeds_from_file >= nseeds) then       
+                  do i = 1, nseeds
+                     ifirst = ilast + 1
+                     param_value = user_get_token(line, ifirst, ilast, iostat) 
+                     read(param_value, *) param%seed(i)
+                  end do
+               else if (nseeds_from_file < nseeds) then  ! Seed array in file is too small
+                  do i = 1, nseeds_from_file
+                     ifirst = ilast + 1
+                     param_value = user_get_token(line, ifirst, ilast, iostat) 
+                     read(param_value, *) param%seed(i)
+                  end do
+               end if
+               seed_set = .true.
             case default
                write(iomsg,*) "Unknown parameter -> ",param_name
                iostat = -1
@@ -238,6 +253,12 @@ contains
             return
             iostat = -1
          end if
+      end if
+
+      if (seed_set) then
+         call random_seed(put = param%seed)
+      else
+         call random_seed(get = param%seed)
       end if
 
       return 

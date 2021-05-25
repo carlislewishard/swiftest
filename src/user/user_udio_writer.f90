@@ -84,6 +84,7 @@ contains
       write(unit, Rfmt) "MU2KG",MU2KG
       write(unit, Rfmt) "TU2S",TU2S 
       write(unit, Rfmt) "DU2M",DU2M
+      write(unit,*) "SEED",size(param%seed),param%seed(:)
       
       write(unit, Lfmt) "EXTRA_FORCE",param%lextra_force
       write(unit, Lfmt) "BIG_DISCARD",param%lbig_discard
