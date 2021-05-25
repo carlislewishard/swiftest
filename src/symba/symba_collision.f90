@@ -46,18 +46,10 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
    logical, dimension(:), allocatable         :: lplpl_unique_parent
    integer(I4B), dimension(:), pointer        :: plparent  
 
-   ! TESTING
-   logical, save   :: lfirst = .true.
-   real(DP), save  :: Minitial
-   real(DP)        :: Msystem, Madd, Mdiscard
 
    ! First determine the collisional regime for each colliding pair
    associate(npl => symba_plA%helio%swiftest%nbody, xbpl => symba_plA%helio%swiftest%xb, statpl => symba_plA%helio%swiftest%status, idpl => symba_plA%helio%swiftest%id, &
              idx1 => plplenc_list%index1, idx2 => plplenc_list%index2, plparent => symba_plA%kin%parent)
-      if (lfirst) then
-         Minitial = sum(symba_plA%helio%swiftest%mass(1:npl))
-         lfirst = .false.
-      end if 
       lplpl_collision(:) = plplenc_list%status(1:nplplenc) == COLLISION
       ldiscard = any(lplpl_collision)
       if (.not.ldiscard) return
