@@ -133,10 +133,10 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    integer(I4B)                            :: try, ntry
    integer(I4B), parameter                 :: NFRAG_MIN = 6 !! The minimum allowable number of fragments (set to 6 because that's how many unknowns are needed in the tangential velocity calculation)
    real(DP)                                :: r_max_start = 1.0_DP
-   logical, save                           :: lfirst = .true.
    real(DP), parameter                     :: Ltol = 2 * epsilon(1.0_DP)
    real(DP), parameter                     :: Etol = 1e-8_DP
    integer(I4B), parameter                 :: MAXTRY = 1000
+   integer(I4B) :: iflip = 1
 
    if (nfrag < NFRAG_MIN) then
       write(*,*) "symba_frag_pos needs at least ",NFRAG_MIN," fragments, but only ",nfrag," were given."
@@ -272,7 +272,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
       ! Set scale factors
       mscale = mtot !! Because of the implied G, mass is actually G*mass with units of distance**3 / time**2
-      rscale = norm2(x(:,2) - x(:,1))
+      rscale = sum(radius(:))
       vscale = sqrt(mscale / rscale)
       tscale = rscale / vscale
       Lscale = mscale * rscale * vscale
@@ -778,7 +778,6 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       !! it is called. 
       implicit none
       integer(I4B) :: i
-      integer(I4B), save :: iflip = 1
 
       if (ke_offset < 0.0_DP) then 
          if (iflip == 1) then
