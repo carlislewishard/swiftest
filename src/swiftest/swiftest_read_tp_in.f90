@@ -28,10 +28,11 @@ contains
          write(*,*) 'Error opening test particle initial conditions file ',trim(adjustl(param%intpfile))
          return
       end if
+      ntp = 0
       if (is_ascii) then
-         read(lun, *) ntp
+         read(lun, *, iostat=ierr) ntp
       else
-         read(lun) ntp
+         read(lun, iostat=ierr) ntp
       end if
       if (ntp <= 0) return
 

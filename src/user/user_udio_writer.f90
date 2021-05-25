@@ -19,88 +19,95 @@ contains
       character(len=*), intent(inout)     :: iomsg
 
       ! Internals
-      !character(*),parameter :: Ifmt  = '(A20,1X,I0/)'         !! Format label for integer values
-      !character(*),parameter :: Rfmt  = '(A20,1X,ES25.17/)'    !! Format label for real values 
-      !character(*),parameter :: R2fmt = '(A20,2(1X,ES25.17)/)'  !! Format label for 2x real values 
-      !character(*),parameter :: Sfmt  = '(A20,1X,A/)'          !! Format label for string values 
-      !character(*),parameter :: Lfmt  = '(A20,1X,L1/)'         !! Format label for logical values 
-      !character(*),parameter :: Pfmt  = '(A20/)'               !! Format label for single parameter string
-      character(*),parameter :: Ifmt  = '(A20,1X,I0)'         !! Format label for integer values
-      character(*),parameter :: Rfmt  = '(A20,1X,ES25.17)'    !! Format label for real values 
-      character(*),parameter :: R2fmt = '(A20,2(1X,ES25.17))'  !! Format label for 2x real values 
-      character(*),parameter :: Sfmt  = '(A20,1X,A)'          !! Format label for string values 
-      character(*),parameter :: Lfmt  = '(A20,1X,L1)'         !! Format label for logical values 
-      character(*),parameter :: Pfmt  = '(A20)'               !! Format label for single parameter string
+      character(*),parameter :: Ifmt  = '(I0)'         !! Format label for integer values
+      character(*),parameter :: Rfmt  = '(ES25.17)'    !! Format label for real values 
+      character(*),parameter :: Lfmt  = '(L1)'         !! Format label for logical values 
+      character(len=*), parameter :: Afmt = '(A25,1X,64(:,A25,1X))'
+      character(25)          :: param_name, param_value
+      type character_array
+         character(25) :: value
+      end type character_array
+      type(character_array), dimension(:), allocatable :: param_array
+      integer(I4B) :: i
 
-      write(unit, Rfmt) "T0", param%t0
-      write(unit, Rfmt) "TSTOP",param%tstop
-      write(unit, Rfmt) "DT",param%dt
-      write(unit, Sfmt) "PL_IN",trim(adjustl(param%inplfile))
-      write(unit, Sfmt) "TP_IN",trim(adjustl(param%intpfile))
-      write(unit, Sfmt) "IN_TYPE",trim(adjustl(param%out_type))
+      write(param_name, Afmt) "T0"; write(param_value,Rfmt) param%t0; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+      write(param_name, Afmt) "TSTOP"; write(param_value, Rfmt) param%tstop; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+      write(param_name, Afmt) "DT"; write(param_value, Rfmt) param%dt; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+      write(param_name, Afmt) "PL_IN"; write(param_value, Afmt) trim(adjustl(param%inplfile)); write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+      write(param_name, Afmt) "TP_in"; write(param_value, Afmt) trim(adjustl(param%intpfile)); write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+      write(param_name, Afmt) "IN_TYPE"; write(param_value, Afmt) trim(adjustl(param%in_type)); write(unit, Afmt) adjustl(param_name), adjustl(param_value)
       if (param%istep_out > 0) then
-         write(unit, Ifmt) "ISTEP_OUT",param%istep_out
-         write(unit, Sfmt) "BIN_OUT",trim(adjustl(param%outfile))
-         write(unit, Sfmt) "PARTICLE_FILE",trim(adjustl(param%particle_file))
-         write(unit, Sfmt) "OUT_TYPE",trim(adjustl(param%out_type))
-         write(unit, Sfmt) "OUT_FORM",trim(adjustl(param%out_form))
-         write(unit, Sfmt) "OUT_STAT","APPEND"
-      else
-         write(unit, Pfmt) "!ISTEP_OUT "
-         write(unit, Pfmt) "!BIN_OUT"
-         write(unit, Pfmt) "!OUT_TYPE"
-         write(unit, Pfmt) "!OUT_FORM"
-         write(unit, Pfmt) "!OUT_STAT"
+         write(param_name, Afmt) "ISTEP_OUT"; write(param_value, Ifmt) param%istep_out; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+         write(param_name, Afmt) "BIN_OUT"; write(param_value, Afmt) trim(adjustl(param%outfile)); write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+         write(param_name, Afmt) "PARTICLE_FILE"; write(param_value, Afmt) trim(adjustl(param%particle_file)); write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+         write(param_name, Afmt) "OUT_TYPE"; write(param_value, Afmt) trim(adjustl(param%out_type)); write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+         write(param_name, Afmt) "OUT_FORM"; write(param_value, Afmt) trim(adjustl(param%out_form)); write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+         write(param_name, Afmt) "OUT_STAT"; write(param_value, Afmt) "APPEND"; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
       end if
-      write(unit, Sfmt) "ENC_OUT",trim(adjustl(param%encounter_file))
+      write(param_name, Afmt) "ENC_OUT"; write(param_value, Afmt) trim(adjustl(param%encounter_file)); write(unit, Afmt) adjustl(param_name), adjustl(param_value)
       if (param%istep_dump > 0) then
-         write(unit, Ifmt) "ISTEP_DUMP",param%istep_dump
-      else
-         write(unit, Pfmt) "!ISTEP_DUMP" 
+         write(param_name, Afmt) "ISTEP_DUMP"; write(param_value, Ifmt) param%istep_dump; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
       end if
       if (param%j2rp2 > VSMALL) then
-         write(unit, Rfmt) "J2 ",param%j2rp2
+         write(param_name, Afmt) "J2 "; write(param_value, Rfmt) param%j2rp2; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
          if (param%j4rp4 > VSMALL) then
-            write(unit, Rfmt) "J4 ",param%j4rp4
-         else
-            write(unit, Pfmt) "!J4 "
+            write(param_name, Afmt) "J4 "; write(param_value, Rfmt) param%j4rp4; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
          end if
-      else
-         write(unit, Pfmt) "!J2 "
-         write(unit, Pfmt) "!J4 "
       end if
-      write(unit, Rfmt) "CHK_RMIN",param%rmin
-      write(unit, Rfmt) "CHK_RMAX",param%rmax
-      write(unit, Rfmt) "CHK_EJECT",param%rmaxu
-      write(unit, Rfmt) "CHK_QMIN",param%qmin
+      write(param_name, Afmt) "CHK_RMIN"; write(param_value, Rfmt) param%rmin; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+      write(param_name, Afmt) "CHK_RMAX"; write(param_value, Rfmt) param%rmax; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+      write(param_name, Afmt) "CHK_EJECT"; write(param_value, Rfmt) param%rmaxu; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+      write(param_name, Afmt) "CHK_QMIN"; write(param_value, Rfmt) param%qmin; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
       if (param%qmin >= 0.0_DP) then
-         write(unit, Sfmt) "CHK_QMIN_COORD",trim(adjustl(param%qmin_coord))
-         write(unit, R2fmt) "CHK_QMIN_RANGE",param%qmin_alo, param%qmin_ahi
-      else
-         write(unit, Pfmt) "!CHK_QMIN_COORD"
-         write(unit, Pfmt) "!CHK_QMIN_RANGE"
+         write(param_name, Afmt) "CHK_QMIN_COORD"; write(param_value, Afmt) trim(adjustl(param%qmin_coord)); write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+         allocate(param_array(2))
+         write(param_array(1)%value, Rfmt) param%qmin_alo
+         write(param_array(2)%value, Rfmt) param%qmin_ahi
+         write(param_name, Afmt) "CHK_QMIN_RANGE"; write(unit, Afmt) adjustl(param_name), adjustl(param_array(1)%value), adjustl(param_array(2)%value)
       end if
-      if (param%lmtiny) write(unit, Rfmt) "MTINY",param%mtiny
-      write(unit, Rfmt) "MU2KG",MU2KG
-      write(unit, Rfmt) "TU2S",TU2S 
-      write(unit, Rfmt) "DU2M",DU2M
-      write(unit,*) "SEED",size(param%seed),param%seed(:)
+      if (param%lmtiny) then
+         write(param_name, Afmt) "MTINY"; write(param_value, Rfmt) param%mtiny; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+      end if
+      write(param_name, Afmt) "MU2KG"; write(param_value, Rfmt) MU2KG; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+      write(param_name, Afmt) "TU2S"; write(param_value, Rfmt) TU2S ; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+      write(param_name, Afmt) "DU2M"; write(param_value, Rfmt) DU2M; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+
+      ! Special handling is required for writing the random number seed array as its size is not known until runtime
+      ! For the "SEED" parameter line, the first value will be the size of the seed array and the rest will be the seed array elements
+      write(param_name, Afmt) "SEED"
+      if (allocated(param_array)) deallocate(param_array)
+      allocate(param_array(0:size(param%seed)))
+      write(param_array(0)%value, Ifmt) size(param%seed)
+      do i = 1, size(param%seed)
+         write(param_array(i)%value, Ifmt) param%seed(i)
+      end do
+      write(unit, Afmt, advance='no') adjustl(param_name), adjustl(param_array(0)%value)
+      do i = 1, size(param%seed)
+         if (i < size(param%seed)) then
+            write(unit, Afmt, advance='no') adjustl(param_array(i)%value)
+         else
+            write(unit, Afmt) adjustl(param_array(i)%value)
+         end if
+      end do
+      ! ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
       
-      write(unit, Lfmt) "EXTRA_FORCE",param%lextra_force
-      write(unit, Lfmt) "BIG_DISCARD",param%lbig_discard
-      write(unit, Lfmt) "RHILL_PRESENT",param%lrhill_present
-      write(unit, Lfmt) "CHK_CLOSE",param%lclose
-      write(unit, Lfmt) "FRAGMENTATION", param%lfragmentation
-      write(unit, Lfmt) "ENERGY", param%lenergy
-      write(unit, Lfmt) "ROTATION", param%lrotation
-      write(unit, Lfmt) "TIDES", param%ltides
-      write(unit, Lfmt) "GR", param%lgr
-      write(unit, Lfmt) "YARKOVSKY", param%lyarkovsky
-      write(unit, Lfmt) "YORP", param%lyorp
-      write(unit, Lfmt) "RINGMOONS", param%lringmoons
-      if (param%lringmoons) write(unit, Sfmt) "RING_OUTFILE",trim(adjustl(param%ring_outfile))
+      write(param_name, Afmt) "EXTRA_FORCE"; write(param_value, Lfmt) param%lextra_force; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+      write(param_name, Afmt) "BIG_DISCARD"; write(param_value, Lfmt) param%lbig_discard; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+      write(param_name, Afmt) "RHILL_PRESENT"; write(param_value, Lfmt) param%lrhill_present; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+      write(param_name, Afmt) "CHK_CLOSE"; write(param_value, Lfmt) param%lclose; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+      write(param_name, Afmt) "FRAGMENTATION"; write(param_value, Lfmt)  param%lfragmentation; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+      write(param_name, Afmt) "ENERGY"; write(param_value, Lfmt)  param%lenergy; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+      write(param_name, Afmt) "ROTATION"; write(param_value, Lfmt)  param%lrotation; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+      write(param_name, Afmt) "TIDES"; write(param_value, Lfmt)  param%ltides; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+      write(param_name, Afmt) "GR"; write(param_value, Lfmt)  param%lgr; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+      write(param_name, Afmt) "YARKOVSKY"; write(param_value, Lfmt)  param%lyarkovsky; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+      write(param_name, Afmt) "YORP"; write(param_value, Lfmt)  param%lyorp; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+      write(param_name, Afmt) "RINGMOONS"; write(param_value, Lfmt)  param%lringmoons; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+      if (param%lringmoons) then
+         write(param_name, Afmt) "RING_OUTFILE"; write(param_value, Afmt) trim(adjustl(param%ring_outfile)); write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+      end if
 
-
+      iostat = 0
 
       return
 

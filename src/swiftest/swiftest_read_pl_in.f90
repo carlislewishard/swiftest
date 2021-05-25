@@ -93,7 +93,6 @@ contains
          else
             self%rhill(:) = 0.0_DP
          end if
-         self%status(:) = ACTIVE
          if (param%lclose) then
             read(LUN, iostat = ierr) self%radius(:)
          else
@@ -105,21 +104,21 @@ contains
             read(LUN, iostat = ierr) self%Ip(:,:)
             read(LUN, iostat = ierr) self%rot(:,:)
          end if
+         if (ierr /= 0) then
+            write(*,*) 'An error occurred reading in ',trim(adjustl(param%inplfile))
+            call util_exit(FAILURE)
+         end if
          self%status(:) = ACTIVE
       end if
       close(unit = LUN)
-      if (ierr /= 0 ) then
-         write(*,*) 'Error reading in massive body initial conditions from ',trim(adjustl(param%inplfile))
-         call util_exit(FAILURE)
-      end if
 
-      do i = 1, npl
+      self%info(1)%origin_type = "Central body"
+      do i = 2, npl
          self%info(i)%origin_xh(:) = self%xh(:,i)
          self%info(i)%origin_vh(:) = self%vh(:,i)
          self%info(i)%origin_time = 0.0_DP
          self%info(i)%origin_type = "Initial conditions"
       end do
-      self%info(1)%origin_type = "Central body"
 
       ! Give massive bodies a positive id
       self%id(:) = abs(self%id(:))
