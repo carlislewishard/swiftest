@@ -48,7 +48,6 @@ contains
          Eorbit_now = ke_orbit_now + ke_spin_now + pe_now
          Ltot_now(:) = Lorbit_now(:) + Lspin_now(:) + Lescape(:)
          Mtot_now = dMcb + sum(mass(2:npl)) + Mcb_initial + Mescape
-         Ltot_now(:) = Lescape(:) + Ltot_now(:)
          if (lfirst) then
             Eorbit_orig = Eorbit_now
             Mtot_orig = Mtot_now
