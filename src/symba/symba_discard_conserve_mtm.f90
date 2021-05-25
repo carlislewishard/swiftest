@@ -35,7 +35,7 @@ subroutine symba_discard_conserve_mtm(param, swiftest_plA, ipl, lescape_body)
          Mescape = Mescape + mass(ipl)
          call util_crossproduct(xb(:,ipl), vb(:,ipl), Lpl)
          Lpl(:) = mass(ipl) * (Lpl(:) + radius(ipl)**2 * Ip(3,ipl) * rot(:, ipl))
-         Lescape(:) = Lescape(:)  + Lpl(:) 
+         Lescape(:) = Lescape(:) + Lpl(:) 
          do i = 2, npl
             if (i == ipl) cycle
             pe = pe - mass(i) * mass(ipl) / norm2(xb(:, ipl) - xb(:, i))
