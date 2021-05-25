@@ -1,16 +1,23 @@
 submodule(user) s_user_get_token
 contains
-   module procedure user_get_token
+   module function user_get_token(buffer, ifirst, ilast, ierr) result(token)
       !! author: David A. Minton
       !!
       !! Retrieves a character token from an input string. Here a token is defined as any set of contiguous non-blank characters not 
       !! beginning with or containing "!". If "!" is present, any remaining part of the buffer including the "!" is ignored
       !!
       !! Adapted from David E. Kaufmann's Swifter routine user_get_token.f90
-      use swiftest
-      use module_interfaces
+      use swiftest, except_this_one => user_get_token
       implicit none
 
+      ! Arguments
+      character(len=*), intent(in)     :: buffer         !! Input string buffer
+      integer(I4B), intent(inout)      :: ifirst         !! Index of the buffer at which to start the search for a token
+      integer(I4B), intent(out)        :: ilast          !! Index of the buffer at the end of the returned token
+      integer(I4B), intent(out)        :: ierr           !! Error code
+      character(len=:),allocatable     :: token          !! Returned token stringn
+
+      ! Internals
       integer(I4B) :: i,ilength
 
       ilength = len(buffer)
@@ -42,5 +49,5 @@ contains
 
       return
 
-      end procedure user_get_token
+   end function user_get_token
 end submodule s_user_get_token

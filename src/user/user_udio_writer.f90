@@ -1,17 +1,24 @@
 submodule(user) s_user_udio_writer
 contains
-   module procedure user_udio_writer
+   module subroutine user_udio_writer(param, unit, iotype, v_list, iostat, iomsg) 
       !! author: David A. Minton
       !!
       !! Dump integration parameters to file
       !!
       !! Adapted from David E. Kaufmann's Swifter routine io_dump_param.f90
       !! Adapted from Martin Duncan's Swift routine io_dump_param.f
-      use swiftest
-      use module_interfaces
+      use swiftest, except_this_one => user_udio_writer
       implicit none
 
-                                                               !! In user-defined derived-type output, we need newline characters at the end of each format statement
+      ! Arguments
+      class(user_input_parameters),intent(in)  :: param         !! Output collection of user-defined parameters
+      integer, intent(in)                 :: unit        
+      character(len=*), intent(in)        :: iotype
+      integer, intent(in)                 :: v_list(:)
+      integer, intent(out)                :: iostat
+      character(len=*), intent(inout)     :: iomsg
+
+      ! Internals
       !character(*),parameter :: Ifmt  = '(A20,1X,I0/)'         !! Format label for integer values
       !character(*),parameter :: Rfmt  = '(A20,1X,ES25.17/)'    !! Format label for real values 
       !character(*),parameter :: R2fmt = '(A20,2(1X,ES25.17)/)'  !! Format label for 2x real values 
@@ -96,5 +103,5 @@ contains
 
       return
 
-      end procedure user_udio_writer
+   end subroutine user_udio_writer
 end submodule s_user_udio_writer

@@ -1,6 +1,6 @@
 submodule (user) s_user_read_param_in
 contains
-   module procedure user_read_param_in
+   module subroutine user_read_param_in(param,inparfile) 
       !! author: The Purdue Swiftest Team -  David A. Minton, Carlisle A. Wishard, Jennifer L.L. Pouplin, and Jacob R. Elliott
       !!
       !! Read in parameters for the integration
@@ -8,11 +8,14 @@ contains
       !! Adapted from David E. Kaufmann's Swifter routine io_init_param.f90
       !! Adapted from Martin Duncan's Swift routine io_init_param.f
       !$ use omp_lib
-      !use util, only: util_exit ! IMPLEMENTATION TBD
-      use swiftest
-      use module_interfaces
+      use swiftest, except_this_one => user_read_param_in
       implicit none
 
+      ! Arguments
+      class(user_input_parameters),intent(out) :: param         !! Input collection of user-defined parameters
+      character(*), intent(in)            :: inparfile     !! Parameter input file name (i.e. param.in)
+
+      ! Internals
       integer(I4B), parameter :: LUN = 7                 !! Unit number of input file
       integer(I4B)            :: ierr = 0                !! Input error code
       character(STRMAX)       :: error_message           !! Error message in UDIO procedure
@@ -113,6 +116,6 @@ contains
 
       return 
 
-      end procedure user_read_param_in
+   end subroutine user_read_param_in
 
 end submodule s_user_read_param_in

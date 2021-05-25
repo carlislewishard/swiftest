@@ -1,16 +1,20 @@
 submodule(user) s_user_dump_param
 contains
-   module procedure user_dump_param
+   module subroutine user_dump_param(param,t)
       !! author: David A. Minton
       !!
       !! Dump integration parameters to file
       !!
       !! Adapted from David E. Kaufmann's Swifter routine io_dump_param.f90
       !! Adapted from Martin Duncan's Swift routine io_dump_param.f
-      use swiftest
-      use module_interfaces
+      use swiftest, except_this_one => user_dump_param
       implicit none
 
+      ! Arguments
+      class(user_input_parameters),intent(in)  :: param    !! Output collection of user-defined parameters
+      real(DP),intent(in)                 :: t        !! Current simulation tim
+
+      ! Internals
       type(user_input_parameters)  :: param_dump !! Data type of dumped parameter file
       integer(I4B), parameter :: LUN = 7 !! Unit number of output file
       integer(I4B)            :: ierr     !! Error code
@@ -44,5 +48,5 @@ contains
 
       return
 
-      end procedure user_dump_param
+   end subroutine user_dump_param
 end submodule s_user_dump_param
