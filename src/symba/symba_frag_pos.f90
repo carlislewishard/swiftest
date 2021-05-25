@@ -730,11 +730,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
          fval = fval + 0.5_DP * m_frag(i) * dot_product(v_shift(:, i), v_shift(:, i))
       end do
       ! The following ensures that fval = 0 is a local minimum, which is what the BFGS method is searching for
-      if (fval < 0.0_DP) then
-         fval = fval**2 
-      else
-         fval = fval**2 
-      end if
+      fval = fval**2 
 
       return
 
