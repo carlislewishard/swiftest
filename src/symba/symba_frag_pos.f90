@@ -417,7 +417,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       logical,                intent(in) :: linclude_fragments
       ! Internals
       real(DP) :: ke_orbit, ke_spin, pe, te
-      real(DP), dimension(NDIM)  :: Ltot, Lorbit, Lspin
+      real(DP), dimension(NDIM)  :: Lorbit, Lspin
       integer(I4B) :: i, npl_new, nplm
       logical, dimension(:), allocatable :: ltmp
       logical :: lk_plpl
@@ -499,7 +499,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
             end do
             ke_target = ke_family + (ke_spin_before - ke_spin) + (pe_before - pe) - Qloss
             ke_offset = ke_frag - ke_target
-            L_offset(:) = Ltot_before(:) - Ltot(:)
+            L_offset(:) = Ltot_before(:) - Ltot_after(:)
          else
             Ltot_before(:) = Lorbit(:) + Lspin(:)
             Lmag_before = norm2(Ltot_before(:))

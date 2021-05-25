@@ -1103,20 +1103,13 @@ MODULE module_interfaces
 
 
      INTERFACE
-          SUBROUTINE symba_reorder_pl(npl, symba_plA)
-               USE swiftest_globals
-               USE swiftest_data_structures
-               USE module_helio
-               USE module_symba
-               IMPLICIT NONE
-               INTEGER(I4B), INTENT(IN) :: npl
-               TYPE(symba_pl), INTENT(INOUT)  :: symba_plA
-               INTEGER(I4B)                              :: i
-               INTEGER(I4B), DIMENSION(:), ALLOCATABLE   :: index
-               REAL(DP), DIMENSION(:), ALLOCATABLE       :: mass
-               REAL(DP), DIMENSION(:,:), allocatable     :: symba_plwkspA
-               INTEGER(I4B), DIMENSION(:,:), allocatable :: symba_plwkspA_id_status
-          END SUBROUTINE symba_reorder_pl
+      subroutine symba_reorder_pl(npl, symba_plA)
+         use swiftest_globals
+         use module_symba
+         implicit NONE
+         integer(I4B), intent(in) :: npl
+         type(symba_pl), intent(inout) :: symba_plA
+      end subroutine symba_reorder_pl
      END INTERFACE
 
      INTERFACE
