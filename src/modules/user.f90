@@ -35,6 +35,7 @@ module user
       real(DP)             :: MU2KG = -1.0_DP      !! Converts mass units to grams
       real(DP)             :: TU2S  = -1.0_DP      !! Converts time units to seconds
       real(DP)             :: DU2M = -1.0_DP       !! Converts distance unit to centimeters
+      integer(I4B), dimension(:), allocatable :: seed  !! Random seeds
 
 
       !Logical flags to turn on or off various features of the code

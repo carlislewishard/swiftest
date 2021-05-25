@@ -40,8 +40,6 @@ program swiftest_symba
    character(len=*), parameter   :: simtimefmt = '(" Time = ", es12.5, "; fraction done = ", f5.3, "; number of active pl, tp = ", i7, ", ", i7)'
    character(len=*), parameter   :: walltimefmt = '("      Wall time (s): ", es12.5, "; Wall time/step in this interval (s):  ", es12.5)'
    character(len=*), parameter   :: endwallfmt = '("Wall time to complete run (s): ", es12.5)'
-   integer(I4B), allocatable :: seed(:)
-   integer(I4B) :: nseeds
    integer(I4B), dimension(:), allocatable :: discard_stat_list
    logical, dimension(:), allocatable :: discard_l_pl
 
@@ -75,11 +73,6 @@ program swiftest_symba
 
       call util_version
        
-      call random_seed(size = nseeds)
-      allocate(seed(nseeds))
-      seed(:) = [(i * 1, i = 1, nseeds)]
-      call random_seed(put = seed)
-
       call get_command_argument(1, inparfile, status = ierr) 
       if (ierr /= 0) then
          write(*, 100, advance = "NO") "Enter name of parameter data file: "

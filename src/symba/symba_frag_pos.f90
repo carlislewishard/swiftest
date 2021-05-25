@@ -130,8 +130,6 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    real(DP)                                :: ke_family, ke_target, ke_frag, ke_offset
    real(DP), dimension(NDIM)               :: x_col_unit, y_col_unit, z_col_unit
    character(len=*), parameter             :: fmtlabel = "(A14,10(ES11.4,1X,:))"
-   integer(I4B), dimension(:), allocatable :: seed
-   integer(I4B)                            :: nseed
    integer(I4B)                            :: try, ntry
    integer(I4B), parameter                 :: NFRAG_MIN = 6 !! The minimum allowable number of fragments (set to 6 because that's how many unknowns are needed in the tangential velocity calculation)
    real(DP)                                :: r_max_start = 1.0_DP
@@ -147,14 +145,6 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    end if
 
    ntry = nfrag - NFRAG_MIN
-   ! Temporary until we get random number stuff settled for the whole project
-   if (lfirst) then
-      call random_seed(size=nseed)
-      allocate(seed(nseed))
-      seed = [(12*ii, ii=1, nseed)]
-      call random_seed(put=seed)
-      lfirst = .false.
-   end if
 
    allocate(x_frag, source=xb_frag)
    allocate(v_frag, source=vb_frag)
@@ -248,6 +238,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    write(*,        "(' -------------------------------------------------------------------------------------')")
    if (lmerge) then
       write(*,*) "symba_frag_pos failed after: ",try," tries"
+      stop
    else
       write(*,*) "symba_frag_pos succeeded after: ",try," tries"
       write(*,        "(' dL_tot should be very small' )")
