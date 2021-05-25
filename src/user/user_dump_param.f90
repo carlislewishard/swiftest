@@ -27,6 +27,7 @@ contains
       param_dump%inplfile = trim(adjustl(DUMP_PL_FILE(idx))) 
       param_dump%intpfile = trim(adjustl(DUMP_TP_FILE(idx))) 
       param_dump%in_type = "REAL8"
+      call random_seed(get = param_dump%seed)
       open(unit = LUN, file = DUMP_PARAM_FILE(idx), status='replace', form = 'formatted', iostat =ierr)
       if (ierr /=0) then
          write(*,*) 'Swiftest error.'
