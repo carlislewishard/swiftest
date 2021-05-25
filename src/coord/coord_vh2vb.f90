@@ -26,7 +26,7 @@ subroutine coord_vh2vb(npl, swiftest_plA, msys)
              mass => swiftest_plA%mass, status => swiftest_plA%status, &
              dMcb => swiftest_plA%dMcb, Mcb_initial => swiftest_plA%Mcb_initial)
 
-      lstatus(2:npl) = status(2:npl) == ACTIVE
+      lstatus(2:npl) = status(2:npl) /= INACTIVE
 
       vbcb(:) = 0.0_DP
       do i = 2,npl
@@ -36,7 +36,6 @@ subroutine coord_vh2vb(npl, swiftest_plA, msys)
 
       msys = dMcb + sum(mass(2:npl), lstatus(2:npl)) + Mcb_initial
       vbcb(:) = -vbcb(:) / msys
-
 
       do i = 2,npl 
          vb(:,i) = vh(:,i) + vbcb(:)

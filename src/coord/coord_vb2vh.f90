@@ -23,7 +23,7 @@ subroutine coord_vb2vh(npl, swiftest_plA)
              vb   => swiftest_plA%vb,        vh => swiftest_plA%vh, &
              mass => swiftest_plA%mass, status => swiftest_plA%status)
 
-      lstatus(2:npl) = status(2:npl) == ACTIVE
+      lstatus(2:npl) = status(2:npl) /= INACTIVE
       vbcb(:) = 0.0_DP
       do i = 2, npl
          if (.not.lstatus(i)) cycle

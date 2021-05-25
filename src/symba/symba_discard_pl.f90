@@ -42,9 +42,6 @@ subroutine symba_discard_pl(t, npl, ntp, symba_plA, symba_tpA, rmin, rmax, rmaxu
          if (allocated(discard_stat_list)) deallocate(discard_stat_list)
          allocate(discard_stat_list(ndiscard))
          discard_stat_list = pack(status(1:npl), discard_l_pl)
-         where(discard_l_pl(1:npl)) 
-            status(:) = ACTIVE
-         end where
       end if
    end associate
        

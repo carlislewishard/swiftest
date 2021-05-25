@@ -25,7 +25,7 @@ subroutine coord_h2b(npl, swiftest_plA, msys)
              mass => swiftest_plA%mass, status => swiftest_plA%status, &
              dMcb => swiftest_plA%dMcb, Mcb_initial => swiftest_plA%Mcb_initial)
 
-      lstatus(2:npl) = status(2:npl) == ACTIVE
+      lstatus(2:npl) = status(2:npl) /= INACTIVE
 
       xbcb(:) = 0.0_DP
       vbcb(:) = 0.0_DP
