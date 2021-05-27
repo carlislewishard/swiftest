@@ -45,6 +45,8 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    character(len=*), parameter             :: fmtlabel = "(A14,10(ES11.4,1X,:))"
    integer(I4B)                            :: try, ntry
    integer(I4B), parameter                 :: NFRAG_MIN = 7 !! The minimum allowable number of fragments (set to 6 because that's how many unknowns are needed in the tangential velocity calculation)
+   integer(I4B), parameter                 :: NFRAG_MAX_FACTOR = 2 !! The maximum allowable number of fragments relative to what was originally given
+   integer(I4B)                            :: NFRAG_MAX
    real(DP)                                :: r_max_start 
    real(DP), parameter                     :: Ltol = 10 * epsilon(1.0_DP)
    real(DP), parameter                     :: Etol = 1e-8_DP
@@ -58,6 +60,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       lmerge = .true.
       return
    end if
+   NFRAG_MAX = nfrag * NFRAG_MAX_FACTOR
 
    call ieee_get_halting_mode(IEEE_ALL,fpe_halting_modes)  ! Save the current halting modes so we can turn them off temporarily
    fpe_quiet_modes(:) = .false.
@@ -98,7 +101,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
   
    try = 1
    lmerge = .false.
-   do while (nfrag >= NFRAG_MIN .and. try < MAXTRY)
+   do while (nfrag <= NFRAG_MAX .and. nfrag >= NFRAG_MIN .and. try < MAXTRY)
       lmerge = .false.
       lincrease_fragment_number = .false.
    
