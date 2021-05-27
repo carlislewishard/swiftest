@@ -39,6 +39,7 @@ contains
       !!    due to compiler incompatabilities
       !write(LUN,'(DT)') param_dump
       call param_dump%udio_writer(LUN, iotype="none",v_list=(/0/),iostat=ierr,iomsg=error_message)
+      call random_seed(put = param_dump%seed)
 
       if (idx == 2) then
          idx = 1

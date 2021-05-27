@@ -34,7 +34,7 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
    real(DP)                                :: mchild, mtot
    real(DP), dimension(NDIM)               :: xc, vc, xcom, vcom, xchild, vchild, xcrossv
    real(DP)                                :: mtiny_si
-   real(DP)                                :: mlr, mslr, msys, msys_new, Qloss
+   real(DP)                                :: mlr, mslr, msys, msys_new, Qloss, impact_parameter
    integer(I4B), dimension(:), allocatable :: family, collision_idx, unique_parent_idx
    integer(I4B)                            :: fam_size, istart, ncollisions, nunique_parent
    type family_array
@@ -153,6 +153,9 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
             Ip(:, j) = mass(j) * symba_plA%helio%swiftest%Ip(:, idx_parent(j))
             ! Assume principal axis rotation about axis corresponding to highest moment of inertia (3rd Ip)
             L_spin(:, j)  = Ip(3, j) * radius(j)**2 * symba_plA%helio%swiftest%rot(:, idx_parent(j))
+
+            ! Use conservation of energy and angular momentum to adjust velocities and distances to be those equivalent to where they would be when the mutual radii are touching
+            !call vector_adjust(mass(j), x(:,j), v(:,j))
             if (nchild(j) > 0) then
                do i = 1, nchild(j) ! Loop over all children and take the mass weighted mean of the properties
                   idx_child = parent_child_index_array(j)%idx(i + 1)
@@ -307,5 +310,34 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
    end associate
 
    return
+
+   contains
+      subroutine vector_adjust(mass, radius, x, v)
+         !! author: David A. Minton
+         !!
+         !! Uses conservation of angular momentum and energy to adjust the velocity vectors of two bodies to be what they would be if they were touching
+         implicit none
+         ! Arguments
+         real(DP), dimension(:), intent(in) :: mass, radius
+         real(DP), dimension(:), intent(inout) :: x,v
+         ! Internals
+         real(DP) :: mrat, vmag0, vmag, rmag0, rmag, B
+         real(DP), dimension(NDIM) :: h0
+
+         mrat = mass(1) * mass(2) / sum(mass(1:2))
+         vmag0 = norm2(v(:))
+         rmag0 = norm2(x(:))
+         rmag = sum(radius(1:2))
+
+         ! Solve vis-viva to get the new magnitude of the velocity
+         vmag = 2 * sqrt((0.5_DP * vmag0**2 * mrat + mass(1) * mass(2) * (1.0_DP / rmag - 1.0_DP / rmag0)) / mrat)
+
+         ! Use conservation of angular momentum to get the new impact parameter
+         call util_cross_product(x(:), v(:), h0(:))
+         B = norm2(h0) / (rmag * vmag)
+
+
+
+      end subroutine vector_adjust
 
 end subroutine symba_collision

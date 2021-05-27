@@ -1,92 +1,3 @@
-module symba_frag_pos_lambda_implementation
-   use swiftest_globals
-   use lambda_function
-   implicit none
-
-   ! Define the class and interface used to implement the lambda function
-   type, public, extends(lambda_obj) :: ke_constraint
-      procedure(abstract_objective_func), pointer, nopass :: ke_objective_func_ptr => null()
-      real(DP), dimension(:),   allocatable :: v_t_mag
-      real(DP), dimension(:,:), allocatable :: v_r_unit, v_t_unit
-      real(DP), dimension(:),   allocatable :: m_frag
-      real(DP), dimension(NDIM)             :: vcom
-      real(DP)                              :: ke_target
-   contains
-      generic   :: init => ke_objective_func_init
-      procedure :: eval => ke_objective_func_eval
-      procedure, nopass :: ke_objective_func_init
-      final     :: ke_objective_func_destroy
-   end type ke_constraint
-   interface ke_constraint
-      module procedure ke_objective_func_init
-   end interface
-
-   abstract interface
-      function abstract_objective_func(v_r_mag, v_r_unit, v_t_mag, v_t_unit, m_frag, vcom, ke_target) result(fnorm)
-         ! Template for the kinetic energy constraint function used for minimizing
-         import DP
-         real(DP), dimension(:),   intent(in) :: v_r_mag   !! Radial velocity mangitude
-         real(DP), dimension(:,:), intent(in) :: v_r_unit  !! Radial velocity unit vector
-         real(DP), dimension(:),   intent(in) :: v_t_mag   !! Tangential velocity magnitude
-         real(DP), dimension(:,:), intent(in) :: v_t_unit  !! Tangential velocity unit vector
-         real(DP), dimension(:),   intent(in) :: m_frag    !! Fragment masses
-         real(DP), dimension(:),   intent(in) :: vcom      !! Barycentric velocity of collisional system center of mass
-         real(DP),                 intent(in) :: ke_target !! Target kinetic energ
-         real(DP)                             :: fnorm     !! The objective function result: norm of the vector composed of the tangential momentum and energy
-      end function
-   end interface
-
-   contains
-      type(ke_constraint) function ke_objective_func_init(lambda, v_r_unit, v_t_mag, v_t_unit, m_frag, vcom, ke_target)
-         implicit none
-         ! Arguments
-         procedure(abstract_objective_func)   :: lambda    !! The lambda function
-         real(DP), dimension(:,:), intent(in) :: v_r_unit  !! Radial velocity unit vector
-         real(DP), dimension(:),   intent(in) :: v_t_mag   !! Tangential velocity magnitude
-         real(DP), dimension(:,:), intent(in) :: v_t_unit  !! Tangential velocity unit vector
-         real(DP), dimension(:),   intent(in) :: m_frag    !! Fragment masses
-         real(DP), dimension(:),   intent(in) :: vcom      !! Barycentric velocity of collisional system center of mass
-         real(DP),                 intent(in) :: ke_target !! Target kinetic energ
-         ! Internals
-         associate(self => ke_objective_func_init)
-            self%ke_objective_func_ptr  => lambda
-            allocate(self%v_r_unit, source=v_r_unit)
-            allocate(self%v_t_mag, source=v_t_mag)
-            allocate(self%v_t_unit, source=v_t_unit)
-            allocate(self%m_frag, source=m_frag)
-            self%vcom(:) = vcom(:)
-            self%ke_target = ke_target
-         end associate
-         return
-      end function ke_objective_func_init
-
-      subroutine ke_objective_func_destroy(self)
-         implicit none
-         type(ke_constraint) :: self
-         if (allocated(self%v_r_unit)) deallocate(self%v_r_unit)
-         if (allocated(self%v_t_mag)) deallocate(self%v_t_mag)
-         if (allocated(self%v_t_unit)) deallocate(self%v_t_unit)
-         if (allocated(self%m_frag)) deallocate(self%m_frag)
-         if (associated(self%ke_objective_func_ptr)) nullify(self%ke_objective_func_ptr)
-      end subroutine ke_objective_func_destroy 
-
-   function ke_objective_func_eval(self, x) result(fval) 
-      implicit none
-      ! Arguments
-      class(ke_constraint),   intent(in) :: self
-      real(DP), dimension(:), intent(in) :: x
-      ! Result
-      real(DP)                           :: fval
-
-      if (associated(self%ke_objective_func_ptr)) then
-         fval = self%ke_objective_func_ptr(x, self%v_r_unit, self%v_t_mag, self%v_t_unit, self%m_frag, self%vcom, self%ke_target)
-      else
-         error stop "KE Objective function was not initialized."
-      end if
-   end function ke_objective_func_eval
-
-end module symba_frag_pos_lambda_implementation
-
 subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radius, &
                           nfrag, Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, Qloss, lmerge)
    !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
@@ -98,6 +9,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    use module_helio
    use module_symba
    use module_swiftestalloc 
+   use lambda_function
    use module_interfaces, except_this_one => symba_frag_pos
    implicit none
    ! Arguments
@@ -114,7 +26,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    real(DP), intent(inout)                 :: Qloss
    ! Internals
    real(DP), parameter                     :: f_spin = 0.20_DP !! Fraction of pre-impact orbital angular momentum that is converted to fragment spin
-   real(DP)                                :: mscale = 1.0_DP, rscale = 1.0_DP, vscale = 1.0_DP, tscale = 1.0_DP, Lscale = 1.0_DP, Escale = 1.0_DP! Scale factors that reduce quantities to O(~1) in the collisional system
+   real(DP)                                :: mscale, rscale, vscale, tscale, Lscale, Escale ! Scale factors that reduce quantities to O(~1) in the collisional system
    real(DP)                                :: mtot 
    real(DP), dimension(NDIM)               :: xcom, vcom
    integer(I4B)                            :: ii, fam_size
@@ -132,12 +44,20 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    character(len=*), parameter             :: fmtlabel = "(A14,10(ES11.4,1X,:))"
    integer(I4B)                            :: try, ntry
    integer(I4B), parameter                 :: NFRAG_MIN = 6 !! The minimum allowable number of fragments (set to 6 because that's how many unknowns are needed in the tangential velocity calculation)
-   real(DP)                                :: r_max_start = 1.0_DP
-   real(DP), parameter                     :: Ltol = 2 * epsilon(1.0_DP)
+   real(DP)                                :: r_max_start 
+   real(DP), parameter                     :: Ltol = 10 * epsilon(1.0_DP)
    real(DP), parameter                     :: Etol = 1e-8_DP
    integer(I4B), parameter                 :: MAXTRY = 1000
-   integer(I4B) :: iflip = 1
+   integer(I4B)                            :: iflip = 1
+   logical                                 :: lreduce_fragment_number
 
+   r_max_start = 1.0_DP
+   mscale = 1.0_DP
+   rscale = 1.0_DP
+   vscale = 1.0_DP
+   tscale = 1.0_DP
+   Lscale = 1.0_DP
+   Escale = 1.0_DP
    if (nfrag < NFRAG_MIN) then
       write(*,*) "symba_frag_pos needs at least ",NFRAG_MIN," fragments, but only ",nfrag," were given."
       lmerge = .true.
@@ -172,61 +92,20 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    lmerge = .false.
    do while (nfrag >= NFRAG_MIN .and. try <= MAXTRY)
       lmerge = .false.
-      !write(*,        "(' -------------------------------------------------------------------------------------')")
-      !write(*,*) "Try number: ",try, ' of ',ntry
-      !write(*,        "(' -------------------------------------------------------------------------------------')")
-      !write(*,        "('  First pass to get angular momentum ')")
+      lreduce_fragment_number = .false.
    
       call set_fragment_position_vectors()
-      call set_fragment_tangential_velocities()
-      call calculate_system_energy(linclude_fragments=.true.)
-   
-      !write(*,        "(' -------------------------------------------------------------------------------------')")
-      !write(*,        "('             |      T_orb      T_spin           T          pe        Etot        Ltot')")
-      !write(*,        "(' -------------------------------------------------------------------------------------')")
-      !write(*,fmtlabel) ' change      |',(ke_orbit_after - ke_orbit_before) / abs(Etot_before), &
-      !                                    (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
-      !                                    (ke_orbit_after + ke_spin_after - ke_orbit_before - ke_spin_before)/ abs(Etot_before), &
-      !                                    (pe_after - pe_before) / abs(Etot_before), &
-      !                                    dEtot, dLmag
-  ! 
-  !    write(*,        "(' -------------------------------------------------------------------------------------')")
-  !    write(*,        "(' If T_offset > 0, this will be a merge')") 
-  !    write(*,fmtlabel) ' T_offset  |',ke_offset / abs(Etot_before)
-   
-      call set_fragment_radial_velocities(lmerge)
-   
-      call calculate_system_energy(linclude_fragments=.true.)
-   
+      call set_fragment_tangential_velocities(lmerge)
+      if (.not.lmerge) call set_fragment_radial_velocities(lmerge)
       if (.not.lmerge) then
+         call calculate_system_energy(linclude_fragments=.true.)
          if (dEtot > 0.0_DP)  then
-            write(*,*) 'Failed try ',try,': Positive energy'
             lmerge = .true.
          else if (abs((Etot_after - Etot_before + Qloss) / Etot_before) > Etol) then
-            write(*,*) 'Failed try ',try,': Energy error too big: ',dEtot
             lmerge = .true.
          else if (abs(dLmag) > Ltol) then
-            write(*,*) 'Failed try ',try,': Angular momentum error too big: ',dLmag
             lmerge = .true.
          end if
-
-         !write(*,        "(' -------------------------------------------------------------------------------------')")
-         !write(*,        "('  Second pass to get energy ')")
-         !write(*,        "(' -------------------------------------------------------------------------------------')")
-         !write(*,fmtlabel) ' T_frag targ |',ke_target / abs(Etot_before)
-         !write(*,fmtlabel) ' T_frag calc |',ke_frag / abs(Etot_before)
-         !write(*,        "(' T_offset should now be small')") 
-         !write(*,fmtlabel) ' T_offset    |',ke_offset / abs(Etot_before)
-         !write(*,        "(' -------------------------------------------------------------------------------------')")
-         !write(*,        "('             |      T_orb      T_spin           T          pe        Etot        Ltot')")
-         !write(*,        "(' -------------------------------------------------------------------------------------')")
-         !write(*,fmtlabel) ' change      |',(ke_orbit_after - ke_orbit_before) / abs(Etot_before), &
-         !                                    (ke_spin_after - ke_spin_before)/ abs(Etot_before), &
-         !                                    (ke_orbit_after + ke_spin_after - ke_orbit_before - ke_spin_before)/ abs(Etot_before), &
-         !                                    (pe_after - pe_before) / abs(Etot_before), &
-         !                                    dEtot, dLmag
-      !else
-         !write(*,*) 'Failed try ',try,': Could not find radial velocities.'
       end if
  
       if (.not.lmerge) exit
@@ -238,7 +117,6 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    write(*,        "(' -------------------------------------------------------------------------------------')")
    if (lmerge) then
       write(*,*) "symba_frag_pos failed after: ",try," tries"
-      stop
    else
       write(*,*) "symba_frag_pos succeeded after: ",try," tries"
       write(*,        "(' dL_tot should be very small' )")
@@ -251,6 +129,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    write(*,        "(' -------------------------------------------------------------------------------------')")
 
    call restore_scale_factors()
+   close(22)
 
    return 
 
@@ -347,6 +226,12 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       allocate(v_t_mag(nfrag))
       allocate(v_r_unit(NDIM,nfrag))
       allocate(v_t_unit(NDIM,nfrag))
+
+      rmag(:) = 0.0_DP
+      v_r_mag(:) = 0.0_DP
+      v_t_mag(:) = 0.0_DP
+      v_r_unit(:,:) = 0.0_DP
+      v_t_unit(:,:) = 0.0_DP
 
       L_orb(:, :) = 0.0_DP
       ! Compute orbital angular momentum of pre-impact system
@@ -489,7 +374,6 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
                ke_frag = ke_frag + 0.5_DP * m_frag(i) * dot_product(vb_frag(:, i), vb_frag(:, i))
             end do
             ke_target = ke_family + (ke_spin_before - ke_spin) + (pe_before - pe) - Qloss
-            ke_offset = ke_frag - ke_target
             L_offset(:) = Ltot_before(:) - Ltot_after(:)
          else
             Ltot_before(:) = Lorbit(:) + Lspin(:)
@@ -542,7 +426,6 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       logical, dimension(:), allocatable :: loverlap
       integer(I4B) :: i, j
 
-
       allocate(loverlap(nfrag))
 
       ! Place the fragments into a region that is big enough that we should usually not have overlapping bodies
@@ -588,26 +471,135 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       return
    end subroutine set_fragment_position_vectors
 
-   subroutine set_fragment_tangential_velocities()
+   subroutine set_fragment_tangential_velocities(lerr)
       !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
       !!
       !! Adjusts the positions, velocities, and spins of a collection of fragments such that they conserve angular momentum
       implicit none
+      ! Arguments
+      logical, intent(out)  :: lerr
       ! Internals
-      integer(I4B)                            :: i
-      real(DP)                                :: L_orb_mag
-      real(DP), dimension(2 * NDIM, 2 * NDIM) :: A ! LHS of linear equation used to solve for momentum constraint in Gauss elimination code
-      real(DP), dimension(2 * NDIM)           :: b  ! RHS of linear equation used to solve for momentum constraint in Gauss elimination code
-      real(DP), dimension(NDIM)               :: L_lin_others, L_orb_others, L
+      integer(I4B) :: i
+      real(DP)     :: L_orb_mag, fval
+      real(DP), parameter                   :: TOL = 1e-4_DP
+      real(DP), dimension(:), allocatable   :: v_t_initial
+      type(lambda_obj_err)                 :: objective_function
 
-      v_frag(:,:) = 0.0_DP
-      
       ! Divide up the pre-impact spin angular momentum equally between the various bodies by mass
       do i = 1, nfrag
          rot_frag(:,i) = L_frag_spin(:) / nfrag / (Ip_frag(:, i) * m_frag(i) * rad_frag(i)**2)
       end do
+      vb_frag(:,:) = 0.0_DP
 
-      L_orb_mag = norm2(L_frag_orb(:)) 
+      call calculate_system_energy(linclude_fragments=.true.)
+      if (ke_target < 0.0_DP) then
+         write(*,*) 'Negative ke_target: ',ke_target
+         lerr = .true.
+         lreduce_fragment_number = .true.
+         return
+      end if
+
+      lerr = .false.
+      if (nfrag > 6) then
+         allocate(v_t_initial, mold=v_t_mag)
+         L_orb_mag = norm2(L_frag_orb(:)) 
+         v_t_initial(1:6) = 0.0_DP
+         do i = 7, nfrag
+            v_t_initial(i) = L_orb_mag / (m_frag(i) * rmag(i) * nfrag) 
+         end do
+         v_t_mag(1:nfrag) = solve_fragment_tangential_velocities(v_t_mag_input=v_t_initial(7:nfrag), lerr=lerr)
+      else
+         v_t_mag(1:nfrag) = solve_fragment_tangential_velocities(lerr)
+      end if 
+      vb_frag(:,:) = vmag_to_vb(v_r_mag, v_r_unit, v_t_mag, v_t_unit, m_frag, vcom) 
+      ke_frag = 0.0_DP
+      do i = 1, nfrag
+         ke_frag = ke_frag + 0.5_DP * m_frag(i) * dot_product(vb_frag(:, i), vb_frag(:, i))
+      end do
+      ke_offset = ke_frag - ke_target
+      if ((ke_offset > 0.0_DP) .and. (nfrag >6)) then
+         objective_function = lambda_obj(tangential_objective_function, lerr)
+         v_t_mag(7:nfrag) = util_minimize_bfgs(objective_function, nfrag - 6, v_t_initial(7:nfrag), TOL, lerr)
+         if (lerr) v_t_mag(7:nfrag) = objective_function%lastarg(:)
+         v_t_mag(:) = solve_fragment_tangential_velocities(v_t_mag_input=v_t_mag(7:nfrag), lerr=lerr)
+         ke_offset = objective_function%lastval
+      end if
+      lerr = (ke_offset > 0.0_DP)
+      if (lerr) then
+         lreduce_fragment_number = .false.
+         ! No solution exists for this case, so we need to indicate that this should be a merge
+         ! This may happen due to setting the tangential velocities too high when setting the angular momentum constraint
+         v_frag(:,:) = 0.0_DP
+         do i = 1, nfrag
+            vb_frag(:, i) = vcom(:)
+         end do
+      else
+         ! Shift the radial velocity vectors to align with the center of mass of the collisional system (the origin)
+         vb_frag(:,1:nfrag) = vmag_to_vb(v_r_mag(1:nfrag), v_r_unit(:,1:nfrag), v_t_mag(1:nfrag), v_t_unit(:,1:nfrag), m_frag(1:nfrag), vcom(:)) 
+         do i = 1, nfrag
+            v_frag(:, i) = vb_frag(:, i) - vcom(:)
+         end do
+      end if
+
+      return
+
+   end subroutine set_fragment_tangential_velocities
+
+   function tangential_objective_function(v_t_mag_input, lerr) result(ke_offset) 
+      !! Author: David A. Minton
+      !!
+      !! Objective function for evaluating how close our fragment velocities get to minimizing KE error from our required value
+      implicit none
+      ! Arguments
+      real(DP), dimension(:),   intent(in)  :: v_t_mag_input   !! Unknown tangential component of velocity vector set previously by angular momentum constraint
+      logical,                  intent(out) :: lerr            !! Error flag
+      ! Result
+      real(DP)                              :: ke_offset 
+      ! Internals
+      integer(I4B) :: i
+      real(DP), dimension(:,:), allocatable :: v_shift
+      real(DP), dimension(:), allocatable :: v_t_mag_output
+
+      lerr = .false.
+      allocate(v_t_mag_output, mold=v_t_mag)
+      v_t_mag_output(:) = solve_fragment_tangential_velocities(v_t_mag_input=v_t_mag_input(:), lerr=lerr)
+      if (lerr) then
+         v_t_mag_output(1:6) = 0.0_DP
+         if (nfrag > 6) v_t_mag_output(7:nfrag) = v_t_mag_input(:)
+      end if
+
+      allocate(v_shift, mold=vb_frag)
+      v_shift(:,:) = vmag_to_vb(v_r_mag, v_r_unit, v_t_mag_output, v_t_unit, m_frag, vcom) 
+
+      ke_frag = 0.0_DP
+      do i = 1, nfrag
+         ke_frag = ke_frag + 0.5_DP * m_frag(i) * dot_product(v_shift(:, i), v_shift(:, i))
+      end do
+      ke_offset = ke_frag - ke_target
+      lerr = (ke_offset > 0.0_DP)
+      return
+   end function tangential_objective_function
+
+   function solve_fragment_tangential_velocities(lerr, v_t_mag_input) result(v_t_mag_output)
+      !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
+      !!
+      !! Adjusts the positions, velocities, and spins of a collection of fragments such that they conserve angular momentum
+      implicit none
+      ! Arguments
+      logical,                          intent(out) :: lerr            !! Error flag 
+      real(DP), dimension(:), optional, intent(in)  :: v_t_mag_input   !! Unknown tangential velocities for fragments 7:nfrag
+      ! Internals
+      integer(I4B)                            :: i
+      ! Result
+      real(DP), dimension(:), allocatable     :: v_t_mag_output
+
+      real(DP), dimension(2 * NDIM, 2 * NDIM) :: A ! LHS of linear equation used to solve for momentum constraint in Gauss elimination code
+      real(DP), dimension(2 * NDIM)           :: b  ! RHS of linear equation used to solve for momentum constraint in Gauss elimination code
+      real(DP), dimension(NDIM)               :: L_lin_others, L_orb_others, L, v
+
+      v_frag(:,:) = 0.0_DP
+      lerr = .false.
+
       ! We have 6 constraint equations (2 vector constraints in 3 dimensions each)
       ! The first 3 are that the linear momentum of the fragments is zero with respect to the collisional barycenter
       ! The second 3 are that the sum of the angular momentum of the fragments is conserved from the pre-impact state
@@ -618,30 +610,23 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
             A(1:3, i) = m_frag(i) * v_t_unit(:, i) 
             call util_crossproduct(v_r_unit(:, i), v_t_unit(:, i), L(:))
             A(4:6, i) = m_frag(i) * rmag(i) * L(:)
-         else !For the remining bodies, distribute the angular momentum equally amongs them
-            v_t_mag(i) = L_orb_mag / (m_frag(i) * rmag(i) * nfrag) 
-            v_frag(:, i) = v_t_mag(i) * v_t_unit(:, i)
-            L_lin_others(:) = L_lin_others(:) + m_frag(i) * v_frag(:, i)
-            call util_crossproduct(x_frag(:, i), v_frag(:, i), L(:))
+         else if (present(v_t_mag_input)) then
+            v(:) = v_t_mag_input(i - 6) * v_t_unit(:, i)
+            L_lin_others(:) = L_lin_others(:) + m_frag(i) * v(:)
+            call util_crossproduct(x_frag(:, i), v(:), L(:))
             L_orb_others(:) = L_orb_others(:) + m_frag(i) * L(:)
          end if
       end do
       b(1:3) = -L_lin_others(:)
       b(4:6) = L_frag_orb(:) - L_orb_others(:)
-      v_t_mag(1:6) = util_solve_linear_system(A, b, 6, lmerge)
-      if (lmerge) return
-      do i = 1, 6
-         v_frag(:, i) = v_t_mag(i) * v_t_unit(:, i)
-      end do
-
-      do i = 1, nfrag
-         vb_frag(:,i) = v_frag(:,i) + vcom(:)
-      end do
+      allocate(v_t_mag_output, mold=v_t_mag)
+      v_t_mag_output(1:6) = util_solve_linear_system(A, b, 6, lerr)
+      if (present(v_t_mag_input)) v_t_mag_output(7:nfrag) = v_t_mag_input(:)
 
       return 
-   end subroutine set_fragment_tangential_velocities
+   end function solve_fragment_tangential_velocities
 
-   subroutine set_fragment_radial_velocities(lmerge)
+   subroutine set_fragment_radial_velocities(lerr)
       !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
       !!
       !! 
@@ -651,27 +636,18 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       !! It takes in the initial "guess" of velocities and solve for the a scaling factor applied to the radial component wrt the
       !! center of mass frame needed to correct the kinetic energy of the fragments in the system barycenter frame to match that of 
       !! the target kinetic energy required to satisfy the constraints.
-      use symba_frag_pos_lambda_implementation
       implicit none
       ! Arguments
-      logical,                intent(out)   :: lmerge
+      logical,                intent(out)   :: lerr
       ! Internals
-      real(DP), parameter                   :: TOL = 1e-9_DP
-      real(DP), dimension(:), allocatable   :: vflat 
-      logical                               :: lerr
+      real(DP), parameter                   :: TOL = 1e-6_DP
       integer(I4B)                          :: i
       real(DP), dimension(:), allocatable   :: v_r_initial, v_r_sigma
       real(DP), dimension(:,:), allocatable :: v_r
+      type(lambda_obj)                      :: objective_function
 
       ! Set the "target" ke_orbit_after (the value of the orbital kinetic energy that the fragments ought to have)
       
-      if ((ke_target < 0.0_DP) .or. (ke_offset > 0.0_DP)) then
-         !if (ke_target < 0.0_DP) write(*,*) 'Negative ke_target: ',ke_target
-         !if (ke_offset > 0.0_DP) write(*,*) 'Positive ke_offset: ',ke_offset
-         lmerge = .true.
-         return
-      end if
-
       allocate(v_r_initial, source=v_r_mag)
       ! Initialize radial velocity magnitudes with a random value that is approximately 10% of that found by distributing the kinetic energy equally
       allocate(v_r_sigma, source=v_r_mag)
@@ -681,18 +657,17 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
       ! Initialize the lambda function using a structure constructor that calls the init method
       ! Minimize the ke objective function using the BFGS optimizer
-      v_r_mag(1:nfrag) = util_minimize_bfgs(ke_constraint(ke_objective_function, v_r_unit(:,1:nfrag), v_t_mag(1:nfrag), v_t_unit(:,1:nfrag), m_frag(1:nfrag), vcom(:), ke_target), &
-                                             nfrag, v_r_initial(1:nfrag), TOL, lerr)
+      lerr = .false.
+      objective_function = lambda_obj(radial_objective_function)
+      v_r_mag = util_minimize_bfgs(objective_function, nfrag, v_r_initial, TOL, lerr)
       if (lerr) then
          ! No solution exists for this case, so we need to indicate that this should be a merge
          ! This may happen due to setting the tangential velocities too high when setting the angular momentum constraint
-         lmerge = .true.
          v_frag(:,:) = 0.0_DP
          do i = 1, nfrag
             vb_frag(:, i) = vcom(:)
          end do
       else
-         lmerge = .false.
          ! Shift the radial velocity vectors to align with the center of mass of the collisional system (the origin)
          vb_frag(:,1:nfrag) =  vmag_to_vb(v_r_mag(1:nfrag), v_r_unit(:,1:nfrag), v_t_mag(1:nfrag), v_t_unit(:,1:nfrag), m_frag(1:nfrag), vcom(:)) 
          do i = 1, nfrag
@@ -703,18 +678,13 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       return
    end subroutine set_fragment_radial_velocities
 
-   function ke_objective_function(v_r_mag, v_r_unit, v_t_mag, v_t_unit, m_frag, vcom, ke_target) result(fval) 
+   function radial_objective_function(v_r_mag_input) result(fval) 
       !! Author: David A. Minton
       !!
       !! Objective function for evaluating how close our fragment velocities get to minimizing KE error from our required value
       implicit none
       ! Arguments
-      real(DP), dimension(:),   intent(in)  :: v_r_mag   !! Unknown radial component of fragment velocity vector
-      real(DP), dimension(:),   intent(in)  :: v_t_mag   !! Tangential component of velocity vector set previously by angular momentum constraint
-      real(DP), dimension(:,:), intent(in)  :: v_r_unit, v_t_unit !! Radial and tangential unit vectors for each fragment
-      real(DP), dimension(:),   intent(in)  :: m_frag    !! Fragment masses
-      real(DP), dimension(:),   intent(in)  :: vcom      !! Barycentric velocity of collisional system center of mass
-      real(DP),                 intent(in)  :: ke_target !! Target kinetic energy
+      real(DP), dimension(:),   intent(in)  :: v_r_mag_input   !! Unknown radial component of fragment velocity vector
       ! Result
       real(DP)                              :: fval      !! The objective function result, which is the square of the difference between the calculated fragment kinetic energy and our target
                                                          !! Minimizing this brings us closer to our objective
@@ -724,7 +694,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       real(DP), dimension(:,:), allocatable :: v_shift
 
       allocate(v_shift, mold=vb_frag)
-      v_shift(:,:) = vmag_to_vb(v_r_mag, v_r_unit, v_t_mag, v_t_unit, m_frag, vcom) 
+      v_shift(:,:) = vmag_to_vb(v_r_mag_input, v_r_unit, v_t_mag, v_t_unit, m_frag, vcom) 
       fval = -ke_target
       do i = 1, nfrag
          fval = fval + 0.5_DP * m_frag(i) * dot_product(v_shift(:, i), v_shift(:, i))
@@ -734,7 +704,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
       return
 
-   end function ke_objective_function
+   end function radial_objective_function
 
    function vmag_to_vb(v_r_mag, v_r_unit, v_t_mag, v_t_unit, m_frag, vcom) result(vb) 
       !! Author: David A. Minton
@@ -775,7 +745,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       implicit none
       integer(I4B) :: i
 
-      if (ke_offset < 0.0_DP) then 
+      if (lreduce_fragment_number) then 
          if (iflip == 1) then
             iflip = 2
          else
@@ -787,7 +757,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
          rad_frag(nfrag) = 0.0_DP
          nfrag = nfrag - 1
       end if
-      r_max_start = r_max_start + 1.0_DP ! The larger lever arm can help if the problem is in the angular momentum step
+      r_max_start = r_max_start + 1.00_DP ! The larger lever arm can help if the problem is in the angular momentum step
    end subroutine restructure_failed_fragments
 
 

@@ -1614,12 +1614,12 @@ END INTERFACE
             use swiftest_globals
             use lambda_function
             implicit none
-            integer(I4B),           intent(in)  :: N
-            class(lambda_obj),      intent(in)  :: f
-            real(DP), dimension(:), intent(in)  :: x0_d
-            real(DP),               intent(in)  :: eps_d
-            logical,                intent(out) :: lerr
-            real(DP), dimension(:), allocatable :: x1_d
+            integer(I4B),           intent(in)    :: N
+            class(lambda_obj),      intent(inout) :: f
+            real(DP), dimension(:), intent(in)    :: x0_d
+            real(DP),               intent(in)    :: eps_d
+            logical,                intent(out)   :: lerr
+            real(DP), dimension(:), allocatable   :: x1_d
          end function util_minimize_bfgs
       end interface
 

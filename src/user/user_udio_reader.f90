@@ -161,18 +161,22 @@ contains
                ! Because the number of seeds can vary between compilers/systems, we need to make sure we can handle cases in which the input file has a different
                ! number of seeds than the current system. If the number of seeds in the file is smaller than required, we will use them as a source to fill in the missing elements.
                ! If the number of seeds in the file is larger than required, we will truncate the seed array.
-               if (nseeds_from_file >= nseeds) then       
+               if (nseeds_from_file > nseeds) then
+                  nseeds = nseeds_from_file
+                  deallocate(param%seed)
+                  allocate(param%seed(nseeds))
                   do i = 1, nseeds
                      ifirst = ilast + 1
                      param_value = user_get_token(line, ifirst, ilast, iostat) 
                      read(param_value, *) param%seed(i)
                   end do
-               else if (nseeds_from_file < nseeds) then  ! Seed array in file is too small
+               else ! Seed array in file is too small
                   do i = 1, nseeds_from_file
                      ifirst = ilast + 1
                      param_value = user_get_token(line, ifirst, ilast, iostat) 
                      read(param_value, *) param%seed(i)
                   end do
+                  param%seed(nseeds_from_file+1:nseeds) = [(param%seed(1) - param%seed(nseeds_from_file) + i, i=nseeds_from_file+1, nseeds)]
                end if
                seed_set = .true.
             case default

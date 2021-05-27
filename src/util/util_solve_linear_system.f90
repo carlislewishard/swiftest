@@ -32,6 +32,7 @@ function util_solve_linear_system_d(A,b,n,lerr) result(x)
    lerr = any(fpe_flag) 
    if (lerr) then
       x = 0.0_DP
+      write(*,*) 'fpe in util_solve_linear_system'
    else
       x = real(qx, kind=DP)
    end if
@@ -91,10 +92,11 @@ function solve_wbs(u) result(x) ! solve with backward substitution
    n = size(u, 1)
    if (allocated(x)) deallocate(x)
    if (.not.allocated(x)) allocate(x(n))
-   call ieee_set_halting_mode(ieee_divide_by_zero, .false.)
-   do i = n, 1, -1 
-      x(i) = (u(i, n + 1) - sum(u(i, i + 1:n) * x(i + 1:n))) / u(i, i)
-   end do
+   if (any(abs(u) < tiny(1._DP))) then 
+      x(:) = 0._DP
+      return
+   end if
+   forall (i=n:1:-1) x(i) = (u(i, n + 1) - sum(u(i, i + 1:n) * x(i + 1:n))) / u(i, i)
    return
 end function solve_wbs
 
