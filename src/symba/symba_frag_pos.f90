@@ -112,24 +112,23 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       call restructure_failed_fragments()
       try = try + 1
    end do
-   write(*,        "(' -------------------------------------------------------------------------------------')")
-   write(*,        "('  Final diagnostic')")
-   write(*,        "(' -------------------------------------------------------------------------------------')")
+   !write(*,        "(' -------------------------------------------------------------------------------------')")
+   !write(*,        "('  Final diagnostic')")
+   !write(*,        "(' -------------------------------------------------------------------------------------')")
    if (lmerge) then
       write(*,*) "symba_frag_pos failed after: ",try," tries"
    else
       write(*,*) "symba_frag_pos succeeded after: ",try," tries"
-      write(*,        "(' dL_tot should be very small' )")
-      write(*,fmtlabel) ' dL_tot      |', dLmag
-      write(*,        "(' dE_tot should be negative and equal to Qloss' )")
-      write(*,fmtlabel) ' dE_tot      |', dEtot
-      write(*,fmtlabel) ' Qloss       |', -Qloss / abs(Etot_before)
-      write(*,fmtlabel) ' dE - Qloss  |', (Etot_after - Etot_before + Qloss) / abs(Etot_before)
+   !   write(*,        "(' dL_tot should be very small' )")
+   !   write(*,fmtlabel) ' dL_tot      |', dLmag
+   !   write(*,        "(' dE_tot should be negative and equal to Qloss' )")
+   !   write(*,fmtlabel) ' dE_tot      |', dEtot
+   !   write(*,fmtlabel) ' Qloss       |', -Qloss / abs(Etot_before)
+   !   write(*,fmtlabel) ' dE - Qloss  |', (Etot_after - Etot_before + Qloss) / abs(Etot_before)
    end if
-   write(*,        "(' -------------------------------------------------------------------------------------')")
+   !write(*,        "(' -------------------------------------------------------------------------------------')")
 
    call restore_scale_factors()
-   close(22)
 
    return 
 
