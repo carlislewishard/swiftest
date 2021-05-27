@@ -5,6 +5,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    !! Places the collision fragments on a circle oriented with a plane defined
    !! by the position and velocity vectors of the collision
    !! 
+   use, intrinsic :: ieee_exceptions
    use swiftest
    use module_helio
    use module_symba
@@ -43,13 +44,24 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    real(DP), dimension(NDIM)               :: x_col_unit, y_col_unit, z_col_unit
    character(len=*), parameter             :: fmtlabel = "(A14,10(ES11.4,1X,:))"
    integer(I4B)                            :: try, ntry
-   integer(I4B), parameter                 :: NFRAG_MIN = 6 !! The minimum allowable number of fragments (set to 6 because that's how many unknowns are needed in the tangential velocity calculation)
+   integer(I4B), parameter                 :: NFRAG_MIN = 7 !! The minimum allowable number of fragments (set to 6 because that's how many unknowns are needed in the tangential velocity calculation)
    real(DP)                                :: r_max_start 
    real(DP), parameter                     :: Ltol = 10 * epsilon(1.0_DP)
    real(DP), parameter                     :: Etol = 1e-8_DP
    integer(I4B), parameter                 :: MAXTRY = 1000
    integer(I4B)                            :: iflip = 1
    logical                                 :: lreduce_fragment_number
+   logical, dimension(size(IEEE_ALL))      :: fpe_halting_modes, fpe_quiet_modes
+
+   if (nfrag < NFRAG_MIN) then
+      write(*,*) "symba_frag_pos needs at least ",NFRAG_MIN," fragments, but only ",nfrag," were given."
+      lmerge = .true.
+      return
+   end if
+
+   call ieee_get_halting_mode(IEEE_ALL,fpe_halting_modes)  ! Save the current halting modes so we can turn them off temporarily
+   fpe_quiet_modes(:) = .false.
+   call ieee_set_halting_mode(IEEE_ALL,fpe_quiet_modes)
 
    r_max_start = 1.0_DP
    mscale = 1.0_DP
@@ -58,11 +70,6 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    tscale = 1.0_DP
    Lscale = 1.0_DP
    Escale = 1.0_DP
-   if (nfrag < NFRAG_MIN) then
-      write(*,*) "symba_frag_pos needs at least ",NFRAG_MIN," fragments, but only ",nfrag," were given."
-      lmerge = .true.
-      return
-   end if
 
    ntry = nfrag - NFRAG_MIN
 
@@ -81,7 +88,6 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
    call calculate_system_energy(linclude_fragments=.false.)
 
-
    !write(*,        "(' -------------------------------------------------------------------------------------')")
    !write(*,        "('              Energy normalized by |Etot_before|')")
    
@@ -90,7 +96,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
   
    try = 1
    lmerge = .false.
-   do while (nfrag >= NFRAG_MIN+1 .and. try <= MAXTRY)
+   do while (nfrag >= NFRAG_MIN .and. try < MAXTRY)
       lmerge = .false.
       lreduce_fragment_number = .false.
    
@@ -132,6 +138,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    !write(*,        "(' -------------------------------------------------------------------------------------')")
 
    call restore_scale_factors()
+   call ieee_set_halting_mode(IEEE_ALL,fpe_halting_modes)  ! Save the current halting modes so we can turn them off temporarily
 
    return 
 
@@ -183,6 +190,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       implicit none
       integer(I4B) :: i
 
+      call ieee_set_halting_mode(IEEE_ALL,.false.)
       mtot = mscale
       mass = mass * mscale
       radius = radius * rscale
@@ -190,11 +198,12 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       v = v * vscale
       L_spin = L_spin * Lscale
 
-      x_frag = x_frag * rscale
-      v_frag = v_frag * vscale
-      m_frag = m_frag * mscale
-      rot_frag = rot_frag / tscale
-      rad_frag = rad_frag * rscale
+      ! Avoid FP exceptions 
+      x_frag(:,1:nfrag) = x_frag(:,1:nfrag) * rscale
+      v_frag(:,1:nfrag) = v_frag(:,1:nfrag) * vscale
+      m_frag(1:nfrag) = m_frag(1:nfrag) * mscale
+      rot_frag(:,1:nfrag) = rot_frag(:,1:nfrag) / tscale
+      rad_frag(1:nfrag) = rad_frag(1:nfrag) * rscale
       ! Convert the final result to the system units
       xcom(:) = xcom(:) * rscale
       vcom(:) = vcom(:) * vscale
