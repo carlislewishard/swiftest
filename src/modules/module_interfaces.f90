@@ -934,9 +934,9 @@ MODULE module_interfaces
             real(DP), dimension(:,:), intent(inout)   :: x, v, L_spin, Ip
             real(DP), dimension(:),   intent(inout)   :: mass, radius
             integer(I4B),             intent(inout)   :: nfrag
-            real(DP), dimension(:),   intent(inout)   :: m_frag, rad_frag
-            real(DP), dimension(:,:), intent(inout)   :: Ip_frag
-            real(DP), dimension(:,:), intent(inout)   :: xb_frag, vb_frag, rot_frag
+            real(DP), dimension(:), allocatable,  intent(inout)   :: m_frag, rad_frag
+            real(DP), dimension(:,:), allocatable, intent(inout)   :: Ip_frag
+            real(DP), dimension(:,:), allocatable, intent(inout)   :: xb_frag, vb_frag, rot_frag
             real(DP), intent(inout)                   :: Qloss
             logical, intent(out)                      :: lmerge
          end subroutine symba_frag_pos
