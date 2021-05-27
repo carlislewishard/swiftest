@@ -32,7 +32,7 @@ function util_solve_linear_system_d(A,b,n,lerr) result(x)
    lerr = any(fpe_flag) 
    if (lerr .or. (any(abs(qx) > huge(x))) .or. (any(abs(qx) < tiny(x)))) then
       x = 0.0_DP
-      write(*,*) 'fpe in util_solve_linear_system'
+      !write(*,*) 'fpe in util_solve_linear_system'
    else
       x = real(qx, kind=DP)
    end if
