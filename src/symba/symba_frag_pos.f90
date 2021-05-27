@@ -20,9 +20,9 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    real(DP), dimension(:,:), intent(inout) :: x, v, L_spin, Ip
    real(DP), dimension(:),   intent(inout) :: mass, radius
    integer(I4B), intent(inout)             :: nfrag
-   real(DP), dimension(:),   intent(inout) :: m_frag, rad_frag
-   real(DP), dimension(:,:), intent(inout) :: Ip_frag
-   real(DP), dimension(:,:), intent(inout) :: xb_frag, vb_frag, rot_frag
+   real(DP), dimension(:), allocatable,   intent(inout) :: m_frag, rad_frag
+   real(DP), dimension(:,:), allocatable, intent(inout) :: Ip_frag
+   real(DP), dimension(:,:), allocatable, intent(inout) :: xb_frag, vb_frag, rot_frag
    logical, intent(out)                    :: lmerge ! Answers the question: Should this have been a merger instead?
    real(DP), intent(inout)                 :: Qloss
    ! Internals
@@ -50,7 +50,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    real(DP), parameter                     :: Etol = 1e-8_DP
    integer(I4B), parameter                 :: MAXTRY = 1000
    integer(I4B)                            :: iflip = 1
-   logical                                 :: lreduce_fragment_number
+   logical                                 :: lincrease_fragment_number
    logical, dimension(size(IEEE_ALL))      :: fpe_halting_modes, fpe_quiet_modes
 
    if (nfrag < NFRAG_MIN) then
@@ -73,8 +73,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
    ntry = nfrag - NFRAG_MIN
 
-   allocate(x_frag, source=xb_frag)
-   allocate(v_frag, source=vb_frag)
+
 
    associate(npl => symba_plA%helio%swiftest%nbody, status => symba_plA%helio%swiftest%status) 
       allocate(lexclude(npl))
@@ -85,6 +84,9 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       end where
    end associate
    call set_scale_factors()
+
+   allocate(x_frag, source=xb_frag)
+   allocate(v_frag, source=vb_frag)
 
    call calculate_system_energy(linclude_fragments=.false.)
 
@@ -98,7 +100,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    lmerge = .false.
    do while (nfrag >= NFRAG_MIN .and. try < MAXTRY)
       lmerge = .false.
-      lreduce_fragment_number = .false.
+      lincrease_fragment_number = .false.
    
       call set_fragment_position_vectors()
       call set_fragment_tangential_velocities(lmerge)
@@ -506,7 +508,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       if (ke_target < 0.0_DP) then
          write(*,*) 'Negative ke_target: ',ke_target
          lerr = .true.
-         lreduce_fragment_number = .true.
+         lincrease_fragment_number = .true.
          return
       end if
 
@@ -537,7 +539,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       end if
       lerr = (ke_offset > 0.0_DP)
       if (lerr) then
-         lreduce_fragment_number = .false.
+         lincrease_fragment_number = .false.
          ! No solution exists for this case, so we need to indicate that this should be a merge
          ! This may happen due to setting the tangential velocities too high when setting the angular momentum constraint
          v_frag(:,:) = 0.0_DP
@@ -751,22 +753,45 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       !! Author: David A. Minton
       !!
       !! We failed to find a set of positions and velocities that satisfy all the constraints, and so we will alter the fragments and try again.
-      !! Currently, this code will take the last fragment in the list and merge it with the first or second, alternating back and forth each time 
+      !! Currently, this code will distribute a fraction of the i>2 fragments into a new fragment.
       !! it is called. 
       implicit none
       integer(I4B) :: i
+      real(DP), dimension(:), allocatable  :: m_frag_new, rad_frag_new
+      real(DP), dimension(:,:), allocatable  :: xb_frag_new, vb_frag_new, Ip_frag_new, rot_frag_new
+      real(DP) :: mtransfer
 
-      if (lreduce_fragment_number) then 
-         if (iflip == 1) then
-            iflip = 2
-         else
-            iflip = 1
-         end if
-         m_frag(iflip) = m_frag(iflip) + m_frag(nfrag)
-         rad_frag(iflip) = (rad_frag(iflip)**3 + rad_frag(nfrag)**3)**(1._DP / 3._DP) 
-         m_frag(nfrag) = 0.0_DP
-         rad_frag(nfrag) = 0.0_DP
-         nfrag = nfrag - 1
+
+      if (lincrease_fragment_number) then 
+         deallocate(x_frag, v_frag)
+         allocate(m_frag_new(nfrag + 1))
+         allocate(rad_frag_new(nfrag + 1))
+         allocate(xb_frag_new(NDIM, nfrag + 1))
+         allocate(vb_frag_new(NDIM, nfrag + 1))
+         allocate(Ip_frag_new(NDIM, nfrag + 1))
+         allocate(rot_frag_new(NDIM, nfrag + 1))
+         m_frag_new(1:nfrag) = m_frag(1:nfrag)
+         rad_frag_new(1:nfrag) = rad_frag(1:nfrag)
+         Ip_frag_new(:,1:nfrag) = Ip_frag(:,1:nfrag)
+         do i = 3, nfrag
+            mtransfer = m_frag(i) / (nfrag - 2)
+            m_frag_new(i) = m_frag_new(i) - mtransfer
+            rad_frag_new(i) = rad_frag_new(i) * (m_frag_new(i) / m_frag(i))**(1.0_DP / 3.0_DP)
+            m_frag_new(nfrag+1) = m_frag_new(nfrag+1) + mtransfer
+         end do
+         m_frag_new(nfrag+1) = m_frag_new(nfrag+1) + mtot - sum(m_frag_new(1:nfrag+1)) 
+         rad_frag_new(nfrag+1) = rad_frag(1) * (m_frag_new(nfrag+1) / m_frag(1))**(1.0_DP / 3.0_DP)
+         Ip_frag_new(:,nfrag+1) = Ip_frag(:,nfrag)
+         xb_frag_new(:,:) = 0.0_DP
+         vb_frag_new(:,:) = 0.0_DP
+         rot_frag_new(:,:) = 0.0_DP
+         call move_alloc(m_frag_new, m_frag)
+         call move_alloc(rad_frag_new, rad_frag)
+         call move_alloc(xb_frag_new, xb_frag)
+         call move_alloc(vb_frag_new, vb_frag)
+         call move_alloc(Ip_frag_new, Ip_frag)
+         call move_alloc(rot_frag_new, rot_frag)
+         nfrag = nfrag + 1
       end if
       r_max_start = r_max_start + 1.00_DP ! The larger lever arm can help if the problem is in the angular momentum step
    end subroutine restructure_failed_fragments
