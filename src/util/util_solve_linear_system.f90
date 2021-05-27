@@ -30,7 +30,7 @@ function util_solve_linear_system_d(A,b,n,lerr) result(x)
 
    call ieee_get_flag(ieee_usual, fpe_flag)
    lerr = any(fpe_flag) 
-   if (lerr) then
+   if (lerr .or. (abs(qx) > huge(x)) .or. (abs(qx) < tiny(x))) then
       x = 0.0_DP
       write(*,*) 'fpe in util_solve_linear_system'
    else
