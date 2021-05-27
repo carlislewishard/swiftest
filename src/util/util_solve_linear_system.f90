@@ -96,7 +96,10 @@ function solve_wbs(u) result(x) ! solve with backward substitution
       x(:) = 0._DP
       return
    end if
-   forall (i=n:1:-1) x(i) = (u(i, n + 1) - sum(u(i, i + 1:n) * x(i + 1:n))) / u(i, i)
+   call ieee_set_halting_mode(ieee_divide_by_zero, .false.)
+   do i = n, 1, -1 
+      x(i) = (u(i, n + 1) - sum(u(i, i + 1:n) * x(i + 1:n))) / u(i, i)
+   end do   
    return
 end function solve_wbs
 
