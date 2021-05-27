@@ -25,7 +25,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    logical, intent(out)                    :: lmerge ! Answers the question: Should this have been a merger instead?
    real(DP), intent(inout)                 :: Qloss
    ! Internals
-   real(DP), parameter                     :: f_spin = 0.20_DP !! Fraction of pre-impact orbital angular momentum that is converted to fragment spin
+   real(DP), parameter                     :: f_spin = 0.03_DP !! Fraction of pre-impact orbital angular momentum that is converted to fragment spin
    real(DP)                                :: mscale, rscale, vscale, tscale, Lscale, Escale ! Scale factors that reduce quantities to O(~1) in the collisional system
    real(DP)                                :: mtot 
    real(DP), dimension(NDIM)               :: xcom, vcom
@@ -90,7 +90,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
   
    try = 1
    lmerge = .false.
-   do while (nfrag >= NFRAG_MIN .and. try <= MAXTRY)
+   do while (nfrag >= NFRAG_MIN+1 .and. try <= MAXTRY)
       lmerge = .false.
       lreduce_fragment_number = .false.
    
