@@ -92,7 +92,7 @@ function solve_wbs(u) result(x) ! solve with backward substitution
    n = size(u, 1)
    if (allocated(x)) deallocate(x)
    if (.not.allocated(x)) allocate(x(n))
-   if (any(abs(u) < tiny(1._DP))) then 
+   if (any(abs(u) < tiny(1._DP)) .or. any(abs(u) > huge(1._DP))) then 
       x(:) = 0._DP
       return
    end if
