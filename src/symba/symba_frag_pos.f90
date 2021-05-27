@@ -117,8 +117,8 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    !write(*,        "(' -------------------------------------------------------------------------------------')")
    if (lmerge) then
       write(*,*) "symba_frag_pos failed after: ",try," tries"
-      do i = 1, nfrag
-         vb_frag(:, i) = vcom(:)
+      do ii = 1, nfrag
+         vb_frag(:, ii) = vcom(:)
       end do
    else
       write(*,*) "symba_frag_pos succeeded after: ",try," tries"
