@@ -704,7 +704,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ! Arguments
       logical,                intent(out)   :: lerr
       ! Internals
-      real(DP), parameter                   :: TOL = 1e-9_DP
+      real(DP), parameter                   :: TOL = 1e-6_DP
       integer(I4B)                          :: i
       real(DP), dimension(:), allocatable   :: v_r_initial, v_r_sigma
       real(DP), dimension(:,:), allocatable :: v_r
@@ -754,7 +754,6 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
                                                          !! Minimizing this brings us closer to our objective
       ! Internals
       integer(I4B)                        :: i
-      real(DP), dimension(NDIM)           :: L
       real(DP), dimension(:,:), allocatable :: v_shift
 
       allocate(v_shift, mold=vb_frag)
