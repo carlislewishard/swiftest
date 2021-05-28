@@ -385,11 +385,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
             Etot_after = ke_orbit_after + ke_spin_after + pe_after
             dEtot = (Etot_after - Etot_before) / abs(Etot_before)
             dLmag = norm2(Ltot_after(:) - Ltot_before(:)) / Lmag_before
-            ke_frag = 0._DP
-            do i = 1, nfrag
-               ke_frag = ke_frag + 0.5_DP * m_frag(i) * dot_product(vb_frag(:, i), vb_frag(:, i))
-            end do
-            ke_frag_budget = ke_family + (ke_spin_before - ke_spin) + (pe_before - pe) - Qloss
+            ke_frag_budget = ke_family + ke_spin_before + (pe_before - pe) - Qloss
             L_offset(:) = Ltot_before(:) - Ltot_after(:)
          else
             Ltot_before(:) = Lorbit(:) + Lspin(:)
@@ -708,7 +704,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ! Arguments
       logical,                intent(out)   :: lerr
       ! Internals
-      real(DP), parameter                   :: TOL = 1e-6_DP
+      real(DP), parameter                   :: TOL = 1e-9_DP
       integer(I4B)                          :: i
       real(DP), dimension(:), allocatable   :: v_r_initial, v_r_sigma
       real(DP), dimension(:,:), allocatable :: v_r
@@ -763,12 +759,12 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
       allocate(v_shift, mold=vb_frag)
       v_shift(:,:) = vmag_to_vb(v_r_mag_input, v_r_unit, v_t_mag, v_t_unit, m_frag, vcom) 
-      fval = -ke_frag_budget
+      fval = -ke_frag_budget + ke_frag_spin
       do i = 1, nfrag
          fval = fval + 0.5_DP * m_frag(i) * dot_product(v_shift(:, i), v_shift(:, i))
       end do
       ! The following ensures that fval = 0 is a local minimum, which is what the BFGS method is searching for
-      fval = fval**2 
+      fval = (fval / ke_frag_budget)**2 
 
       return
 
