@@ -453,7 +453,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       x_frag(:, 1) = -y_col_unit(:) * r_max  
       x_frag(:, 2) =  y_col_unit(:) * r_max  
 
-      call random_number(x_frag(:,2:nfrag))
+      call random_number(x_frag(:,3:nfrag))
       loverlap(:) = .true.
       do while (any(loverlap(3:nfrag)))
          do i = 3, nfrag
