@@ -62,7 +62,7 @@ OPTIMIZE = -qopt-report=5
 
 #debug flags
 
-GDEBUG = -ggdb -g3 -O0 -fbacktrace -fbounds-check -fcheck=all 
+GDEBUG = -ggdb -O0 -fbacktrace -fbounds-check 
 GPRODUCTION = -O3
 GPAR = -fopenmp -ftree-parallelize-loops=4
 GMEM = -fsanitize=undefined -fsanitize=address -fsanitize=leak 
