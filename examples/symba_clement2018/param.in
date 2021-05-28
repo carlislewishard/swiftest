@@ -1,0 +1,36 @@
+!
+! Parameter file for Clement 2018 in units of Msun, AU, year
+!
+T0             0.0e0
+TSTOP          1e8                ! simulation length in years
+DT             0.016              ! stepsize in years
+PL_IN          clement_2018.in
+TP_IN          tp.in
+IN_TYPE        ASCII
+ISTEP_OUT      6250               ! output cadence 
+ISTEP_DUMP     6250               ! system dump cadence
+BIN_OUT        bin.dat
+PARTICLE_FILE  particle.dat
+OUT_TYPE       REAL8              ! double precision real output
+OUT_FORM       EL                 ! osculating element output
+OUT_STAT       REPLACE
+J2             0.0                ! no J2 term
+J4             0.0                ! no J4 term
+CHK_CLOSE      yes                ! check for planetary close encounters
+CHK_RMIN       0.00465047         ! check for close solar encounters in AU
+CHK_RMAX       100000.0            ! discard outside of
+CHK_EJECT      -1.0               ! ignore this check
+CHK_QMIN       -1.0               ! ignore this check
+!CHK_QMIN_COORD HELIO             ! commented out here
+!CHK_QMIN_RANGE 1.0 1000.0        ! commented out here
+ENC_OUT        enc.dat
+EXTRA_FORCE    no                 ! no extra user-defined forces
+BIG_DISCARD    no                 ! output all planets if anything discarded
+RHILL_PRESENT  yes                ! Hill's sphere radii in input file
+FRAGMENTATION  yes
+MU2KG          1.98847e30         ! (M_sun-> kg)
+DU2M           1.495979e11        ! distance unit to meters (AU --> m)
+TU2S           3.15569259747e7    ! time unit to seconds (years --> seconds)
+MTINY          1e-10		      ! (G*M)
+ENERGY         yes
+ROTATION       yes
