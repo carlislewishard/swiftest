@@ -759,12 +759,12 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
       allocate(v_shift, mold=vb_frag)
       v_shift(:,:) = vmag_to_vb(v_r_mag_input, v_r_unit, v_t_mag, v_t_unit, m_frag, vcom) 
-      fval = -ke_frag_budget + ke_frag_spin
+      fval = -2 * ke_frag_budget 
       do i = 1, nfrag
-         fval = fval + 0.5_DP * m_frag(i) * dot_product(v_shift(:, i), v_shift(:, i))
+         fval = fval + m_frag(i) * (Ip_frag(3, i) * rad_frag(i)**2 * dot_product(rot_frag(:, i), rot_frag(:, i)) + dot_product(v_shift(:, i), v_shift(:, i)))
       end do
       ! The following ensures that fval = 0 is a local minimum, which is what the BFGS method is searching for
-      fval = (fval / ke_frag_budget)**2 
+      fval = (0.5_DP * fval / ke_frag_budget)**2 
 
       return
 
