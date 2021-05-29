@@ -107,7 +107,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       if (.not.lmerge) call set_fragment_radial_velocities(lmerge)
       if (.not.lmerge) then
          call calculate_system_energy(linclude_fragments=.true.)
-         if (dEtot > 0.0_DP)  then
+         if (dEtot > 0.0_DP) then
             lmerge = .true.
          else if (abs((Etot_after - Etot_before + Qloss) / Etot_before) > Etol) then
             lmerge = .true.
@@ -120,9 +120,9 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       call restructure_failed_fragments()
       try = try + 1
    end do
-   !write(*,        "(' -------------------------------------------------------------------------------------')")
-   !write(*,        "('  Final diagnostic')")
-   !write(*,        "(' -------------------------------------------------------------------------------------')")
+   write(*,        "(' -------------------------------------------------------------------------------------')")
+   write(*,        "('  Final diagnostic')")
+   write(*,        "(' -------------------------------------------------------------------------------------')")
    if (lmerge) then
       write(*,*) "symba_frag_pos failed after: ",try," tries"
       do ii = 1, nfrag
@@ -130,14 +130,14 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       end do
    else
       write(*,*) "symba_frag_pos succeeded after: ",try," tries"
-   !   write(*,        "(' dL_tot should be very small' )")
-   !   write(*,fmtlabel) ' dL_tot      |', dLmag
-   !   write(*,        "(' dE_tot should be negative and equal to Qloss' )")
-   !   write(*,fmtlabel) ' dE_tot      |', dEtot
-   !   write(*,fmtlabel) ' Qloss       |', -Qloss / abs(Etot_before)
-   !   write(*,fmtlabel) ' dE - Qloss  |', (Etot_after - Etot_before + Qloss) / abs(Etot_before)
+      write(*,        "(' dL_tot should be very small' )")
+      write(*,fmtlabel) ' dL_tot      |', dLmag
+      write(*,        "(' dE_tot should be negative and equal to Qloss' )")
+      write(*,fmtlabel) ' dE_tot      |', dEtot
+      write(*,fmtlabel) ' Qloss       |', -Qloss / abs(Etot_before)
+      write(*,fmtlabel) ' dE - Qloss  |', (Etot_after - Etot_before + Qloss) / abs(Etot_before)
    end if
-   !write(*,        "(' -------------------------------------------------------------------------------------')")
+   write(*,        "(' -------------------------------------------------------------------------------------')")
 
    call restore_scale_factors()
    call ieee_set_halting_mode(IEEE_ALL,fpe_halting_modes)  ! Save the current halting modes so we can turn them off temporarily
@@ -528,7 +528,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       spinfunc =  lambda_obj(spin_objective_function)
       f_spin = util_minimize_bfgs(spinfunc, 1, f_spin_init, TOL, lerr)
       if (lerr) f_spin = 0.0_DP ! We couldn't find a good solution to the spin fraction, so reset spin to 0
-      ke_radial = ke_frag_budget * (1.0_DP - spin_objective_function(f_spin))
+      ke_radial = ke_frag_budget - spin_objective_function(f_spin)
 
       lerr = (ke_radial < 0.0_DP)
 
@@ -562,7 +562,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ! Result
       real(DP)                              :: fval
       ! Internals
-      integer(I4B) :: i
+      integer(I4B) :: i, j
       real(DP), parameter                  :: TOL = 1e-9_DP
       real(DP), dimension(NDIM) :: L_frag_spin
       real(DP)     :: L_orb_mag
@@ -581,8 +581,9 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ke_frag_spin = 0.0_DP
       do i = 1, nfrag
          rot_frag(:,i) = L_frag_spin(:) / (m_frag(i) * Ip_frag(3, i) * rad_frag(i)**2)
-         ke_frag_spin = ke_frag_spin + 0.5_DP * m_frag(i) * Ip_frag(3, i) * rad_frag(i)**2 * dot_product(rot_frag(:, i), rot_frag(:, i))
+         ke_frag_spin = ke_frag_spin + m_frag(i) * Ip_frag(3, i) * rad_frag(i)**2 * dot_product(rot_frag(:, i), rot_frag(:, i))
       end do
+      ke_frag_spin = 0.5_DP * ke_frag_spin
 
       ! Next we will attempt to find a tangential velocity distribution that fully conserves angular and linear momentum without blowing the energy budget
       ! The first attempt will be made using a computationally cheap linear solver.
@@ -592,21 +593,21 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       do i = 7, nfrag
          v_t_initial(i) = L_orb_mag / (m_frag(i) * rmag(i) * nfrag) 
       end do
-      v_t_mag(1:nfrag) = solve_fragment_tangential_velocities(v_t_mag_input=v_t_initial(7:nfrag), lerr=lerr)
-      if (lerr) then ! We blew our kinetic energy budget. We'll try the more expensive approach of minimizing kinetic energy as a function of all n>7 fragments
-         objective_function = lambda_obj(tangential_objective_function, lerr)
-         v_t_mag(7:nfrag) = util_minimize_bfgs(objective_function, nfrag - 6, v_t_initial(7:nfrag), TOL, lerr)
-         if (lerr) v_t_mag(7:nfrag) = objective_function%lastarg(:)
-      end if
-      vb_frag(:,:) = vmag_to_vb(v_r_mag, v_r_unit, v_t_mag, v_t_unit, m_frag, vcom) 
-      ke_frag = 0.0_DP
-      do i = 1, nfrag
-         ke_frag = ke_frag + 0.5_DP * m_frag(i) * dot_product(vb_frag(:, i), vb_frag(:, i))
+      objective_function = lambda_obj(tangential_objective_function, lerr)
+      do j = 1, 2
+         v_t_mag(1:nfrag) = solve_fragment_tangential_velocities(v_t_mag_input=v_t_initial(7:nfrag), lerr=lerr)
+         vb_frag(:,:) = vmag_to_vb(v_r_mag, v_r_unit, v_t_mag, v_t_unit, m_frag, vcom) 
+         ke_frag = 0.0_DP
+         do i = 1, nfrag
+            ke_frag = ke_frag + m_frag(i) * dot_product(vb_frag(:, i), vb_frag(:, i))
+         end do
+         ke_frag = 0.5_DP * ke_frag
+         fval = ke_frag + ke_frag_spin 
+         if (fval < ke_frag_budget) exit
+         if (j ==1) v_t_initial(7:nfrag) = util_minimize_bfgs(objective_function, nfrag - 6, v_t_mag(7:nfrag), TOL, lerr)
       end do
-      fval = (ke_frag + ke_frag_spin) / ke_frag_budget
 
       return
-
    end function spin_objective_function
 
    function tangential_objective_function(v_t_mag_input, lerr) result(fval)
@@ -636,11 +637,14 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       v_shift(:,:) = vmag_to_vb(v_r_mag, v_r_unit, v_t_mag_output, v_t_unit, m_frag, vcom) 
 
       ke_frag = 0.0_DP
+      ke_frag_spin = 0.0_DP
       do i = 1, nfrag
-         ke_frag = ke_frag + 0.5_DP * m_frag(i) * dot_product(v_shift(:, i), v_shift(:, i))
+         ke_frag = ke_frag + m_frag(i) * dot_product(v_shift(:, i), v_shift(:, i))
+         ke_frag_spin = ke_frag_spin + m_frag(i) * Ip_frag(3, i) * rad_frag(i)**2 * dot_product(rot_frag(:, i), rot_frag(:, i))
       end do
-      fval = (ke_frag + ke_frag_spin) / ke_frag_budget
-      lerr = ke_frag_budget * (1.0_DP - fval) > 0.0_DP
+      ke_frag = 0.5_DP * ke_frag
+      ke_frag_spin = 0.5_DP * ke_frag_spin
+      fval = ke_frag + ke_frag_spin
       return
    end function tangential_objective_function
 
@@ -704,7 +708,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ! Arguments
       logical,                intent(out)   :: lerr
       ! Internals
-      real(DP), parameter                   :: TOL = 1e-6_DP
+      real(DP), parameter                   :: TOL = 1e-10_DP
       integer(I4B)                          :: i
       real(DP), dimension(:), allocatable   :: v_r_initial, v_r_sigma
       real(DP), dimension(:,:), allocatable :: v_r
@@ -717,7 +721,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       allocate(v_r_sigma, source=v_r_mag)
       call random_number(v_r_sigma(1:nfrag))
       v_r_sigma(1:nfrag) = sqrt((1.0_DP + 2 * (v_r_sigma(1:nfrag) - 0.5_DP) * 1e-3_DP)) 
-      v_r_initial(1:nfrag) = v_r_sigma(1:nfrag) * sqrt(abs(ke_radial) / (2 * m_frag(1:nfrag) * nfrag)) 
+      v_r_initial(1:nfrag) = v_r_sigma(1:nfrag) * sqrt(2 * abs(ke_radial) / (m_frag(1:nfrag) * nfrag)) 
 
       ! Initialize the lambda function using a structure constructor that calls the init method
       ! Minimize the ke objective function using the BFGS optimizer
@@ -753,17 +757,17 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       real(DP)                              :: fval      !! The objective function result, which is the square of the difference between the calculated fragment kinetic energy and our target
                                                          !! Minimizing this brings us closer to our objective
       ! Internals
-      integer(I4B)                        :: i
+      integer(I4B)                         :: i
       real(DP), dimension(:,:), allocatable :: v_shift
 
       allocate(v_shift, mold=vb_frag)
       v_shift(:,:) = vmag_to_vb(v_r_mag_input, v_r_unit, v_t_mag, v_t_unit, m_frag, vcom) 
-      fval = -2 * ke_frag_budget 
+      fval = 2 * ke_frag_budget 
       do i = 1, nfrag
-         fval = fval + m_frag(i) * (Ip_frag(3, i) * rad_frag(i)**2 * dot_product(rot_frag(:, i), rot_frag(:, i)) + dot_product(v_shift(:, i), v_shift(:, i)))
+         fval = fval - m_frag(i) * (Ip_frag(3, i) * rad_frag(i)**2 * dot_product(rot_frag(:, i), rot_frag(:, i)) + dot_product(v_shift(:, i), v_shift(:, i)))
       end do
       ! The following ensures that fval = 0 is a local minimum, which is what the BFGS method is searching for
-      fval = (0.5_DP * fval / ke_frag_budget)**2 
+      fval = fval**2 
 
       return
 
