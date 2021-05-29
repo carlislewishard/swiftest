@@ -28,8 +28,8 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
    real(DP), dimension(:), allocatable :: x1
    ! Internals
    integer(I4B) ::  i, j, k, l, conv, num
-   integer(I4B), parameter :: MAXLOOP = 1000 !! Maximum number of loops before method is determined to have failed 
-   real(DP), parameter     :: gradeps = 1e-8_DP !! Tolerance for gradient calculations
+   integer(I4B), parameter :: MAXLOOP = 200 !! Maximum number of loops before method is determined to have failed 
+   real(DP), parameter     :: gradeps = 1e-4_DP !! Tolerance for gradient calculations
    real(DP), dimension(N) :: S               !! Direction vectors 
    real(DP), dimension(N,N) :: H             !! Approximated inverse Hessian matrix 
    real(DP), dimension(N) :: grad1           !! gradient of f 
