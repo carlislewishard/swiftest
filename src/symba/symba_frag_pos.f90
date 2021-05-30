@@ -104,9 +104,10 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
          if (.not.lmerge) then
             call calculate_system_energy(linclude_fragments=.true.)
             if ((abs(dEtot) - Qloss) / Qloss > Etol) then
-               write(*,*) 'Energy error is too high: ',(abs(dEtot) - Qloss) / Qloss
+               write(*,*) 'Failed due to high energy error: ',(abs(dEtot) - Qloss) / Qloss
                lmerge = .true.
             else if (abs(dLmag) > Ltol) then
+               write(*,*) 'Failed due to high angular momentum error: ',(abs(dEtot) - Qloss) / Qloss
                lmerge = .true.
             end if
          end if
@@ -498,7 +499,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ! Internals
       integer(I4B) :: i
       real(DP)     :: L_orb_mag
-      real(DP), parameter                  :: TOL = 1e-8_DP
+      real(DP), parameter                  :: TOL = 2e-8_DP
       real(DP), dimension(:), allocatable  :: v_t_initial
       type(lambda_obj)                     :: spinfunc
       real(DP), dimension(1)               :: f_spin  !! Fraction of pre-impact angular momentum that is converted to fragment spin
@@ -570,7 +571,6 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       real(DP)                              :: fval
       ! Internals
       integer(I4B) :: i, j
-      real(DP), parameter                  :: TOL = 1e-8_DP
       real(DP), dimension(NDIM) :: L_frag_spin
       real(DP)     :: L_orb_mag
       real(DP), dimension(:), allocatable  :: v_t_initial
@@ -711,7 +711,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ! Arguments
       logical,                intent(out)   :: lerr
       ! Internals
-      real(DP), parameter                   :: TOL = 1e-11_DP
+      real(DP), parameter                   :: TOL = 1e-12_DP
       integer(I4B)                          :: i, j
       real(DP), dimension(:), allocatable   :: v_r_initial, v_r_sigma
       real(DP), dimension(:,:), allocatable :: v_r
