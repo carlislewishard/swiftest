@@ -309,8 +309,8 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
          real(DP) :: a0, a1, a2, a3, da
          real(DP) :: f0, f1, f2, fcon
          integer(I4B) :: i, j
-         integer(I4B), parameter :: MAXLOOP = 10000 ! maximum number of loops before method is determined to have failed   
-         real(DP), parameter :: eps = 2 * epsilon(lo) ! small number precision to test floating point equality   
+         integer(I4B), parameter :: MAXLOOP = 100 ! maximum number of loops before method is determined to have failed   
+         real(DP), parameter :: eps = epsilon(lo) ! small number precision to test floating point equality   
          real(DP), parameter :: dela = 2.0324_DP ! arbitrary number to test if function is constant   
 
          ! set up initial bracket points   
