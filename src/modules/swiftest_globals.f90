@@ -43,7 +43,7 @@ module swiftest_globals
    !integer(I4B), parameter :: RMVS     = 7
    !integer(I4B), parameter  :: SYMBA    = 8
 
-   integer(I4B), parameter :: STRMAX = 128
+   integer(I4B), parameter :: STRMAX = 1024
       !! Maximum size of character strings
 
    character(*), parameter :: REAL4_TYPE = "REAL4"
