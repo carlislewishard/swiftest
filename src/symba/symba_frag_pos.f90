@@ -103,7 +103,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
                write(*,*) 'Failed due to high energy error: ',(abs(dEtot) - Qloss) / Qloss
                lmerge = .true.
             else if (abs(dLmag) > Ltol) then
-               write(*,*) 'Failed due to high angular momentum error: ',(abs(dEtot) - Qloss) / Qloss
+               write(*,*) 'Failed due to high angular momentum error: ', dLmag
                lmerge = .true.
             end if
          end if
