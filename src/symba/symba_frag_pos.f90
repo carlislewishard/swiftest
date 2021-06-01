@@ -78,18 +78,14 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
          lexclude(1:npl) = .false. 
       end where
    end associate
-   call set_scale_factors()
 
    allocate(x_frag, source=xb_frag)
    allocate(v_frag, source=vb_frag)
 
    call calculate_system_energy(linclude_fragments=.false.)
-
-   !write(*,        "(' -------------------------------------------------------------------------------------')")
-   !write(*,        "('              Energy normalized by |Etot_before|')")
-   
-   call define_coordinate_system()
    call define_pre_collisional_family()
+   call set_scale_factors()
+   call define_coordinate_system()
   
    try = 1
    lmerge = .false.
