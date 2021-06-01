@@ -156,10 +156,10 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ! Set scale factors
       mscale = mtot !! Because of the implied G, mass is actually G*mass with units of distance**3 / time**2
       rscale = sum(radius(:))
-      vscale = sqrt(mscale / rscale)
+      Escale = ke_family !mscale * vscale**2
+      vscale = sqrt(2 * Escale / mscale) !sqrt(mscale / rscale)
       tscale = rscale / vscale
       Lscale = mscale * rscale * vscale
-      Escale = mscale * vscale**2
 
       xcom(:) = xcom(:) / rscale
       vcom(:) = vcom(:) / vscale
@@ -173,7 +173,15 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
       m_frag = m_frag / mscale
       rad_frag = rad_frag / rscale
+      rot_frag = rot_frag * tscale
       Qloss = Qloss / Escale
+      ke_family = ke_family / Escale
+      Etot_before = Etot_before / Escale
+      pe_before = pe_before / Escale
+      ke_spin_before = ke_spin_before / Escale
+      ke_orbit_before = ke_orbit_before / Escale
+      Ltot_before = Ltot_before / Lscale
+      Lmag_before = Lmag_before / Lscale
 
       return
    end subroutine set_scale_factors
