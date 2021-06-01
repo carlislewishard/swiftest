@@ -216,6 +216,14 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       end do
 
       Qloss = Qloss * Escale
+      ke_family = ke_family * Escale
+      Etot_before = Etot_before * Escale
+      pe_before = pe_before * Escale
+      ke_spin_before = ke_spin_before * Escale
+      ke_orbit_before = ke_orbit_before * Escale
+      Ltot_before = Ltot_before * Lscale
+      Lmag_before = Lmag_before * Lscale 
+
       mscale = 1.0_DP
       rscale = 1.0_DP
       vscale = 1.0_DP
