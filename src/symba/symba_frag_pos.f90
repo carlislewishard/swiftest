@@ -293,7 +293,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
             ke_family = ke_family + Mpl(family(i)) * dot_product(vbpl(:,family(i)), vbpl(:,family(i)))
             lexclude(family(i)) = .true. ! For all subsequent energy calculations the pre-impact family members will be replaced by the fragments
          end do
-         ke_family = 0.5_DP * ke_family / Escale
+         ke_family = 0.5_DP * ke_family! / Escale
       end associate
       return
    end subroutine define_pre_collisional_family
