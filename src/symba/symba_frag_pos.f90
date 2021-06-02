@@ -182,6 +182,13 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ke_orbit_before = ke_orbit_before / Escale
       Ltot_before = Ltot_before / Lscale
       Lmag_before = Lmag_before / Lscale
+      Etot_after = Etot_after / Escale
+      pe_after = pe_after / Escale
+      ke_spin_after = ke_spin_after / Escale
+      ke_orbit_after = ke_orbit_after / Escale
+      Ltot_after = Ltot_after / Lscale
+      Lmag_after = Lmag_after / Lscale
+
 
       return
    end subroutine set_scale_factors
@@ -223,6 +230,12 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ke_orbit_before = ke_orbit_before * Escale
       Ltot_before = Ltot_before * Lscale
       Lmag_before = Lmag_before * Lscale 
+      Etot_after = Etot_after * Escale
+      pe_after = pe_after * Escale
+      ke_spin_after = ke_spin_after * Escale
+      ke_orbit_after = ke_orbit_after * Escale
+      Ltot_after = Ltot_after * Lscale
+      Lmag_after = Lmag_after * Lscale 
 
       mscale = 1.0_DP
       rscale = 1.0_DP
