@@ -102,8 +102,8 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
             if ((abs((dEtot - Qloss) / Qloss) > Etol) .or. (dEtot > 0.0_DP)) then
                write(*,*) 'Failed due to high energy error: ', abs((dEtot - Qloss) / Qloss), dEtot / abs(Etot_before) 
                lmerge = .true.
-            else if (abs(dLmag) > Ltol) then
-               write(*,*) 'Failed due to high angular momentum error: ', dLmag
+            else if (abs(dLmag) / Lmag_before > Ltol) then
+               write(*,*) 'Failed due to high angular momentum error: ', dLmag / Lmag_before
                lmerge = .true.
             end if
          end if
@@ -124,7 +124,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    else
       write(*,*) "symba_frag_pos succeeded after: ",try," tries"
       write(*,        "(' dL_tot should be very small' )")
-      write(*,fmtlabel) ' dL_tot      |', dLmag
+      write(*,fmtlabel) ' dL_tot      |', dLmag / Lmag_before
       write(*,        "(' dE_tot should be negative and equal to Qloss' )")
       write(*,fmtlabel) ' dE_tot      |', dEtot / abs(Etot_before)
       write(*,fmtlabel) ' Qloss       |', -Qloss / abs(Etot_before)
@@ -392,7 +392,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
             pe_after = pe
             Etot_after = ke_orbit_after + ke_spin_after + pe_after
             dEtot = Etot_after - Etot_before 
-            dLmag = norm2(Ltot_after(:) - Ltot_before(:)) / Lmag_before
+            dLmag = norm2(Ltot_after(:) - Ltot_before(:)) 
          else
             Ltot_before(:) = Lorbit(:) + Lspin(:)
             Lmag_before = norm2(Ltot_before(:))
