@@ -82,10 +82,10 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    allocate(x_frag, source=xb_frag)
    allocate(v_frag, source=vb_frag)
 
-   call calculate_system_energy(linclude_fragments=.false.)
    call define_pre_collisional_family()
    call set_scale_factors()
    call define_coordinate_system()
+   call calculate_system_energy(linclude_fragments=.false.)
   
    try = 1
    lmerge = .false.
@@ -99,8 +99,8 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
          if (lmerge) write(*,*) 'Failed to find radial velocities'
          if (.not.lmerge) then
             call calculate_system_energy(linclude_fragments=.true.)
-            if ((abs(dEtot / Etot_before) < Qloss) .or. (dEtot > 0.0_DP)) then
-               write(*,*) 'Failed due to high energy error: ', abs(dEtot / Etot_before)
+            if ((abs((dEtot - Qloss) / Qloss) > Etol) .or. (dEtot > 0.0_DP)) then
+               write(*,*) 'Failed due to high energy error: ', abs((dEtot - Qloss) / Qloss), dEtot / abs(Etot_before) 
                lmerge = .true.
             else if (abs(dLmag) > Ltol) then
                write(*,*) 'Failed due to high angular momentum error: ', dLmag
@@ -155,9 +155,9 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
       ! Set scale factors
       mscale = mtot !! Because of the implied G, mass is actually G*mass with units of distance**3 / time**2
-      rscale = sum(radius(:))
-      Escale = ke_family !mscale * vscale**2
-      vscale = sqrt(2 * Escale / mscale) !sqrt(mscale / rscale)
+      Escale = ke_family 
+      vscale = sqrt(2 * Escale / mscale) 
+      rscale = mscale**2 / Escale
       tscale = rscale / vscale
       Lscale = mscale * rscale * vscale
 
@@ -176,19 +176,6 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       rot_frag = rot_frag * tscale
       Qloss = Qloss / Escale
       ke_family = ke_family / Escale
-      Etot_before = Etot_before / Escale
-      pe_before = pe_before / Escale
-      ke_spin_before = ke_spin_before / Escale
-      ke_orbit_before = ke_orbit_before / Escale
-      Ltot_before = Ltot_before / Lscale
-      Lmag_before = Lmag_before / Lscale
-      Etot_after = Etot_after / Escale
-      pe_after = pe_after / Escale
-      ke_spin_after = ke_spin_after / Escale
-      ke_orbit_after = ke_orbit_after / Escale
-      Ltot_after = Ltot_after / Lscale
-      Lmag_after = Lmag_after / Lscale
-
 
       return
    end subroutine set_scale_factors
@@ -312,9 +299,8 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
          ke_family = 0.0_DP
          do i = 1, fam_size
             ke_family = ke_family + Mpl(family(i)) * dot_product(vbpl(:,family(i)), vbpl(:,family(i)))
-            lexclude(family(i)) = .true. ! For all subsequent energy calculations the pre-impact family members will be replaced by the fragments
          end do
-         ke_family = 0.5_DP * ke_family! / Escale
+         ke_family = 0.5_DP * ke_family
       end associate
       return
    end subroutine define_pre_collisional_family
@@ -349,6 +335,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
          lk_plpl = allocated(symba_plA%helio%swiftest%k_plpl)
          if (lk_plpl) deallocate(symba_plA%helio%swiftest%k_plpl) 
          if (linclude_fragments) then ! Temporarily expand the planet list to feed it into symba_energy
+            lexclude(family(:)) = .true. 
             npl_new = npl + nfrag
          else
             npl_new  = npl
