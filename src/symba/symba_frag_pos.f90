@@ -541,7 +541,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ! Convert a fraction of the pre-impact angular momentum into fragment spin angular momentum
       L_frag_spin(:) = f_spin * L_frag_tot(:)
       L_frag_orb(:) =  L_frag_tot(:) - L_frag_spin(:)
-
+      L_orb_mag = norm2(L_frag_orb(:))
       ! Divide up the pre-impact spin angular momentum equally amongst the fragments and calculate the spin kinetic energy
       do i = 1, nfrag
          rot_frag(:,i) = L_frag_spin(:) / (nfrag * m_frag(i) * Ip_frag(3, i) * rad_frag(i)**2)
@@ -588,8 +588,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       integer(I4B) :: i
       real(DP), dimension(:,:), allocatable :: v_shift
       real(DP), dimension(NDIM) :: L_frag, L
-      real(DP) :: dLmag 
-      !real(DP), dimension(:), allocatable :: v_t_mag_output
+      real(DP) :: dL
 
       lerr = .false.
 
@@ -605,10 +604,10 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
          call util_crossproduct(x_frag(:, i), v_shift(:, i), L(:))
          L_frag(:) = L_frag(:) + L(:) * m_frag(i)
       end do
-      dLmag = norm2(L_frag(:) - L_frag_orb(:)) / norm2(L_frag_orb(:))
+      dL = norm2(L_frag(:) - L_frag_orb(:)) / norm2(L_frag_orb(:))
       ke_frag = 0.5_DP * ke_frag
       ke_frag_spin = 0.5_DP * ke_frag_spin
-      fval = (ke_frag + ke_frag_spin) / ke_frag_budget * dLmag
+      fval = (ke_frag + ke_frag_spin) / ke_frag_budget * dL
       lerr = .false.
       return
    end function tangential_objective_function
