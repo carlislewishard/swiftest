@@ -439,7 +439,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       !! The initial positions do not conserve energy or momentum, so these need to be adjusted later.
 
       implicit none
-      real(DP)  :: r_max, dis
+      real(DP)  :: r_max, dis, rad
       real(DP), dimension(NDIM) ::  L_sigma
       logical, dimension(:), allocatable :: loverlap
       integer(I4B) :: i, j
@@ -449,11 +449,12 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ! Place the fragments into a region that is big enough that we should usually not have overlapping bodies
       ! An overlapping bodies will collide in the next time step, so it's not a major problem if they do (it just slows the run down)
       r_max = r_max_start
+      rad = sum(radius(:))
 
       ! We will treat the first fragment of the list as a special case. It gets initialized the maximum distance along the original impactor distance vector.
       ! This is done because in a regular disruption, the first body is the largest fragment.
-      x_frag(:, 1) = -y_col_unit(:) * r_max  
-      x_frag(:, 2) =  y_col_unit(:) * r_max  
+      x_frag(:, 1) = -y_col_unit(:) * r_max * rad
+      x_frag(:, 2) =  y_col_unit(:) * r_max * rad
 
       call random_number(x_frag(:,3:nfrag))
       loverlap(:) = .true.
@@ -461,7 +462,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
          do i = 3, nfrag
             if (loverlap(i)) then
                call random_number(x_frag(:,i))
-               x_frag(:, i) = 2 * (x_frag(:, i) - 0.5_DP) * r_max
+               x_frag(:, i) = 2 * (x_frag(:, i) - 0.5_DP) * r_max * rad
             end if
          end do
          loverlap(:) = .false.
@@ -613,7 +614,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       dL = norm2(L_frag(:) - L_frag_orb(:)) / norm2(L_frag_orb(:))
       keo = 0.5_DP * keo
       kes = 0.5_DP * kes
-      fval = (keo + kes) / ke_frag_budget 
+      fval = keo + kes
       lerr = .false.
       return
    end function tangential_objective_function
