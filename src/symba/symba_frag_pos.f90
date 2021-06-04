@@ -547,11 +547,10 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
          rbar = rmag(i) * norm2(r_cross_L(:))
          v_t_mag(i) = L_orb_mag / (m_frag(i) * rbar * nfrag) 
       end do
+      objective_function = lambda_obj(tangential_objective_function, lerr)
+      v_t_mag(7:nfrag) = util_minimize_bfgs(objective_function, nfrag-6, v_t_initial(7:nfrag), TOL, lerr)
       v_t_initial(:) = v_t_mag(:)
       v_t_mag(1:nfrag) = solve_fragment_tangential_velocities(v_t_mag_input=v_t_initial(7:nfrag), lerr=lerr)
-      v_t_initial(:) = v_t_mag(:)
-      objective_function = lambda_obj(tangential_objective_function, lerr)
-      v_t_mag(1:nfrag) = util_minimize_bfgs(objective_function, nfrag, v_t_initial(1:nfrag), TOL, lerr)
       ! Shift the radial velocity vectors to align with the center of mass of the collisional system (the origin)
       vb_frag(:,1:nfrag) = vmag_to_vb(v_r_mag(1:nfrag), v_r_unit(:,1:nfrag), v_t_mag(1:nfrag), v_t_unit(:,1:nfrag), m_frag(1:nfrag), vcom(:)) 
       ke_frag = 0.0_DP
@@ -594,31 +593,25 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
       lerr = .false.
 
-      allocate(v_shift, mold=vb_frag)
-      allocate(v_t_new, mold=v_t_mag_input)
+      allocate(v_shift(NDIM, nfrag))
+      allocate(v_t_new(nfrag))
 
-      v_t_new(1:nfrag) = solve_fragment_tangential_velocities(v_t_mag_input=v_t_mag_input(7:nfrag), lerr=lerr)
+      v_t_new(:) = solve_fragment_tangential_velocities(v_t_mag_input=v_t_mag_input(:), lerr=lerr)
       v_shift(:,:) = vmag_to_vb(v_r_mag, v_r_unit, v_t_new, v_t_unit, m_frag, vcom) 
 
       keo = 0.0_DP
       kes = 0.0_DP
       L_frag(:) = 0.0_DP
-      write(*,*) 'tan obj'
       do i = 1, nfrag
          keo = keo + m_frag(i) * dot_product(v_shift(:, i), v_shift(:, i))
          kes = kes + m_frag(i) * Ip_frag(3, i) * rad_frag(i)**2 * dot_product(rot_frag(:, i), rot_frag(:, i))
          call util_crossproduct(x_frag(:, i), v_shift(:, i), L(:))
          L_frag(:) = L_frag(:) + L(:) * m_frag(i)
-         write(*,*) i,v_t_new(i)
       end do
       dL = norm2(L_frag(:) - L_frag_orb(:)) / norm2(L_frag_orb(:))
       keo = 0.5_DP * keo
       kes = 0.5_DP * kes
       fval = (keo + kes) / ke_frag_budget 
-      write(*,*) 'ke_frag       : ',keo
-      write(*,*) 'ke_frag_spin  : ',kes
-      write(*,*) 'dL  : ',dL
-      write(*,*) 'fval: ',fval
       lerr = .false.
       return
    end function tangential_objective_function
@@ -662,7 +655,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       end do
       b(1:3) = -L_lin_others(:)
       b(4:6) = L_frag_orb(:) - L_orb_others(:)
-      allocate(v_t_mag_output, mold=v_t_mag)
+      allocate(v_t_mag_output(nfrag))
       v_t_mag_output(1:6) = util_solve_linear_system(A, b, 6, lerr)
       if (present(v_t_mag_input)) v_t_mag_output(7:nfrag) = v_t_mag_input(:)
 
