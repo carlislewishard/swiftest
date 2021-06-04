@@ -534,15 +534,17 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
       allocate(v_t_initial, mold=v_t_mag)
 
-      f_spin = 1e-2_DP
-
+      f_spin = 0.5_DP
+      L_frag_spin(:) = 0.0_DP
+      do i = 1, nfrag
+         rot_frag(:,i) = sqrt(2 * f_spin * ke_frag_budget / (nfrag * m_frag(i) * rad_frag(i)**2 * Ip_frag(3, i))) * v_h_unit(:, i)
+         L_frag_spin(:) = L_frag_spin(:) + m_frag(i) * rad_frag(i)**2 * Ip_frag(3, i) * rot_frag(:, i)
+      end do
       ! Convert a fraction of the pre-impact angular momentum into fragment spin angular momentum
-      L_frag_spin(:) = f_spin * L_frag_tot(:)
       L_frag_orb(:) =  L_frag_tot(:) - L_frag_spin(:)
       L_orb_mag = norm2(L_frag_orb(:))
       ! Divide up the pre-impact spin angular momentum equally amongst the fragments and calculate the spin kinetic energy
       do i = 7, nfrag
-         rot_frag(:,i) = L_frag_spin(:) / (nfrag * m_frag(i) * Ip_frag(3, i) * rad_frag(i)**2)
          call util_crossproduct(v_r_unit(:, i), z_col_unit, r_cross_L(:))
          rbar = rmag(i) * norm2(r_cross_L(:))
          v_t_initial(i) = L_orb_mag / (m_frag(i) * rbar * nfrag) 
