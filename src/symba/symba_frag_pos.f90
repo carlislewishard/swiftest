@@ -510,14 +510,12 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       logical, intent(out)  :: lerr
       ! Internals
       integer(I4B) :: i
-      real(DP)     :: L_orb_mag, f_spin
-      real(DP), parameter                  :: TOL = 2e-8_DP
+      real(DP)     :: L_orb_mag, f_spin, rbar
+      real(DP), parameter                  :: TOL = 1e-8_DP
       real(DP), dimension(:), allocatable  :: v_t_initial
       type(lambda_obj)                     :: spinfunc
       type(lambda_obj_err)                 :: objective_function
-      real(DP), dimension(NDIM) :: L_frag_spin
-      real(DP), dimension(1) :: alpha
-      real(DP), dimension(1), parameter :: alpha_init = [1.0]
+      real(DP), dimension(NDIM) :: L_frag_spin, r_cross_L
 
       ! Initialize the fragments with 0 velocity and spin so we can divide up the balance between the tangential, radial, and spin components while conserving momentum
       lerr = .false.
@@ -545,12 +543,15 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ! Divide up the pre-impact spin angular momentum equally amongst the fragments and calculate the spin kinetic energy
       do i = 1, nfrag
          rot_frag(:,i) = L_frag_spin(:) / (nfrag * m_frag(i) * Ip_frag(3, i) * rad_frag(i)**2)
-         v_t_initial(i) = L_orb_mag / (m_frag(i) * rmag(i) * nfrag) 
+         call util_crossproduct(v_r_unit(:, i), z_col_unit, r_cross_L(:))
+         rbar = rmag(i) * norm2(r_cross_L(:))
+         v_t_mag(i) = L_orb_mag / (m_frag(i) * rbar * nfrag) 
       end do
-      objective_function = lambda_obj(tangential_objective_function, lerr)
-      v_t_mag(1:nfrag) = util_minimize_bfgs(objective_function, nfrag, v_t_initial(1:nfrag), TOL, lerr)
       v_t_initial(:) = v_t_mag(:)
       v_t_mag(1:nfrag) = solve_fragment_tangential_velocities(v_t_mag_input=v_t_initial(7:nfrag), lerr=lerr)
+      v_t_initial(:) = v_t_mag(:)
+      objective_function = lambda_obj(tangential_objective_function, lerr)
+      v_t_mag(1:nfrag) = util_minimize_bfgs(objective_function, nfrag, v_t_initial(1:nfrag), TOL, lerr)
       ! Shift the radial velocity vectors to align with the center of mass of the collisional system (the origin)
       vb_frag(:,1:nfrag) = vmag_to_vb(v_r_mag(1:nfrag), v_r_unit(:,1:nfrag), v_t_mag(1:nfrag), v_t_unit(:,1:nfrag), m_frag(1:nfrag), vcom(:)) 
       ke_frag = 0.0_DP
@@ -566,7 +567,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       lerr = (ke_radial < 0.0_DP)
       write(*,*) 'Tangential'
       write(*,*) 'ke_frag_budget: ',ke_frag_budget
-      write(*,*) 'ke_frag       : ',ke_frag
+      write(*,*) 'ke_frag       : ',ke_frag 
       write(*,*) 'ke_frag_spin  : ',ke_frag_spin
       write(*,*) 'ke_radial     : ',ke_radial
 
@@ -587,27 +588,37 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ! Internals
       integer(I4B) :: i
       real(DP), dimension(:,:), allocatable :: v_shift
+      real(DP), dimension(:), allocatable :: v_t_new
       real(DP), dimension(NDIM) :: L_frag, L
-      real(DP) :: dL
+      real(DP) :: dL, keo, kes
 
       lerr = .false.
 
       allocate(v_shift, mold=vb_frag)
-      v_shift(:,:) = vmag_to_vb(v_r_mag, v_r_unit, v_t_mag_input, v_t_unit, m_frag, vcom) 
+      allocate(v_t_new, mold=v_t_mag_input)
 
-      ke_frag = 0.0_DP
-      ke_frag_spin = 0.0_DP
+      v_t_new(1:nfrag) = solve_fragment_tangential_velocities(v_t_mag_input=v_t_mag_input(7:nfrag), lerr=lerr)
+      v_shift(:,:) = vmag_to_vb(v_r_mag, v_r_unit, v_t_new, v_t_unit, m_frag, vcom) 
+
+      keo = 0.0_DP
+      kes = 0.0_DP
       L_frag(:) = 0.0_DP
+      write(*,*) 'tan obj'
       do i = 1, nfrag
-         ke_frag = ke_frag + m_frag(i) * dot_product(v_shift(:, i), v_shift(:, i))
-         ke_frag_spin = ke_frag_spin + m_frag(i) * Ip_frag(3, i) * rad_frag(i)**2 * dot_product(rot_frag(:, i), rot_frag(:, i))
+         keo = keo + m_frag(i) * dot_product(v_shift(:, i), v_shift(:, i))
+         kes = kes + m_frag(i) * Ip_frag(3, i) * rad_frag(i)**2 * dot_product(rot_frag(:, i), rot_frag(:, i))
          call util_crossproduct(x_frag(:, i), v_shift(:, i), L(:))
          L_frag(:) = L_frag(:) + L(:) * m_frag(i)
+         write(*,*) i,v_t_new(i)
       end do
       dL = norm2(L_frag(:) - L_frag_orb(:)) / norm2(L_frag_orb(:))
-      ke_frag = 0.5_DP * ke_frag
-      ke_frag_spin = 0.5_DP * ke_frag_spin
-      fval = (ke_frag + ke_frag_spin) / ke_frag_budget * dL
+      keo = 0.5_DP * keo
+      kes = 0.5_DP * kes
+      fval = (keo + kes) / ke_frag_budget 
+      write(*,*) 'ke_frag       : ',keo
+      write(*,*) 'ke_frag_spin  : ',kes
+      write(*,*) 'dL  : ',dL
+      write(*,*) 'fval: ',fval
       lerr = .false.
       return
    end function tangential_objective_function
