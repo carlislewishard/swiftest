@@ -592,7 +592,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       real(DP), dimension(:,:), allocatable :: v_shift
       real(DP), dimension(:), allocatable :: v_t_new
       real(DP), dimension(NDIM) :: L_frag, L
-      real(DP) :: dL, keo, kes
+      real(DP) :: dL, keo
 
       lerr = .false.
 
@@ -603,18 +603,15 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       v_shift(:,:) = vmag_to_vb(v_r_mag, v_r_unit, v_t_new, v_t_unit, m_frag, vcom) 
 
       keo = 0.0_DP
-      kes = 0.0_DP
       L_frag(:) = 0.0_DP
       do i = 1, nfrag
          keo = keo + m_frag(i) * dot_product(v_shift(:, i), v_shift(:, i))
-         kes = kes + m_frag(i) * Ip_frag(3, i) * rad_frag(i)**2 * dot_product(rot_frag(:, i), rot_frag(:, i))
          call util_crossproduct(x_frag(:, i), v_shift(:, i), L(:))
          L_frag(:) = L_frag(:) + L(:) * m_frag(i)
       end do
       dL = norm2(L_frag(:) - L_frag_orb(:)) / norm2(L_frag_orb(:))
       keo = 0.5_DP * keo
-      kes = 0.5_DP * kes
-      fval = keo + kes
+      fval = keo 
       lerr = .false.
       return
    end function tangential_objective_function
