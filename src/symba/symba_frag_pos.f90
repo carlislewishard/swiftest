@@ -100,7 +100,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
          if (.not.lmerge) then
             call calculate_system_energy(linclude_fragments=.true.)
             if ((abs(dEtot - Qloss) / Qloss > Etol) .or. (dEtot > 0.0_DP)) then
-               write(*,*) 'Failed due to high energy error: ', abs(dEtot / Etot_before)
+               write(*,*) 'Failed due to high energy error: ', (abs(dEtot) - Qloss) / Qloss
                lmerge = .true.
             else if (abs(dLmag) > Ltol) then
                write(*,*) 'Failed due to high angular momentum error: ', dLmag
