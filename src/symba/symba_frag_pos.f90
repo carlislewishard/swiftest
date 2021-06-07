@@ -47,7 +47,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    real(DP)                                :: r_max_start 
    real(DP), parameter                     :: Ltol = 10 * epsilon(1.0_DP)
    real(DP), parameter                     :: Etol = 1e-10_DP
-   integer(I4B), parameter                 :: MAXTRY = 200
+   integer(I4B), parameter                 :: MAXTRY = 2000
    logical, dimension(size(IEEE_ALL))      :: fpe_halting_modes, fpe_quiet_modes
 
    if (nfrag < NFRAG_MIN) then
@@ -92,20 +92,20 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       lmerge = .false.
       call set_fragment_position_vectors()
       call set_fragment_tangential_velocities(lmerge)
-      if (lmerge) write(*,*) 'Failed to find tangential velocities'
+      !if (lmerge) write(*,*) 'Failed to find tangential velocities'
       if (.not.lmerge) then
          call set_fragment_radial_velocities(lmerge)
-         if (lmerge) write(*,*) 'Failed to find radial velocities'
+         !if (lmerge) write(*,*) 'Failed to find radial velocities'
          if (.not.lmerge) then
             call calculate_system_energy(linclude_fragments=.true.)
-            write(*,*) 'Qloss : ',Qloss
-            write(*,*) '-dEtot: ',-dEtot
-            write(*,*) 'delta : ',abs((dEtot + Qloss)) 
+            !write(*,*) 'Qloss : ',Qloss
+            !write(*,*) '-dEtot: ',-dEtot
+            !write(*,*) 'delta : ',abs((dEtot + Qloss)) 
             if ((abs(dEtot + Qloss) > Etol) .or. (dEtot > 0.0_DP)) then
-               write(*,*) 'Failed due to high energy error: '
+            !   write(*,*) 'Failed due to high energy error: '
                lmerge = .true.
             else if (abs(dLmag) / Lmag_before > Ltol) then
-               write(*,*) 'Failed due to high angular momentum error: ', dLmag / Lmag_before
+            !   write(*,*) 'Failed due to high angular momentum error: ', dLmag / Lmag_before
                lmerge = .true.
             end if
          end if
@@ -493,7 +493,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ! Internals
       integer(I4B) :: i
       real(DP)     :: L_orb_mag, f_spin, rbar
-      real(DP), parameter                  :: TOL = 1e-8_DP
+      real(DP), parameter                  :: TOL = 1e-4_DP
       real(DP), dimension(:), allocatable  :: v_t_initial
       type(lambda_obj)                     :: spinfunc
       type(lambda_obj_err)                 :: objective_function
@@ -508,33 +508,38 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
       call calculate_system_energy(linclude_fragments=.true.)
       ke_frag_budget = -dEtot - Qloss
-      write(*,*) '***************************************************'
-      write(*,*) 'Energy balance so far: '
-      write(*,*) 'ke_frag_budget : ',ke_frag_budget
-      write(*,*) 'dEtot          : ',dEtot
-      write(*,*) 'ke_frag_budget + dEtot ~ 0?', ke_frag_budget + dEtot
-      write(*,*) '***************************************************'
-      write(*,*) 'ke_orbit_before: ',ke_orbit_before 
-      write(*,*) 'ke_orbit_after : ',ke_orbit_after  
-      write(*,*) 'ke_spin_before : ',ke_spin_before 
-      write(*,*) 'ke_spin_after  : ',ke_spin_after  
-      write(*,*) 'pe_before      : ',pe_before 
-      write(*,*) 'pe_after       : ',pe_after  
-      write(*,*) 'Qloss          : ',Qloss
+      !write(*,*) '***************************************************'
+      !write(*,*) 'Energy balance so far: '
+      !write(*,*) 'ke_frag_budget : ',ke_frag_budget
+      !write(*,*) 'ke_orbit_before: ',ke_orbit_before 
+      !write(*,*) 'ke_orbit_after : ',ke_orbit_after  
+      !write(*,*) 'ke_spin_before : ',ke_spin_before 
+      !write(*,*) 'ke_spin_after  : ',ke_spin_after  
+      !write(*,*) 'pe_before      : ',pe_before 
+      !write(*,*) 'pe_after       : ',pe_after  
+      !write(*,*) 'Qloss          : ',Qloss
+      !write(*,*) '***************************************************'
       if (ke_frag_budget < 0.0_DP) then
-         write(*,*) 'Negative ke_frag_budget: ',ke_frag_budget
+      !   write(*,*) 'Negative ke_frag_budget: ',ke_frag_budget
+         r_max_start = r_max_start / 2 
          lerr = .true.
          return
       end if
 
       allocate(v_t_initial, mold=v_t_mag)
 
-      f_spin = 0.0_DP
+      f_spin = 0.01_DP
       L_frag_spin(:) = 0.0_DP
-      do i = 1, nfrag
-         rot_frag(:,i) = sqrt(2 * f_spin * ke_frag_budget / (nfrag * m_frag(i) * rad_frag(i)**2 * Ip_frag(3, i))) * v_h_unit(:, i)
-         L_frag_spin(:) = L_frag_spin(:) + m_frag(i) * rad_frag(i)**2 * Ip_frag(3, i) * rot_frag(:, i)
+      ke_frag_spin = 0.0_DP
+      do i = 1, 2
+         rot_frag(:,i) = L_spin(:, i) / (m_frag(i) * rad_frag(i)**2 * Ip_frag(3, i))
       end do
+      do i = 1, nfrag
+         rot_frag(:,i) = rot_frag(:, i) + sqrt(2 * f_spin * ke_frag_budget / (nfrag * m_frag(i) * rad_frag(i)**2 * Ip_frag(3, i))) * v_h_unit(:, i)
+         L_frag_spin(:) = L_frag_spin(:) + m_frag(i) * rad_frag(i)**2 * Ip_frag(3, i) * rot_frag(:, i)
+         ke_frag_spin = ke_frag_spin + m_frag(i) * Ip_frag(3, i) * rad_frag(i)**2 * dot_product(rot_frag(:, i), rot_frag(:, i))
+      end do
+      ke_frag_spin = 0.5_DP * ke_frag_spin
       ! Convert a fraction of the pre-impact angular momentum into fragment spin angular momentum
       L_frag_orb(:) =  L_frag_tot(:) - L_frag_spin(:)
       L_orb_mag = norm2(L_frag_orb(:))
@@ -551,21 +556,18 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ! Shift the radial velocity vectors to align with the center of mass of the collisional system (the origin)
       vb_frag(:,1:nfrag) = vmag_to_vb(v_r_mag(1:nfrag), v_r_unit(:,1:nfrag), v_t_mag(1:nfrag), v_t_unit(:,1:nfrag), m_frag(1:nfrag), vcom(:)) 
       ke_frag_orbit = 0.0_DP
-      ke_frag_spin = 0.0_DP
       do i = 1, nfrag
          v_frag(:, i) = vb_frag(:, i) - vcom(:)
          ke_frag_orbit = ke_frag_orbit + m_frag(i) * dot_product(vb_frag(:, i), vb_frag(:, i))
-         ke_frag_spin = ke_frag_spin + m_frag(i) * Ip_frag(3, i) * rad_frag(i)**2 * dot_product(rot_frag(:, i), rot_frag(:, i))
       end do
       ke_frag_orbit = 0.5_DP * ke_frag_orbit
-      ke_frag_spin = 0.5_DP * ke_frag_spin
       ke_radial = ke_frag_budget - ke_frag_orbit - ke_frag_spin
       lerr = (ke_radial < 0.0_DP)
-      write(*,*) 'Tangential'
-      write(*,*) 'ke_frag_budget: ',ke_frag_budget
-      write(*,*) 'ke_frag_orbit : ',ke_frag_orbit
-      write(*,*) 'ke_frag_spin  : ',ke_frag_spin
-      write(*,*) 'ke_radial     : ',ke_radial
+      !write(*,*) 'Tangential'
+      !write(*,*) 'ke_frag_budget: ',ke_frag_budget
+      !write(*,*) 'ke_frag_orbit : ',ke_frag_orbit
+      !write(*,*) 'ke_frag_spin  : ',ke_frag_spin
+      !write(*,*) 'ke_radial     : ',ke_radial
 
       return
 
@@ -704,12 +706,12 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
          ke_frag_orbit = ke_frag_orbit + m_frag(i) * dot_product(vb_frag(:, i), vb_frag(:, i))
       end do
       ke_frag_orbit = 0.5_DP * ke_frag_orbit
-      write(*,*) 'Radial'
-      write(*,*) 'Failure? ',lerr 
-      write(*,*) 'ke_frag_budget: ',ke_frag_budget
-      write(*,*) 'ke_frag_orbit : ',ke_frag_orbit
-      write(*,*) 'ke_frag_spin  : ',ke_frag_spin
-      write(*,*) 'ke_remainder  : ',ke_frag_budget - (ke_frag_orbit + ke_frag_spin)
+      !write(*,*) 'Radial'
+      !write(*,*) 'Failure? ',lerr 
+      !write(*,*) 'ke_frag_budget: ',ke_frag_budget
+      !write(*,*) 'ke_frag_orbit : ',ke_frag_orbit
+      !write(*,*) 'ke_frag_spin  : ',ke_frag_spin
+      !write(*,*) 'ke_remainder  : ',ke_frag_budget - (ke_frag_orbit + ke_frag_spin)
 
       return
    end subroutine set_fragment_radial_velocities
@@ -783,7 +785,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       real(DP), dimension(:,:), allocatable  :: xb_frag_new, vb_frag_new, Ip_frag_new, rot_frag_new
       real(DP) :: mtransfer
 
-      r_max_start = r_max_start + 2.00_DP ! The larger lever arm can help if the problem is in the angular momentum step
+      r_max_start = r_max_start * 1.20_DP ! The larger lever arm can help if the problem is in the angular momentum step
    end subroutine restructure_failed_fragments
 
 
