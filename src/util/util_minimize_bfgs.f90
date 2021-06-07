@@ -28,8 +28,8 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
    real(DP), dimension(:), allocatable :: x1
    ! Internals
    integer(I4B) ::  i, j, k, l, conv, num
-   integer(I4B), parameter :: MAXLOOP = 1000 !! Maximum number of loops before method is determined to have failed 
-   real(DP), parameter     :: gradeps = 1e-6_DP !! Tolerance for gradient calculations
+   integer(I4B), parameter :: MAXLOOP = 100 !! Maximum number of loops before method is determined to have failed 
+   real(DP), parameter     :: graddelta = 1e-6_DP !! Delta x for gradient calculations
    real(DP), dimension(N) :: S               !! Direction vectors 
    real(DP), dimension(N,N) :: H             !! Approximated inverse Hessian matrix 
    real(DP), dimension(N) :: grad1           !! gradient of f 
@@ -50,7 +50,7 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
    ! Initialize approximate Hessian with the identity matrix (i.e. begin with method of steepest descent) 
    ! Get initial gradient and initialize arrays for updated values of gradient and x
    H(:,:) = reshape([((0._DP, i=1, j-1), 1._DP, (0._DP, i=j+1, N), j=1, N)], [N,N])  
-   grad0 = gradf(f, N, x0(:), gradeps, lerr)
+   grad0 = gradf(f, N, x0(:), graddelta, lerr)
    if (lerr) then
       call ieee_set_status(original_fpe_status)
       return
@@ -60,13 +60,13 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
       !check for convergence
       conv = count(abs(grad1(:)) > eps)
       if (conv == 0) then
-         write(*,*) "BFGS converged on gradient after ",i," iterations" 
+         !write(*,*) "BFGS converged on gradient after ",i," iterations" 
          exit 
       end if
       S(:) = -matmul(H(:,:), grad1(:))
-      astar = minimize1D(f, x1, S, N, gradeps, lerr)
+      astar = minimize1D(f, x1, S, N, graddelta, lerr)
       if (lerr) then
-         write(*,*) "Exiting BFGS with error in minimize1D step"
+         !write(*,*) "Exiting BFGS with error in minimize1D step"
          exit
       end if
       ! Get new x values 
@@ -74,7 +74,7 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
       x1(:) = x1(:) + P(:)
       ! Calculate new gradient
       grad0(:) = grad1(:)
-      grad1 = gradf(f, N, x1, gradeps, lerr)
+      grad1 = gradf(f, N, x1, graddelta, lerr)
       y(:) = grad1(:) - grad0(:)
       Py = sum(P(:) * y(:))
       ! set up factors for H matrix update 
@@ -86,7 +86,7 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
       end do
       ! prevent divide by zero (convergence) 
       if (abs(Py) < tiny(Py)) then
-         write(*,*) "BFGS Converged on tiny Py after ",i," iterations"
+         !write(*,*) "BFGS Converged on tiny Py after ",i," iterations"
          exit
       end if
       ! set up update 
@@ -110,12 +110,12 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
       if (any(fpe_flag)) exit 
       if (i == MAXLOOP) then
          lerr = .true.
-         write(*,*) "BFGS ran out of loops!"
+         !write(*,*) "BFGS ran out of loops!"
       end if
    end do
    call ieee_get_flag(ieee_usual, fpe_flag)
    lerr = lerr .or. any(fpe_flag)  
-   if (any(fpe_flag)) write(*,*) 'BFGS did not converge due to fpe'
+   !if (any(fpe_flag)) write(*,*) 'BFGS did not converge due to fpe'
    !if (lerr) write(*,*) "BFGS did not converge!"
    call ieee_set_status(original_fpe_status)
 
@@ -139,13 +139,13 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
          !! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -   
          implicit none
          ! Arguments
-         integer(I4B),           intent(in)  :: N
-         class(lambda_obj),      intent(inout)  :: f
-         real(DP), dimension(:), intent(in)  :: x1
-         real(DP),               intent(in)  :: dx
-         logical,                intent(out) :: lerr
+         integer(I4B),           intent(in)    :: N
+         class(lambda_obj),      intent(inout) :: f
+         real(DP), dimension(:), intent(in)    :: x1
+         real(DP),               intent(in)    :: dx
+         logical,                intent(out)   :: lerr
          ! Result
-         real(DP), dimension(N)              :: grad
+         real(DP), dimension(N)                :: grad
          ! Internals
          integer(I4B) :: i, j
          real(DP), dimension(N) :: xp, xm
@@ -219,7 +219,7 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
          alo = a0
          call bracket(f, x0, S, N, gam, step, alo, ahi, lerr)
          if (lerr) then
-            write(*,*) "BFGS bracketing step failed!"
+            !write(*,*) "BFGS bracketing step failed!"
             return 
          end if
          if (abs(alo - ahi) < eps) then
@@ -229,7 +229,7 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
          end if
          call golden(f, x0, S, N, greduce, alo, ahi, lerr)
          if (lerr) then
-            write(*,*) "BFGS golden section step failed!"
+            !write(*,*) "BFGS golden section step failed!"
             return 
          end if
          if (abs(alo - ahi) < eps) then
@@ -239,7 +239,7 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
          end if
          call quadfit(f, x0, S, N, eps, alo, ahi, lerr)
          if (lerr) then
-            write(*,*) "BFGS quadfit failed!"
+            !write(*,*) "BFGS quadfit failed!"
             return 
          end if
          if (abs(alo - ahi) < eps) then
@@ -299,19 +299,18 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
          implicit none
          ! Arguments
          integer(I4B),           intent(in)    :: N
-         class(lambda_obj),      intent(inout)    :: f
+         class(lambda_obj),      intent(inout) :: f
          real(DP), dimension(:), intent(in)    :: x0, S
          real(DP),               intent(in)    :: gam, step
          real(DP),               intent(inout) :: lo
          real(DP),               intent(out)   :: hi
          logical,                intent(out)   :: lerr
          ! Internals
-         real(DP) :: a0, a1, a2, a3, da
-         real(DP) :: f0, f1, f2, fcon
+         real(DP) :: a0, a1, a2, atmp, da
+         real(DP) :: f0, f1, f2
          integer(I4B) :: i, j
          integer(I4B), parameter :: MAXLOOP = 100 ! maximum number of loops before method is determined to have failed   
          real(DP), parameter :: eps = epsilon(lo) ! small number precision to test floating point equality   
-         real(DP), parameter :: dela = 2.0324_DP ! arbitrary number to test if function is constant   
 
          ! set up initial bracket points   
          a0 =  lo
@@ -326,61 +325,61 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
          if (lerr) return
          ! loop over bracket method until either min is bracketed method fails   
          do i = 1, MAXLOOP 
-            if ((f0 > f1) .and. (f2 > f1)) then  ! minimum was found   
+            if ((f0 > f1) .and. (f1 < f2)) then  ! Minimum was found   
                lo = a0
                hi = a2
                return 
-            else if ((f0 > f1) .and. (f1 < f2)) then ! function appears to decrease   
+            else if ((f0 >= f1) .and. (f1 > f2)) then ! Function appears to decrease   
                da = da * gam
-               a3 = a2 + da
+               atmp = a2 + da
                a0 = a1
                a1 = a2
-               a2 = a3
+               a2 = atmp
                f0 = f1
                f1 = f2
                f2 = n2one(f, x0, S, N, a2, lerr)
-            else if ((f0 < f1) .and. (f1 < f2)) then ! function appears to increase   
+            else if ((f0 < f1) .and. (f1 <= f2)) then ! Function appears to increase   
                da = da * gam
-               a3 = a0 - da
+               atmp = a0 - da
                a2 = a1
                a1 = a0
-               a0 = a3
+               a0 = atmp
                f2 = f1
                f0 = n2one(f, x0, S, N, a0, lerr)
-            else if ((f0 < f1) .and. (f1 > f2)) then ! more than one minimum present, so in this case we arbitrarily choose the RHS min   
+            else if ((f0 < f1) .and. (f1 > f2)) then ! We are at a peak. Pick the direction that descends the fastest
                da = da * gam
-               a3 = a2 + da
-               a0 = a1
-               a1 = a2
-               a2 = a3
-               f0 = f1
-               f1 = f2
+               if (f2 > f0) then ! LHS is lower than RHS
+                  atmp = a2 + da
+                  a0 = a1
+                  a1 = a2
+                  a2 = atmp
+                  f0 = f1
+                  f1 = f2
+                  f2 = n2one(f, x0, S, N, a2, lerr)
+               else ! RHS is lower than LHS
+                  atmp = a0 - da
+                  a2 = a1
+                  a1 = a0
+                  a0 = atmp
+                  f2 = f1
+                  f1 = f2
+                  f0 = n2one(f, x0, S, N, a0, lerr)
+               end if
+            else if ((f0 > f1) .and. (abs(f2 - f1) <= eps)) then ! Decrasging but RHS equal   
+               da = da * gam
+               atmp = a2 + da
+               a2 = atmp
                f2 = n2one(f, x0, S, N, a2, lerr)
-            else if ((f0 > f1) .and. (abs(f2 - f1) <= eps)) then ! RHS equal   
+            else if ((abs(f0 - f1) < eps) .and. (f1 < f2)) then ! Increasing but LHS equal   
                da = da * gam
-               a3 = a2 + da
-               a2 = a3
-               f2 = n2one(f, x0, S, N, a2, lerr)
-            else if ((abs(f0 - f1) < eps) .and. (f2 > f1)) then ! LHS equal   
-               da = da * gam
-               a3 = a0 - da
-               a0 = a3
+               atmp = a0 - da
+               a0 = atmp
                f0 = n2one(f, x0, S, N, a0, lerr)
-            else  ! all values equal stops if there is no minimum or takes RHS min if it exists   
-               ! test if function itself is constant   
-               fcon = n2one(f, x0, S, N, a2 * dela, lerr) !change a2 by an arbitrary number to see if constant  
-               lerr = lerr .or. (abs(f2 - fcon) < eps) 
-               if (lerr) return
-               a3 = a0 + 0.5_DP * (a1 - a0)
-               a0 = a1
-               a1 = a2
-               a2 = a3
-               f0 = f1
-               f1 = f2     
-               a3 = a0 + 0.5_DP * (a1 - a0)
-               a1 = a2
-               a2 = a3
-               f1 = f2
+            else  ! all values equal. Expand in either direction and try again
+               a0 = a0 - da
+               a2 = a2 + da
+               f0 = n2one(f, x0, S, N, a0, lerr)
+               if (lerr) exit ! An error occurred while evaluating the function
                f2 = n2one(f, x0, S, N, a2, lerr)
             end if
             if (lerr) exit ! An error occurred while evaluating the function
