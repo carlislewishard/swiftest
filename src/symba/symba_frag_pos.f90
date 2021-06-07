@@ -46,7 +46,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    integer(I4B), parameter                 :: NFRAG_MIN = 7 !! The minimum allowable number of fragments (set to 6 because that's how many unknowns are needed in the tangential velocity calculation)
    real(DP)                                :: r_max_start 
    real(DP), parameter                     :: Ltol = 10 * epsilon(1.0_DP)
-   real(DP), parameter                     :: Etol = 1e-2_DP
+   real(DP), parameter                     :: Etol = 1e-10_DP
    integer(I4B), parameter                 :: MAXTRY = 200
    logical, dimension(size(IEEE_ALL))      :: fpe_halting_modes, fpe_quiet_modes
 
@@ -99,8 +99,11 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
          if (lmerge) write(*,*) 'Failed to find radial velocities'
          if (.not.lmerge) then
             call calculate_system_energy(linclude_fragments=.true.)
-            if ((abs((dEtot - Qloss) / Qloss) > Etol) .or. (dEtot > 0.0_DP)) then
-               write(*,*) 'Failed due to high energy error: ', abs((dEtot - Qloss) / Qloss), dEtot / abs(Etot_before) 
+            write(*,*) 'Qloss : ',Qloss
+            write(*,*) '-dEtot: ',-dEtot
+            write(*,*) 'delta : ',abs((dEtot + Qloss)) 
+            if ((abs(dEtot + Qloss) > Etol) .or. (dEtot > 0.0_DP)) then
+               write(*,*) 'Failed due to high energy error: '
                lmerge = .true.
             else if (abs(dLmag) / Lmag_before > Ltol) then
                write(*,*) 'Failed due to high angular momentum error: ', dLmag / Lmag_before
@@ -156,7 +159,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ! Set scale factors
       mscale = mtot !! Because of the implied G, mass is actually G*mass with units of distance**3 / time**2
       Escale = ke_family 
-      vscale = sqrt(2 * Escale / mscale) 
+      vscale = sqrt(Escale / mscale) 
       rscale = mscale**2 / Escale
       tscale = rscale / vscale
       Lscale = mscale * rscale * vscale
@@ -292,15 +295,15 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       !! Defines the pre-collisional "family" consisting of all of the bodies involved in the collision. These bodies need to be identified so that they can be excluded from energy calculations once
       !! the collisional products (the fragments) are created.
       integer(I4B) :: i
-      associate(vbpl => symba_plA%helio%swiftest%vb, Mpl => symba_plA%helio%swiftest%mass)
+      associate(vbpl => symba_plA%helio%swiftest%vb, Mpl => symba_plA%helio%swiftest%mass, &
+                Ipl => symba_plA%helio%swiftest%Ip, radpl => symba_plA%helio%swiftest%radius, rotpl => symba_plA%helio%swiftest%rot)
          fam_size = size(family)
 
          ! We need the original kinetic energy of just the pre-impact family members in order to balance the energy later
          ke_family = 0.0_DP
          do i = 1, fam_size
-            ke_family = ke_family + Mpl(family(i)) * dot_product(vbpl(:,family(i)), vbpl(:,family(i)))
+            ke_family = ke_family + 0.5_DP * Mpl(family(i)) * (dot_product(vbpl(:,family(i)), vbpl(:,family(i))) + Ipl(3,family(i)) * radpl(family(i))**2 * dot_product(rotpl(:,family(i)), rotpl(:, family(i))))
          end do
-         ke_family = 0.5_DP * ke_family
       end associate
       return
    end subroutine define_pre_collisional_family
@@ -370,8 +373,8 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
             call move_alloc(ltmp, lexclude)
          end if
    
-         where (lexclude(1:npl))
-            symba_plwksp%helio%swiftest%status(1:npl) = INACTIVE
+         where (lexclude(1:npl_new))
+            symba_plwksp%helio%swiftest%status(1:npl_new) = INACTIVE
          end where
    
          nplm = count(symba_plwksp%helio%swiftest%mass > param%mtiny / mscale)
@@ -527,6 +530,21 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
       call calculate_system_energy(linclude_fragments=.true.)
       ke_frag_budget = ke_family + (ke_spin_before - ke_spin_after) + (pe_before - pe_after) - Qloss
+      !ke_frag_budget = -dEtot - Qloss
+      write(*,*) '***************************************************'
+      write(*,*) 'Energy balance so far: '
+      write(*,*) 'ke_family      : ',ke_family
+      write(*,*) 'ke_frag_budget : ',ke_frag_budget
+      write(*,*) 'dEtot          : ',dEtot
+      write(*,*) 'ke_frag_budget + dEtot ~ 0?', ke_frag_budget + dEtot
+      write(*,*) '***************************************************'
+      write(*,*) 'ke_orbit_before: ',ke_orbit_before 
+      write(*,*) 'ke_orbit_after : ',ke_orbit_after  
+      write(*,*) 'ke_spin_before : ',ke_spin_before 
+      write(*,*) 'ke_spin_after  : ',ke_spin_after  
+      write(*,*) 'pe_before      : ',pe_before 
+      write(*,*) 'pe_after       : ',pe_after  
+      write(*,*) 'Qloss          : ',Qloss
       if (ke_frag_budget < 0.0_DP) then
          write(*,*) 'Negative ke_frag_budget: ',ke_frag_budget
          lerr = .true.
@@ -535,7 +553,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
       allocate(v_t_initial, mold=v_t_mag)
 
-      f_spin = 0.5_DP
+      f_spin = 0.0_DP
       L_frag_spin(:) = 0.0_DP
       do i = 1, nfrag
          rot_frag(:,i) = sqrt(2 * f_spin * ke_frag_budget / (nfrag * m_frag(i) * rad_frag(i)**2 * Ip_frag(3, i))) * v_h_unit(:, i)
@@ -548,7 +566,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       do i = 7, nfrag
          call util_crossproduct(v_r_unit(:, i), z_col_unit, r_cross_L(:))
          rbar = rmag(i) * norm2(r_cross_L(:))
-         v_t_initial(i) = L_orb_mag / (m_frag(i) * rbar * nfrag) 
+         v_t_initial(i) = 0.5_DP * L_orb_mag / (m_frag(i) * rbar * nfrag) 
       end do
       objective_function = lambda_obj(tangential_objective_function, lerr)
       v_t_mag(7:nfrag) = util_minimize_bfgs(objective_function, nfrag-6, v_t_initial(7:nfrag), TOL, lerr)
@@ -676,7 +694,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ! Arguments
       logical,                intent(out)   :: lerr
       ! Internals
-      real(DP), parameter                   :: TOL = 1e-12_DP
+      real(DP), parameter                   :: TOL = 2e-8_DP
       integer(I4B)                          :: i, j
       real(DP), dimension(:), allocatable   :: v_r_initial, v_r_sigma
       real(DP), dimension(:,:), allocatable :: v_r
@@ -716,6 +734,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       end do
       ke_frag = 0.5_DP * ke_frag
       write(*,*) 'Radial'
+      write(*,*) 'Failure? ',lerr 
       write(*,*) 'ke_frag_budget: ',ke_frag_budget
       write(*,*) 'ke_frag       : ',ke_frag
       write(*,*) 'ke_frag_spin  : ',ke_frag_spin
@@ -745,7 +764,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
          fval = fval - m_frag(i) * (Ip_frag(3, i) * rad_frag(i)**2 * dot_product(rot_frag(:, i), rot_frag(:, i)) + dot_product(v_shift(:, i), v_shift(:, i)))
       end do
       ! The following ensures that fval = 0 is a local minimum, which is what the BFGS method is searching for
-      fval = (fval / (2 * ke_frag_budget))**2 
+      fval = (fval / (2 * ke_radial))**2
 
       return
 
