@@ -219,7 +219,7 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
          alo = a0
          call bracket(f, x0, S, N, gam, step, alo, ahi, lerr)
          if (lerr) then
-            !write(*,*) "BFGS bracketing step failed!"
+            write(*,*) "BFGS bracketing step failed!"
             return 
          end if
          if (abs(alo - ahi) < eps) then
@@ -229,7 +229,7 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
          end if
          call golden(f, x0, S, N, greduce, alo, ahi, lerr)
          if (lerr) then
-            !write(*,*) "BFGS golden section step failed!"
+            write(*,*) "BFGS golden section step failed!"
             return 
          end if
          if (abs(alo - ahi) < eps) then
@@ -239,7 +239,7 @@ function util_minimize_bfgs(f, N, x0, eps, lerr) result(x1)
          end if
          call quadfit(f, x0, S, N, eps, alo, ahi, lerr)
          if (lerr) then
-            !write(*,*) "BFGS quadfit failed!"
+            write(*,*) "BFGS quadfit failed!"
             return 
          end if
          if (abs(alo - ahi) < eps) then

@@ -29,7 +29,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    real(DP)                                :: mscale, rscale, vscale, tscale, Lscale, Escale ! Scale factors that reduce quantities to O(~1) in the collisional system
    real(DP)                                :: mtot 
    real(DP), dimension(NDIM)               :: xcom, vcom
-   integer(I4B)                            :: ii, fam_size
+   integer(I4B)                            :: ii
    logical, dimension(:), allocatable      :: lexclude
    real(DP), dimension(NDIM, 2)            :: rot, L_orb 
    real(DP), dimension(:,:), allocatable   :: x_frag, v_frag, v_r_unit, v_t_unit, v_h_unit
@@ -39,7 +39,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    real(DP)                                :: Etot_before, ke_orbit_before, ke_spin_before, pe_before, Lmag_before
    real(DP)                                :: Etot_after,  ke_orbit_after,  ke_spin_after,  pe_after,  Lmag_after, dEtot, dLmag
    real(DP), dimension(NDIM)               :: L_frag_tot, L_frag_orb
-   real(DP)                                :: ke_family, ke_frag_budget, ke_frag, ke_radial, ke_frag_spin
+   real(DP)                                :: ke_frag_budget, ke_frag_orbit, ke_radial, ke_frag_spin
    real(DP), dimension(NDIM)               :: x_col_unit, y_col_unit, z_col_unit
    character(len=*), parameter             :: fmtlabel = "(A14,10(ES11.4,1X,:))"
    integer(I4B)                            :: try, ntry
@@ -82,7 +82,6 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    allocate(x_frag, source=xb_frag)
    allocate(v_frag, source=vb_frag)
 
-   call define_pre_collisional_family()
    call set_scale_factors()
    call define_coordinate_system()
    call calculate_system_energy(linclude_fragments=.false.)
@@ -157,8 +156,8 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       vcom(:) = (mass(1) * v(:,1) + mass(2) * v(:,2)) / mtot
 
       ! Set scale factors
+      Escale = 0.5_DP * (mass(1) * dot_product(v(:,1), v(:,1)) + mass(2) * dot_product(v(:,2), v(:,2)))
       mscale = mtot !! Because of the implied G, mass is actually G*mass with units of distance**3 / time**2
-      Escale = ke_family 
       vscale = sqrt(Escale / mscale) 
       rscale = mscale**2 / Escale
       tscale = rscale / vscale
@@ -178,7 +177,6 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       rad_frag = rad_frag / rscale
       rot_frag = rot_frag * tscale
       Qloss = Qloss / Escale
-      ke_family = ke_family / Escale
 
       return
    end subroutine set_scale_factors
@@ -213,7 +211,6 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       end do
 
       Qloss = Qloss * Escale
-      ke_family = ke_family * Escale
       Etot_before = Etot_before * Escale
       pe_before = pe_before * Escale
       ke_spin_before = ke_spin_before * Escale
@@ -288,25 +285,6 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
       return
    end subroutine define_coordinate_system
-
-   subroutine define_pre_collisional_family()
-      !! author: David A. Minton
-      !!
-      !! Defines the pre-collisional "family" consisting of all of the bodies involved in the collision. These bodies need to be identified so that they can be excluded from energy calculations once
-      !! the collisional products (the fragments) are created.
-      integer(I4B) :: i
-      associate(vbpl => symba_plA%helio%swiftest%vb, Mpl => symba_plA%helio%swiftest%mass, &
-                Ipl => symba_plA%helio%swiftest%Ip, radpl => symba_plA%helio%swiftest%radius, rotpl => symba_plA%helio%swiftest%rot)
-         fam_size = size(family)
-
-         ! We need the original kinetic energy of just the pre-impact family members in order to balance the energy later
-         ke_family = 0.0_DP
-         do i = 1, fam_size
-            ke_family = ke_family + 0.5_DP * Mpl(family(i)) * (dot_product(vbpl(:,family(i)), vbpl(:,family(i))) + Ipl(3,family(i)) * radpl(family(i))**2 * dot_product(rotpl(:,family(i)), rotpl(:, family(i))))
-         end do
-      end associate
-      return
-   end subroutine define_pre_collisional_family
 
    subroutine calculate_system_energy(linclude_fragments)
       !! Author: David A. Minton
@@ -529,11 +507,9 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       v_r_mag(:) = 0.0_DP
 
       call calculate_system_energy(linclude_fragments=.true.)
-      ke_frag_budget = ke_family + (ke_spin_before - ke_spin_after) + (pe_before - pe_after) - Qloss
-      !ke_frag_budget = -dEtot - Qloss
+      ke_frag_budget = -dEtot - Qloss
       write(*,*) '***************************************************'
       write(*,*) 'Energy balance so far: '
-      write(*,*) 'ke_family      : ',ke_family
       write(*,*) 'ke_frag_budget : ',ke_frag_budget
       write(*,*) 'dEtot          : ',dEtot
       write(*,*) 'ke_frag_budget + dEtot ~ 0?', ke_frag_budget + dEtot
@@ -566,7 +542,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       do i = 7, nfrag
          call util_crossproduct(v_r_unit(:, i), z_col_unit, r_cross_L(:))
          rbar = rmag(i) * norm2(r_cross_L(:))
-         v_t_initial(i) = 0.5_DP * L_orb_mag / (m_frag(i) * rbar * nfrag) 
+         v_t_initial(i) = L_orb_mag / (m_frag(i) * rbar * nfrag) 
       end do
       objective_function = lambda_obj(tangential_objective_function, lerr)
       v_t_mag(7:nfrag) = util_minimize_bfgs(objective_function, nfrag-6, v_t_initial(7:nfrag), TOL, lerr)
@@ -574,20 +550,20 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       v_t_mag(1:nfrag) = solve_fragment_tangential_velocities(v_t_mag_input=v_t_initial(7:nfrag), lerr=lerr)
       ! Shift the radial velocity vectors to align with the center of mass of the collisional system (the origin)
       vb_frag(:,1:nfrag) = vmag_to_vb(v_r_mag(1:nfrag), v_r_unit(:,1:nfrag), v_t_mag(1:nfrag), v_t_unit(:,1:nfrag), m_frag(1:nfrag), vcom(:)) 
-      ke_frag = 0.0_DP
+      ke_frag_orbit = 0.0_DP
       ke_frag_spin = 0.0_DP
       do i = 1, nfrag
          v_frag(:, i) = vb_frag(:, i) - vcom(:)
-         ke_frag = ke_frag + m_frag(i) * dot_product(vb_frag(:, i), vb_frag(:, i))
+         ke_frag_orbit = ke_frag_orbit + m_frag(i) * dot_product(vb_frag(:, i), vb_frag(:, i))
          ke_frag_spin = ke_frag_spin + m_frag(i) * Ip_frag(3, i) * rad_frag(i)**2 * dot_product(rot_frag(:, i), rot_frag(:, i))
       end do
-      ke_frag = 0.5_DP * ke_frag
+      ke_frag_orbit = 0.5_DP * ke_frag_orbit
       ke_frag_spin = 0.5_DP * ke_frag_spin
-      ke_radial = ke_frag_budget - ke_frag - ke_frag_spin
+      ke_radial = ke_frag_budget - ke_frag_orbit - ke_frag_spin
       lerr = (ke_radial < 0.0_DP)
       write(*,*) 'Tangential'
       write(*,*) 'ke_frag_budget: ',ke_frag_budget
-      write(*,*) 'ke_frag       : ',ke_frag 
+      write(*,*) 'ke_frag_orbit : ',ke_frag_orbit
       write(*,*) 'ke_frag_spin  : ',ke_frag_spin
       write(*,*) 'ke_radial     : ',ke_radial
 
@@ -609,8 +585,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       integer(I4B) :: i
       real(DP), dimension(:,:), allocatable :: v_shift
       real(DP), dimension(:), allocatable :: v_t_new
-      real(DP), dimension(NDIM) :: L_frag, L
-      real(DP) :: dL, keo
+      real(DP) :: keo
 
       lerr = .false.
 
@@ -621,13 +596,9 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       v_shift(:,:) = vmag_to_vb(v_r_mag, v_r_unit, v_t_new, v_t_unit, m_frag, vcom) 
 
       keo = 0.0_DP
-      L_frag(:) = 0.0_DP
       do i = 1, nfrag
          keo = keo + m_frag(i) * dot_product(v_shift(:, i), v_shift(:, i))
-         call util_crossproduct(x_frag(:, i), v_shift(:, i), L(:))
-         L_frag(:) = L_frag(:) + L(:) * m_frag(i)
       end do
-      dL = norm2(L_frag(:) - L_frag_orb(:)) / norm2(L_frag_orb(:))
       keo = 0.5_DP * keo
       fval = keo 
       lerr = .false.
@@ -728,17 +699,17 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
             v_frag(:, i) = vb_frag(:, i) - vcom(:)
          end do
       end if
-      ke_frag = 0.0_DP
+      ke_frag_orbit = 0.0_DP
       do i = 1, nfrag
-         ke_frag = ke_frag + m_frag(i) * dot_product(vb_frag(:, i), vb_frag(:, i))
+         ke_frag_orbit = ke_frag_orbit + m_frag(i) * dot_product(vb_frag(:, i), vb_frag(:, i))
       end do
-      ke_frag = 0.5_DP * ke_frag
+      ke_frag_orbit = 0.5_DP * ke_frag_orbit
       write(*,*) 'Radial'
       write(*,*) 'Failure? ',lerr 
       write(*,*) 'ke_frag_budget: ',ke_frag_budget
-      write(*,*) 'ke_frag       : ',ke_frag
+      write(*,*) 'ke_frag_orbit : ',ke_frag_orbit
       write(*,*) 'ke_frag_spin  : ',ke_frag_spin
-      write(*,*) 'ke_remainder  : ',ke_frag_budget - (ke_frag + ke_frag_spin)
+      write(*,*) 'ke_remainder  : ',ke_frag_budget - (ke_frag_orbit + ke_frag_spin)
 
       return
    end subroutine set_fragment_radial_velocities
