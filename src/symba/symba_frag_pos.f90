@@ -44,10 +44,10 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    character(len=*), parameter             :: fmtlabel = "(A14,10(ES11.4,1X,:))"
    integer(I4B)                            :: try, ntry
    integer(I4B), parameter                 :: NFRAG_MIN = 7 !! The minimum allowable number of fragments (set to 6 because that's how many unknowns are needed in the tangential velocity calculation)
-   real(DP)                                :: r_max_start, f_spin 
+   real(DP)                                :: r_max_start, r_max, f_spin 
    real(DP), parameter                     :: Ltol = 10 * epsilon(1.0_DP)
    real(DP), parameter                     :: Etol = 1e-10_DP
-   integer(I4B), parameter                 :: MAXTRY = 2000
+   integer(I4B), parameter                 :: MAXTRY = 10000
    logical, dimension(size(IEEE_ALL))      :: fpe_halting_modes, fpe_quiet_modes
 
    if (nfrag < NFRAG_MIN) then
@@ -60,8 +60,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    fpe_quiet_modes(:) = .false.
    call ieee_set_halting_mode(IEEE_ALL,fpe_quiet_modes)
 
-   r_max_start = 1.0_DP
-   f_spin = 0.5_DP
+   f_spin = 0.05_DP
    mscale = 1.0_DP
    rscale = 1.0_DP
    vscale = 1.0_DP
@@ -87,6 +86,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    call define_coordinate_system()
    call calculate_system_energy(linclude_fragments=.false.)
   
+   r_max_start = norm2(x(:,2) - x(:,1))
    try = 1
    lmerge = .false.
    do while (try < MAXTRY)
@@ -103,10 +103,10 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
             !write(*,*) '-dEtot: ',-dEtot
             !write(*,*) 'delta : ',abs((dEtot + Qloss)) 
             if ((abs(dEtot + Qloss) > Etol) .or. (dEtot > 0.0_DP)) then
-            !   write(*,*) 'Failed due to high energy error: '
+              ! write(*,*) 'Failed due to high energy error: '
                lmerge = .true.
             else if (abs(dLmag) / Lmag_before > Ltol) then
-            !   write(*,*) 'Failed due to high angular momentum error: ', dLmag / Lmag_before
+              ! write(*,*) 'Failed due to high angular momentum error: ', dLmag / Lmag_before
                lmerge = .true.
             end if
          end if
@@ -157,11 +157,12 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       vcom(:) = (mass(1) * v(:,1) + mass(2) * v(:,2)) / mtot
 
       ! Set scale factors
+      !! Because of the implied G, mass is actually G*mass with units of distance**3 / time**2
       Escale = 0.5_DP * (mass(1) * dot_product(v(:,1), v(:,1)) + mass(2) * dot_product(v(:,2), v(:,2)))
-      mscale = mtot !! Because of the implied G, mass is actually G*mass with units of distance**3 / time**2
+      rscale = sum(radius(:))
+      mscale = sqrt(Escale * rscale) 
       vscale = sqrt(Escale / mscale) 
-      rscale = mscale**2 / Escale
-      tscale = rscale / vscale
+      tscale = rscale / vscale 
       Lscale = mscale * rscale * vscale
 
       xcom(:) = xcom(:) / rscale
@@ -421,7 +422,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       !! The initial positions do not conserve energy or momentum, so these need to be adjusted later.
 
       implicit none
-      real(DP)  :: r_max, dis, rad
+      real(DP)  :: dis, rad
       real(DP), dimension(NDIM) ::  L_sigma
       logical, dimension(:), allocatable :: loverlap
       integer(I4B) :: i, j
@@ -433,18 +434,19 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       r_max = r_max_start
       rad = sum(radius(:))
 
-      ! We will treat the first fragment of the list as a special case. It gets initialized the maximum distance along the original impactor distance vector.
-      ! This is done because in a regular disruption, the first body is the largest fragment.
-      x_frag(:, 1) = -y_col_unit(:) * r_max * rad
-      x_frag(:, 2) =  y_col_unit(:) * r_max * rad
+      ! We will treat the first two fragments of the list as special cases. They get initialized the maximum distances apart along the original impactor distance vector.
+      ! This is done because in a regular disruption, the first body is the largest, the second the second largest, and the rest are smaller equal-mass fragments.
 
       call random_number(x_frag(:,3:nfrag))
       loverlap(:) = .true.
       do while (any(loverlap(3:nfrag)))
+         x_frag(:, 1) = -y_col_unit(:) * r_max 
+         x_frag(:, 2) =  y_col_unit(:) * r_max 
+         r_max = r_max + 0.1_DP * rad
          do i = 3, nfrag
             if (loverlap(i)) then
                call random_number(x_frag(:,i))
-               x_frag(:, i) = 2 * (x_frag(:, i) - 0.5_DP) * r_max * rad
+               x_frag(:, i) = 2 * (x_frag(:, i) - 0.5_DP) * r_max 
             end if
          end do
          loverlap(:) = .false.
@@ -454,7 +456,6 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
                loverlap(i) = loverlap(i) .or. (dis <= (rad_frag(i) + rad_frag(j))) 
             end do
          end do
-         r_max = r_max + 0.2_DP
       end do
       call shift_vector_to_origin(m_frag, x_frag)
 
@@ -463,7 +464,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
          v_r_unit(:, i) = x_frag(:, i) / rmag(i)
          call random_number(L_sigma(:)) ! Randomize the tangential velocity direction. This helps to ensure that the tangential velocity doesn't completely line up with the angular momentum vector,
                                         ! otherwise we can get an ill-conditioned system
-         v_h_unit(:, i) = z_col_unit(:) + 2e-3_DP * (L_sigma(:) - 0.5_DP)
+         v_h_unit(:, i) = z_col_unit(:) + 2e-1_DP * (L_sigma(:) - 0.5_DP)
          v_h_unit(:, i) = v_h_unit(:, i) / norm2(v_h_unit(:, i)) 
          call util_crossproduct(v_h_unit(:, i), v_r_unit(:, i), v_t_unit(:, i))
          xb_frag(:,i) = x_frag(:,i) + xcom(:)
@@ -484,21 +485,17 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       !! If that doesn't work and we blow our kinetic energy budget, we will attempt to find a tangential velocity distribution that minimizes the kinetic energy while
       !! conserving momentum. 
       !!
-      !! If that doesn't work, we'll try changing the fraction of angular momentum that goes into spin (f_spin) once more and do another attempt.
-      !!
-      !! If after reducing f_spin down to our minimum allowable value, we will flag this as a failure, which will trigger a restructuring of the fragments so that
-      !! we will try new values of the radial position distribution.
+      !! A failure will trigger a restructuring of the fragments so we will try new values of the radial position distribution.
       implicit none
       ! Arguments
       logical, intent(out)  :: lerr
       ! Internals
       integer(I4B) :: i
-      real(DP)     :: L_orb_mag, rbar
       real(DP), parameter                  :: TOL = 1e-4_DP
       real(DP), dimension(:), allocatable  :: v_t_initial
       type(lambda_obj)                     :: spinfunc
       type(lambda_obj_err)                 :: objective_function
-      real(DP), dimension(NDIM) :: L_frag_spin, r_cross_L
+      real(DP), dimension(NDIM) :: L_frag_spin, L_remainder, Li, rot_ke, rot_L
 
       ! Initialize the fragments with 0 velocity and spin so we can divide up the balance between the tangential, radial, and spin components while conserving momentum
       lerr = .false.
@@ -509,6 +506,10 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
       call calculate_system_energy(linclude_fragments=.true.)
       ke_frag_budget = -dEtot - Qloss
+      !write(*,*) '***************************************************'
+      !write(*,*) 'Original dis   : ',norm2(x(:,2) - x(:,1))
+      !write(*,*) 'r_max          : ',r_max
+      !write(*,*) 'f_spin         : ',f_spin
       !write(*,*) '***************************************************'
       !write(*,*) 'Energy balance so far: '
       !write(*,*) 'ke_frag_budget : ',ke_frag_budget
@@ -535,20 +536,27 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
          rot_frag(:,i) = L_spin(:, i) / (m_frag(i) * rad_frag(i)**2 * Ip_frag(3, i))
       end do
       do i = 1, nfrag
-         rot_frag(:,i) = rot_frag(:, i) + sqrt(2 * f_spin * ke_frag_budget / (nfrag * m_frag(i) * rad_frag(i)**2 * Ip_frag(3, i))) * v_h_unit(:, i)
+         rot_ke(:) = sqrt(2 * f_spin * ke_frag_budget / (nfrag * m_frag(i) * rad_frag(i)**2 * Ip_frag(3, i))) * v_h_unit(:, i)
+         rot_L(:) = f_spin * L_frag_tot(:) / (nfrag * m_frag(i) * rad_frag(i)**2 * Ip_frag(3, i))
+         if (norm2(rot_ke) < norm2(rot_L)) then
+            rot_frag(:,i) = rot_frag(:, i) + rot_ke(:)
+         else
+            rot_frag(:, i) = rot_frag(:, i) + rot_L(:)
+         end if
          L_frag_spin(:) = L_frag_spin(:) + m_frag(i) * rad_frag(i)**2 * Ip_frag(3, i) * rot_frag(:, i)
          ke_frag_spin = ke_frag_spin + m_frag(i) * Ip_frag(3, i) * rad_frag(i)**2 * dot_product(rot_frag(:, i), rot_frag(:, i))
       end do
       ke_frag_spin = 0.5_DP * ke_frag_spin
       ! Convert a fraction of the pre-impact angular momentum into fragment spin angular momentum
       L_frag_orb(:) =  L_frag_tot(:) - L_frag_spin(:)
-      L_orb_mag = norm2(L_frag_orb(:))
+      L_remainder(:) = L_frag_orb(:)
       ! Divide up the pre-impact spin angular momentum equally amongst the fragments and calculate the spin kinetic energy
-      do i = 7, nfrag
-         call util_crossproduct(v_r_unit(:, i), z_col_unit, r_cross_L(:))
-         rbar = rmag(i) * norm2(r_cross_L(:))
-         v_t_initial(i) = L_orb_mag / (m_frag(i) * rbar * nfrag) 
+      do i = 1, nfrag
+         v_t_initial(i) = norm2(L_remainder(:)) / ((nfrag - i + 1) * m_frag(i) * norm2(x_frag(:,i)))
+         call util_crossproduct(m_frag(i) * x_frag(:,i), v_t_initial(i) * v_t_unit(:, i), Li(:))
+         L_remainder(:) = L_remainder(:) - Li(:)
       end do
+      v_t_mag(:) = v_t_initial(:)
       objective_function = lambda_obj(tangential_objective_function, lerr)
       v_t_mag(7:nfrag) = util_minimize_bfgs(objective_function, nfrag-6, v_t_initial(7:nfrag), TOL, lerr)
       v_t_initial(7:nfrag) = v_t_mag(7:nfrag)
@@ -622,7 +630,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
       real(DP), dimension(2 * NDIM, 2 * NDIM) :: A ! LHS of linear equation used to solve for momentum constraint in Gauss elimination code
       real(DP), dimension(2 * NDIM)           :: b  ! RHS of linear equation used to solve for momentum constraint in Gauss elimination code
-      real(DP), dimension(NDIM)               :: L_lin_others, L_orb_others, L, v
+      real(DP), dimension(NDIM)               :: L_lin_others, L_orb_others, L, vtmp
 
       v_frag(:,:) = 0.0_DP
       lerr = .false.
@@ -638,9 +646,9 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
             call util_crossproduct(v_r_unit(:, i), v_t_unit(:, i), L(:))
             A(4:6, i) = m_frag(i) * rmag(i) * L(:)
          else if (present(v_t_mag_input)) then
-            v(:) = v_t_mag_input(i - 6) * v_t_unit(:, i)
-            L_lin_others(:) = L_lin_others(:) + m_frag(i) * v(:)
-            call util_crossproduct(x_frag(:, i), v(:), L(:))
+            vtmp(:) = v_t_mag_input(i - 6) * v_t_unit(:, i)
+            L_lin_others(:) = L_lin_others(:) + m_frag(i) * vtmp(:)
+            call util_crossproduct(x_frag(:, i), vtmp(:), L(:))
             L_orb_others(:) = L_orb_others(:) + m_frag(i) * L(:)
          end if
       end do
@@ -785,8 +793,8 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       real(DP), dimension(:,:), allocatable  :: xb_frag_new, vb_frag_new, Ip_frag_new, rot_frag_new
       real(DP) :: mtransfer
 
-      r_max_start = r_max_start + 0.10_DP ! The larger lever arm can help if the problem is in the angular momentum step
-      if (f_spin > 1e-6_DP) then
+      r_max_start = r_max_start + 0.01_DP ! The larger lever arm can help if the problem is in the angular momentum step
+      if (f_spin > epsilon(1.0_DP)) then
          f_spin = f_spin / 2
       else
          f_spin = 0.0_DP
