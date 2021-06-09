@@ -44,7 +44,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    character(len=*), parameter             :: fmtlabel = "(A14,10(ES11.4,1X,:))"
    integer(I4B)                            :: try, ntry
    integer(I4B), parameter                 :: NFRAG_MIN = 7 !! The minimum allowable number of fragments (set to 6 because that's how many unknowns are needed in the tangential velocity calculation)
-   real(DP)                                :: r_max_start 
+   real(DP)                                :: r_max_start, f_spin 
    real(DP), parameter                     :: Ltol = 10 * epsilon(1.0_DP)
    real(DP), parameter                     :: Etol = 1e-10_DP
    integer(I4B), parameter                 :: MAXTRY = 2000
@@ -60,7 +60,8 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    fpe_quiet_modes(:) = .false.
    call ieee_set_halting_mode(IEEE_ALL,fpe_quiet_modes)
 
-   r_max_start = 2.0_DP
+   r_max_start = 1.0_DP
+   f_spin = 0.5_DP
    mscale = 1.0_DP
    rscale = 1.0_DP
    vscale = 1.0_DP
@@ -492,7 +493,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       logical, intent(out)  :: lerr
       ! Internals
       integer(I4B) :: i
-      real(DP)     :: L_orb_mag, f_spin, rbar
+      real(DP)     :: L_orb_mag, rbar
       real(DP), parameter                  :: TOL = 1e-4_DP
       real(DP), dimension(:), allocatable  :: v_t_initial
       type(lambda_obj)                     :: spinfunc
@@ -528,7 +529,6 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
       allocate(v_t_initial, mold=v_t_mag)
 
-      f_spin = 0.01_DP
       L_frag_spin(:) = 0.0_DP
       ke_frag_spin = 0.0_DP
       do i = 1, 2
@@ -785,7 +785,12 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       real(DP), dimension(:,:), allocatable  :: xb_frag_new, vb_frag_new, Ip_frag_new, rot_frag_new
       real(DP) :: mtransfer
 
-      r_max_start = r_max_start * 1.20_DP ! The larger lever arm can help if the problem is in the angular momentum step
+      r_max_start = r_max_start + 0.10_DP ! The larger lever arm can help if the problem is in the angular momentum step
+      if (f_spin > 1e-6_DP) then
+         f_spin = f_spin / 2
+      else
+         f_spin = 0.0_DP
+      end if
    end subroutine restructure_failed_fragments
 
 
