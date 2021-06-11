@@ -11,7 +11,7 @@ ymin = -20.0
 ymax = 20.0
 
 #cases = ['supercat_head', 'supercat_off', 'disruption_head', 'disruption_off']
-cases = ['disruption_off']
+cases = ['disruption_off', 'supercat_off']
 
 def scale_sim(ds, config):
 
@@ -302,6 +302,10 @@ for case in cases:
         animfile = 'movies/disruption_headon.mp4'
         titletext = "Disruption- Head on"
         configfile = 'param.disruption_headon.in'
+    elif case == 'merger':
+        animfile = 'movies/merger.mp4'
+        titletext = "Merger"
+        configfile = 'param.merger.in'
     else:
         print(f'{case} is an unknown case')
         exit(-1)
