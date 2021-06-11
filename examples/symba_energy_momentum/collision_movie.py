@@ -10,8 +10,8 @@ xmax = 20.0
 ymin = -20.0
 ymax = 20.0
 
-#cases = ['supercat_head', 'supercat_off', 'disruption_head', 'disruption_off']
-cases = ['disruption_off', 'supercat_off']
+cases = ['supercat_head', 'supercat_off', 'disruption_head', 'disruption_off']
+#cases = ['disruption_off', 'supercat_off']
 
 def scale_sim(ds, config):
 
