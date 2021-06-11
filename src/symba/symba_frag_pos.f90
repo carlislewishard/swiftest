@@ -806,15 +806,18 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       integer(I4B) :: i
       real(DP), dimension(:), allocatable  :: m_frag_new, rad_frag_new
       real(DP), dimension(:,:), allocatable  :: xb_frag_new, vb_frag_new, Ip_frag_new, rot_frag_new
-      real(DP) :: delta_r
+      real(DP) :: delta_r, delta_r_max
       real(DP), parameter :: ke_avg_deficit_target = 0.0_DP 
-      real(DP), parameter :: delta_r_max = 0.1_DP
 
-      delta_r = delta_r_max
+      ! Introduce a bit of noise in the radius determination so we don't just flip flop between similar failed positions
+      call random_number(delta_r_max)
+      delta_r_max = sum(radius(:)) * (1.0_DP + 2e-1_DP * (delta_r_max - 0.5_DP))
       if (try > 2) then
          ! Linearly interpolate the last two failed solution ke deficits to find a new distance value to try
          delta_r = (r_max_start - r_max_start_old) * (ke_avg_deficit_target - ke_avg_deficit_old) / (ke_avg_deficit - ke_avg_deficit_old)
          if (abs(delta_r) > delta_r_max) delta_r = sign(delta_r_max, delta_r)
+      else
+         delta_r = delta_r_max
       end if
       r_max_start_old = r_max_start
       r_max_start = r_max_start + delta_r ! The larger lever arm can help if the problem is in the angular momentum step
