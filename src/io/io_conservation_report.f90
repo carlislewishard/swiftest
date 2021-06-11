@@ -74,6 +74,7 @@ contains
                write(*,*) 'dke_spin : ',(ke_spin_now - ke_spin_last) / abs(Eorbit_orig)
                write(*,*) 'dpe      : ',(pe_now - pe_last) / abs(Eorbit_orig)
                write(*,*)
+               call util_exit(FAILURE)
             end if
          end if
          ke_orbit_last = ke_orbit_now
