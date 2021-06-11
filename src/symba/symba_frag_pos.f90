@@ -440,8 +440,8 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       call random_number(x_frag(:,3:nfrag))
       loverlap(:) = .true.
       do while (any(loverlap(3:nfrag)))
-         x_frag(:, 1) = -y_col_unit(:) * r_max 
-         x_frag(:, 2) =  y_col_unit(:) * r_max 
+         x_frag(:, 1) = x(:, 1) - xcom(:) 
+         x_frag(:, 2) = x(:, 2) - xcom(:) 
          r_max = r_max + 0.1_DP * rad
          do i = 3, nfrag
             if (loverlap(i)) then
@@ -536,8 +536,8 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
          rot_frag(:,i) = L_spin(:, i) / (m_frag(i) * rad_frag(i)**2 * Ip_frag(3, i))
       end do
       do i = 1, nfrag
-         rot_ke(:) = sqrt(2 * f_spin * ke_frag_budget / (nfrag * m_frag(i) * rad_frag(i)**2 * Ip_frag(3, i))) * v_h_unit(:, i)
-         rot_L(:) = f_spin * L_frag_tot(:) / (nfrag * m_frag(i) * rad_frag(i)**2 * Ip_frag(3, i))
+         rot_ke(:) = sqrt(2 * f_spin * ke_frag_budget / (nfrag * m_frag(i) * rad_frag(i)**2 * Ip_frag(3, i))) * L_frag_orb(:) / norm2(L_frag_orb(:))
+         rot_L(:) = f_spin * L_frag_orb(:) / (nfrag * m_frag(i) * rad_frag(i)**2 * Ip_frag(3, i))
          if (norm2(rot_ke) < norm2(rot_L)) then
             rot_frag(:,i) = rot_frag(:, i) + rot_ke(:)
          else
@@ -793,7 +793,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       real(DP), dimension(:,:), allocatable  :: xb_frag_new, vb_frag_new, Ip_frag_new, rot_frag_new
       real(DP) :: mtransfer
 
-      r_max_start = r_max_start + 0.01_DP ! The larger lever arm can help if the problem is in the angular momentum step
+      r_max_start = r_max_start + 0.1_DP ! The larger lever arm can help if the problem is in the angular momentum step
       if (f_spin > epsilon(1.0_DP)) then
          f_spin = f_spin / 2
       else
