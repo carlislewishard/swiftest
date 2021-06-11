@@ -161,6 +161,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       !! Scales dimenional quantities to ~O(1) with respect to the collisional system. This scaling makes it easier for the non-linear minimization 
       !! to converge on a solution
       implicit none
+      integer(I4B) :: i
 
       ! Find the center of mass of the collisional system	
       mtot = sum(mass(:)) 
@@ -185,6 +186,9 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       x = x / rscale
       v = v / vscale
       L_spin = L_spin / Lscale
+      do i = 1, 2
+         rot(:,i) = L_spin(:,i) / (mass(i) * radius(i)**2 * Ip(3, i))
+      end do
 
       m_frag = m_frag / mscale
       rad_frag = rad_frag / rscale
@@ -208,9 +212,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       x = x * rscale
       v = v * vscale
       L_spin = L_spin * Lscale
-      do i = 1, 2
-         rot(:,i) = L_spin(:,i) / (mass(i) * radius(i)**2 * Ip(3, i))
-      end do
+      rot = rot / tscale
 
       ! Avoid FP exceptions 
       x_frag(:,1:nfrag) = x_frag(:,1:nfrag) * rscale
