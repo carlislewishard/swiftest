@@ -47,7 +47,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    real(DP)                                :: r_max_start, r_max_start_old, r_max, f_spin 
    real(DP), parameter                     :: Ltol = 10 * epsilon(1.0_DP)
    real(DP), parameter                     :: Etol = 1e-10_DP
-   integer(I4B), parameter                 :: MAXTRY = 10000
+   integer(I4B), parameter                 :: MAXTRY = 1000
    integer(I4B), parameter                 :: TANTRY = 3
    logical, dimension(size(IEEE_ALL))      :: fpe_halting_modes, fpe_quiet_modes
 
