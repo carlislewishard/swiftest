@@ -169,14 +169,12 @@ class AnimatedScatter(object):
         py = pl[:, 1]
         sarrowend = []
         sarrowtip = []
-        idxactive = np.arange(id.size)[self.mask]
         for i in range(pl.shape[0]):
-            endrel = np.array([0.0,  len[i], 0.0])
-            tiprel = np.array([0.0, -len[i], 0.0])
+            endrel = np.array([len[i],  0.0, 0.0])
+            tiprel = np.array([-len[i], 0.0, 0.0])
             r = R.from_rotvec(self.rot_angle[id[i]])
-            if i in idxactive:
-                endrel = r.apply(endrel)
-                tiprel = r.apply(tiprel)
+            endrel = r.apply(endrel)
+            tiprel = r.apply(tiprel)
             send = (px[i] + endrel[0], py[i] + endrel[1])
             stip = (px[i] + tiprel[0], py[i] + tiprel[1])
             sarrowend.append(send)
@@ -268,6 +266,7 @@ class AnimatedScatter(object):
             roty = np.nan_to_num(roty, copy=False)
             rotz = np.nan_to_num(rotz, copy=False)
             rotvec = np.array([rotx, roty, rotz])
+            self.rotvec = dict(zip(id, zip(*rotvec)))
 
             if frame == 0:
                 tmp = np.zeros_like(rotvec)
@@ -275,13 +274,9 @@ class AnimatedScatter(object):
             else:
                 t0 = self.ds.coords['time'].values[frame-1]
                 dt = t - t0
-                for i in np.arange(npl):
-                    if id[i] in self.rot_angle:
-                        self.rot_angle[id[i]] = self.rot_angle[id[i]] + dt * rotvec[:,i]
-                        self.rot_angle[id[i]] = self.rot_angle[id[i]] % (2 * np.pi)
-                    else:
-                        self.rot_angle[id[i]] = np.zeros(3)
-
+                idxactive = np.arange(id.size)[self.mask]
+                for i in id[idxactive]:
+                    self.rot_angle[i] = self.rot_angle[i] + dt * np.array(self.rotvec[i])
             frame += 1
             yield t, name, mass, radius, npl, np.c_[x, y, vx, vy], radmarker, origin
 
