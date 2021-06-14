@@ -100,7 +100,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
          ke_avg_deficit = ke_avg_deficit - ke_radial
          subtry = subtry + 1
          if (.not.lfailure .or. subtry == TANTRY) exit
-         write(*,*) 'Trying new arrangement'
+         !write(*,*) 'Trying new arrangement'
       end do
       ke_avg_deficit = ke_avg_deficit / subtry
       if (lfailure) write(*,*) 'Failed to find tangential velocities'
@@ -110,11 +110,11 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
          if (lfailure) write(*,*) 'Failed to find radial velocities'
          if (.not.lfailure) then
             call calculate_system_energy(linclude_fragments=.true.)
-            write(*,*) 'Qloss : ',Qloss
-            write(*,*) '-dEtot: ',-dEtot
-            write(*,*) 'delta : ',abs((dEtot + Qloss)) 
+            !write(*,*) 'Qloss : ',Qloss
+            !write(*,*) '-dEtot: ',-dEtot
+            !write(*,*) 'delta : ',abs((dEtot + Qloss)) 
             if ((abs(dEtot + Qloss) > Etol) .or. (dEtot > 0.0_DP)) then
-               write(*,*) 'Failed due to high energy error: '
+               write(*,*) 'Failed due to high energy error: ',dEtot, abs(dEtot + Qloss) / Etol
                lfailure = .true.
             else if (abs(dLmag) / Lmag_before > Ltol) then
                write(*,*) 'Failed due to high angular momentum error: ', dLmag / Lmag_before
@@ -525,21 +525,21 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
       call calculate_system_energy(linclude_fragments=.true.)
       ke_frag_budget = -dEtot - Qloss
-      write(*,*) '***************************************************'
-      write(*,*) 'Original dis   : ',norm2(x(:,2) - x(:,1))
-      write(*,*) 'r_max          : ',r_max
-      write(*,*) 'f_spin         : ',f_spin
-      write(*,*) '***************************************************'
-      write(*,*) 'Energy balance so far: '
-      write(*,*) 'ke_frag_budget : ',ke_frag_budget
-      write(*,*) 'ke_orbit_before: ',ke_orbit_before 
-      write(*,*) 'ke_orbit_after : ',ke_orbit_after  
-      write(*,*) 'ke_spin_before : ',ke_spin_before 
-      write(*,*) 'ke_spin_after  : ',ke_spin_after  
-      write(*,*) 'pe_before      : ',pe_before 
-      write(*,*) 'pe_after       : ',pe_after  
-      write(*,*) 'Qloss          : ',Qloss
-      write(*,*) '***************************************************'
+      !write(*,*) '***************************************************'
+      !write(*,*) 'Original dis   : ',norm2(x(:,2) - x(:,1))
+      !write(*,*) 'r_max          : ',r_max
+      !write(*,*) 'f_spin         : ',f_spin
+      !write(*,*) '***************************************************'
+      !write(*,*) 'Energy balance so far: '
+      !write(*,*) 'ke_frag_budget : ',ke_frag_budget
+      !write(*,*) 'ke_orbit_before: ',ke_orbit_before 
+      !write(*,*) 'ke_orbit_after : ',ke_orbit_after  
+      !write(*,*) 'ke_spin_before : ',ke_spin_before 
+      !write(*,*) 'ke_spin_after  : ',ke_spin_after  
+      !write(*,*) 'pe_before      : ',pe_before 
+      !write(*,*) 'pe_after       : ',pe_after  
+      !write(*,*) 'Qloss          : ',Qloss
+      !write(*,*) '***************************************************'
       if (ke_frag_budget < 0.0_DP) then
          write(*,*) 'Negative ke_frag_budget: ',ke_frag_budget
          r_max_start = r_max_start / 2 
@@ -604,11 +604,11 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
       ! If we are over the energy budget, flag this as a failure so we can try again
       lerr = (ke_radial < 0.0_DP)
-      write(*,*) 'Tangential'
-      write(*,*) 'ke_frag_budget: ',ke_frag_budget
-      write(*,*) 'ke_frag_orbit : ',ke_frag_orbit
-      write(*,*) 'ke_frag_spin  : ',ke_frag_spin
-      write(*,*) 'ke_radial     : ',ke_radial
+      !write(*,*) 'Tangential'
+      !write(*,*) 'ke_frag_budget: ',ke_frag_budget
+      !write(*,*) 'ke_frag_orbit : ',ke_frag_orbit
+      !write(*,*) 'ke_frag_spin  : ',ke_frag_spin
+      !write(*,*) 'ke_radial     : ',ke_radial
 
       return
 
@@ -732,12 +732,12 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
          ke_frag_orbit = ke_frag_orbit + m_frag(i) * dot_product(vb_frag(:, i), vb_frag(:, i))
       end do
       ke_frag_orbit = 0.5_DP * ke_frag_orbit
-      write(*,*) 'Radial'
-      write(*,*) 'Failure? ',lerr 
-      write(*,*) 'ke_frag_budget: ',ke_frag_budget
-      write(*,*) 'ke_frag_orbit : ',ke_frag_orbit
-      write(*,*) 'ke_frag_spin  : ',ke_frag_spin
-      write(*,*) 'ke_remainder  : ',ke_frag_budget - (ke_frag_orbit + ke_frag_spin)
+      !write(*,*) 'Radial'
+      !write(*,*) 'Failure? ',lerr 
+      !write(*,*) 'ke_frag_budget: ',ke_frag_budget
+      !write(*,*) 'ke_frag_orbit : ',ke_frag_orbit
+      !write(*,*) 'ke_frag_spin  : ',ke_frag_spin
+      !write(*,*) 'ke_remainder  : ',ke_frag_budget - (ke_frag_orbit + ke_frag_spin)
       lerr = .false.
 
       return
