@@ -29,7 +29,7 @@ function symba_casesupercatastrophic (symba_plA, family, nmergeadd, mergeadd_lis
    real(DP), dimension(NDIM)               :: Ip_new
    real(DP), dimension(:, :), allocatable  :: vb_frag, xb_frag, rot_frag, Ip_frag
    real(DP), dimension(:), allocatable     :: m_frag, rad_frag
-   logical                                 :: lmerge
+   logical                                 :: lfailure
   
    ! Collisional fragments will be uniformly distributed around the pre-impact barycenter
    nfrag = 20 ! This value is set for testing. This needs to be updated such that it is calculated or set by the user
@@ -68,11 +68,12 @@ function symba_casesupercatastrophic (symba_plA, family, nmergeadd, mergeadd_lis
 
    ! Put the fragments on the circle surrounding the center of mass of the system
    call symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radius, &
-                       nfrag, Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, Qloss, lmerge)
+                       nfrag, Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, Qloss, lfailure)
 
-   if (lmerge) then
-      write(*,*) 'Should have been a merge instead.'
-      status = symba_casemerge(symba_plA, family, nmergeadd, mergeadd_list, x, v, mass, radius, L_spin, Ip, param)
+   if (lfailure) then
+      write(*,*) 'No fragment solution found, so treat as a pure hit-and-run'
+      status = ACTIVE 
+      nfrag = 0
    else
       write(*,'("Generating ",I2.0," fragments")') nfrag
       status = SUPERCATASTROPHIC

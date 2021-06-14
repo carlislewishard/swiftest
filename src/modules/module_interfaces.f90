@@ -923,7 +923,7 @@ MODULE module_interfaces
 
      INTERFACE
          subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radius, &
-                                    nfrag, Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, Qloss, lmerge)
+                                    nfrag, Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, Qloss, lfailure)
             use swiftest_globals
             USE swiftest_data_structures
             USE module_symba
@@ -938,7 +938,7 @@ MODULE module_interfaces
             real(DP), dimension(:,:), allocatable, intent(inout)   :: Ip_frag
             real(DP), dimension(:,:), allocatable, intent(inout)   :: xb_frag, vb_frag, rot_frag
             real(DP), intent(inout)                   :: Qloss
-            logical, intent(out)                      :: lmerge
+            logical, intent(out)                      :: lfailure
          end subroutine symba_frag_pos
       END INTERFACE
 

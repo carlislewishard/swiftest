@@ -1,5 +1,5 @@
 subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radius, &
-                          nfrag, Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, Qloss, lmerge)
+                          nfrag, Ip_frag, m_frag, rad_frag, xb_frag, vb_frag, rot_frag, Qloss, lfailure)
    !! Author: Jennifer L.L. Pouplin, Carlisle A. Wishard, and David A. Minton
    !!
    !! Places the collision fragments on a circle oriented with a plane defined
@@ -23,7 +23,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    real(DP), dimension(:), allocatable,   intent(inout) :: m_frag, rad_frag
    real(DP), dimension(:,:), allocatable, intent(inout) :: Ip_frag
    real(DP), dimension(:,:), allocatable, intent(inout) :: xb_frag, vb_frag, rot_frag
-   logical, intent(out)                    :: lmerge ! Answers the question: Should this have been a merger instead?
+   logical, intent(out)                    :: lfailure ! Answers the question: Should this have been a merger instead?
    real(DP), intent(inout)                 :: Qloss
    ! Internals
    real(DP)                                :: mscale, rscale, vscale, tscale, Lscale, Escale ! Scale factors that reduce quantities to O(~1) in the collisional system
@@ -53,7 +53,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
    if (nfrag < NFRAG_MIN) then
       write(*,*) "symba_frag_pos needs at least ",NFRAG_MIN," fragments, but only ",nfrag," were given."
-      lmerge = .true.
+      lfailure = .true.
       return
    end if
 
@@ -87,50 +87,50 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
   
    r_max_start = norm2(x(:,2) - x(:,1))
    try = 1
-   lmerge = .false.
+   lfailure = .false.
    ke_avg_deficit = 0.0_DP
    do while (try < MAXTRY)
-      lmerge = .false.
+      lfailure = .false.
       ke_avg_deficit_old = ke_avg_deficit
       ke_avg_deficit = 0.0_DP
       subtry = 1
       do 
          call set_fragment_position_vectors()
-         call set_fragment_tangential_velocities(lmerge)
+         call set_fragment_tangential_velocities(lfailure)
          ke_avg_deficit = ke_avg_deficit - ke_radial
          subtry = subtry + 1
-         if (.not.lmerge .or. subtry == TANTRY) exit
+         if (.not.lfailure .or. subtry == TANTRY) exit
          write(*,*) 'Trying new arrangement'
       end do
       ke_avg_deficit = ke_avg_deficit / subtry
-      if (lmerge) write(*,*) 'Failed to find tangential velocities'
+      if (lfailure) write(*,*) 'Failed to find tangential velocities'
 
-      if (.not.lmerge) then
-         call set_fragment_radial_velocities(lmerge)
-         if (lmerge) write(*,*) 'Failed to find radial velocities'
-         if (.not.lmerge) then
+      if (.not.lfailure) then
+         call set_fragment_radial_velocities(lfailure)
+         if (lfailure) write(*,*) 'Failed to find radial velocities'
+         if (.not.lfailure) then
             call calculate_system_energy(linclude_fragments=.true.)
             write(*,*) 'Qloss : ',Qloss
             write(*,*) '-dEtot: ',-dEtot
             write(*,*) 'delta : ',abs((dEtot + Qloss)) 
             if ((abs(dEtot + Qloss) > Etol) .or. (dEtot > 0.0_DP)) then
                write(*,*) 'Failed due to high energy error: '
-               lmerge = .true.
+               lfailure = .true.
             else if (abs(dLmag) / Lmag_before > Ltol) then
                write(*,*) 'Failed due to high angular momentum error: ', dLmag / Lmag_before
-               lmerge = .true.
+               lfailure = .true.
             end if
          end if
       end if
  
-      if (.not.lmerge) exit
+      if (.not.lfailure) exit
       call restructure_failed_fragments()
       try = try + 1
    end do
    write(*,        "(' -------------------------------------------------------------------------------------')")
    write(*,        "('  Final diagnostic')")
    write(*,        "(' -------------------------------------------------------------------------------------')")
-   if (lmerge) then
+   if (lfailure) then
       write(*,*) "symba_frag_pos failed after: ",try," tries"
       do ii = 1, nfrag
          vb_frag(:, ii) = vcom(:)
@@ -206,29 +206,32 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       integer(I4B) :: i
 
       call ieee_set_halting_mode(IEEE_ALL,.false.)
-      mtot = mscale
+      ! Restore scale factors
+      xcom(:) = xcom(:) * rscale
+      vcom(:) = vcom(:) * vscale
+
+      mtot = mtot * mscale
       mass = mass * mscale
       radius = radius * rscale
       x = x * rscale
       v = v * vscale
       L_spin = L_spin * Lscale
-      rot = rot / tscale
+      do i = 1, 2
+         rot(:,i) = L_spin(:,i) * (mass(i) * radius(i)**2 * Ip(3, i))
+      end do
 
-      ! Avoid FP exceptions 
-      x_frag(:,1:nfrag) = x_frag(:,1:nfrag) * rscale
-      v_frag(:,1:nfrag) = v_frag(:,1:nfrag) * vscale
-      m_frag(1:nfrag) = m_frag(1:nfrag) * mscale
-      rot_frag(:,1:nfrag) = rot_frag(:,1:nfrag) / tscale
-      rad_frag(1:nfrag) = rad_frag(1:nfrag) * rscale
-      ! Convert the final result to the system units
-      xcom(:) = xcom(:) * rscale
-      vcom(:) = vcom(:) * vscale
+      m_frag = m_frag * mscale
+      rad_frag = rad_frag * rscale
+      rot_frag = rot_frag / tscale
+      x_frag = x_frag * rscale
+      v_frag = v_frag * vscale
+      Qloss = Qloss * Escale
+
       do i = 1, nfrag
          xb_frag(:, i) = x_frag(:, i) + xcom(:)
          vb_frag(:, i) = v_frag(:, i) + vcom(:)
       end do
 
-      Qloss = Qloss * Escale
       Etot_before = Etot_before * Escale
       pe_before = pe_before * Escale
       ke_spin_before = ke_spin_before * Escale
@@ -241,7 +244,6 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ke_orbit_after = ke_orbit_after * Escale
       Ltot_after = Ltot_after * Lscale
       Lmag_after = Lmag_after * Lscale 
-
 
       mscale = 1.0_DP
       rscale = 1.0_DP
