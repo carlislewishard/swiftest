@@ -170,8 +170,8 @@ class AnimatedScatter(object):
         sarrowend = []
         sarrowtip = []
         for i in range(pl.shape[0]):
-            endrel = np.array([len[i],  0.0, 0.0])
-            tiprel = np.array([-len[i], 0.0, 0.0])
+            endrel = np.array([0.0, len[i],  0.0])
+            tiprel = np.array([0.0, -len[i], 0.0])
             r = R.from_rotvec(self.rot_angle[id[i]])
             endrel = r.apply(endrel)
             tiprel = r.apply(tiprel)
