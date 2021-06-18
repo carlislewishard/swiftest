@@ -554,7 +554,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
       ! Start the first two bodies with the same rotation as the original two impactors, then distribute the remaining angular momentum among the rest
       do i = 1, 2
          rot_frag(:, i) = rot(:, i)
-         L_frag_spin(:) = L_frag_spin(:) + m_frag(i) * rad_frag(i)**2 * Ip_frag(3, i) * dot_product(rot_frag(:, i), rot_frag(:, i))
+         L_frag_spin(:) = L_frag_spin(:) + m_frag(i) * rad_frag(i)**2 * Ip_frag(3, i) * rot_frag(:, i)
       end do
       L_frag_orb(:) =  L_frag_tot(:) - L_frag_spin(:)
       L_frag_spin(:) = 0.0_DP
