@@ -116,7 +116,7 @@ program swiftest_symba
       end if
 
       ! reorder by mass 
-      call symba_reorder_pl(npl, symba_plA)
+      if (out_stat /= "APPEND") call symba_reorder_pl(npl, symba_plA)
       call util_valid(npl, ntp, symba_plA%helio%swiftest, symba_tpA%helio%swiftest)
       call util_hills(npl, symba_plA%helio%swiftest)
       ntp0 = ntp
