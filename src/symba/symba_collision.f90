@@ -333,7 +333,7 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
          vmag = 2 * sqrt((0.5_DP * vmag0**2 * mrat + mass(1) * mass(2) * (1.0_DP / rmag - 1.0_DP / rmag0)) / mrat)
 
          ! Use conservation of angular momentum to get the new impact parameter
-         call util_cross_product(x(:), v(:), h0(:))
+         call util_crossproduct(x(:), v(:), h0(:))
          B = norm2(h0) / (rmag * vmag)
 
 
