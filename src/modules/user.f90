@@ -49,6 +49,14 @@ module user
       logical :: ltides     = .false.              !! Include tidal dissipation 
       logical :: lringmoons = .false.              !! Turn on the ringmoons code 
       logical :: lenergy = .false.                 !! Track the total energy of the system
+      logical :: lfirstenergy = .true.
+      real(DP)                 :: Eorbit_orig = 0.0_DP
+      real(DP)                 :: Mtot_orig = 0.0_DP
+      real(DP)                 :: Lmag_orig = 0.0_DP
+      real(DP), dimension(NDIM) :: Ltot_orig = 0.0_DP
+      real(DP), dimension(NDIM) :: Lorbit_orig = 0.0_DP
+      real(DP), dimension(NDIM) :: Lspin_orig = 0.0_DP
+      logical :: lfirstkick = .true.               !! Initiate the first kick in a symplectic step
 
       ! Future features not implemented or in development
       logical :: lgr = .false.               !! Turn on GR

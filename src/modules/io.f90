@@ -37,7 +37,7 @@ module io
          type(symba_pl),              intent(inout) :: symba_plA    !! Swiftest planet data structure
          integer(I4B),                intent(in)    :: npl          !! Number of massive bodies
          real(DP),                    intent(in)    :: j2rp2, j4rp4 !! Central body oblateness terms
-         type(user_input_parameters), intent(in)    :: param        !! Input colleciton of user-defined parameters
+         type(user_input_parameters), intent(inout)    :: param        !! Input colleciton of user-defined parameters
          logical,                     intent(in)    :: lterminal    !! Indicates whether to output information to the terminal screen
       end subroutine io_conservation_report
 

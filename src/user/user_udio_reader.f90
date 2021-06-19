@@ -179,6 +179,37 @@ contains
                   param%seed(nseeds_from_file+1:nseeds) = [(param%seed(1) - param%seed(nseeds_from_file) + i, i=nseeds_from_file+1, nseeds)]
                end if
                seed_set = .true.
+            case ("FIRSTKICK")
+               call util_toupper(param_value)
+               if (param_value == "NO" .or. param_value == 'F') param%lfirstkick = .false. 
+            case ("FIRSTENERGY")
+               call util_toupper(param_value)
+               if (param_value == "NO" .or. param_value == 'F') param%lfirstenergy = .false. 
+            case("EORBIT_ORIG")
+               read(param_value, *) param%Eorbit_orig 
+            case("MTOT_ORIG")
+               read(param_value, *) param%Mtot_orig 
+            case("LTOT_ORIG")
+               read(param_value, *) param%Ltot_orig(1)
+               do i = 2, NDIM
+                  ifirst = ilast + 1
+                  param_value = user_get_token(line, ifirst, ilast, iostat) 
+                  read(param_value, *) param%Ltot_orig(i)
+               end do
+            case("LORBIT_ORIG")
+               read(param_value, *) param%Lorbit_orig(1)
+               do i = 2, NDIM
+                  ifirst = ilast + 1
+                  param_value = user_get_token(line, ifirst, ilast, iostat) 
+                  read(param_value, *) param%Lorbit_orig(i)
+               end do
+            case("LSPIN_ORIG")
+               read(param_value, *) param%Lspin_orig(1)
+               do i = 2, NDIM
+                  ifirst = ilast + 1
+                  param_value = user_get_token(line, ifirst, ilast, iostat) 
+                  read(param_value, *) param%Lspin_orig(i)
+               end do
             case default
                write(iomsg,*) "Unknown parameter -> ",param_name
                iostat = -1

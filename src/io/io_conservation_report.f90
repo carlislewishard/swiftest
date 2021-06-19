@@ -12,19 +12,16 @@ contains
       type(symba_pl),              intent(inout) :: symba_plA    !! Swiftest planet data structure
       integer(I4B),                intent(in)    :: npl          !! Number of massive bodies
       real(DP),                    intent(in)    :: j2rp2, j4rp4 !! Central body oblateness terms
-      type(user_input_parameters), intent(in)    :: param        !! Input colleciton of user-defined parameters
+      type(user_input_parameters), intent(inout)    :: param        !! Input colleciton of user-defined parameters
       logical,                     intent(in)    :: lterminal    !! Indicates whether to output information to the terminal screen
       ! Internals
       real(DP), dimension(NDIM)       :: Ltot_now,  Lorbit_now,  Lspin_now
-      real(DP), dimension(NDIM), save :: Ltot_orig, Lorbit_orig, Lspin_orig
       real(DP), dimension(NDIM), save :: Ltot_last, Lorbit_last, Lspin_last
-      real(DP), save                  :: Eorbit_orig, Mtot_orig, Lmag_orig
       real(DP), save                  :: ke_orbit_last, ke_spin_last, pe_last, Eorbit_last
       real(DP)                        :: ke_orbit_now,  ke_spin_now,  pe_now,  Eorbit_now
       real(DP)                        :: Eorbit_error, Etotal_error, Ecoll_error
       real(DP)                        :: Mtot_now, Merror
       real(DP)                        :: Lmag_now, Lerror
-      logical, save                   :: lfirst = .true.
       character(len=*), parameter     :: egyfmt = '(ES23.16,10(",",ES23.16,:))' ! Format code for all simulation output
       character(len=*), parameter     :: egyheader = '("t,Eorbit,Ecollisions,Lx,Ly,Lz,Mtot")'
       integer(I4B), parameter         :: egyiu = 72
@@ -35,7 +32,9 @@ contains
 
       associate(Ecollisions => symba_plA%helio%swiftest%Ecollisions, Lescape => symba_plA%helio%swiftest%Lescape, Mescape => symba_plA%helio%swiftest%Mescape, &
                 Euntracked => symba_plA%helio%swiftest%Euntracked, mass => symba_plA%helio%swiftest%mass, dMcb => symba_plA%helio%swiftest%dMcb, &
-                 Mcb_initial => symba_plA%helio%swiftest%Mcb_initial)
+                 Mcb_initial => symba_plA%helio%swiftest%Mcb_initial, Eorbit_orig => param%Eorbit_orig, Mtot_orig => param%Mtot_orig , &
+                 Ltot_orig => param%Ltot_orig(:), Lmag_orig => param%Lmag_orig, Lorbit_orig => param%Lorbit_orig(:), Lspin_orig => param%Lspin_orig(:), &
+                 lfirst => param%lfirstenergy)
          if (lfirst) then
             if (param%out_stat == "OLD") then
                open(unit = egyiu, file = energy_file, form = "formatted", status = "old", action = "write", position = "append")

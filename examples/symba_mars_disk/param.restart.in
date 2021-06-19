@@ -1,0 +1,37 @@
+TSTOP                     2.40000000000000000E+03  
+T0                        1.20000000000000000E+03  
+DT                        6.00000000000000000E+02  
+PL_IN                     dump_pl2.bin             
+TP_in                     dump_tp2.bin             
+IN_TYPE                   REAL8                    
+ISTEP_OUT                 1                        
+BIN_OUT                   bin.dat                  
+PARTICLE_FILE             particle.dat             
+OUT_TYPE                  REAL8                    
+OUT_FORM                  EL                       
+OUT_STAT                  APPEND                   
+ENC_OUT                   /dev/null                
+ISTEP_DUMP                1                        
+CHK_RMIN                  3.38950000000000000E+06  
+CHK_RMAX                  3.38950000000000000E+09  
+CHK_EJECT                 3.38950000000000000E+09  
+CHK_QMIN                  3.38950000000000000E+06  
+CHK_QMIN_COORD            HELIO                    
+CHK_QMIN_RANGE            3.38950000000000000E+06   3.38950000000000000E+11  
+MTINY                     1.00000000000000000E+03  
+MU2KG                     1.00000000000000000E+00  
+TU2S                      1.00000000000000000E+00  
+DU2M                      1.00000000000000000E+00  
+SEED                      2                         3080983                   2220830                  
+EXTRA_FORCE               F                        
+BIG_DISCARD               F                        
+RHILL_PRESENT             T                        
+CHK_CLOSE                 T                        
+FRAGMENTATION             T                        
+ENERGY                    T                        
+ROTATION                  T                        
+TIDES                     F                        
+GR                        F                        
+YARKOVSKY                 F                        
+YORP                      F                        
+RINGMOONS                 F                        

@@ -87,73 +87,74 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      INTEGER(I4B)              :: irec, nplm, ipl, ipl1, ipl2
      INTEGER(I8B)              :: i, k, counter
      INTEGER(I8B), DIMENSION(:), ALLOCATABLE :: pltp_encounters_indices
-     LOGICAL, SAVE             :: lfirst = .true.
      
      LOGICAL(LGT), ALLOCATABLE, DIMENSION(:) :: pltp_lencounters
      LOGICAL(lgt), ALLOCATABLE, DIMENSION(:) :: plpl_lvdotr, pltp_lvdotr
      
 ! Executable code
-     call symba_step_reset(npl, symba_plA, symba_tpA, plplenc_list, pltpenc_list, mergeadd_list, mergesub_list)
-     nplplenc = 0
-     npltpenc = 0
-     irec = 0
-     nplm = count(symba_plA%helio%swiftest%mass(1:npl) > param%mtiny)
+     associate(lfirst => param%lfirstkick) 
+      call symba_step_reset(npl, symba_plA, symba_tpA, plplenc_list, pltpenc_list, mergeadd_list, mergesub_list)
+      nplplenc = 0
+      npltpenc = 0
+      irec = 0
+      nplm = count(symba_plA%helio%swiftest%mass(1:npl) > param%mtiny)
 
-     CALL symba_chk_eucl(npl, irec, symba_plA, dt, plplenc_list, nplplenc)
-     
-     if(ntp>0)then
-         allocate(pltp_lencounters(symba_tpA%helio%swiftest%num_pltp_comparisons))
-         allocate(pltp_lvdotr(symba_tpA%helio%swiftest%num_pltp_comparisons))
-         pltp_lencounters = .false.
-         pltp_lvdotr = .false.
+      CALL symba_chk_eucl(npl, irec, symba_plA, dt, plplenc_list, nplplenc)
+      
+      if(ntp>0)then
+            allocate(pltp_lencounters(symba_tpA%helio%swiftest%num_pltp_comparisons))
+            allocate(pltp_lvdotr(symba_tpA%helio%swiftest%num_pltp_comparisons))
+            pltp_lencounters = .false.
+            pltp_lvdotr = .false.
 
-          CALL symba_chk_eucl_pltp(symba_plA, symba_tpA, dt, pltp_lencounters, pltp_lvdotr, npltpenc)
-     
-          ! npltpenc = count(pltp_encounters > 0)
-          ! print *,'step npltpenc: ',npltpenc
-          if(npltpenc>0)then
+            CALL symba_chk_eucl_pltp(symba_plA, symba_tpA, dt, pltp_lencounters, pltp_lvdotr, npltpenc)
+      
+            ! npltpenc = count(pltp_encounters > 0)
+            ! print *,'step npltpenc: ',npltpenc
+            if(npltpenc>0)then
 
-               allocate(pltp_encounters_indices(npltpenc))
+                  allocate(pltp_encounters_indices(npltpenc))
 
-               counter = 1
-               do k = 1,symba_tpA%helio%swiftest%num_pltp_comparisons
-                    if(pltp_lencounters(k))then
-                         pltp_encounters_indices(counter) = k
-                         counter = counter + 1
-                    endif
-               enddo
+                  counter = 1
+                  do k = 1,symba_tpA%helio%swiftest%num_pltp_comparisons
+                     if(pltp_lencounters(k))then
+                           pltp_encounters_indices(counter) = k
+                           counter = counter + 1
+                     endif
+                  enddo
 
-               symba_plA%ntpenc(symba_tpA%helio%swiftest%k_pltp(1,pltp_encounters_indices(:))) = symba_plA%ntpenc(symba_tpA%helio%swiftest%k_pltp(1,pltp_encounters_indices(:))) + 1
-               symba_tpA%nplenc(symba_tpA%helio%swiftest%k_pltp(2,pltp_encounters_indices(:))) = symba_tpA%nplenc(symba_tpA%helio%swiftest%k_pltp(2,pltp_encounters_indices(:))) + 1
+                  symba_plA%ntpenc(symba_tpA%helio%swiftest%k_pltp(1,pltp_encounters_indices(:))) = symba_plA%ntpenc(symba_tpA%helio%swiftest%k_pltp(1,pltp_encounters_indices(:))) + 1
+                  symba_tpA%nplenc(symba_tpA%helio%swiftest%k_pltp(2,pltp_encounters_indices(:))) = symba_tpA%nplenc(symba_tpA%helio%swiftest%k_pltp(2,pltp_encounters_indices(:))) + 1
 
-               pltpenc_list%status(1:npltpenc) = ACTIVE
-               pltpenc_list%lvdotr(1:npltpenc) = pltp_lvdotr(pltp_encounters_indices(:))
-               pltpenc_list%level(1:npltpenc) = 0
-               pltpenc_list%indexpl(1:npltpenc) = symba_tpA%helio%swiftest%k_pltp(1,pltp_encounters_indices(:))
-               pltpenc_list%indextp(1:npltpenc) = symba_tpA%helio%swiftest%k_pltp(1,pltp_encounters_indices(:))
+                  pltpenc_list%status(1:npltpenc) = ACTIVE
+                  pltpenc_list%lvdotr(1:npltpenc) = pltp_lvdotr(pltp_encounters_indices(:))
+                  pltpenc_list%level(1:npltpenc) = 0
+                  pltpenc_list%indexpl(1:npltpenc) = symba_tpA%helio%swiftest%k_pltp(1,pltp_encounters_indices(:))
+                  pltpenc_list%indextp(1:npltpenc) = symba_tpA%helio%swiftest%k_pltp(1,pltp_encounters_indices(:))
 
-               deallocate(pltp_encounters_indices)
-          endif
+                  deallocate(pltp_encounters_indices)
+            endif
 
-          deallocate(pltp_lencounters, pltp_lvdotr)
-     endif
-     
-! END OF THINGS THAT NEED TO BE CHANGED IN THE TREE
+            deallocate(pltp_lencounters, pltp_lvdotr)
+      endif
+      
+   ! END OF THINGS THAT NEED TO BE CHANGED IN THE TREE
 
-     ! flag to see if there was an encounter
-     lencounter = ((nplplenc > 0) .OR. (npltpenc > 0))
+      ! flag to see if there was an encounter
+      lencounter = ((nplplenc > 0) .OR. (npltpenc > 0))
 
-     IF (lencounter) THEN ! if there was an encounter, we need to enter symba_step_interp to see if we need recursion
-          CALL symba_step_interp_eucl(t, npl, nplm, ntp, symba_plA, symba_tpA, dt, nplplenc, npltpenc, &
-                  plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, param)
-          lfirst = .TRUE.
-     ELSE ! otherwise we can just advance the particles
-         CALL symba_step_helio(lfirst, param%lextra_force, t, npl, nplm, ntp,&
-                                 symba_plA%helio, symba_tpA%helio, &
-                                 param%j2rp2, param%j4rp4, dt)
-     END IF
+      IF (lencounter) THEN ! if there was an encounter, we need to enter symba_step_interp to see if we need recursion
+            CALL symba_step_interp_eucl(t, npl, nplm, ntp, symba_plA, symba_tpA, dt, nplplenc, npltpenc, &
+                     plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list, param)
+            lfirst = .TRUE.
+      ELSE ! otherwise we can just advance the particles
+            CALL symba_step_helio(lfirst, param%lextra_force, t, npl, nplm, ntp,&
+                                    symba_plA%helio, symba_tpA%helio, &
+                                    param%j2rp2, param%j4rp4, dt)
+      END IF
 
-     RETURN
+      RETURN
+   end associate
 
 END SUBROUTINE symba_step_eucl
 !**********************************************************************************************************************************

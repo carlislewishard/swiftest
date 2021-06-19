@@ -21,9 +21,10 @@ contains
       ! Internals
       character(*),parameter :: Ifmt  = '(I0)'         !! Format label for integer values
       character(*),parameter :: Rfmt  = '(ES25.17)'    !! Format label for real values 
+      character(*),parameter :: Rarrfmt  = '(3(ES25.17,1X))'    !! Format label for real values 
       character(*),parameter :: Lfmt  = '(L1)'         !! Format label for logical values 
       character(len=*), parameter :: Afmt = '(A25,1X,64(:,A25,1X))'
-      character(25)          :: param_name, param_value
+      character(256)          :: param_name, param_value
       type character_array
          character(25) :: value
       end type character_array
@@ -106,6 +107,15 @@ contains
       if (param%lringmoons) then
          write(param_name, Afmt) "RING_OUTFILE"; write(param_value, Afmt) trim(adjustl(param%ring_outfile)); write(unit, Afmt) adjustl(param_name), adjustl(param_value)
       end if
+      if (param%lenergy) then
+         write(param_name, Afmt) "FIRSTENERGY"; write(param_value, Lfmt) param%lfirstenergy; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+         write(param_name, Afmt) "EORBIT_ORIG"; write(param_value, Rfmt) param%Eorbit_orig; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+         write(param_name, Afmt) "MTOT_ORIG"; write(param_value, Rfmt) param%Mtot_orig; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+         write(unit, '("LTOT_ORIG  ",3(1X,ES25.17))') param%Ltot_orig(:)
+         write(unit, '("LORBIT_ORIG",3(1X,ES25.17))') param%Lorbit_orig(:)
+         write(unit, '("LSPIN_ORIG ",3(1X,ES25.17))') param%Lspin_orig(:)
+      end if
+      write(param_name, Afmt) "FIRSTKICK"; write(param_value, Lfmt) param%lfirstkick; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
 
       iostat = 0
 
