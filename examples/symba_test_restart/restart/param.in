@@ -1,0 +1,42 @@
+TSTOP                     10.00000000000000000E+08  
+T0                        1.00000000000000000E+01  
+DT                        1.60000000000000003E-02  
+PL_IN                     dump_pl1.bin             
+TP_in                     dump_tp1.bin             
+IN_TYPE                   REAL8                    
+ISTEP_OUT                 625                      
+BIN_OUT                   bin.dat                  
+PARTICLE_FILE             particle.dat             
+OUT_TYPE                  REAL8                    
+OUT_FORM                  EL                       
+OUT_STAT                  APPEND                   
+ENC_OUT                   enc.dat                  
+ISTEP_DUMP                625                      
+CHK_RMIN                  4.65047000000000030E-03  
+CHK_RMAX                  1.00000000000000000E+05  
+CHK_EJECT                 -1.00000000000000000E+00 
+CHK_QMIN                  -1.00000000000000000E+00 
+MTINY                     1.00000000000000004E-10  
+MU2KG                     1.98846999999999998E+30  
+TU2S                      3.15569259747000001E+07  
+DU2M                      1.49597900000000000E+11  
+SEED                      2                         2147483562                2147483398               
+EXTRA_FORCE               F                        
+BIG_DISCARD               F                        
+RHILL_PRESENT             T                        
+CHK_CLOSE                 T                        
+FRAGMENTATION             T                        
+ENERGY                    T                        
+ROTATION                  T                        
+TIDES                     F                        
+GR                        F                        
+YARKOVSKY                 F                        
+YORP                      F                        
+RINGMOONS                 F                        
+FIRSTENERGY               F                        
+EORBIT_ORIG               -2.21433519317093902E-01 
+MTOT_ORIG                 3.95337503039740028E+01  
+LTOT_ORIG     2.51604078104141309E-02   6.62971151477491534E-03   9.49872593451047909E-01
+LORBIT_ORIG   2.51604078104141309E-02   6.62971151477491534E-03   9.49872593451047909E-01
+LSPIN_ORIG    0.00000000000000000E+00   0.00000000000000000E+00   0.00000000000000000E+00
+FIRSTKICK                 T                        
