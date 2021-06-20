@@ -196,6 +196,7 @@ contains
                   param_value = user_get_token(line, ifirst, ilast, iostat) 
                   read(param_value, *) param%Ltot_orig(i)
                end do
+                  param%Lmag_orig = norm2(param%Ltot_orig(:))
             case("LORBIT_ORIG")
                read(param_value, *) param%Lorbit_orig(1)
                do i = 2, NDIM
