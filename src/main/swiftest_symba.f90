@@ -85,13 +85,6 @@ program swiftest_symba
       call param%read_from_file(inparfile)
       param%lmtiny = .true. ! Turn this on for SyMBA
       
-      !^^^^^^^^^^^^^^^^^^^^^^^^^
-      if (.not. param%lrhill_present) then
-         write(*, *) "Swiftest error:"
-         write(*, *) "   Integrator SyMBA requires massive body Hill sphere radii on input"
-         call util_exit(failure)
-      end if
-
       ! reads in initial conditions of all massive bodies from input file
       call symba_read_pl_in(symba_plA, param) 
       call symba_tpA%helio%swiftest%read_from_file(param)
