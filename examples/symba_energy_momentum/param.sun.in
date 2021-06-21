@@ -1,7 +1,7 @@
 !Parameter file for the SyMBA-RINGMOONS test
 T0             0.0 
-TSTOP          1000.0
-DT             50.0
+TSTOP          1.0
+DT             1e-3
 PL_IN          sun.in
 TP_IN          tp.in
 IN_TYPE        ASCII
@@ -10,25 +10,26 @@ ISTEP_DUMP     1
 BIN_OUT        bin.sun.dat
 PARTICLE_FILE  particle.sun.dat
 OUT_TYPE       REAL8
-OUT_FORM       EL
+OUT_FORM       XV                ! osculating element output
 OUT_STAT       REPLACE
-J2             0.0
-J4             0.0
-CHK_CLOSE      yes
-CHK_RMIN       3389500.0
-CHK_RMAX       3389500000.0
-CHK_EJECT      3389500000.0
-CHK_QMIN       3389500.0
-CHK_QMIN_COORD HELIO
-CHK_QMIN_RANGE 3389500.0 338950000000.0
-ENC_OUT        /dev/null
-EXTRA_FORCE    no
-BIG_DISCARD    no
-RHILL_PRESENT  yes
-MTINY          1000.0
-ENERGY         yes
+ISTEP_DUMP     1                 ! system dump cadence
+J2             0.0               ! no J2 term
+J4             0.0               ! no J4 term
+CHK_CLOSE      yes               ! check for planetary close encounters
+CHK_RMIN       0.005
+CHK_RMAX       1e2
+CHK_EJECT      -1.0              ! ignore this check
+CHK_QMIN       -1.0              ! ignore this check
+!CHK_QMIN_COORD HELIO            ! commented out here
+!CHK_QMIN_RANGE 1.0 1000.0       ! commented out here
+ENC_OUT        enc.escape.dat
+EXTRA_FORCE    no                ! no extra user-defined forces
+BIG_DISCARD    no                ! output all planets if anything discarded
+RHILL_PRESENT  no                ! Hill's sphere radii in input file
+MTINY          1.0e-16
 FRAGMENTATION  yes
+MU2KG          1.98908e30
+TU2S           3.1556925e7
+DU2M           1.49598e11
+ENERGY         yes
 ROTATION       yes
-MU2KG          1.0
-DU2M           1.0
-TU2S           1.0
