@@ -93,7 +93,7 @@ program swiftest_symba
       end if
 
       ! reads in initial conditions of all massive bodies from input file
-      call symba_plA%helio%swiftest%read_from_file(param)
+      call symba_read_pl_in(symba_plA, param) 
       call symba_tpA%helio%swiftest%read_from_file(param)
 
       !Temporary until the argument lists get fixed
@@ -106,7 +106,7 @@ program swiftest_symba
          call symba_tp_allocate(symba_tpA,ntpfile)
          call symba_plA%helio%swiftest%dealloc()
          call symba_tpA%helio%swiftest%dealloc()
-         call symba_plA%helio%swiftest%read_from_file(param)
+         call symba_read_pl_in(symba_plA, param)
          call symba_tpA%helio%swiftest%read_from_file(param)
       !**************************************************
       call io_write_particle_pl(symba_plA%helio%swiftest, [(i, i=1,npl)], param)
@@ -116,9 +116,9 @@ program swiftest_symba
       end if
 
       ! reorder by mass 
-      if (out_stat /= "APPEND") call symba_reorder_pl(npl, symba_plA)
+      if (out_stat /= "APPEND") call symba_reorder_pl(npl, symba_plA)  ! This is a new run, so we will sort the massive body list by mass
+          
       call util_valid(npl, ntp, symba_plA%helio%swiftest, symba_tpA%helio%swiftest)
-      call util_hills(npl, symba_plA%helio%swiftest)
       ntp0 = ntp
       t = t0
       tbase = t0
@@ -155,6 +155,7 @@ program swiftest_symba
       start = clock_count / (count_rate * 1.0_DP)
       finish = start
       do while ((t < tstop) .and. ((ntp0 == 0) .or. (ntp > 0)))
+         call util_hills(npl, symba_plA%helio%swiftest)
          call symba_step_eucl(t, dt, param,npl,ntp,symba_plA, symba_tpA, nplplenc, npltpenc,&
                plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list)
 
@@ -223,7 +224,7 @@ program swiftest_symba
                write(*,walltimefmt) finish - start, wallperstep
 
                call param%dump_to_file(t)
-               call io_dump_pl(npl, symba_plA%helio%swiftest, param)
+               call io_dump_pl_symba(npl, symba_plA, param)
                call io_dump_tp(ntp, symba_tpA%helio%swiftest)
                idump = istep_dump
             end if

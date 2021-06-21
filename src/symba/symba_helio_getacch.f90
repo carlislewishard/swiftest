@@ -54,10 +54,8 @@ SUBROUTINE symba_helio_getacch(lflag, lextra_force, t, npl, nplm, helio_plA, j2r
 
 ! Executable code
      IF (lflag) THEN
-          DO i = 2, npl
-               helio_plA%ahi(:,i) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
-          END DO
-          CALL symba_helio_getacch_int(npl, nplm, helio_plA) 
+         helio_plA%ahi(:,2:npl) = 0.0_DP
+         CALL symba_helio_getacch_int(npl, nplm, helio_plA) 
      END IF
      IF (j2rp2 /= 0.0_DP) THEN
           DO i = 2, npl
@@ -70,9 +68,7 @@ SUBROUTINE symba_helio_getacch(lflag, lextra_force, t, npl, nplm, helio_plA, j2r
                helio_plA%ah(:,i) = helio_plA%ahi(:,i) + aobl(:, i) - aobl(:, 1)
           END DO
      ELSE
-          DO i = 2, npl
-               helio_plA%ah(:,i) = helio_plA%ahi(:,i)
-          END DO
+         helio_plA%ah(:,2:npl) = helio_plA%ahi(:,2:npl)
      END IF
      IF (lextra_force) CALL helio_user_getacch(t, npl, helio_plA) 
 

@@ -497,6 +497,16 @@ MODULE module_interfaces
                type(user_input_parameters),intent(inout) :: param
 
           END SUBROUTINE io_dump_pl
+
+         subroutine io_dump_pl_symba(npl, symba_plA, param)
+            use swiftest_globals
+            use module_symba
+            use swiftest_data_structures
+            implicit none
+            integer(I4B), intent(in)        :: npl
+            type(symba_pl), intent(inout):: symba_plA
+            type(user_input_parameters),intent(inout) :: param
+         end subroutine io_dump_pl_symba
      END INTERFACE
 
      INTERFACE

@@ -103,4 +103,11 @@ MODULE module_symba
 
    end type symba_merger 
 
+   interface
+      module subroutine symba_read_pl_in(symba_plA, param) 
+         type(symba_pl),              intent(inout) :: symba_plA  !! Swiftest data structure to store massive body initial conditions
+         type(user_input_parameters), intent(inout) :: param    !! Input collection of user-defined parameters
+      end subroutine symba_read_pl_in
+   end interface
+
 END MODULE module_symba

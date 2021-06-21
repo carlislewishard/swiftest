@@ -7,8 +7,8 @@ DT             0.016              ! stepsize in years
 PL_IN          clement_2018.in
 TP_IN          tp.in
 IN_TYPE        ASCII
-ISTEP_OUT      625               ! output cadence 
-ISTEP_DUMP     625               ! system dump cadence
+ISTEP_OUT      625             ! output cadence 
+ISTEP_DUMP     625             ! system dump cadence
 BIN_OUT        bin.dat
 PARTICLE_FILE  particle.dat
 OUT_TYPE       REAL8              ! double precision real output
