@@ -192,7 +192,6 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
 
       m_frag = m_frag / mscale
       rad_frag = rad_frag / rscale
-      rot_frag = rot_frag * tscale
       Qloss = Qloss / Escale
 
       return
