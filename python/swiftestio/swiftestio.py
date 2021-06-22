@@ -710,11 +710,10 @@ def swiftest_xr2_infile(ds, config, framenum=-1):
             print(pli['Radius'].values, file=plfile)
          print(pli['px'].values, pli['py'].values, pli['pz'].values, file=plfile)
          print(pli['vx'].values, pli['vy'].values, pli['vz'].values, file=plfile)
-      if config['ROTATION'] == 'YES':
-         print(pli['Ip_x'].values, pli['Ip_y'].values, pli['Ip_z'].values, file=plfile)
-         print(pli['rot_x'].values, pli['rot_y'].values, pli['rot_z'].values, file=plfile)
-
-         plfile.close()
+         if config['ROTATION'] == 'YES':
+            print(pli['Ip_x'].values, pli['Ip_y'].values, pli['Ip_z'].values, file=plfile)
+            print(pli['rot_x'].values, pli['rot_y'].values, pli['rot_z'].values, file=plfile)
+      plfile.close()
 
       # TP file
       tpfile = open(config['TP_IN'], 'w')
