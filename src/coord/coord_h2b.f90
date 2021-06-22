@@ -11,12 +11,13 @@ subroutine coord_h2b(npl, swiftest_plA, msys)
 
 ! arguments
    integer(I4B), intent(in)  :: npl
-   real(DP), intent(out)   :: msys
+   real(DP), intent(out), optional   :: msys
    type(swiftest_pl),intent(inout) :: swiftest_plA
 
 ! internals
    integer(I4B)          :: i
    logical, dimension(npl) :: lstatus
+   real(DP)              :: mtot
 
 ! executable code
    associate(vbcb => swiftest_plA%vb(:,1), xbcb => swiftest_plA%xb(:,1), &
@@ -35,10 +36,11 @@ subroutine coord_h2b(npl, swiftest_plA, msys)
          vbcb(:) = vbcb(:) + mass(i) * vh(:,i)
       end do
 
-      msys = dMcb + sum(mass(2:npl), lstatus(2:npl)) + Mcb_initial
+      mtot = dMcb + sum(mass(2:npl), lstatus(2:npl)) + Mcb_initial
+      if (present(msys)) msys = mtot
 
-      xbcb(:) = -xbcb(:) / msys                      
-      vbcb(:) = -vbcb(:) / msys    
+      xbcb(:) = -xbcb(:) / mtot
+      vbcb(:) = -vbcb(:) / mtot
 
       do i = 2,npl 
          xb(:,i) = xh(:,i) + xbcb(:)

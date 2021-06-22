@@ -58,7 +58,7 @@ MODULE module_interfaces
                USE swiftest_data_structures
                IMPLICIT NONE
                INTEGER(I4B), INTENT(IN)         :: npl
-               REAL(DP), INTENT(OUT)            :: msys
+               REAL(DP), INTENT(OUT), optional            :: msys
                TYPE(swiftest_pl), INTENT(INOUT) :: swiftest_plA
           END SUBROUTINE coord_h2b
      END INTERFACE

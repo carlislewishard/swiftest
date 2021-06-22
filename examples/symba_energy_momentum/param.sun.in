@@ -1,6 +1,6 @@
 !Parameter file for the SyMBA-RINGMOONS test
 T0             0.0 
-TSTOP          1.0
+TSTOP          3.0e-2
 DT             1e-3
 PL_IN          sun.in
 TP_IN          tp.in

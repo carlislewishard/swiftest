@@ -22,10 +22,10 @@ contains
       real(DP)                        :: Eorbit_error, Etotal_error, Ecoll_error
       real(DP)                        :: Mtot_now, Merror
       real(DP)                        :: Lmag_now, Lerror
-      character(len=*), parameter     :: egyfmt = '(ES23.16,10(",",ES23.16,:))' ! Format code for all simulation output
-      character(len=*), parameter     :: egyheader = '("t,Eorbit,Ecollisions,Lx,Ly,Lz,Mtot")'
-      integer(I4B), parameter         :: egyiu = 72
-      character(len=*), parameter     :: egytermfmt = '("  DL/L0 = ", ES12.5 &
+      character(len=*), parameter     :: EGYFMT = '(ES23.16,10(",",ES23.16,:))' ! Format code for all simulation output
+      character(len=*), parameter     :: EGYHEADER = '("t,Eorbit,Ecollisions,Lx,Ly,Lz,Mtot")'
+      integer(I4B), parameter         :: EGYIU = 72
+      character(len=*), parameter     :: EGYTERMFMT = '("  DL/L0 = ", ES12.5 &
                                                          "; DEcollisions/|E0| = ", ES12.5, &
                                                          "; D(Eorbit+Ecollisions)/|E0| = ", ES12.5, &
                                                          "; DM/M0 = ", ES12.5)'
@@ -37,10 +37,10 @@ contains
                  lfirst => param%lfirstenergy)
          if (lfirst) then
             if (param%out_stat == "OLD") then
-               open(unit = egyiu, file = energy_file, form = "formatted", status = "old", action = "write", position = "append")
+               open(unit = EGYIU, file = ENERGY_FILE, form = "formatted", status = "old", action = "write", position = "append")
             else 
-               open(unit = egyiu, file = energy_file, form = "formatted", status = "replace", action = "write")
-               write(egyiu,egyheader)
+               open(unit = EGYIU, file = ENERGY_FILE, form = "formatted", status = "replace", action = "write")
+               write(EGYIU,EGYHEADER)
             end if
          end if
          call symba_energy_eucl(npl, symba_plA, j2rp2, j4rp4, ke_orbit_now, ke_spin_now, pe_now, Lorbit_now, Lspin_now)
@@ -57,8 +57,8 @@ contains
             lfirst = .false.
          end if
 
-         write(egyiu,egyfmt) t, Eorbit_now, Ecollisions, Ltot_now, Mtot_now
-         flush(egyiu)
+         write(EGYIU,EGYFMT) t, Eorbit_now, Ecollisions, Ltot_now, Mtot_now
+         flush(EGYIU)
          if (.not.lfirst .and. lterminal) then 
             Lmag_now = norm2(Ltot_now)
             Lerror = norm2(Ltot_now - Ltot_orig) / Lmag_orig
