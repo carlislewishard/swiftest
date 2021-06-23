@@ -10,7 +10,7 @@ ISTEP_DUMP     1
 BIN_OUT        bin.dat
 PARTICLE_FILE  particle.dat
 OUT_TYPE       REAL8
-OUT_FORM       EL
+OUT_FORM       XV
 OUT_STAT       REPLACE
 J2             0.0
 J4             0.0

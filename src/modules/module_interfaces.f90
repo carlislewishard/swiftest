@@ -673,7 +673,7 @@ MODULE module_interfaces
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE orbel_xv2el(x, v, mu, a, e, inc, capom, omega, capm)
+          pure SUBROUTINE orbel_xv2el(x, v, mu, a, e, inc, capom, omega, capm)
                USE swiftest_globals
                IMPLICIT NONE
                REAL(DP), INTENT(IN)                  :: mu

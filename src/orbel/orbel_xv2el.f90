@@ -40,7 +40,7 @@
 !                            Roy, A. E. 1982. Orbital Motion, (Adam Hilger, Ltd.), 75 - 95.
 !
 !**********************************************************************************************************************************
-SUBROUTINE orbel_xv2el(x, v, mu, a, e, inc, capom, omega, capm)
+pure SUBROUTINE orbel_xv2el(x, v, mu, a, e, inc, capom, omega, capm)
 
 ! Modules
      USE swiftest
