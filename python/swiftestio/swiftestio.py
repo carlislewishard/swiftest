@@ -315,12 +315,12 @@ def make_swiftest_labels(config):
    plab.append('mass')
    plab.append('radius')
    if config['ROTATION'] == 'YES':
-      plab.append('Ip_x')
-      plab.append('Ip_y')
-      plab.append('Ip_z')
       plab.append('rot_x')
       plab.append('rot_y')
       plab.append('rot_z')
+      plab.append('Ip_x')
+      plab.append('Ip_y')
+      plab.append('Ip_z')
    if config['TIDES'] == 'YES':
       plab.append('k2')
       plab.append('Q')
