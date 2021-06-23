@@ -1,17 +1,11 @@
 ! Created by  on 6/22/21.
 
 module orbel
-   private
-   public :: orbel_xv2el
-   use, intrinsic :: iso_fortran_env, only : I4B => int32, I8B => int64, SP => real32, DP => real64, QP => real128! Use the intrinsic kind definitions
    implicit none
-   integer(I4B), parameter :: NDIM = 3
-   integer(I4B), parameter :: ELLIPSE   = -1 !! Symbolic names for orbit types - ellipse
-   integer(I4B), parameter :: PARABOLA  =  0 !! Symbolic names for orbit types - parabola
-   integer(I4B), parameter :: HYPERBOLA =  1 !! Symbolic names for orbit types - hyperbola
+
 contains
 
-   pure subroutine orbel_xv2el(mu, x, v, a, e, inc, capom, omega, capm)
+   subroutine xv2el(mu, x, v, a, e, inc, capom, omega, capm)
       !! author: David A. Minton
       !!
       !! Compute osculating orbital elements from relative Cartesian position and velocity
@@ -28,9 +22,9 @@ contains
       !! Adapted from Martin Duncan's Swift routine orbel_xv2el.f
       implicit none
       ! Arguments
-      real(DP), intent(in)  :: mu
-      real(DP), dimension(:), intent(in)  :: x, v
-      real(DP), intent(out) :: a, e, inc, capom, omega, capm
+      real*8, intent(in)  :: mu
+      real*8, dimension(:), intent(in)  :: x, v
+      real*8, intent(out) :: a, e, inc, capom, omega, capm
       !f2py intent(in) mu
       !f2py intent(in) x
       !f2py intent(in) v
@@ -42,10 +36,17 @@ contains
       !f2py intent(out) capm
 
       ! Internals
-      integer(I4B) :: iorbit_type
-      real(DP)   :: r, v2, h2, h, rdotv, energy, fac, u, w, cw, sw, face, cape, tmpf, capf
-      real(DP), dimension(NDIM) :: hvec
 
+      integer :: iorbit_type
+      real*8   :: r, v2, h2, h, rdotv, energy, fac, u, w, cw, sw, face, cape, tmpf, capf
+      real*8, dimension(3) :: hvec
+      integer, parameter :: ELLIPSE   = -1 !! Symbolic names for orbit types - ellipse
+      integer, parameter :: PARABOLA  =  0 !! Symbolic names for orbit types - parabola
+      integer, parameter :: HYPERBOLA =  1 !! Symbolic names for orbit types - hyperbola
+      integer, parameter :: DP = kind(1.d0)
+      real*8,     parameter :: VSMALL    = 4.0E-15_DP
+      real*8, parameter :: PI     = 3.141592653589793238462643383279502884197_DP !! Definition of /(\pi\)
+      real*8, parameter :: TWOPI  = 6.283185307179586476925286766559005768394_DP !! Definition of 2 \pi
 
       a = 0.0_DP
       e = 0.0_DP
@@ -55,7 +56,7 @@ contains
       capm = 0.0_DP
       r = sqrt(dot_product(x(:), x(:)))
       v2 = dot_product(v(:), v(:))
-      hvec = x(:) .cross. v(:)
+      hvec = crossproduct(x(:), v(:))
       h2 = dot_product(hvec(:), hvec(:))
       h = sqrt(h2)
       if (h2 == 0.0_DP) return
@@ -144,7 +145,16 @@ contains
       if (omega < 0.0_DP) omega = omega + TWOPI
 
       return
-   end subroutine orbel_xv2el
-
+      contains
+         function crossproduct(A, B) result(C)
+            implicit none
+            real*8, dimension(:), intent(in) :: A, B
+            real*8, dimension(3) :: C
+            C(1) = A(2) * B(3) - A(3) * B(2)
+            C(2) = A(3) * B(1) - A(1) * B(3)
+            C(3) = A(1) * B(2) - A(2) * B(1)
+            return
+         end function crossproduct
+   end subroutine xv2el
 
 end module orbel
