@@ -74,6 +74,11 @@ contains
                write(*,*) 'dpe      : ',(pe_now - pe_last) / abs(Eorbit_orig)
                write(*,*)
             end if
+            if (Lerror > 1e-10) then
+               write(*,*) 'Something has gone wrong! Angular momentum is too high!'
+               write(*,*) 'Lerror: ', Lerror
+               call util_exit(FAILURE)
+            end if
          end if
          ke_orbit_last = ke_orbit_now
          ke_spin_last = ke_spin_now
