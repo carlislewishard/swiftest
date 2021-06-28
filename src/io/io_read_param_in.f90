@@ -1,6 +1,6 @@
-submodule (swiftest_data_structures) s_user_read_param_in
+submodule (swiftest_data_structures) s_io_read_param_in
 contains
-   module subroutine user_read_param_in(param, inparfile, swiftest_plA) 
+   module subroutine io_read_param_in(param, inparfile, swiftest_plA) 
       !! author: The Purdue Swiftest Team -  David A. Minton, Carlisle A. Wishard, Jennifer L.L. Pouplin, and Jacob R. Elliott
       !!
       !! Read in parameters for the integration
@@ -8,11 +8,11 @@ contains
       !! Adapted from David E. Kaufmann's Swifter routine io_init_param.f90
       !! Adapted from Martin Duncan's Swift routine io_init_param.f
       !$ use omp_lib
-      use swiftest, except_this_one => user_read_param_in
+      use swiftest, except_this_one => io_read_param_in
       implicit none
 
       ! Arguments
-      class(user_input_parameters),intent(out) :: param         !! Input collection of user-defined parameters
+      class(io_input_parameters),intent(out)   :: param         !! Input collection of user-defined parameters
       character(*), intent(in)                 :: inparfile     !! Parameter input file name (i.e. param.in)
       type(swiftest_pl), intent(inout)         :: swiftest_plA
 
@@ -118,6 +118,6 @@ contains
 
       return 
 
-   end subroutine user_read_param_in
+   end subroutine io_read_param_in
 
-end submodule s_user_read_param_in
+end submodule s_io_read_param_in

@@ -1,13 +1,13 @@
-submodule(swiftest_data_structures) s_user_get_token
+submodule(swiftest_data_structures) s_io_get_token
 contains
-   module function user_get_token(buffer, ifirst, ilast, ierr) result(token)
+   module function io_get_token(buffer, ifirst, ilast, ierr) result(token)
       !! author: David A. Minton
       !!
       !! Retrieves a character token from an input string. Here a token is defined as any set of contiguous non-blank characters not 
       !! beginning with or containing "!". If "!" is present, any remaining part of the buffer including the "!" is ignored
       !!
       !! Adapted from David E. Kaufmann's Swifter routine user_get_token.f90
-      use swiftest, except_this_one => user_get_token
+      use swiftest, except_this_one => io_get_token
       implicit none
 
       ! Arguments
@@ -49,5 +49,5 @@ contains
 
       return
 
-   end function user_get_token
-end submodule s_user_get_token
+   end function io_get_token
+end submodule s_io_get_token

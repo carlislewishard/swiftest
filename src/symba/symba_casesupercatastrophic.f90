@@ -17,7 +17,7 @@ function symba_casesupercatastrophic (symba_plA, family, nmergeadd, mergeadd_lis
    type(symba_merger), intent(inout)         :: mergeadd_list
    real(DP), dimension(:,:), intent(inout)   :: x, v, L_spin, Ip
    real(DP), dimension(:),   intent(inout)   :: mass, radius, mass_res
-   type(user_input_parameters),intent(inout) :: param
+   type(io_input_parameters),intent(inout) :: param
    real(DP), intent(inout)                   :: Qloss
    ! Result
    integer(I4B)                              :: status

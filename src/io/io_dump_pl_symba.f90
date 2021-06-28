@@ -12,7 +12,7 @@ subroutine io_dump_pl_symba(npl, symba_plA, param)
 ! arguments
    integer(I4B), intent(in)         :: npl
    type(symba_pl), intent(inout) :: symba_plA
-   type(user_input_parameters),intent(inout) :: param
+   type(io_input_parameters),intent(inout) :: param
 
 ! internals
    integer(I4B)                     :: ierr

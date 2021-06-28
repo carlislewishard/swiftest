@@ -1,17 +1,17 @@
-submodule(swiftest_data_structures) s_user_udio_writer
+submodule(swiftest_data_structures) s_io_udio_writer
 contains
-   module subroutine user_udio_writer(param, unit, iotype, v_list, iostat, iomsg, swiftest_plA) 
+   module subroutine io_udio_writer(param, unit, iotype, v_list, iostat, iomsg, swiftest_plA) 
       !! author: David A. Minton
       !!
       !! Dump integration parameters to file
       !!
       !! Adapted from David E. Kaufmann's Swifter routine io_dump_param.f90
       !! Adapted from Martin Duncan's Swift routine io_dump_param.f
-      use swiftest, except_this_one => user_udio_writer
+      use swiftest, except_this_one => io_udio_writer
       implicit none
 
       ! Arguments
-      class(user_input_parameters),intent(in)  :: param         !! Output collection of user-defined parameters
+      class(io_input_parameters),intent(in)  :: param         !! Output collection of user-defined parameters
       integer, intent(in)                 :: unit        
       character(len=*), intent(in)        :: iotype
       integer, intent(in)                 :: v_list(:)
@@ -118,13 +118,14 @@ contains
          write(unit, '("LCB_INITIAL ",3(1X,ES25.17))') swiftest_pLA%Lcb_initial(:)
          write(unit, '("DLCB ",3(1X,ES25.17))') swiftest_pLA%dLcb(:)
          write(unit, '("LESCAPE ",3(1X,ES25.17))') swiftest_pLA%Lescape(:)
-         write(unit, '("MCB_INITIAL ",(1X,ES25.17))') swiftest_pLA%Mcb_initial
-         write(unit, '("DMCB ",(1X,ES25.17))') swiftest_pLA%dMcb
-         write(unit, '("MESCAPE ",(1X,ES25.17))') swiftest_pLA%Mescape
-         write(unit, '("RCB_INITIAL ",(1X,ES25.17))') swiftest_pLA%Rcb_initial
-         write(unit, '("DRCB ",(1X,ES25.17))') swiftest_pLA%dRcb
-         write(unit, '("ECOLLISIONS ",(1X,ES25.17))') swiftest_pLA%Ecollisions
-         write(unit, '("EUNTRACKED ",(1X,ES25.17))') swiftest_pLA%Euntracked
+
+         write(param_name, Afmt) "MCB_INITIAL"; write(param_value, Rfmt) swiftest_pLA%Mcb_initial; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+         write(param_name, Afmt) "DMCB"; write(param_value, Rfmt) swiftest_pLA%dMcb; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+         write(param_name, Afmt) "MESCAPE"; write(param_value, Rfmt) swiftest_pLA%Mescape; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+         write(param_name, Afmt) "RCB_INITIAL"; write(param_value, Rfmt) swiftest_pLA%Rcb_initial; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+         write(param_name, Afmt) "DRCB"; write(param_value, Rfmt) swiftest_pLA%dRcb; write(unit, Afmt) adjustl(param_name), adjustl(param_value)   
+         write(param_name, Afmt) "ECOLLISIONS"; write(param_value, Rfmt) swiftest_pLA%Ecollisions; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
+         write(param_name, Afmt) "EUNTRACKED"; write(param_value, Rfmt) swiftest_pLA%Euntracked; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
       end if
       write(param_name, Afmt) "FIRSTKICK"; write(param_value, Lfmt) param%lfirstkick; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
 
@@ -132,5 +133,5 @@ contains
 
       return
 
-   end subroutine user_udio_writer
-end submodule s_user_udio_writer
+   end subroutine io_udio_writer
+end submodule s_io_udio_writer

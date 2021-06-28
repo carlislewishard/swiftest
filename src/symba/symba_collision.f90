@@ -19,7 +19,7 @@ subroutine symba_collision (t, symba_plA, nplplenc, plplenc_list, ldiscard, merg
    type(symba_plplenc), intent(inout)        :: plplenc_list
    type(symba_merger), intent(inout)         :: mergeadd_list
    logical, intent(inout)                    :: ldiscard
-   type(user_input_parameters),intent(inout) :: param
+   type(io_input_parameters),intent(inout) :: param
 
    integer(I4B), parameter                 :: NRES = 3   !! Number of collisional product results
    integer(I4B)                            :: i, j, k, index_enc, index_coll, jtarg, jproj

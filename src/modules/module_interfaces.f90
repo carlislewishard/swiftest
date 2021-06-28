@@ -493,7 +493,7 @@ MODULE module_interfaces
                IMPLICIT NONE
                INTEGER(I4B), INTENT(IN)        :: npl
                TYPE(swiftest_pl), INTENT(INOUT):: swiftest_plA
-               type(user_input_parameters),intent(inout) :: param
+               type(io_input_parameters),intent(inout) :: param
 
           END SUBROUTINE io_dump_pl
 
@@ -504,7 +504,7 @@ MODULE module_interfaces
             implicit none
             integer(I4B), intent(in)        :: npl
             type(symba_pl), intent(inout):: symba_plA
-            type(user_input_parameters),intent(inout) :: param
+            type(io_input_parameters),intent(inout) :: param
          end subroutine io_dump_pl_symba
      END INTERFACE
 
@@ -734,7 +734,7 @@ MODULE module_interfaces
          type(symba_merger), intent(inout)         :: mergeadd_list
          real(DP), dimension(:,:), intent(inout)   :: x, v, L_spin, Ip
          real(DP), dimension(:),   intent(inout)   :: mass, radius, mass_res
-         type(user_input_parameters),intent(inout) :: param
+         type(io_input_parameters),intent(inout) :: param
          real(DP), intent(inout)                   :: Qloss
          integer(I4B)                              :: status
       end function symba_casedisruption
@@ -752,7 +752,7 @@ MODULE module_interfaces
          integer(I4B), dimension(:), intent(in)    :: name
          real(DP), dimension(:,:), intent(inout)   :: x, v, Lspin, Ip
          real(DP), dimension(:), intent(inout)     :: mass, radius, mass_res
-         type(user_input_parameters),intent(inout) :: param
+         type(io_input_parameters),intent(inout) :: param
          real(DP), intent(inout)                   :: Qloss
          integer(I4B)                              :: status
       end function symba_casehitandrun
@@ -768,7 +768,7 @@ MODULE module_interfaces
          type(symba_merger), intent(inout)         :: mergeadd_list
          real(DP), dimension(:,:), intent(in)      :: x, v, lspin, Ip
          real(DP), dimension(:), intent(in)        :: mass, radius
-         type(user_input_parameters),intent(inout) :: param
+         type(io_input_parameters),intent(inout) :: param
          integer(I4B)                              :: status
       end function symba_casemerge
 
@@ -784,7 +784,7 @@ MODULE module_interfaces
          type(symba_merger), intent(inout)         :: mergeadd_list
          real(DP), dimension(:,:), intent(inout)   :: x, v, lspin, Ip
          real(DP), dimension(:), intent(inout)     :: mass, radius, mass_res
-         type(user_input_parameters),intent(inout) :: param
+         type(io_input_parameters),intent(inout) :: param
          real(DP), intent(inout)                   :: Qloss
          integer(I4B)                              :: status
       end function symba_casesupercatastrophic
@@ -817,7 +817,7 @@ MODULE module_interfaces
                type(symba_plplenc), intent(inout)        :: plplenc_list
                type(symba_merger), intent(inout)         :: mergeadd_list
                logical, intent(inout)                    :: ldiscard
-               type(user_input_parameters),intent(inout) :: param
+               type(io_input_parameters),intent(inout) :: param
           END SUBROUTINE symba_collision
      END INTERFACE
 
@@ -835,7 +835,7 @@ MODULE module_interfaces
                TYPE(symba_plplenc), INTENT(INOUT)        :: plplenc_list
                TYPE(symba_merger), INTENT(INOUT)         :: mergesub_list
                TYPE(symba_pl), INTENT(INOUT)             :: symba_plA
-               TYPE(user_input_parameters),intent(inout) :: param
+               TYPE(io_input_parameters),intent(inout) :: param
           END SUBROUTINE symba_merge_pl
      END INTERFACE
 
@@ -890,7 +890,7 @@ MODULE module_interfaces
             use swiftest_globals
             use swiftest_data_structures
             implicit none
-            type(user_input_parameters), intent(inout) :: param
+            type(io_input_parameters), intent(inout) :: param
             type(swiftest_pl), intent(inout) :: swiftest_plA
             integer(I4B), intent(in)    :: ipl
             logical, intent(in)        :: lescape_body
@@ -937,7 +937,7 @@ MODULE module_interfaces
             USE swiftest_data_structures
             USE module_symba
             implicit none
-            type(user_input_parameters), intent(in)   :: param 
+            type(io_input_parameters), intent(in)   :: param 
             type(symba_pl), intent(inout)             :: symba_plA
             integer(I4B), dimension(:), intent(in)    :: family
             real(DP), dimension(:,:), intent(inout)   :: x, v, L_spin, Ip
@@ -1103,7 +1103,7 @@ MODULE module_interfaces
          type(symba_merger),          intent(inout) :: mergeadd_list 
          logical(LGT),                intent(in)    :: ldiscard_pl, ldiscard_tp 
          real(DP),                    intent(in)    :: mtiny
-         type(user_input_parameters), intent(inout) :: param
+         type(io_input_parameters), intent(inout) :: param
          logical, dimension(:), allocatable, intent(inout) :: discard_l_pl
          integer(I4B), dimension(:), allocatable, intent(inout) :: discard_stat_list
       end subroutine symba_rearray
@@ -1148,7 +1148,7 @@ MODULE module_interfaces
                USE module_helio
                USE module_symba
                IMPLICIT NONE
-               TYPE(user_input_parameters), INTENT(INOUT)       :: param        ! Derived type containing user defined parameters 
+               TYPE(io_input_parameters), INTENT(INOUT)       :: param        ! Derived type containing user defined parameters 
                INTEGER(I4B), INTENT(IN)                         :: npl, ntp
                INTEGER(I4B), INTENT(INOUT)                      :: nplplenc, npltpenc, nmergeadd, nmergesub
                REAL(DP), INTENT(IN)                             :: t, dt
@@ -1212,7 +1212,7 @@ MODULE module_interfaces
                TYPE(symba_plplenc), INTENT(INOUT) :: plplenc_list
                TYPE(symba_pltpenc), INTENT(INOUT) :: pltpenc_list
                TYPE(symba_merger), INTENT(INOUT)  :: mergeadd_list, mergesub_list
-               type(user_input_parameters), intent(inout) :: param
+               type(io_input_parameters), intent(inout) :: param
           END SUBROUTINE symba_step_interp
      END INTERFACE
 
@@ -1232,7 +1232,7 @@ MODULE module_interfaces
                TYPE(symba_plplenc), INTENT(INOUT) :: plplenc_list
                TYPE(symba_pltpenc), INTENT(INOUT) :: pltpenc_list
                TYPE(symba_merger), INTENT(INOUT)  :: mergeadd_list, mergesub_list
-               type(user_input_parameters), intent(inout)  :: param
+               type(io_input_parameters), intent(inout)  :: param
           END SUBROUTINE symba_step_recur
      END INTERFACE
 
@@ -1342,7 +1342,7 @@ MODULE module_interfaces
                USE module_helio
                USE module_symba
                IMPLICIT NONE
-               TYPE(user_input_parameters), INTENT(INOUT)       :: param        ! Derived type containing user defined parameters 
+               TYPE(io_input_parameters), INTENT(INOUT)       :: param        ! Derived type containing user defined parameters 
                INTEGER(I4B), INTENT(IN)                         :: npl, ntp
                INTEGER(I4B), INTENT(INOUT)                      :: nplplenc, npltpenc, nmergeadd, nmergesub
                REAL(DP), INTENT(IN)                             :: t, dt
@@ -1371,7 +1371,7 @@ MODULE module_interfaces
                TYPE(symba_plplenc), INTENT(INOUT)         :: plplenc_list
                TYPE(symba_pltpenc), INTENT(INOUT)         :: pltpenc_list
                TYPE(symba_merger), INTENT(INOUT)          :: mergeadd_list, mergesub_list
-               type(user_input_parameters), intent(inout) :: param
+               type(io_input_parameters), intent(inout) :: param
           END SUBROUTINE symba_step_interp_eucl
      END INTERFACE
 
@@ -1401,7 +1401,7 @@ MODULE module_interfaces
             type(symba_pl), intent(in)           :: symba_plA
             type(symba_merger), intent(in)          :: mergeadd_list, mergesub_list
             integer(I4B), intent(in)                :: addi, addf, subi, subf
-            type(user_input_parameters), intent(in) :: param
+            type(io_input_parameters), intent(in) :: param
             real(DP)                                :: eoffset
          end function symba_mergeadd_eoffset
       end interface

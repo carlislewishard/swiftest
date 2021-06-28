@@ -33,7 +33,7 @@ PROGRAM tool_encounter_read
      IMPLICIT NONE
 
 ! Arguments
-   type(user_input_parameters)  :: param    ! derived type containing user-defined parameters
+   type(io_input_parameters)  :: param    ! derived type containing user-defined parameters
    type(swiftest_pl)            :: swiftest_plA
      INTEGER(I4B)      :: istep_out      ! Time steps between binary outputs
      INTEGER(I4B)      :: istep_dump     ! Time steps between dumps

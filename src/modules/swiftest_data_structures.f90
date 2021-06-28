@@ -60,7 +60,7 @@ module swiftest_data_structures
       procedure :: read_from_file => swiftest_read_pl_in 
    end type swiftest_pl
 
-   type, public :: user_input_parameters
+   type, public :: io_input_parameters
       real(DP)             :: t0 = 0.0_DP          !! Integration start time
       real(DP)             :: tstop = 0.0_DP       !! Integration stop time
       real(DP)             :: dt = 0.0_DP          !! Time step
@@ -117,70 +117,70 @@ module swiftest_data_structures
       logical :: lyarkovsky = .false.        !! Turn on Yarkovsky effect
       logical :: lyorp = .false.             !! Turn on YORP effect
    contains
-      procedure :: read_from_file => user_read_param_in
-      procedure :: dump_to_file => user_dump_param
-      procedure :: udio_reader => user_udio_reader
-      procedure :: udio_writer => user_udio_writer
+      procedure :: read_from_file => io_read_param_in
+      procedure :: dump_to_file => io_dump_param
+      procedure :: udio_reader => io_udio_reader
+      procedure :: udio_writer => io_udio_writer
       !TODO: Figure out if user-defined derived-type io can be made to work properly
       !generic   :: read(formatted) => udio_reader
       !generic   :: write(formatted) => udio_writer
-   end type user_input_parameters
+   end type io_input_parameters
 
    interface
 
       module subroutine swiftest_read_pl_in(self, param) 
          class(swiftest_pl),          intent(inout) :: self  !! Swiftest data structure to store massive body initial conditions
-         type(user_input_parameters), intent(inout) :: param    !! Input collection of user-defined parameters
+         type(io_input_parameters), intent(inout) :: param    !! Input collection of user-defined parameters
       end subroutine swiftest_read_pl_in
 
       module subroutine swiftest_read_tp_in(self, param) 
          class(swiftest_tp),          intent(inout) :: self  !! Swiftest data structure to store massive body initial conditions
-         type(user_input_parameters), intent(inout) :: param    !! Input collection of user-defined parameters
+         type(io_input_parameters), intent(inout) :: param    !! Input collection of user-defined parameters
       end subroutine swiftest_read_tp_in
 
-      module function user_get_token(buffer, ifirst, ilast, ierr) result(token)
+      module function io_get_token(buffer, ifirst, ilast, ierr) result(token)
          character(len=*), intent(in)     :: buffer         !! Input string buffer
          integer(I4B), intent(inout)      :: ifirst         !! Index of the buffer at which to start the search for a token
          integer(I4B), intent(out)        :: ilast          !! Index of the buffer at the end of the returned token
          integer(I4B), intent(out)        :: ierr           !! Error code
          character(len=:),allocatable     :: token          !! Returned token string
-      end function user_get_token
+      end function io_get_token
 
       !> Interface for type-bound procedure to read in the input parameters from a file
-      module subroutine user_read_param_in(param, inparfile, swiftest_plA) 
-         class(user_input_parameters),intent(out) :: param         !! Input collection of user-defined parameters
+      module subroutine io_read_param_in(param, inparfile, swiftest_plA) 
+         class(io_input_parameters),intent(out) :: param         !! Input collection of user-defined parameters
          character(*), intent(in)                 :: inparfile     !! Parameter input file name (i.e. param.in)
          type(swiftest_pl), intent(inout)         :: swiftest_plA
-      end subroutine user_read_param_in
+      end subroutine io_read_param_in
 
       !> Interface for type-bound procedure to write out the user parameters into a dump file in case the run needs to be restarted
-      module subroutine user_dump_param(param, t, swiftest_plA)
-         class(user_input_parameters),intent(in)  :: param    !! Output collection of user-defined parameters
+      module subroutine io_dump_param(param, t, swiftest_plA)
+         class(io_input_parameters),intent(in)  :: param    !! Output collection of user-defined parameters
          real(DP),intent(in)                      :: t        !! Current simulation time
          type(swiftest_pl), intent(inout)         :: swiftest_plA
-      end subroutine user_dump_param
+      end subroutine io_dump_param
 
       !> Interface for type-bound procedure for user-defined derived-type IO for reading
-      module subroutine user_udio_reader(param, unit, iotype, v_list, iostat, iomsg, swiftest_plA) 
-         class(user_input_parameters),intent(inout)  :: param         !! Input collection of user-defined parameters
+      module subroutine io_udio_reader(param, unit, iotype, v_list, iostat, iomsg, swiftest_plA) 
+         class(io_input_parameters),intent(inout)  :: param         !! Input collection of user-defined parameters
          integer, intent(in)                    :: unit        
          character(len=*), intent(in)           :: iotype
          integer, intent(in)                    :: v_list(:)
          integer, intent(out)                   :: iostat
          character(len=*), intent(inout)        :: iomsg
          type(swiftest_pl), intent(inout)       :: swiftest_plA
-      end subroutine user_udio_reader
+      end subroutine io_udio_reader
 
       !> Interface for type-bound procedure for user-defined derived-type IO for writing
-      module subroutine user_udio_writer(param, unit, iotype, v_list, iostat, iomsg, swiftest_plA) 
-         class(user_input_parameters),intent(in)  :: param         !! Output collection of user-defined parameters
+      module subroutine io_udio_writer(param, unit, iotype, v_list, iostat, iomsg, swiftest_plA) 
+         class(io_input_parameters),intent(in)  :: param         !! Output collection of user-defined parameters
          integer, intent(in)                 :: unit        
          character(len=*), intent(in)        :: iotype
          integer, intent(in)                 :: v_list(:)
          integer, intent(out)                :: iostat
          character(len=*), intent(inout)     :: iomsg
          type(swiftest_pl), intent(inout)    :: swiftest_plA
-      end subroutine user_udio_writer
+      end subroutine io_udio_writer
 
    end interface
 

@@ -1,6 +1,6 @@
-submodule (swiftest_data_structures) s_user_udio_reader
+submodule (swiftest_data_structures) s_io_udio_reader
 contains
-   module subroutine user_udio_reader(param, unit, iotype, v_list, iostat, iomsg, swiftest_plA) 
+   module subroutine io_udio_reader(param, unit, iotype, v_list, iostat, iomsg, swiftest_plA) 
       !! author: The Purdue Swiftest Team -  David A. Minton, Carlisle A. Wishard, Jennifer L.L. Pouplin, and Jacob R. Elliott
       !!
       !! Read in parameters for the integration
@@ -12,11 +12,11 @@ contains
       !! Adapted from Martin Duncan's Swift routine io_init_param.f
       !$ use omp_lib
       !use util, only: util_exit ! IMPLEMENTATION TBD
-      use swiftest, except_this_one => user_udio_reader
+      use swiftest, except_this_one => io_udio_reader
       implicit none
 
       ! Arguments
-      class(user_input_parameters),intent(inout)  :: param         !! Input collection of user-defined parameters
+      class(io_input_parameters),intent(inout)  :: param         !! Input collection of user-defined parameters
       integer, intent(in)                    :: unit        
       character(len=*), intent(in)           :: iotype
       integer, intent(in)                    :: v_list(:)
@@ -47,11 +47,11 @@ contains
          if ((ilength /= 0)) then 
             ifirst = 1
             ! Read the pair of tokens. The first one is the parameter name, the second is the value.
-            param_name = user_get_token(line_trim, ifirst, ilast, iostat)
+            param_name = io_get_token(line_trim, ifirst, ilast, iostat)
             if (param_name == '') cycle ! No parameter name (usually because this line is commented out)
             call util_toupper(param_name)
             ifirst = ilast + 1
-            param_value = user_get_token(line_trim, ifirst, ilast, iostat)
+            param_value = io_get_token(line_trim, ifirst, ilast, iostat)
             select case (param_name)
             case ("T0")
                read(param_value, *) param%t0
@@ -107,7 +107,7 @@ contains
             case ("CHK_QMIN_RANGE")
                read(param_value, *) param%qmin_alo
                ifirst = ilast + 1
-               param_value = user_get_token(line, ifirst, ilast, iostat)
+               param_value = io_get_token(line, ifirst, ilast, iostat)
                read(param_value, *) param%qmin_ahi
             case ("ENC_OUT")
                param%encounter_file = param_value
@@ -168,13 +168,13 @@ contains
                   allocate(param%seed(nseeds))
                   do i = 1, nseeds
                      ifirst = ilast + 1
-                     param_value = user_get_token(line, ifirst, ilast, iostat) 
+                     param_value = io_get_token(line, ifirst, ilast, iostat) 
                      read(param_value, *) param%seed(i)
                   end do
                else ! Seed array in file is too small
                   do i = 1, nseeds_from_file
                      ifirst = ilast + 1
-                     param_value = user_get_token(line, ifirst, ilast, iostat) 
+                     param_value = io_get_token(line, ifirst, ilast, iostat) 
                      read(param_value, *) param%seed(i)
                   end do
                   param%seed(nseeds_from_file+1:nseeds) = [(param%seed(1) - param%seed(nseeds_from_file) + i, i=nseeds_from_file+1, nseeds)]
@@ -194,7 +194,7 @@ contains
                read(param_value, *) param%Ltot_orig(1)
                do i = 2, NDIM
                   ifirst = ilast + 1
-                  param_value = user_get_token(line, ifirst, ilast, iostat) 
+                  param_value = io_get_token(line, ifirst, ilast, iostat) 
                   read(param_value, *) param%Ltot_orig(i)
                end do
                   param%Lmag_orig = norm2(param%Ltot_orig(:))
@@ -202,35 +202,35 @@ contains
                read(param_value, *) param%Lorbit_orig(1)
                do i = 2, NDIM
                   ifirst = ilast + 1
-                  param_value = user_get_token(line, ifirst, ilast, iostat) 
+                  param_value = io_get_token(line, ifirst, ilast, iostat) 
                   read(param_value, *) param%Lorbit_orig(i)
                end do
             case("LSPIN_ORIG")
                read(param_value, *) param%Lspin_orig(1)
                do i = 2, NDIM
                   ifirst = ilast + 1
-                  param_value = user_get_token(line, ifirst, ilast, iostat) 
+                  param_value = io_get_token(line, ifirst, ilast, iostat) 
                   read(param_value, *) param%Lspin_orig(i)
                end do
             case("LCB_INITIAL")
                read(param_value, *) swiftest_plA%Lcb_initial(1)
                do i = 2, NDIM
                   ifirst = ilast + 1
-                  param_value = user_get_token(line, ifirst, ilast, iostat) 
+                  param_value = io_get_token(line, ifirst, ilast, iostat) 
                   read(param_value, *) swiftest_plA%Lcb_initial(i)
                end do
             case("DLCB")
                read(param_value, *) swiftest_plA%dLcb(1)
                do i = 2, NDIM
                   ifirst = ilast + 1
-                  param_value = user_get_token(line, ifirst, ilast, iostat) 
+                  param_value = io_get_token(line, ifirst, ilast, iostat) 
                   read(param_value, *) swiftest_plA%dLcb(i)
                end do
             case("LESCAPE")
                read(param_value, *) swiftest_plA%Lescape(1)
                do i = 2, NDIM
                   ifirst = ilast + 1
-                  param_value = user_get_token(line, ifirst, ilast, iostat) 
+                  param_value = io_get_token(line, ifirst, ilast, iostat) 
                   read(param_value, *) swiftest_plA%Lescape(i)
                end do
             case("MCB_INITIAL")
@@ -335,6 +335,6 @@ contains
 
       return 
 
-   end subroutine user_udio_reader
+   end subroutine io_udio_reader
 
-end submodule s_user_udio_reader
+end submodule s_io_udio_reader

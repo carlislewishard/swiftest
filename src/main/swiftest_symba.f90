@@ -15,7 +15,7 @@ program swiftest_symba
    implicit none
 
    ! Arguments
-   type(user_input_parameters)  :: param    ! derived type containing user-defined parameters
+   type(io_input_parameters)  :: param    ! derived type containing user-defined parameters
 
    ! Internals
    logical                       :: lfrag_add, ldiscard_pl, ldiscard_tp
