@@ -12,7 +12,7 @@ contains
       type(symba_pl),              intent(inout) :: symba_plA    !! Swiftest planet data structure
       integer(I4B),                intent(in)    :: npl          !! Number of massive bodies
       real(DP),                    intent(in)    :: j2rp2, j4rp4 !! Central body oblateness terms
-      type(io_input_parameters), intent(inout)    :: param        !! Input colleciton of user-defined parameters
+      type(swiftest_parameters), intent(inout)    :: param        !! Input colleciton of user-defined parameters
       logical,                     intent(in)    :: lterminal    !! Indicates whether to output information to the terminal screen
       ! Internals
       real(DP), dimension(NDIM)       :: Ltot_now,  Lorbit_now,  Lspin_now

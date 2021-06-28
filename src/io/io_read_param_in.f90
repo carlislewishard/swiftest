@@ -12,7 +12,7 @@ contains
       implicit none
 
       ! Arguments
-      class(io_input_parameters),intent(out)   :: param         !! Input collection of user-defined parameters
+      class(swiftest_parameters),intent(out)   :: param         !! Input collection of user-defined parameters
       character(*), intent(in)                 :: inparfile     !! Parameter input file name (i.e. param.in)
       type(swiftest_pl), intent(inout)         :: swiftest_plA
 

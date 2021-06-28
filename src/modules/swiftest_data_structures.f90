@@ -60,7 +60,7 @@ module swiftest_data_structures
       procedure :: read_from_file => swiftest_read_pl_in 
    end type swiftest_pl
 
-   type, public :: io_input_parameters
+   type, public :: swiftest_parameters
       real(DP)             :: t0 = 0.0_DP          !! Integration start time
       real(DP)             :: tstop = 0.0_DP       !! Integration stop time
       real(DP)             :: dt = 0.0_DP          !! Time step
@@ -124,18 +124,18 @@ module swiftest_data_structures
       !TODO: Figure out if user-defined derived-type io can be made to work properly
       !generic   :: read(formatted) => udio_reader
       !generic   :: write(formatted) => udio_writer
-   end type io_input_parameters
+   end type swiftest_parameters
 
    interface
 
       module subroutine swiftest_read_pl_in(self, param) 
          class(swiftest_pl),          intent(inout) :: self  !! Swiftest data structure to store massive body initial conditions
-         type(io_input_parameters), intent(inout) :: param    !! Input collection of user-defined parameters
+         type(swiftest_parameters), intent(inout) :: param    !! Input collection of user-defined parameters
       end subroutine swiftest_read_pl_in
 
       module subroutine swiftest_read_tp_in(self, param) 
          class(swiftest_tp),          intent(inout) :: self  !! Swiftest data structure to store massive body initial conditions
-         type(io_input_parameters), intent(inout) :: param    !! Input collection of user-defined parameters
+         type(swiftest_parameters), intent(inout) :: param    !! Input collection of user-defined parameters
       end subroutine swiftest_read_tp_in
 
       module function io_get_token(buffer, ifirst, ilast, ierr) result(token)
@@ -148,21 +148,21 @@ module swiftest_data_structures
 
       !> Interface for type-bound procedure to read in the input parameters from a file
       module subroutine io_read_param_in(param, inparfile, swiftest_plA) 
-         class(io_input_parameters),intent(out) :: param         !! Input collection of user-defined parameters
+         class(swiftest_parameters),intent(out) :: param         !! Input collection of user-defined parameters
          character(*), intent(in)                 :: inparfile     !! Parameter input file name (i.e. param.in)
          type(swiftest_pl), intent(inout)         :: swiftest_plA
       end subroutine io_read_param_in
 
       !> Interface for type-bound procedure to write out the user parameters into a dump file in case the run needs to be restarted
       module subroutine io_dump_param(param, t, swiftest_plA)
-         class(io_input_parameters),intent(in)  :: param    !! Output collection of user-defined parameters
+         class(swiftest_parameters),intent(in)  :: param    !! Output collection of user-defined parameters
          real(DP),intent(in)                      :: t        !! Current simulation time
          type(swiftest_pl), intent(inout)         :: swiftest_plA
       end subroutine io_dump_param
 
       !> Interface for type-bound procedure for user-defined derived-type IO for reading
       module subroutine io_udio_reader(param, unit, iotype, v_list, iostat, iomsg, swiftest_plA) 
-         class(io_input_parameters),intent(inout)  :: param         !! Input collection of user-defined parameters
+         class(swiftest_parameters),intent(inout)  :: param         !! Input collection of user-defined parameters
          integer, intent(in)                    :: unit        
          character(len=*), intent(in)           :: iotype
          integer, intent(in)                    :: v_list(:)
@@ -173,7 +173,7 @@ module swiftest_data_structures
 
       !> Interface for type-bound procedure for user-defined derived-type IO for writing
       module subroutine io_udio_writer(param, unit, iotype, v_list, iostat, iomsg, swiftest_plA) 
-         class(io_input_parameters),intent(in)  :: param         !! Output collection of user-defined parameters
+         class(swiftest_parameters),intent(in)  :: param         !! Output collection of user-defined parameters
          integer, intent(in)                 :: unit        
          character(len=*), intent(in)        :: iotype
          integer, intent(in)                 :: v_list(:)

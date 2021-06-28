@@ -14,7 +14,7 @@ subroutine symba_frag_pos(param, symba_plA, family, x, v, L_spin, Ip, mass, radi
    use module_interfaces, except_this_one => symba_frag_pos
    implicit none
    ! Arguments
-   type(io_input_parameters), intent(in) :: param 
+   type(swiftest_parameters), intent(in) :: param 
    type(symba_pl), intent(inout)           :: symba_plA
    integer(I4B), dimension(:), intent(in)  :: family
    real(DP), dimension(:,:), intent(inout) :: x, v, L_spin, Ip

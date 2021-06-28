@@ -72,7 +72,7 @@ SUBROUTINE symba_step_eucl(t,dt,param,npl, ntp,symba_plA, symba_tpA,       &
      IMPLICIT NONE
 
 ! Arguments
-     TYPE(io_input_parameters), INTENT(INOUT)       :: param        ! Derived type containing user defined parameters 
+     TYPE(swiftest_parameters), INTENT(INOUT)       :: param        ! Derived type containing user defined parameters 
      INTEGER(I4B), INTENT(IN)                         :: npl, ntp
      INTEGER(I4B), INTENT(INOUT)                      :: nplplenc, npltpenc, nmergeadd, nmergesub
      REAL(DP), INTENT(IN)                             :: t, dt

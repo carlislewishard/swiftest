@@ -11,12 +11,12 @@ contains
       implicit none
 
       ! Arguments
-      class(io_input_parameters),intent(in)  :: param    !! Output collection of user-defined parameters
+      class(swiftest_parameters),intent(in)  :: param    !! Output collection of user-defined parameters
       real(DP),intent(in)                      :: t        !! Current simulation tim
       type(swiftest_pl), intent(inout)         :: swiftest_plA
 
       ! Internals
-      type(io_input_parameters)  :: param_dump !! Data type of dumped parameter file
+      type(swiftest_parameters)  :: param_dump !! Data type of dumped parameter file
       integer(I4B), parameter :: LUN = 7 !! Unit number of output file
       integer(I4B)            :: ierr     !! Error code
       integer(I4B), save      :: idx = 1  !! Index of current dump file. Output flips between 2 files for extra security

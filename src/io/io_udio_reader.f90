@@ -16,7 +16,7 @@ contains
       implicit none
 
       ! Arguments
-      class(io_input_parameters),intent(inout)  :: param         !! Input collection of user-defined parameters
+      class(swiftest_parameters),intent(inout)  :: param         !! Input collection of user-defined parameters
       integer, intent(in)                    :: unit        
       character(len=*), intent(in)           :: iotype
       integer, intent(in)                    :: v_list(:)

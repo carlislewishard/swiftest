@@ -11,7 +11,7 @@ contains
       ! Arguments
       class(swiftest_pl),          intent(in) :: swiftest_plA !! Swiftest massive body structure
       integer(I4B), dimension(:),  intent(in) :: idx       !! Array of particle indices to append to the particle file
-      type(io_input_parameters), intent(in) :: param     !! Input colleciton of user-defined parameters
+      type(swiftest_parameters), intent(in) :: param     !! Input colleciton of user-defined parameters
       ! Internals
       logical, save             :: lfirst = .true.
       integer(I4B), parameter   :: lun = 22

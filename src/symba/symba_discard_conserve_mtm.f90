@@ -8,7 +8,7 @@ subroutine symba_discard_conserve_mtm(param, swiftest_plA, ipl, lescape_body)
    implicit none
    ! Arguments
    type(swiftest_pl), intent(inout) :: swiftest_plA
-   type(io_input_parameters), intent(inout) :: param
+   type(swiftest_parameters), intent(inout) :: param
    integer(I4B), intent(in)    :: ipl
    logical, intent(in)         :: lescape_body
    ! Internals

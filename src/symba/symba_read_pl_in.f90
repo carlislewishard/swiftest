@@ -12,7 +12,7 @@ contains
       implicit none
       ! Arguments
       type(symba_pl),              intent(inout) :: symba_plA  !! Swiftest data structure to store massive body initial conditions
-      type(io_input_parameters), intent(inout) :: param    !! Input collection of user-defined parameters
+      type(swiftest_parameters), intent(inout) :: param    !! Input collection of user-defined parameters
       ! Internals
       integer(I4B), parameter :: LUN = 7              !! Unit number of input file
       integer(I4B)            :: i, ierr, npl

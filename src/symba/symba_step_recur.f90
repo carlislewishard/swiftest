@@ -67,7 +67,7 @@ RECURSIVE SUBROUTINE symba_step_recur(t, ireci, npl, nplm, ntp, symba_plA, symba
      TYPE(symba_plplenc), INTENT(INOUT)               :: plplenc_list
      TYPE(symba_pltpenc), INTENT(INOUT)               :: pltpenc_list
      TYPE(symba_merger), INTENT(INOUT)                :: mergeadd_list, mergesub_list
-     type(io_input_parameters), intent(inout)       :: param
+     type(swiftest_parameters), intent(inout)       :: param
 
 ! Internals
      LOGICAL(LGT)              :: lencounter

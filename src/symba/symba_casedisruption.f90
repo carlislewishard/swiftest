@@ -18,7 +18,7 @@ function symba_casedisruption (symba_plA, family, nmergeadd, mergeadd_list, x, v
    type(symba_merger), intent(inout)         :: mergeadd_list
    real(DP), dimension(:),   intent(inout)   :: mass, radius, mass_res
    real(DP), dimension(:,:), intent(inout)   :: x, v, L_spin, Ip
-   type(io_input_parameters),intent(inout) :: param
+   type(swiftest_parameters),intent(inout) :: param
    real(DP), intent(inout)                   :: Qloss
    ! Result
    integer(I4B)                              :: status

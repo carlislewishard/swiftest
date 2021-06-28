@@ -21,7 +21,7 @@ subroutine symba_merge_pl(t, dt, index_enc, nmergesub, mergesub_list, npl, symba
    type(symba_plplenc), intent(inout)         :: plplenc_list
    type(symba_merger), intent(inout)          :: mergesub_list
    type(symba_pl), intent(inout)              :: symba_plA
-   type(io_input_parameters), intent(inout) :: param
+   type(swiftest_parameters), intent(inout) :: param
 
    integer(I4B)                               :: i, j, k, index_parent, index_child, p1, p2
    integer(I4B)                               :: nchild_inherit, nchild_orig, nchild_new
