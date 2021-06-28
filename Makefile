@@ -58,7 +58,7 @@ SWIFTEST_MODULES =   swiftest_globals.f90 \
 
 include Makefile.Defines
 
-MODULES         = $(SWIFTEST_MODULES)
+MODULES         = $(SWIFTEST_MODULES) $(USER_MODULES)
 
 
 .PHONY : all mod lib libdir drivers tools bin clean force 
