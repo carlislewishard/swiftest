@@ -19,7 +19,7 @@ function symba_casemerge (symba_plA, family, nmergeadd, mergeadd_list, x, v, mas
    type(symba_merger), intent(inout)         :: mergeadd_list
    real(DP), dimension(:,:), intent(in)      :: x, v, L_spin, Ip
    real(DP), dimension(:),   intent(in)      :: mass, radius
-   type(user_input_parameters),intent(inout) :: param
+   type(swiftest_parameters),intent(inout) :: param
    ! Result
    integer(I4B)                              :: status
    ! Internals

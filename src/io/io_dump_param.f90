@@ -1,21 +1,22 @@
-submodule(user) s_user_dump_param
+submodule(swiftest_data_structures) s_io_dump_param
 contains
-   module subroutine user_dump_param(param,t)
+   module subroutine io_dump_param(param, t, swiftest_plA)
       !! author: David A. Minton
       !!
       !! Dump integration parameters to file
       !!
       !! Adapted from David E. Kaufmann's Swifter routine io_dump_param.f90
       !! Adapted from Martin Duncan's Swift routine io_dump_param.f
-      use swiftest, except_this_one => user_dump_param
+      use swiftest, except_this_one => io_dump_param
       implicit none
 
       ! Arguments
-      class(user_input_parameters),intent(in)  :: param    !! Output collection of user-defined parameters
-      real(DP),intent(in)                 :: t        !! Current simulation tim
+      class(swiftest_parameters),intent(in)  :: param    !! Output collection of user-defined parameters
+      real(DP),intent(in)                      :: t        !! Current simulation tim
+      type(swiftest_pl), intent(inout)         :: swiftest_plA
 
       ! Internals
-      type(user_input_parameters)  :: param_dump !! Data type of dumped parameter file
+      type(swiftest_parameters)  :: param_dump !! Data type of dumped parameter file
       integer(I4B), parameter :: LUN = 7 !! Unit number of output file
       integer(I4B)            :: ierr     !! Error code
       integer(I4B), save      :: idx = 1  !! Index of current dump file. Output flips between 2 files for extra security
@@ -38,7 +39,7 @@ contains
       !! todo: Currently this procedure does not work in user-defined derived-type input mode 
       !!    due to compiler incompatabilities
       !write(LUN,'(DT)') param_dump
-      call param_dump%udio_writer(LUN, iotype="none",v_list=(/0/),iostat=ierr,iomsg=error_message)
+      call param_dump%udio_writer(LUN, iotype="none",v_list=(/0/),iostat=ierr,iomsg=error_message, swiftest_plA=swiftest_plA)
       call random_seed(put = param_dump%seed)
 
       if (idx == 2) then
@@ -51,5 +52,5 @@ contains
 
       return
 
-   end subroutine user_dump_param
-end submodule s_user_dump_param
+   end subroutine io_dump_param
+end submodule s_io_dump_param

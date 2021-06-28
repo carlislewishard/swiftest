@@ -43,7 +43,7 @@ SUBROUTINE io_dump_pl(npl, swiftest_plA, param)
 ! Arguments
      INTEGER(I4B), INTENT(IN)         :: npl
      TYPE(swiftest_pl), INTENT(INOUT) :: swiftest_plA
-      type(user_input_parameters),intent(inout) :: param
+      type(swiftest_parameters),intent(inout) :: param
 
 ! Internals
    INTEGER(I4B)                     :: ierr
