@@ -1,6 +1,6 @@
-submodule (user) s_user_read_param_in
+submodule (swiftest_data_structures) s_user_read_param_in
 contains
-   module subroutine user_read_param_in(param,inparfile) 
+   module subroutine user_read_param_in(param, inparfile, swiftest_plA) 
       !! author: The Purdue Swiftest Team -  David A. Minton, Carlisle A. Wishard, Jennifer L.L. Pouplin, and Jacob R. Elliott
       !!
       !! Read in parameters for the integration
@@ -13,7 +13,8 @@ contains
 
       ! Arguments
       class(user_input_parameters),intent(out) :: param         !! Input collection of user-defined parameters
-      character(*), intent(in)            :: inparfile     !! Parameter input file name (i.e. param.in)
+      character(*), intent(in)                 :: inparfile     !! Parameter input file name (i.e. param.in)
+      type(swiftest_pl), intent(inout)         :: swiftest_plA
 
       ! Internals
       integer(I4B), parameter :: LUN = 7                 !! Unit number of input file
@@ -35,7 +36,7 @@ contains
       !!    as the newline characters are ignored in the input file when compiled in ifort.
 
       !read(LUN,'(DT)', iostat= ierr, iomsg = error_message) param
-      call param%udio_reader(LUN,iotype="none",v_list=(/0/),iostat=ierr,iomsg=error_message)
+      call param%udio_reader(LUN,iotype="none",v_list=(/0/),iostat=ierr,iomsg=error_message, swiftest_plA=swiftest_plA)
       if (ierr /= 0) then
          write(*,*) 'Swiftest error reading ', trim(adjustl(inparfile))
          write(*,*) ierr,trim(adjustl(error_message))

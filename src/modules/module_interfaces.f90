@@ -26,7 +26,6 @@
 MODULE module_interfaces
    use swiftest_globals
    use swiftest_data_structures
-   use user
 
      IMPLICIT NONE
 
@@ -1148,7 +1147,6 @@ MODULE module_interfaces
                USE swiftest_data_structures
                USE module_helio
                USE module_symba
-               use user
                IMPLICIT NONE
                TYPE(user_input_parameters), INTENT(INOUT)       :: param        ! Derived type containing user defined parameters 
                INTEGER(I4B), INTENT(IN)                         :: npl, ntp
@@ -1205,7 +1203,6 @@ MODULE module_interfaces
                USE swiftest_data_structures
                USE module_helio
                USE module_symba
-               use user
                IMPLICIT NONE
                INTEGER(I4B), INTENT(IN)           :: npl, nplm, ntp, nplplenc, npltpenc
                INTEGER(I4B), INTENT(INOUT)        :: nmergeadd, nmergesub
@@ -1226,7 +1223,6 @@ MODULE module_interfaces
                USE swiftest_data_structures
                USE module_helio
                USE module_symba
-               use user
                IMPLICIT NONE
                INTEGER(I4B), INTENT(IN)           :: ireci, npl, nplm, ntp, nplplenc, npltpenc
                INTEGER(I4B), INTENT(INOUT)        :: nmergeadd, nmergesub
@@ -1345,7 +1341,6 @@ MODULE module_interfaces
                USE swiftest_data_structures
                USE module_helio
                USE module_symba
-               use user
                IMPLICIT NONE
                TYPE(user_input_parameters), INTENT(INOUT)       :: param        ! Derived type containing user defined parameters 
                INTEGER(I4B), INTENT(IN)                         :: npl, ntp
@@ -1367,7 +1362,6 @@ MODULE module_interfaces
                USE swiftest_globals
                USE swiftest_data_structures
                USE module_symba
-               USE user
                IMPLICIT NONE
                INTEGER(I4B), INTENT(IN)                   :: npl, nplm, ntp, nplplenc, npltpenc
                INTEGER(I4B), INTENT(INOUT)                :: nmergeadd, nmergesub
@@ -1402,7 +1396,6 @@ MODULE module_interfaces
             USE swiftest_globals
             USE swiftest_data_structures
             USE module_symba
-            USE user
             implicit none
             integer(I4B), intent(in)                :: npl
             type(symba_pl), intent(in)           :: symba_plA

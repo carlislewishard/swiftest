@@ -45,7 +45,6 @@
 #******************************************************************************
 
 SWIFTEST_MODULES =   swiftest_globals.f90 \
-                     user.f90 \
                      swiftest_data_structures.f90 \
 							lambda_function.f90\
                      module_swifter.f90 \

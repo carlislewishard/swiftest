@@ -1,6 +1,6 @@
-submodule (user) s_user_udio_reader
+submodule (swiftest_data_structures) s_user_udio_reader
 contains
-   module subroutine user_udio_reader(param, unit, iotype, v_list, iostat, iomsg) 
+   module subroutine user_udio_reader(param, unit, iotype, v_list, iostat, iomsg, swiftest_plA) 
       !! author: The Purdue Swiftest Team -  David A. Minton, Carlisle A. Wishard, Jennifer L.L. Pouplin, and Jacob R. Elliott
       !!
       !! Read in parameters for the integration
@@ -22,6 +22,7 @@ contains
       integer, intent(in)                    :: v_list(:)
       integer, intent(out)                   :: iostat
       character(len=*), intent(inout)        :: iomsg
+      type(swiftest_pl), intent(inout)       :: swiftest_plA
 
       ! Internals
       logical                 :: t0_set = .false.        !! Is the initial time set in the input file?
@@ -211,6 +212,41 @@ contains
                   param_value = user_get_token(line, ifirst, ilast, iostat) 
                   read(param_value, *) param%Lspin_orig(i)
                end do
+            case("LCB_INITIAL")
+               read(param_value, *) swiftest_plA%Lcb_initial(1)
+               do i = 2, NDIM
+                  ifirst = ilast + 1
+                  param_value = user_get_token(line, ifirst, ilast, iostat) 
+                  read(param_value, *) swiftest_plA%Lcb_initial(i)
+               end do
+            case("DLCB")
+               read(param_value, *) swiftest_plA%dLcb(1)
+               do i = 2, NDIM
+                  ifirst = ilast + 1
+                  param_value = user_get_token(line, ifirst, ilast, iostat) 
+                  read(param_value, *) swiftest_plA%dLcb(i)
+               end do
+            case("LESCAPE")
+               read(param_value, *) swiftest_plA%Lescape(1)
+               do i = 2, NDIM
+                  ifirst = ilast + 1
+                  param_value = user_get_token(line, ifirst, ilast, iostat) 
+                  read(param_value, *) swiftest_plA%Lescape(i)
+               end do
+            case("MCB_INITIAL")
+               read(param_value, *) swiftest_plA%Mcb_initial 
+            case("DMCB")
+               read(param_value, *) swiftest_plA%dMcb
+            case("MESCAPE")
+               read(param_value, *) swiftest_plA%Mescape 
+            case("RCB_INITIAL")
+               read(param_value, *) swiftest_plA%Rcb_initial 
+            case("DRCB")
+               read(param_value, *) swiftest_plA%dRcb
+            case("ECOLLISIONS")
+               read(param_value, *) swiftest_plA%Ecollisions
+            case("EUNTRACKED")
+               read(param_value, *) swiftest_plA%Euntracked
             case default
                write(iomsg,*) "Unknown parameter -> ",param_name
                iostat = -1

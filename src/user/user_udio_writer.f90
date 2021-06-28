@@ -1,6 +1,6 @@
-submodule(user) s_user_udio_writer
+submodule(swiftest_data_structures) s_user_udio_writer
 contains
-   module subroutine user_udio_writer(param, unit, iotype, v_list, iostat, iomsg) 
+   module subroutine user_udio_writer(param, unit, iotype, v_list, iostat, iomsg, swiftest_plA) 
       !! author: David A. Minton
       !!
       !! Dump integration parameters to file
@@ -17,6 +17,7 @@ contains
       integer, intent(in)                 :: v_list(:)
       integer, intent(out)                :: iostat
       character(len=*), intent(inout)     :: iomsg
+      type(swiftest_pl), intent(inout)    :: swiftest_plA
 
       ! Internals
       character(*),parameter :: Ifmt  = '(I0)'         !! Format label for integer values
@@ -114,6 +115,16 @@ contains
          write(unit, '("LTOT_ORIG  ",3(1X,ES25.17))') param%Ltot_orig(:)
          write(unit, '("LORBIT_ORIG",3(1X,ES25.17))') param%Lorbit_orig(:)
          write(unit, '("LSPIN_ORIG ",3(1X,ES25.17))') param%Lspin_orig(:)
+         write(unit, '("LCB_INITIAL ",3(1X,ES25.17))') swiftest_pLA%Lcb_initial(:)
+         write(unit, '("DLCB ",3(1X,ES25.17))') swiftest_pLA%dLcb(:)
+         write(unit, '("LESCAPE ",3(1X,ES25.17))') swiftest_pLA%Lescape(:)
+         write(unit, '("MCB_INITIAL ",(1X,ES25.17))') swiftest_pLA%Mcb_initial
+         write(unit, '("DMCB ",(1X,ES25.17))') swiftest_pLA%dMcb
+         write(unit, '("MESCAPE ",(1X,ES25.17))') swiftest_pLA%Mescape
+         write(unit, '("RCB_INITIAL ",(1X,ES25.17))') swiftest_pLA%Rcb_initial
+         write(unit, '("DRCB ",(1X,ES25.17))') swiftest_pLA%dRcb
+         write(unit, '("ECOLLISIONS ",(1X,ES25.17))') swiftest_pLA%Ecollisions
+         write(unit, '("EUNTRACKED ",(1X,ES25.17))') swiftest_pLA%Euntracked
       end if
       write(param_name, Afmt) "FIRSTKICK"; write(param_value, Lfmt) param%lfirstkick; write(unit, Afmt) adjustl(param_name), adjustl(param_value)
 

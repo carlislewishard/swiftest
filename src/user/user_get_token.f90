@@ -1,4 +1,4 @@
-submodule(user) s_user_get_token
+submodule(swiftest_data_structures) s_user_get_token
 contains
    module function user_get_token(buffer, ifirst, ilast, ierr) result(token)
       !! author: David A. Minton

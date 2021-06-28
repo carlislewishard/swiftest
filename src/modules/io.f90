@@ -5,7 +5,6 @@ module io
    !! Module containing all input/output subroutine interface blocks 
    use swiftest_globals
    use swiftest_data_structures
-   use user
 
    interface
 

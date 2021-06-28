@@ -82,7 +82,7 @@ program swiftest_symba
       100 format(a)
       inparfile = trim(adjustl(inparfile))
       ! read in the param.in file and get simulation parameters
-      call param%read_from_file(inparfile)
+      call param%read_from_file(inparfile, symba_plA%helio%swiftest)
       param%lmtiny = .true. ! Turn this on for SyMBA
       
       ! reads in initial conditions of all massive bodies from input file
@@ -216,7 +216,7 @@ program swiftest_symba
                finish = clock_count / (count_rate * 1.0_DP)
                write(*,walltimefmt) finish - start, wallperstep
 
-               call param%dump_to_file(t)
+               call param%dump_to_file(t, symba_plA%helio%swiftest)
                call io_dump_pl_symba(npl, symba_plA, param)
                call io_dump_tp(ntp, symba_tpA%helio%swiftest)
                idump = istep_dump

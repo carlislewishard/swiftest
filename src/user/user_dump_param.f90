@@ -1,6 +1,6 @@
-submodule(user) s_user_dump_param
+submodule(swiftest_data_structures) s_user_dump_param
 contains
-   module subroutine user_dump_param(param,t)
+   module subroutine user_dump_param(param, t, swiftest_plA)
       !! author: David A. Minton
       !!
       !! Dump integration parameters to file
@@ -12,7 +12,8 @@ contains
 
       ! Arguments
       class(user_input_parameters),intent(in)  :: param    !! Output collection of user-defined parameters
-      real(DP),intent(in)                 :: t        !! Current simulation tim
+      real(DP),intent(in)                      :: t        !! Current simulation tim
+      type(swiftest_pl), intent(inout)         :: swiftest_plA
 
       ! Internals
       type(user_input_parameters)  :: param_dump !! Data type of dumped parameter file
@@ -38,7 +39,7 @@ contains
       !! todo: Currently this procedure does not work in user-defined derived-type input mode 
       !!    due to compiler incompatabilities
       !write(LUN,'(DT)') param_dump
-      call param_dump%udio_writer(LUN, iotype="none",v_list=(/0/),iostat=ierr,iomsg=error_message)
+      call param_dump%udio_writer(LUN, iotype="none",v_list=(/0/),iostat=ierr,iomsg=error_message, swiftest_plA=swiftest_plA)
       call random_seed(put = param_dump%seed)
 
       if (idx == 2) then
