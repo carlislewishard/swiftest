@@ -641,15 +641,15 @@ def solar_system_pl(config, ephemerides_start_date):
 
    # Planet radii in meters
    planetradius = {
-      'mercury': np.longdouble(2439.4e3),
-      'venus': np.longdouble(6051.8e3),
-      'earthmoon': np.longdouble(6371.0084e3),  # Earth only for radius
-      'mars': np.longdouble(3389.50e3),
-      'jupiter': np.longdouble(69911e3),
-      'saturn': np.longdouble(58232.0e3),
-      'uranus': np.longdouble(25362.e3),
-      'neptune': np.longdouble(24622.e3),
-      'plutocharon': np.longdouble(1188.3e3)
+      'mercury': np.longdouble(2439.4e3) / AU2M,
+      'venus': np.longdouble(6051.8e3) / AU2M,
+      'earthmoon': np.longdouble(6371.0084e3) / AU2M,  # Earth only for radius
+      'mars': np.longdouble(3389.50e3) / AU2M,
+      'jupiter': np.longdouble(69911e3) / AU2M,
+      'saturn': np.longdouble(58232.0e3) / AU2M,
+      'uranus': np.longdouble(25362.e3) / AU2M,
+      'neptune': np.longdouble(24622.e3) / AU2M,
+      'plutocharon': np.longdouble(1188.3e3) / AU2M
    }
 
    # Unit conversion factors
