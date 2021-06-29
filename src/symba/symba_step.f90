@@ -71,7 +71,7 @@ subroutine symba_step(t, dt, param, npl, ntp,symba_plA, symba_tpA,       &
      implicit none
 
 ! Arguments
-     type(user_input_parameters), intent(inout)       :: param        ! derived type containing user defined parameters 
+     type(swiftest_parameters), intent(inout)       :: param        ! derived type containing user defined parameters 
      integer(I4B), intent(in)                         :: npl, ntp
      integer(I4B), intent(inout)                      :: nplplenc, npltpenc, nmergeadd, nmergesub
      real(DP), intent(in)                             :: t, dt

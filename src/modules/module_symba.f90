@@ -106,7 +106,7 @@ MODULE module_symba
    interface
       module subroutine symba_read_pl_in(symba_plA, param) 
          type(symba_pl),              intent(inout) :: symba_plA  !! Swiftest data structure to store massive body initial conditions
-         type(user_input_parameters), intent(inout) :: param    !! Input collection of user-defined parameters
+         type(swiftest_parameters), intent(inout) :: param    !! Input collection of user-defined parameters
       end subroutine symba_read_pl_in
    end interface
 

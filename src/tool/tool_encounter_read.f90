@@ -28,11 +28,13 @@ PROGRAM tool_encounter_read
 ! Modules
      USE swiftest
      USE module_interfaces
+     USE swiftest_data_structures
    use io
      IMPLICIT NONE
 
 ! Arguments
-   type(user_input_parameters)  :: param    ! derived type containing user-defined parameters
+   type(swiftest_parameters)  :: param    ! derived type containing user-defined parameters
+   type(swiftest_pl)            :: swiftest_plA
      INTEGER(I4B)      :: istep_out      ! Time steps between binary outputs
      INTEGER(I4B)      :: istep_dump     ! Time steps between dumps
      REAL(DP)          :: t0             ! Integration start time
@@ -70,7 +72,7 @@ PROGRAM tool_encounter_read
      READ(*,100)inparfile
  100 FORMAT(A)
      inparfile=TRIM(ADJUSTL(inparfile))
-   call param%read_from_file(inparfile)
+   call param%read_from_file(inparfile, swiftest_plA)
 
    ! temporary until the conversion to the derived type argument list is complete
    t0 = param%t0

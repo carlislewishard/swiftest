@@ -10,7 +10,7 @@ contains
       implicit none
       ! Arguments
       class(swiftest_pl),          intent(inout) :: swiftest_plA   !! Swiftest massive body structure
-      type(user_input_parameters), intent(in) :: param   !! Input colleciton of user-defined parameters
+      type(swiftest_parameters), intent(in) :: param   !! Input colleciton of user-defined parameters
       ! Internals
       integer(I4B), parameter   :: lun = 22
       integer(I4B)              :: i, ierr, id, idx

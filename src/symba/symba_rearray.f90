@@ -22,7 +22,7 @@ subroutine symba_rearray(t, npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, 
    type(symba_merger),          intent(inout) :: mergeadd_list 
    logical,                     intent(in)    :: ldiscard_pl, ldiscard_tp 
    real(DP),                    intent(in)    :: mtiny
-   type(user_input_parameters), intent(inout) :: param
+   type(swiftest_parameters), intent(inout) :: param
    logical, dimension(:), allocatable, intent(inout) :: discard_l_pl
    integer(I4B), dimension(:), allocatable, intent(inout) :: discard_stat_list
 
