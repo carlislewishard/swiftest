@@ -109,7 +109,13 @@ program swiftest_symba
       end if
 
       ! reorder by mass 
-      if (out_stat /= "APPEND") call symba_reorder_pl(npl, symba_plA)  ! This is a new run, so we will sort the massive body list by mass
+      if (out_stat /= "APPEND") then ! This is a new run, so we will sort the massive body list by mass and save the initial conditions of the central body
+         call symba_reorder_pl(npl, symba_plA)  
+         symba_plA%helio%swiftest%Mcb_initial = symba_plA%helio%swiftest%mass(1)
+         symba_plA%helio%swiftest%Rcb_initial = symba_plA%helio%swiftest%radius(1)
+         symba_plA%helio%swiftest%Lcb_initial(:) = symba_plA%helio%swiftest%Ip(3,1) * symba_plA%helio%swiftest%mass(1) * &
+                                                   symba_plA%helio%swiftest%radius(1)**2 * symba_plA%helio%swiftest%rot(:,1)
+      end if
           
       call util_valid(npl, ntp, symba_plA%helio%swiftest, symba_tpA%helio%swiftest)
       ntp0 = ntp
@@ -129,12 +135,6 @@ program swiftest_symba
       nplm = count(symba_plA%helio%swiftest%mass(1:npl) > mtiny)
       CALL util_dist_index_plpl(npl, nplm, symba_plA)
       !CALL util_dist_index_pltp(nplm, ntp, symba_tpA)
-
-      ! Save initial mass and angular momentum of the central body
-      symba_plA%helio%swiftest%Mcb_initial = symba_plA%helio%swiftest%mass(1)
-      symba_plA%helio%swiftest%Rcb_initial = symba_plA%helio%swiftest%radius(1)
-      symba_plA%helio%swiftest%Lcb_initial(:) = symba_plA%helio%swiftest%Ip(3,1) * symba_plA%helio%swiftest%mass(1) * &
-                                                symba_plA%helio%swiftest%radius(1)**2 * symba_plA%helio%swiftest%rot(:,1)
 
       if (param%lenergy) then
          call coord_h2b(npl, symba_plA%helio%swiftest, msys)
