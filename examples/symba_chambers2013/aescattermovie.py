@@ -5,7 +5,6 @@ from matplotlib import animation
 import matplotlib.colors as mcolors
 
 radscale = 20
-RMars = 3389500.0
 xmin = 1.0
 xmax = 10.0
 ymin = 1e-6
@@ -55,7 +54,7 @@ class AnimatedScatter(object):
         # set up the figure
         self.ax = plt.axes(xlim=(xmin, xmax), ylim=(ymin, ymax))
         self.ax.margins(x=10, y=1)
-        self.ax.set_xlabel('Semi Major Axis ($R_{Mars}$)', fontsize='16', labelpad=1)
+        self.ax.set_xlabel('Semi Major Axis (AU)', fontsize='16', labelpad=1)
         self.ax.set_ylabel('Eccentricity', fontsize='16', labelpad=1)
         self.ax.set_yscale('log')
 
@@ -76,7 +75,7 @@ class AnimatedScatter(object):
             d = self.ds.isel(time=frame)
             Radius = d['radmarker'].values
             Mass = d['Mass'].values
-            a = d['a'].values / RMars
+            a = d['a'].values 
             e = d['e'].values
             name = d['id'].values
             npl = d['npl'].values
