@@ -54,6 +54,8 @@ module swiftest_data_structures
       real(DP)                                    :: Euntracked = 0.0_DP !! Energy gained from system due to escaped bodies
       integer(I4B), dimension(:,:), allocatable   :: k_plpl
       integer(I8B)                                :: num_plpl_comparisons
+      real(DP),     dimension(:),     allocatable :: k2   !! Love number
+      real(DP),     dimension(:),     allocatable :: Q !! Quality factor 
    contains
       procedure :: alloc => swiftest_pl_allocate
       procedure :: dealloc => swiftest_pl_deallocate
