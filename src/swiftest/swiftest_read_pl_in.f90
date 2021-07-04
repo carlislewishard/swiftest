@@ -48,6 +48,10 @@ contains
             read(LUN, *, iostat = ierr) self%Ip(:,1)
             read(LUN, *, iostat = ierr) self%rot(:,1)
          end if
+         if (param%ltides) THEN
+            read(LUN, *, iostat = ierr) self%k2(1)
+            read(LUN, *, iostat = ierr) self%Q(1)
+         end if 
          if (ierr /= 0) then
             write(*,*) 'Error reading central body values in ',trim(adjustl(param%inplfile))
             return
@@ -104,6 +108,10 @@ contains
             read(LUN, iostat = ierr) self%Ip(:,:)
             read(LUN, iostat = ierr) self%rot(:,:)
          end if
+         if (param%ltides) THEN
+            read(LUN, *, iostat = ierr) self%k2(:)
+            read(LUN, *, iostat = ierr) self%Q(:)
+         end if 
          if (ierr /= 0) then
             write(*,*) 'An error occurred reading in ',trim(adjustl(param%inplfile))
             call util_exit(FAILURE)
