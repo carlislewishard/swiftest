@@ -5,7 +5,7 @@
 !  Project   : SWIFTEST
 !  Package   : module
 !  Language    : Fortran 90/95
-!
+!  author: The Purdue Swiftest Team -  David A. Minton, Carlisle A. Wishard, Jennifer L.L. Pouplin, and Jacob R. Elliott
 !  Description : Definition of data and structures specific to the calculation of tidal torques
 !
 !  Input
