@@ -1,65 +1,22 @@
-!**********************************************************************************************************************************
-!
-!  Unit Name   : symba_user_getacch
-!  Unit Type   : subroutine
-!  Project     : Swiftest
-!  Package     : symba
-!  Language    : Fortran 90/95
-!
-!  Description : Add user-supplied heliocentric accelerations to planets
-!
-!  Input
-!    Arguments : t          : time
-!                npl        : number of planets
-!                symba_pl1P : pointer to head of SyMBA planet structure linked-list
-!    Terminal  : TBS as needed by user
-!    File      : TBS as needed by user
-!
-!  Output
-!    Arguments : symba_pl1P : pointer to head of SyMBA planet structure linked-list
-!    Terminal  : TBS as needed by user
-!    File      : TBS as needed by user
-!
-!  Invocation  : CALL symba_user_getacch(t, npl, symba_pl1P)
-!
-!  Notes       : Carlisle was here
-!
-!**********************************************************************************************************************************
-SUBROUTINE symba_user_getacch(t, npl, symba_plA)
+subroutine tides_getacch(t, npl, symba_plA)
+	!! author: Jennifer L.L. Pouplin, Carlisle A. wishard, and David A. Minton
+	!!
+	!! Calculated tidal torques from central body to any planet and from any planet to central body
+	!! planet - planet interactions are considered negligeable
+	!! Adapted from Mercury-T code from Bolmont et al. 2015
+   use swiftest
+   use module_symba
+   use module_interfaces, EXCEPT_THIS_ONE => tides_getacch
+   implicit none
 
-! Modules
-     USE swiftest
-     USE module_symba
-     USE module_interfaces, EXCEPT_THIS_ONE => symba_user_getacch
-     IMPLICIT NONE
+   real(DP), intent(in)                   :: t
+   integer(I4B), intent(in)               :: npl
+   type(symba_pl)                         :: symba_plA
+   type(swiftest_parameters),intent(inout) :: param
 
-! Arguments
-     INTEGER(I4B), INTENT(IN)                     :: npl
-     REAL(DP), INTENT(IN)                         :: t
-     TYPE(symba_pl), INTENT(INOUT)                :: symba_plA
 
-! Internals
 
-! Executable code
 
-     RETURN
+    return
 
-END SUBROUTINE symba_user_getacch
-!**********************************************************************************************************************************
-!
-!  Author(s)   : David E. Kaufmann
-!
-!  Revision Control System (RCS) Information
-!
-!  Source File : $RCSfile$
-!  Full Path   : $Source$
-!  Revision    : $Revision$
-!  Date        : $Date$
-!  Programmer  : $Author$
-!  Locked By   : $Locker$
-!  State       : $State$
-!
-!  Modification History:
-!
-!  $Log$
-!**********************************************************************************************************************************
+end subroutine tides_getacch 
