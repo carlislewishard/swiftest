@@ -138,16 +138,15 @@ contains
             case ("ROTATION")
                call util_toupper(param_value)
                if (param_value == "YES" .or. param_value == 'T') param%lrotation = .true.
-
+            case ("TIDES")
+               call util_toupper(param_value)
+               if (param_value == "YES" .or. param_value == 'T') param%ltides = .true. 
             ! The following are not yet implemented
             case ("RINGMOONS")
                call util_toupper(param_value)
                if (param_value == "YES" .or. param_value == 'T') param%lringmoons = .true.
             case ("RING_OUTFILE")
                param%ring_outfile = param_value
-            case ("TIDES")
-               call util_toupper(param_value)
-               if (param_value == "YES" .or. param_value == 'T') param%ltides = .true. 
             case ("GR")
                call util_toupper(param_value)
                if (param_value == "YES" .or. param_value == 'T') param%lgr = .true. 
