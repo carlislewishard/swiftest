@@ -185,6 +185,7 @@ program swiftest_symba
                Ecollision = Eorbit_after - Eorbit_before   ! Energy change resulting in this collisional event Total running energy offset from collision in this step
                symba_plA%helio%swiftest%Ecollisions = symba_plA%helio%swiftest%Ecollisions + Ecollision
             end if
+            param%lfirstkick = .true.
             !if (ntp > 0) call util_dist_index_pltp(nplm, ntp, symba_plA, symba_tpA)
          end if
 
