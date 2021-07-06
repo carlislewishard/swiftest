@@ -77,7 +77,6 @@ contains
             if (Lerror > 1e-10) then
                write(*,*) 'Something has gone wrong! Angular momentum is too high!'
                write(*,*) 'Lerror: ', Lerror
-               call util_exit(FAILURE)
             end if
          end if
          ke_orbit_last = ke_orbit_now
