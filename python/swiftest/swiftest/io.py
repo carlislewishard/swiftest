@@ -498,72 +498,16 @@ def swiftest_stream(f, param):
 
       plab, tlab = make_swiftest_labels(param)
 
-      if param['OUT_FORM'] == 'XV':
-         mu = np.empty_like(p1)
-         mu[0] = Mpl[0]
-         mu[1:] = Mpl[0] + Mpl[1:]
-         p7 = []
-         p8 = []
-         p9 = []
-         p10 = []
-         p11 = []
-         p12 = []
-         for i in range(mu.size):
-            elem = orbel.xv2el(mu[i], p1[i], p2[i], p3[i], p4[i], p5[i], p6[i])
-            p7.append(elem[0])
-            p8.append(elem[1])
-            p9.append(elem[2])
-            p10.append(elem[3])
-            p11.append(elem[4])
-            p12.append(elem[5])
-         p7 = np.array(p7)
-         p8 = np.array(p8)
-         p9 = np.array(p9)
-         p10 = np.array(p10)
-         p11 = np.array(p11)
-         p12 = np.array(p12)
-         if ntp[0] > 0:
-            mu = np.full_like(t1,Mpl[0])
-            t7 = []
-            t8 = []
-            t9 = []
-            t10 = []
-            t11 = []
-            t12 = []
-            for i in range(mu.size):
-               elem = orbel.xv2el(mu[i], t1[i], t2[i], t3[i], t4[i], t5[i], t6[i])
-               t7.append(elem[0])
-               t8.append(elem[1])
-               t9.append(elem[2])
-               t10.append(elem[3])
-               t11.append(elem[4])
-               t12.append(elem[5])
-            t7 = np.array(t7)
-            t8 = np.array(t8)
-            t9 = np.array(t9)
-            t10 = np.array(t10)
-            t11 = np.array(t11)
-            t12 = np.array(t12)
-
       if npl > 0:
          if param['ROTATION'] == 'YES':
-            if param['OUT_FORM'] == 'EL':
-               pvec = np.vstack([p1,p2,p3,p4,p5,p6,Mpl,Rpl,rot_x,rot_y,rot_z,Ip_1,Ip_2,Ip_3])
-            else:
-               pvec = np.vstack([p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, Mpl, Rpl, rot_x, rot_y, rot_z, Ip_1, Ip_2, Ip_3])
+            pvec = np.vstack([p1,p2,p3,p4,p5,p6,Mpl,Rpl,rot_x,rot_y,rot_z,Ip_1,Ip_2,Ip_3])
          else:
-            if param['OUT_FORM'] == 'EL':
-               pvec = np.vstack([p1,p2,p3,p4,p5,p6,Mpl,Rpl])
-            else:
-               pvec = np.vstack([p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, Mpl, Rpl])
+            pvec = np.vstack([p1,p2,p3,p4,p5,p6,Mpl,Rpl])
       else:
          pvec = np.empty((8,0))
          plid = np.empty(0)
       if ntp > 0:
-         if param['OUT_FORM'] == 'EL':
-            tvec = np.vstack([t1,t2,t3,t4,t5,t6])
-         else:
-            tvec = np.vstack([t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12])
+        tvec = np.vstack([t1,t2,t3,t4,t5,t6])
       else:
          tvec = np.empty((6,0))
          tpid = np.empty(0)
