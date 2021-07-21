@@ -402,12 +402,6 @@ def make_swiftest_labels(param):
       tlab.append('vx')
       tlab.append('vy')
       tlab.append('vz')
-      tlab.append('a')
-      tlab.append('e')
-      tlab.append('inc')
-      tlab.append('capom')
-      tlab.append('omega')
-      tlab.append('capm')
    elif param['OUT_FORM'] == 'EL':
       tlab.append('a')
       tlab.append('e')
