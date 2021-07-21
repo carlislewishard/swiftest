@@ -1,4 +1,4 @@
-import swiftestio as swio
+import swiftest 
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import animation
@@ -10,34 +10,34 @@ xmax = 20.0
 ymin = -20.0
 ymax = 20.0
 
-cases = ['supercat_head', 'supercat_off', 'disruption_head', 'disruption_off']
-#cases = ['disruption_off', 'supercat_off']
+#cases = ['supercat_head', 'supercat_off', 'disruption_head', 'disruption_off']
+cases = ['disruption_off']
 
-def scale_sim(ds, config):
+def scale_sim(ds, param):
 
     dsscale = ds
 
-    dsscale['mass'] = ds['mass'] / config['GU']
-    Mtot = dsscale['mass'].sum(skipna=True, dim="id").isel(time=0)
-    rscale = sum(ds['radius'].sel(id=[2, 3], time=0)).item()
-    ds['radius'] /= rscale
+    dsscale['Mass'] = ds['Mass'] / param['GU']
+    Mtot = dsscale['Mass'].sum(skipna=True, dim="id").isel(time=0)
+    rscale = sum(ds['Radius'].sel(id=[2, 3], time=0)).item()
+    ds['Radius'] /= rscale
 
-    dsscale['radmarker'] = dsscale['radius'].fillna(0)
+    dsscale['radmarker'] = dsscale['Radius'].fillna(0)
 
     dsscale['px'] /= rscale
     dsscale['py'] /= rscale
     dsscale['pz'] /= rscale
 
-    mpx = dsscale['mass'] * dsscale['px']
-    mpy = dsscale['mass'] * dsscale['py']
-    mpz = dsscale['mass'] * dsscale['pz']
+    mpx = dsscale['Mass'] * dsscale['px']
+    mpy = dsscale['Mass'] * dsscale['py']
+    mpz = dsscale['Mass'] * dsscale['pz']
     xbsys = mpx.sum(skipna=True, dim="id") / Mtot
     ybsys = mpy.sum(skipna=True, dim="id") / Mtot
     zbsys = mpz.sum(skipna=True, dim="id") / Mtot
 
-    mvx = dsscale['mass'] * dsscale['vx']
-    mvy = dsscale['mass'] * dsscale['vy']
-    mvz = dsscale['mass'] * dsscale['vz']
+    mvx = dsscale['Mass'] * dsscale['vx']
+    mvy = dsscale['Mass'] * dsscale['vy']
+    mvz = dsscale['Mass'] * dsscale['vz']
     vxbsys = mvx.sum(skipna=True, dim="id") / Mtot
     vybsys = mvy.sum(skipna=True, dim="id") / Mtot
     vzbsys = mvz.sum(skipna=True, dim="id") / Mtot
@@ -64,12 +64,12 @@ class UpdatablePatchCollection(clt.PatchCollection):
 class AnimatedScatter(object):
     """An animated scatter plot using matplotlib.animations.FuncAnimation."""
 
-    def __init__(self, ds, config):
+    def __init__(self, ds, param):
 
         frame = 0
         nframes = ds['time'].size
-        self.ds = scale_sim(ds, config)
-        self.config = config
+        self.ds = scale_sim(ds, param)
+        self.param = param
         self.rot_angle = {}
 
         self.clist = {'Initial conditions' : 'xkcd:windows blue',
@@ -184,7 +184,7 @@ class AnimatedScatter(object):
     def setup_plot(self):
         # First frame
         """Initial drawing of the scatter plot."""
-        t, name, mass, radius, npl, pl, radmarker, origin = next(self.data_stream(0))
+        t, name, Mass, Radius, npl, pl, radmarker, origin = next(self.data_stream(0))
 
         cval = self.origin_to_color(origin)
         # set up the figure
@@ -217,13 +217,13 @@ class AnimatedScatter(object):
 
     def update(self,frame):
         """Update the scatter plot."""
-        t, name, mass, radius, npl, pl, radmarker, origin = next(self.data_stream(frame))
+        t, name, Mass, Radius, npl, pl, radmarker, origin = next(self.data_stream(frame))
         cval = self.origin_to_color(origin)
         #varrowend, varrowtip = self.velocity_vectors(pl, radmarker)
         sarrowend, sarrowtip = self.spin_arrows(pl, name, radmarker)
         for i, p in enumerate(self.patches):
             p.set_center((pl[i, 0], pl[i,1]))
-            p.set_radius(radmarker[i])
+            p.set_Radius(radmarker[i])
             p.set_color(cval[i])
             #self.varrows[i].set_position(varrowtip[i])
             #self.varrows[i].xy = varrowend[i]
@@ -236,8 +236,8 @@ class AnimatedScatter(object):
     def data_stream(self, frame=0):
         while True:
             d = self.ds.isel(time=frame)
-            radius = d['radmarker'].values
-            mass = d['mass'].values
+            Radius = d['radmarker'].values
+            Mass = d['Mass'].values
             x = d['pxb'].values
             y = d['pyb'].values
             vx = d['vxb'].values
@@ -260,8 +260,8 @@ class AnimatedScatter(object):
             vx = np.nan_to_num(vx, copy=False)
             vy = np.nan_to_num(vy, copy=False)
             radmarker = np.nan_to_num(radmarker, copy=False)
-            mass = np.nan_to_num(mass, copy=False)
-            radius = np.nan_to_num(radius, copy=False)
+            Mass = np.nan_to_num(Mass, copy=False)
+            Radius = np.nan_to_num(Radius, copy=False)
             rotx = np.nan_to_num(rotx, copy=False)
             roty = np.nan_to_num(roty, copy=False)
             rotz = np.nan_to_num(rotz, copy=False)
@@ -278,35 +278,36 @@ class AnimatedScatter(object):
                 for i in id[idxactive]:
                     self.rot_angle[i] = self.rot_angle[i] + dt * np.array(self.rotvec[i])
             frame += 1
-            yield t, name, mass, radius, npl, np.c_[x, y, vx, vy], radmarker, origin
+            yield t, name, Mass, Radius, npl, np.c_[x, y, vx, vy], radmarker, origin
 
 for case in cases:
     if case == 'supercat_off':
         animfile = 'movies/supercat_off_axis.mp4'
         titletext = "Supercatastrophic - Off Axis"
-        configfile = 'param.supercatastrophic_off_axis.in'
+        paramfile = 'param.supercatastrophic_off_axis.in'
     elif case == 'supercat_head':
         animfile = 'movies/supercat_headon.mp4'
         titletext = "Supercatastrophic - Head on"
-        configfile = 'param.supercatastrophic_headon.in'
+        paramfile = 'param.supercatastrophic_headon.in'
     elif case == 'disruption_off':
         animfile = 'movies/disruption_off_axis.mp4'
         titletext = "Disruption - Off Axis"
-        configfile = 'param.disruption_off_axis.in'
+        paramfile = 'param.disruption_off_axis.in'
     elif case == 'disruption_head':
         animfile = 'movies/disruption_headon.mp4'
         titletext = "Disruption- Head on"
-        configfile = 'param.disruption_headon.in'
+        paramfile = 'param.disruption_headon.in'
     elif case == 'merger':
         animfile = 'movies/merger.mp4'
         titletext = "Merger"
-        configfile = 'param.merger.in'
+        paramfile = 'param.merger.in'
     else:
         print(f'{case} is an unknown case')
         exit(-1)
-    config = swio.read_swiftest_config(configfile)
-    ds = swio.swiftest2xr(config)
+    sim = swiftest.Simulation(param_file=paramfile)
+    sim.bin2xr()
+    ds = sim.ds
     print('Making animation')
-    anim = AnimatedScatter(ds,config)
+    anim = AnimatedScatter(ds,sim.param)
     print('Animation finished')
     plt.close(fig='all')
