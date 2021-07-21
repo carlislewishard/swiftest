@@ -85,7 +85,7 @@ class AnimatedScatter(object):
         self.ani = animation.FuncAnimation(self.fig, self.update, interval=1, frames=nframes,
                                           init_func=self.setup_plot, blit=False)
         self.ani.save(animfile, fps=60, dpi=300,
-                      extra_args=['-vcodec', 'libx264'])
+                      extra_args=['-vcodec', 'mpeg4'])
 
     def plot_pl_circles(self, pl, radmarker):
         patches = []
@@ -223,7 +223,7 @@ class AnimatedScatter(object):
         sarrowend, sarrowtip = self.spin_arrows(pl, name, radmarker)
         for i, p in enumerate(self.patches):
             p.set_center((pl[i, 0], pl[i,1]))
-            p.set_Radius(radmarker[i])
+            p.set_radius(radmarker[i])
             p.set_color(cval[i])
             #self.varrows[i].set_position(varrowtip[i])
             #self.varrows[i].xy = varrowend[i]
