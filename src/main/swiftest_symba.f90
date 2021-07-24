@@ -148,7 +148,7 @@ program swiftest_symba
       start = clock_count / (count_rate * 1.0_DP)
       finish = start
       do while ((t < tstop) .and. ((ntp0 == 0) .or. (ntp > 0)))
-         call util_hills(npl, symba_plA%helio%swiftest)
+         !call util_hills(npl, symba_plA%helio%swiftest)
          call symba_step_eucl(t, dt, param,npl,ntp,symba_plA, symba_tpA, nplplenc, npltpenc,&
                plplenc_list, pltpenc_list, nmergeadd, nmergesub, mergeadd_list, mergesub_list)
 
