@@ -159,10 +159,11 @@ subroutine symba_rearray(t, npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, 
 
       call io_write_particle_pl(symba_plA%helio%swiftest, pack([(i, i=1,npl)], add_l_pl(:)), param)
 
-      symba_plA%helio%swiftest%status(1:npl) = ACTIVE
       call symba_reorder_pl(npl, symba_plA)
       
       call util_hills(npl, symba_plA%helio%swiftest)
+
+      symba_plA%helio%swiftest%status(1:npl) = ACTIVE
 
       nplm = count(symba_plA%helio%swiftest%mass(1:npl) > mtiny)
       CALL util_dist_index_plpl(npl, nplm, symba_plA)
