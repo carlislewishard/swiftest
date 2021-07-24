@@ -42,8 +42,8 @@ subroutine util_hills(npl, swiftest_plA)
                   ap = r ! use the heliocentric radius for the hill radius of hyperbolic orbits 
                        !(this is probably good enough for most purposes, but probably worth investigating)
                end if
+               rhill(i) = ap * (((GMp(i) / mu) / 3.0_DP)**(1.0_DP / 3.0_DP))
             end if
-            rhill(i) = ap * (((GMp(i) / mu) / 3.0_DP)**(1.0_DP / 3.0_DP))
          else
             rhill(i) = 0.0_DP
          end if
