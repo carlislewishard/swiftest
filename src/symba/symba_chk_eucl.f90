@@ -41,6 +41,7 @@ subroutine symba_chk_eucl(npl, irec, symba_plA, dt, plplenc_list, nplplenc)
       lencounter(:) = .false.
 
       term2 = rhscale * (rshell**irec)
+      nplplenc_new = 0
 
       do k = 1, num_plpl_comparisons
          associate(ik => k_plpl(1, k), jk => k_plpl(2, k))
