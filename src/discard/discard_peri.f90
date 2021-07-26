@@ -58,7 +58,7 @@ SUBROUTINE discard_peri(t, npl, ntp, swiftest_plA, swiftest_tpA, msys, qmin, qmi
 
 ! Executable code
      IF (lfirst) THEN
-          IF (.NOT. lrhill_present) CALL util_hills(npl, swiftest_plA)
+          IF (.NOT. lrhill_present) CALL util_hills(npl, swiftest_plA%xh, swiftest_plA%vh, swiftest_plA%mass, swiftest_plA%mass(1), swiftest_plA%rhill)
           CALL util_peri(lfirst, ntp, swiftest_tpA, swiftest_plA%mass(1), msys, qmin_coord)
           lfirst = .FALSE.
      ELSE

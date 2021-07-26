@@ -125,6 +125,8 @@ subroutine symba_rearray(t, npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, 
          symba_plA%helio%swiftest%rot(i,nkpl+1:npl) = mergeadd_list%rot(i,1:nmergeadd)
       end do
       symba_plA%helio%swiftest%info(nkpl+1:npl) = mergeadd_list%info(1:nmergeadd)
+      ! Compute rhill
+      call util_hills(nmergeadd+1, symba_plA%helio%swiftest%xb(:,nkpl:npl), symba_plA%helio%swiftest%vb(:,nkpl:npl), symba_plA%helio%swiftest%mass(nkpl:npl), symba_plA%helio%swiftest%mass(1), symba_plA%helio%swiftest%rhill(nkpl:npl))
    end if 
 
    if (ldiscard_pl) then
@@ -161,8 +163,6 @@ subroutine symba_rearray(t, npl, nplm, ntp, nsppl, nsptp, symba_plA, symba_tpA, 
 
       call symba_reorder_pl(npl, symba_plA)
       
-      call util_hills(npl, symba_plA%helio%swiftest)
-
       symba_plA%helio%swiftest%status(1:npl) = ACTIVE
 
       nplm = count(symba_plA%helio%swiftest%mass(1:npl) > mtiny)

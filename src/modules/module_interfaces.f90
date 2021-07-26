@@ -1473,13 +1473,15 @@ END INTERFACE
      END INTERFACE
 
      INTERFACE
-          SUBROUTINE util_hills(npl, swiftest_plA)
-               USE swiftest_globals
-               USE swiftest_data_structures
-               IMPLICIT NONE
-               INTEGER(I4B), INTENT(IN)         :: npl
-               TYPE(swiftest_pl), INTENT(INOUT) :: swiftest_plA
-          END SUBROUTINE util_hills
+     subroutine util_hills(npl, xh, vh, GMpl, GMcb, rhill)
+      use swiftest_globals
+      implicit none
+      integer(I4B), intent(in)  :: npl
+      real(DP), dimension(:,:), intent(in) :: xh, vh
+      real(DP), dimension(:),   intent(in) :: GMpl
+      real(DP),                 intent(in) :: GMcb
+      real(DP), dimension(:),   intent(out) :: rhill
+     end subroutine util_hills
      END INTERFACE
 
      INTERFACE
