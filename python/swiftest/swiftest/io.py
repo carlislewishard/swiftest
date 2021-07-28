@@ -950,12 +950,15 @@ def swifter2swiftest(swifter_param, plname="", tpname="",  conversion_questions=
             line = line.split("!")[0]  # Ignore comments
             i_list = [i for i in line.split(" ") if i.strip()]
             npl = int(i_list[0])
-            print(npl - 1, file=plnew)
+            print(npl, file=plnew)
             line = plold.readline()
+            print(line.strip(), file=plnew)
             i_list = [i for i in line.split(" ") if i.strip()]
             GMcb = real2float(i_list[1])  # Store central body GM for later
-            line = plold.readline()  # Ignore the two zero vector lines
             line = plold.readline()
+            print(line.strip(), file=plnew)
+            line = plold.readline()
+            print(line.strip(), file=plnew)
             for n in range(1, npl):  # Loop over planets
                 line = plold.readline()
                 i_list = [i for i in line.split(" ") if i.strip()]
