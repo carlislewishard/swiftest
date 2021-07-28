@@ -181,5 +181,10 @@ class Simulation:
             self.write_param(param_file, param=swifter_param)
         else:
             print(f'Saving to {codename} not supported')
+        return
 
+    def savebin(self, outtype="netCDF", outname=None):
+        if not outname:
+            print("Error! No output defined!")
+        io.xr2file(self.ds, outname)
         return
