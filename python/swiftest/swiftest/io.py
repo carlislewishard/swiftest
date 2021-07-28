@@ -1163,8 +1163,8 @@ def swiftest2swifter_param(swiftest_param, J2=0.0, J4=0.0):
 
     return swifter_param
 
-def xr2file(xr_ds, outfile=""):
-    xr_ds.to_netcdf(outfile)
+def xr2file(ds, outname=""):
+    ds.to_netcdf(path=outname)
     return
 
 def file2xr(filename):
