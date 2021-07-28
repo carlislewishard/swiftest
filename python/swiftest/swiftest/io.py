@@ -276,7 +276,6 @@ def write_labeled_param(param, param_file_name):
                'IN_TYPE',
                'PL_IN',
                'TP_IN',
-               'CB_IN',
                'BIN_OUT',
                'ENC_OUT',
                'CHK_QMIN',
@@ -428,37 +427,33 @@ def make_swiftest_labels(param):
 
 def swiftest_stream(f, param):
     """
-    Reads in a Swifter bin.dat file and returns a single frame of data as a datastream
-
+    Reads in a Swiftest bin.dat file and returns a single frame of data as a datastream
+ 
     Parameters
     ----------
     f : file object
     param : dict
-
+ 
     Yields
     -------
-    t    : float
-        Time of this frame
-    cbid : int array
-        ID of central body (always returns 0)
-    cvec : float array
-        (npl,1) - vector of quantities for the massive body (Mass, Radius, J2, J4, etc)
+    t   : float
+       Time of this frame
     npl  : int
-        Number of massive bodies
+       Number of massive bodies
     plid : int array
-        IDs of massive bodies
+       IDs of massive bodies
     pvec : float array
-        (npl,N) - vector of N quantities or each particle (6 of XV/EL + Mass, Radius, etc)
+       (npl,N) - vector of N quantities or each particle (6 of XV/EL + mass, radius, etc)
     plab : string list
-        Labels for the pvec data
+       Labels for the pvec data
     ntp  : int
-        Number of test particles
+       Number of test particles
     tpid : int array
-        Ids of test particles
+       Ids of test particles
     tvec : float array
-        (ntp,N) - vector of N quantities for each particle (6 of XV/EL, etc.)
+       (ntp,N) - vector of N quantities for each particle (6 of XV/EL, etc.)
     tlab : string list
-        Labels for the tvec data
+       Labels for the tvec data
     """
     while True:  # Loop until you read the end of file
         try:
@@ -469,21 +464,6 @@ def swiftest_stream(f, param):
         npl = f.read_ints()
         ntp = f.read_ints()
         iout_form = f.read_reals('c')
-        cbid = f.read_ints()
-        Mcb = f.read_reals(np.float64)
-        Rcb = f.read_reals(np.float64)
-        J2cb = f.read_reals(np.float64)
-        J4cb = f.read_reals(np.float64)
-        if param['ROTATION'] == 'YES':
-            Ipcbx = f.read_reals(np.float64)
-            Ipcby = f.read_reals(np.float64)
-            Ipcbz = f.read_reals(np.float64)
-            rotcbx = f.read_reals(np.float64)
-            rotcby = f.read_reals(np.float64)
-            rotcbz = f.read_reals(np.float64)
-        if param['TIDES'] == 'YES':
-            k2cb = f.read_reals(np.float64)
-            Qcb = f.read_reals(np.float64)
         if npl[0] > 0:
             plid = f.read_ints()
             p1 = f.read_reals(np.float64)
@@ -494,18 +474,13 @@ def swiftest_stream(f, param):
             p6 = f.read_reals(np.float64)
             Mpl = f.read_reals(np.float64)
             Rpl = f.read_reals(np.float64)
-            if param['RHILL_PRESENT'] == 'YES':
-                Rhill = f.read_reals(np.float64)
             if param['ROTATION'] == 'YES':
-                rotplx = f.read_reals(np.float64)
-                rotply = f.read_reals(np.float64)
-                rotplz = f.read_reals(np.float64)
-                Ipplx = f.read_reals(np.float64)
-                Ipply = f.read_reals(np.float64)
-                Ipplz = f.read_reals(np.float64)
-            if param['TIDES'] == 'YES':
-                k2pl = f.read_reals(np.float64)
-                Qpl = f.read_reals(np.float64)
+                rot_x = f.read_reals(np.float64)
+                rot_y = f.read_reals(np.float64)
+                rot_z = f.read_reals(np.float64)
+                Ip_1 = f.read_reals(np.float64)
+                Ip_2 = f.read_reals(np.float64)
+                Ip_3 = f.read_reals(np.float64)
         if ntp[0] > 0:
             tpid = f.read_ints()
             t1 = f.read_reals(np.float64)
@@ -515,10 +490,13 @@ def swiftest_stream(f, param):
             t5 = f.read_reals(np.float64)
             t6 = f.read_reals(np.float64)
         
-        clab, plab, tlab = make_swiftest_labels(param)
+        plab, tlab = make_swiftest_labels(param)
         
         if npl > 0:
-            pvec = np.vstack([p1, p2, p3, p4, p5, p6, Mpl, Rpl])
+            if param['ROTATION'] == 'YES':
+                pvec = np.vstack([p1, p2, p3, p4, p5, p6, Mpl, Rpl, rot_x, rot_y, rot_z, Ip_1, Ip_2, Ip_3])
+            else:
+                pvec = np.vstack([p1, p2, p3, p4, p5, p6, Mpl, Rpl])
         else:
             pvec = np.empty((8, 0))
             plid = np.empty(0)
@@ -527,21 +505,9 @@ def swiftest_stream(f, param):
         else:
             tvec = np.empty((6, 0))
             tpid = np.empty(0)
-        cvec = np.array([Mcb, Rcb, J2cb, J4cb])
-        if param['RHILL_PRESENT'] == 'YES':
-           if npl > 0:
-              pvec = np.vstack([pvec, Rhill])
-        if param['ROTATION'] == 'YES':
-            cvec = np.vstack([cvec, Ipcbx, Ipcby, Ipcbz, rotcbx, rotcby, rotcbz])
-            if npl > 0:
-                pvec = np.vstack([pvec, Ipplx, Ipply, Ipplz, rotplx, rotply, rotplz])
-        if param['TIDES'] == 'YES':
-            cvec = np.vstack([cvec, k2cb, Qcb])
-            if npl > 0:
-                pvec = np.vstack([pvec, k2pl, Qpl])
-        yield t, cbid, cvec.T, clab, \
-              npl, plid, pvec.T, plab, \
+        yield t, npl, plid, pvec.T, plab, \
               ntp, tpid, tvec.T, tlab
+
 
 def swifter2xr(param):
     """
@@ -586,172 +552,116 @@ def swifter2xr(param):
     return ds
 
 def swiftest2xr(param):
-    """
-    Converts a Swiftest binary data file into an xarray DataSet.
+   """Reads in the Swiftest BIN_OUT file and converts it to an xarray Dataset"""
+   dims  = ['time','id', 'vec']
+   dsframes = []
 
-    Parameters
-    ----------
-    param : dict
-        Swiftest parameters
+   with FortranFile(param['BIN_OUT'], 'r') as f:
+      for t, npl, plid, pvec, plab, \
+         ntp, tpid, tvec, tlab in swiftest_stream(f, param):
+         plframe = np.expand_dims(pvec, axis=0)
+         tpframe = np.expand_dims(tvec, axis=0)
+         bd = []
 
-    Returns
-    -------
-    xarray dataset
-    """
-    
-    dims = ['time', 'id', 'vec']
-    cb = []
-    pl = []
-    tp = []
-    with FortranFile(param['BIN_OUT'], 'r') as f:
-        for t, cbid, cvec, clab, \
-            npl, plid, pvec, plab, \
-            ntp, tpid, tvec, tlab in swiftest_stream(f, param):
-            # Prepare frames by adding an extra axis for the time coordinate
-            cbframe = np.expand_dims(cvec, axis=0)
-            plframe = np.expand_dims(pvec, axis=0)
-            tpframe = np.expand_dims(tvec, axis=0)
-
-            # Create xarray DataArrays out of each body type
-            cbxr = xr.DataArray(cbframe, dims=dims, coords={'time': t, 'id': cbid, 'vec': clab})
+         # Create xarray DataArrays out of each body type
+         if npl[0] > 0 :
             plxr = xr.DataArray(plframe, dims=dims, coords={'time': t, 'id': plid, 'vec': plab})
+            bd.append(plxr)
+         if ntp[0] > 0 :
             tpxr = xr.DataArray(tpframe, dims=dims, coords={'time': t, 'id': tpid, 'vec': tlab})
-            
-            cb.append(cbxr)
-            pl.append(plxr)
-            tp.append(tpxr)
-            sys.stdout.write('\r' + f"Reading in time {t[0]:.3e}")
-            sys.stdout.flush()
-    
-    cbda = xr.concat(cb, dim='time')
-    plda = xr.concat(pl, dim='time')
-    tpda = xr.concat(tp, dim='time')
-    
-    cbds = cbda.to_dataset(dim='vec')
-    plds = plda.to_dataset(dim='vec')
-    tpds = tpda.to_dataset(dim='vec')
-    print('\nCreating Dataset')
-    ds = xr.combine_by_coords([cbds, plds, tpds])
-    print(f"Successfully converted {ds.sizes['time']} output frames.")
-    return ds
+            bd.append(tpxr)
+         bdxr = xr.concat(bd, dim='time')
+         bdxr = bdxr.to_dataset(dim='vec')
+         bdxr = bdxr.assign(npl=npl[0])
+         bdxr = bdxr.assign(ntp=ntp[0])
+         dsframes.append(bdxr)
+         sys.stdout.write('\r'+f"Reading in time {t[0]:.3e}")
+         sys.stdout.flush()
+      print('\nCreating Dataset')
+      ds = xr.concat(dsframes, dim='time')
+   if not param['PARTICLE_FILE'] == '':
+      ds = swiftest_particle_2xr(ds, param)
+   print(f"Successfully converted {ds.sizes['time']} output frames.")
+   return ds
 
 def swiftest_xr2infile(ds, param, framenum=-1):
-    """
-    Writes a set of Swiftest input files from a single frame of a Swiftest xarray dataset
+   """
+   Writes a set of Swiftest input files from a single frame of a Swiftest xarray dataset
 
-    Parameters
-    ----------
-    ds : xarray dataset
-        Dataset containing Swiftest n-body data in XV format
-    framenum : int
-        Time frame to use to generate the initial conditions. If this argument is not passed, the default is to use the last frame in the dataset.
-    param : dict
-        Swiftest input parameters. This method uses the names of the cb, pl, and tp files from the input
+   Parameters
+   ----------
+   ds : xarray dataset
+       Dataset containing Swiftest n-body data in XV format
+   framenum : int
+       Time frame to use to generate the initial conditions. If this argument is not passed, the default is to use the last frame in the dataset.
+   param : dict
+       Swiftest Configuration parameters. This method uses the names of the  pl, and tp files from the configuration
 
-    Returns
-    -------
-    A set of three input files for a Swiftest run
-    """
-    frame = ds.isel(time=framenum)
-    cb = frame.where(frame.id == 0, drop=True)
-    pl = frame.where(frame.id > 0, drop=True)
-    pl = pl.where(np.invert(np.isnan(pl['Mass'])), drop=True).drop_vars(['J_2', 'J_4'])
-    tp = frame.where(np.isnan(frame['Mass']), drop=True).drop_vars(['Mass', 'Radius', 'J_2', 'J_4'])
-    
-    GMSun = np.double(cb['Mass'])
-    RSun = np.double(cb['Radius'])
-    J2 = np.double(cb['J_2'])
-    J4 = np.double(cb['J_4'])
-    cbid = int(0)
-    
-    if param['IN_TYPE'] == 'ASCII':
-        # Swiftest Central body file
-        cbfile = open(param['CB_IN'], 'w')
-        print(0, file=cbfile)
-        print(GMSun, file=cbfile)
-        print(RSun, file=cbfile)
-        print(J2, file=cbfile)
-        print(J4, file=cbfile)
-        cbfile.close()
-        
-        plfile = open(param['PL_IN'], 'w')
-        print(pl.id.count().values, file=plfile)
-        for i in pl.id:
-            pli = pl.sel(id=i)
-            if param['RHILL_PRESENT'] == 'YES':
-               print(i.values, pli['Mass'].values, pli['Rhill'].values, file=plfile)
-            else:
-               print(i.values, pli['Mass'].values, file=plfile)
+   Returns
+   -------
+   A set of three input files for a Swiftest run
+   """
+   frame = ds.isel(time=framenum)
+   pl = frame.where(np.invert(np.isnan(frame['Mass'])), drop=True)
+   tp = frame.where(np.isnan(frame['Mass']), drop=True).drop_vars(['Mass', 'Radius'])
+   tp = tp.where(np.invert(np.isnan(tp['px'])), drop=True)
+
+   GMSun = np.double(pl['Mass'].isel(id=0))
+   RSun = np.double(pl['Radius'].isel(id=0))
+
+   if param['IN_TYPE'] == 'ASCII':
+      # Swiftest PL file
+      plfile = open(param['PL_IN'], 'w')
+      print(pl.id.count().values, file=plfile)
+      for i in pl.id:
+         pli = pl.sel(id=i)
+         print(i.values, pli['Mass'].values, file=plfile)
+         if i != 0:
             print(pli['Radius'].values, file=plfile)
-            print(pli['px'].values, pli['py'].values, pli['pz'].values, file=plfile)
-            print(pli['vx'].values, pli['vy'].values, pli['vz'].values, file=plfile)
-        plfile.close()
-        
-        # TP file
-        tpfile = open(param['TP_IN'], 'w')
-        print(tp.id.count().values, file=tpfile)
-        for i in tp.id:
-            tpi = tp.sel(id=i)
-            print(i.values, file=tpfile)
-            print(tpi['px'].values, tpi['py'].values, tpi['pz'].values, file=tpfile)
-            print(tpi['vx'].values, tpi['vy'].values, tpi['vz'].values, file=tpfile)
-        tpfile.close()
-    elif param['IN_TYPE'] == 'REAL8':
-        # Now make Swiftest files
-        cbfile = FortranFile(param['CB_IN'], 'w')
-        cbfile.write_record(cbid)
-        cbfile.write_record(np.double(GMSun))
-        cbfile.write_record(np.double(RSun))
-        cbfile.write_record(np.double(J2))
-        cbfile.write_record(np.double(J4))
-        cbfile.close()
-        
-        plfile = FortranFile(param['PL_IN'], 'w')
-        npl = pl.id.count().values
-        plid = pl.id.values
-        px = pl['px'].values  
-        py = pl['py'].values  
-        pz = pl['pz'].values  
-        vx = pl['vx'].values  
-        vy = pl['vy'].values  
-        vz = pl['vz'].values  
-        mass = pl['Mass'].values  
-        radius = pl['Radius'].values  
-        
-        plfile.write_record(npl)
-        plfile.write_record(plid)
-        plfile.write_record(px)
-        plfile.write_record(py)
-        plfile.write_record(pz)
-        plfile.write_record(vx)
-        plfile.write_record(vy)
-        plfile.write_record(vz)
-        plfile.write_record(mass)
-        if param['RHILL_PRESENT'] == 'YES':
-            rhill = pl['Rhill'].values
-            plfile.write_record(rhill)
-        plfile.write_record(radius)
-        plfile.close()
-        tpfile = FortranFile(param['TP_IN'], 'w')
-        ntp = tp.id.count().values
-        tpid = tp.id.values
-        px = tp['px'].values  
-        py = tp['py'].values  
-        pz = tp['pz'].values  
-        vx = tp['vx'].values  
-        vy = tp['vy'].values  
-        vz = tp['vz'].values 
-        tpfile.write_record(ntp)
-        tpfile.write_record(tpid)
-        tpfile.write_record(px)
-        tpfile.write_record(py)
-        tpfile.write_record(pz)
-        tpfile.write_record(vx)
-        tpfile.write_record(vy)
-        tpfile.write_record(vz)
-    else:
-        print(f"{param['IN_TYPE']} is an unknown file type")
+         print(pli['px'].values, pli['py'].values, pli['pz'].values, file=plfile)
+         print(pli['vx'].values, pli['vy'].values, pli['vz'].values, file=plfile)
+         if param['ROTATION'] == 'YES':
+            print(pli['Ip_x'].values, pli['Ip_y'].values, pli['Ip_z'].values, file=plfile)
+            print(pli['rot_x'].values, pli['rot_y'].values, pli['rot_z'].values, file=plfile)
+      plfile.close()
 
+      # TP file
+      tpfile = open(param['TP_IN'], 'w')
+      print(tp.id.count().values, file=tpfile)
+      for i in tp.id:
+         tpi = tp.sel(id=i)
+         print(i.values, file=tpfile)
+         print(tpi['px'].values, tpi['py'].values, tpi['pz'].values, file=tpfile)
+         print(tpi['vx'].values, tpi['vy'].values, tpi['vz'].values, file=tpfile)
+      tpfile.close()
+   elif param['IN_TYPE'] == 'REAL8':
+      # Now make Swiftest files
+      plfile = FortranFile(swiftest_pl, 'w')
+      plfile.write_record(npl)
+      plfile.write_record(plid[1:])
+      plfile.write_record(p_pl[0][1:])
+      plfile.write_record(p_pl[1][1:])
+      plfile.write_record(p_pl[2][1:])
+      plfile.write_record(v_pl[0][1:])
+      plfile.write_record(v_pl[1][1:])
+      plfile.write_record(v_pl[2][1:])
+      plfile.write_record(mass[1:])
+      plfile.write_record(radius[1:])
+      plfile.close()
+      tpfile = FortranFile(swiftest_tp, 'w')
+      ntp = 1
+      tpfile.write_record(ntp)
+      tpfile.write_record(tpid)
+      tpfile.write_record(p_tp[0])
+      tpfile.write_record(p_tp[1])
+      tpfile.write_record(p_tp[2])
+      tpfile.write_record(v_tp[0])
+      tpfile.write_record(v_tp[1])
+      tpfile.write_record(v_tp[2])
+   else:
+      print(f"{param['IN_TYPE']} is an unknown file type")
+
+   return
 
 def swifter_xr2infile(ds, param, framenum=-1):
     """
@@ -771,25 +681,23 @@ def swifter_xr2infile(ds, param, framenum=-1):
     A set of input files for a Swifter run
     """
     frame = ds.isel(time=framenum)
-    cb = frame.where(frame.id == 0, drop=True)
-    pl = frame.where(frame.id > 0, drop=True)
-    pl = pl.where(np.invert(np.isnan(pl['Mass'])), drop=True).drop_vars(['J_2', 'J_4'])
-    tp = frame.where(np.isnan(frame['Mass']), drop=True).drop_vars(['Mass', 'Radius', 'J_2', 'J_4'])
-    
-    GMSun = np.double(cb['Mass'])
-    RSun = np.double(cb['Radius'])
-    param['J2'] = np.double(cb['J_2'])
-    param['J4'] = np.double(cb['J_4'])
+    pl = frame.where(np.invert(np.isnan(frame['Mass'])), drop=True)
+    tp = frame.where(np.isnan(frame['Mass']), drop=True).drop_vars(['Mass', 'Radius'])
+    tp = tp.where(np.invert(np.isnan(tp['px'])), drop=True)
+
+    GMSun = np.double(pl['Mass'].isel(id=0))
+    RSun = np.double(pl['Radius'].isel(id=0))
+
     param['RHILL_PRESENT'] = "YES"
     
     if param['IN_TYPE'] == 'ASCII':
         # Swiftest Central body file
         plfile = open(param['PL_IN'], 'w')
-        print(pl.id.count().values + 1, file=plfile)
-        print(cb.id.values[0], cb['Mass'].values[0], file=plfile)
+        print(pl.id.count().values, file=plfile)
+        print(pl.id.values[0], pl['Mass'].isel(id=0).values[0], file=plfile)
         print('0.0 0.0 0.0', file=plfile)
         print('0.0 0.0 0.0', file=plfile)
-        for i in pl.id:
+        for i in pl.id[1:]:
             pli = pl.sel(id=i)
             if param['RHILL_PRESENT'] == "YES":
                 print(i.values, pli['Mass'].values, pli['Rhill'].values, file=plfile)
@@ -1016,7 +924,7 @@ def swift2swifter(swift_param, plname="", tpname="", conversion_questions={}):
     
     return swifter_param
 
-def swifter2swiftest(swifter_param, plname="", tpname="", cbname="", conversion_questions={}):
+def swifter2swiftest(swifter_param, plname="", tpname="",  conversion_questions={}):
     swiftest_param = swifter_param.copy()
     # Pull additional feature status from the conversion_questions dictionary
     
@@ -1125,13 +1033,6 @@ def swifter2swiftest(swifter_param, plname="", tpname="", cbname="", conversion_
     except IOError:
         print(f"Error converting TP file")
         
-    # Create the CB file
-    if cbname == '':
-        cbname = input("CB_IN: Name of new planet input file: [cb.swiftest.in]> ")
-        if cbname == '':
-            cbname = "cb.swiftest.in"
-    swiftest_param['CB_IN'] = cbname
-   
     unit_system = conversion_questions.get('UNITS', '')
     unit_type = 5
     if not unit_system:
@@ -1202,19 +1103,6 @@ def swifter2swiftest(swifter_param, plname="", tpname="", cbname="", conversion_
             cbrad = input("Enter radius of central body in simulation Distance Units: ")
             cbrad = real2float(cbrad.strip())
     
-    print(f'Writing out new CB file: {swiftest_param["CB_IN"]}')
-    # Write out new central body file
-    try:
-        cbnew = open(swiftest_param['CB_IN'], 'w')
-        print(GMcb, file=cbnew)
-        print(cbrad, file=cbnew)
-        print(swifter_param['J2'], file=cbnew)
-        print(swifter_param['J4'], file=cbnew)
-        cbnew.close()
-    except IOError:
-        print(f"Cannot write to file {swiftest_param['CB_IN']}")
-        return swifter_param
-   
     MTINY = conversion_questions.get('MTINY', None)
     if not MTINY:
         MTINY = input(f"Value of MTINY if this is a SyMBA simulation (enter nothing if this is not a SyMBA parameter file)> ")
@@ -1231,7 +1119,7 @@ def swifter2swiftest(swifter_param, plname="", tpname="", cbname="", conversion_
     swiftest_param['! VERSION'] = "Swiftest parameter file converted from Swifter"
     return swiftest_param
 
-def swift2swiftest(swift_param, plname="", tpname="", cbname="", conversion_questions={}):
+def swift2swiftest(swift_param, plname="", tpname="", conversion_questions={}):
     if plname == '':
         plname = input("PL_IN: Name of new planet input file: [pl.swiftest.in]> ")
         if plname == '':
@@ -1246,19 +1134,13 @@ def swift2swiftest(swift_param, plname="", tpname="", cbname="", conversion_ques
     tptmp = tempfile.NamedTemporaryFile()
     tptmpname = tptmp.name
 
-    # Create the CB file
-    if cbname == '':
-        cbname = input("CB_IN: Name of new planet input file: [cb.swiftest.in]> ")
-        if cbname == '':
-            cbname = "cb.swiftest.in"
     swifter_param = swift2swifter(swift_param, pltmpname, tptmpname, conversion_questions)
-    swiftest_param = swifter2swiftest(swifter_param, plname, tpname, cbname, conversion_questions)
+    swiftest_param = swifter2swiftest(swifter_param, plname, tpname, conversion_questions)
     swiftest_param['! VERSION'] = "Swiftest parameter file converted from Swift"
     return swiftest_param
 
 def swiftest2swifter_param(swiftest_param, J2=0.0, J4=0.0):
     swifter_param = swiftest_param
-    CBIN = swifter_param.pop("CB_IN", None)
     MTINY = swifter_param.pop("MTINY", None)
     MU2KG = swifter_param.pop("MU2KG", 1.0)
     DU2M = swifter_param.pop("DU2M", 1.0)

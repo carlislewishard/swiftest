@@ -11,4 +11,4 @@ inparam = "param.swifter.in"
 outparam = "param.swifter2swiftest.new"
 print(f"Reading Swift parameter {inparam} and saving it to {outparam}")
 sim = swiftest.Simulation(param_file=inparam, codename="Swifter")
-oldparam = sim.convert(outparam, newcodename="Swiftest", plname="pl.swifter2swiftest.in", tpname="tp.swifter2swiftest.in", cbname="cb.swifter2swiftest.in")
+oldparam = sim.convert(outparam, newcodename="Swiftest", plname="pl.swifter2swiftest.in", tpname="tp.swifter2swiftest.in")

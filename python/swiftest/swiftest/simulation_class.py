@@ -18,7 +18,6 @@ class Simulation:
             'DT': "0.0",
             'PL_IN': "pl.in",
             'TP_IN': "tp.in",
-            'CB_IN': "cb.in",
             'IN_TYPE': "ASCII",
             'ISTEP_OUT': "1",
             'ISTEP_DUMP': "1",
@@ -99,7 +98,7 @@ class Simulation:
             print('Cannot process unknown code type. Call the read_param method with a valid code name. Valid options are "Swiftest", "Swifter", or "Swift".')
         return
     
-    def convert(self, param_file, newcodename="Swiftest", plname="pl.swiftest.in", tpname="tp.swiftest.in", cbname="cb.swiftest.in", conversion_questions={}):
+    def convert(self, param_file, newcodename="Swiftest", plname="pl.swiftest.in", tpname="tp.swiftest.in",  conversion_questions={}):
         """
         Converts simulation input files from one code type to another (Swift, Swifter, or Swiftest). Returns the old parameter configuration.
         """
@@ -113,14 +112,14 @@ class Simulation:
         goodconversion = True
         if self.codename == "Swifter":
             if newcodename == "Swiftest":
-                self.param = io.swifter2swiftest(self.param, plname, tpname, cbname, conversion_questions)
+                self.param = io.swifter2swiftest(self.param, plname, tpname,  conversion_questions)
             else:
                 goodconversion = False
         elif self.codename == "Swift":
             if newcodename == "Swifter":
                 self.param = io.swift2swifter(self.param, plname, tpname, conversion_questions)
             elif newcodename == "Swiftest":
-                self.param = io.swift2swiftest(self.param, plname, tpname, cbname, conversion_questions)
+                self.param = io.swift2swiftest(self.param, plname, tpname, conversion_questions)
             else:
                 goodconversion = False
         else:
