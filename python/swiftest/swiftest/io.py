@@ -1162,3 +1162,11 @@ def swiftest2swifter_param(swiftest_param, J2=0.0, J4=0.0):
     swifter_param['! VERSION'] = "Swifter parameter file converted from Swiftest"
 
     return swifter_param
+
+def xr2file(xr_ds, outfile=""):
+    xr_ds.to_netcdf(outfile)
+    return
+
+def file2xr(filename):
+    xr_ds.open_dataset(filename)
+    return
