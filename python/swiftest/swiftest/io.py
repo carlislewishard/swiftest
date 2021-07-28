@@ -497,12 +497,12 @@ def swiftest_stream(f, param):
             if param['RHILL_PRESENT'] == 'YES':
                 Rhill = f.read_reals(np.float64)
             if param['ROTATION'] == 'YES':
-                Ipplx = f.read_reals(np.float64)
-                Ipply = f.read_reals(np.float64)
-                Ipplz = f.read_reals(np.float64)
                 rotplx = f.read_reals(np.float64)
                 rotply = f.read_reals(np.float64)
                 rotplz = f.read_reals(np.float64)
+                Ipplx = f.read_reals(np.float64)
+                Ipply = f.read_reals(np.float64)
+                Ipplz = f.read_reals(np.float64)
             if param['TIDES'] == 'YES':
                 k2pl = f.read_reals(np.float64)
                 Qpl = f.read_reals(np.float64)
