@@ -490,7 +490,7 @@ def swiftest_stream(f, param):
             t5 = f.read_reals(np.float64)
             t6 = f.read_reals(np.float64)
         
-        plab, tlab = make_swiftest_labels(param)
+        clab, plab, tlab = make_swiftest_labels(param)
         
         if npl > 0:
             if param['ROTATION'] == 'YES':
