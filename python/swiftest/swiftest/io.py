@@ -401,8 +401,8 @@ def make_swiftest_labels(param):
     plab = tlab.copy()
     plab.append('Mass')
     plab.append('Radius')
-    if param['RHILL_PRESENT'] == 'YES':
-        plab.append('Rhill')
+    #if param['RHILL_PRESENT'] == 'YES':
+        #plab.append('Rhill')
     clab = ['Mass', 'Radius', 'J_2', 'J_4']
     if param['ROTATION'] == 'YES':
         clab.append('Ip_x')
