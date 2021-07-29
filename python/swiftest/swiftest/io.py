@@ -1167,6 +1167,6 @@ def xr2file(ds, outname=""):
     ds.to_netcdf(path=outname)
     return
 
-def file2xr(filename):
-    xr_ds.open_dataset(filename)
-    return
+def file2xr(inname=""):
+    ds = xr.open_dataset(filename_or_obj=inname)
+    return ds
