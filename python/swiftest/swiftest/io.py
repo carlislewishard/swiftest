@@ -579,8 +579,8 @@ def swiftest2xr(param):
          sys.stdout.flush()
       print('\nCreating Dataset')
       ds = xr.concat(dsframes, dim='time')
-   if not param['PARTICLE_FILE'] == '':
-      ds = swiftest_particle_2xr(ds, param)
+   #if not param['PARTICLE_FILE'] == '':
+   #   ds = swiftest_particle_2xr(ds, param)
    print(f"Successfully converted {ds.sizes['time']} output frames.")
    return ds
 
