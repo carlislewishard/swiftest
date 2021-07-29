@@ -185,6 +185,14 @@ class Simulation:
 
     def savebin(self, outtype="netCDF", outname=None):
         if not outname:
-            print("Error! No output defined!")
+            print("Error! No output name defined!")
         io.xr2file(self.ds, outname)
+        print("Swiftest simulation data stored as NetCDF .nc")
         return
+
+    def readnc(self, inname=None):
+        if not inname:
+            print("Error! No input name defined!")
+        ds = io.file2xr(inname)
+        print("Swiftest simulation data read in and stored as xarray DataSet .ds")
+        return ds
