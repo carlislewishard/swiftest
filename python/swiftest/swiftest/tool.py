@@ -2,15 +2,15 @@ import swiftest
 import numpy as np
 import os
 import glob
-from pyslalib import slalib
+#from pyslalib import slalib
 import xarray as xr
 """
 Functions that recreate the Swift/Swifter tool programs
 """
 
 def sla_dranrm(angle):
-    func = np.vectorize(slalib.sla_dranrm)
-    return xr.apply_ufunc(func, angle)
+    #func = np.vectorize(slalib.sla_dranrm)
+    return #xr.apply_ufunc(func, angle)
 
 def follow_swift(ds, ifol=None, nskp=None):
     """
