@@ -112,12 +112,9 @@ contains
       integer(I8B),           intent(in)    :: n    !! Number of encounters to allocate space for
 
       call encounter_setup_list(self, n)
-      if (n < 0_I8B) return
+      if (n <= 0_I8B) return
 
-      call self%dealloc()
-
-      if (n ==0_I8B) return
-
+      if (allocated(self%level)) deallocate(self%level)
       allocate(self%level(n))
 
       self%level(:) = -1

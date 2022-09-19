@@ -883,10 +883,12 @@ contains
                           self%a(i), self%e(i), self%inc(i),  &
                           self%capom(i), self%omega(i), self%capm(i))
       end do
+
+      return
    end subroutine orbel_xv2el_vec 
 
 
-   pure subroutine orbel_xv2el(mu, px, py, pz, vx, vy, vz, a, e, inc, capom, omega, capm)
+   module pure subroutine orbel_xv2el(mu, px, py, pz, vx, vy, vz, a, e, inc, capom, omega, capm)
       !! author: David A. Minton
       !!
       !! Compute osculating orbital elements from relative Cartesian position and velocity

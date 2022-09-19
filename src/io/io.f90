@@ -1364,7 +1364,6 @@ contains
 
       if (ierr == 0) then
    
-         if (self%j2rp2 /= 0.0_DP) param%loblatecb = .true.
          if (param%rmin < 0.0) param%rmin = self%radius
          
          select type(cb => self)
@@ -1418,6 +1417,12 @@ contains
          self%Lescape(:) = param%Lescape(:)
          self%Ecollisions = param%Ecollisions
          self%Euntracked = param%Euntracked
+      end if
+
+      param%loblatecb = ((self%cb%j2rp2 /= 0.0_DP) .or. (self%cb%j4rp4 /= 0.0_DP))
+      if (.not.param%loblatecb) then
+         if (allocated(self%pl%aobl)) deallocate(self%pl%aobl)
+         if (allocated(self%tp%aobl)) deallocate(self%tp%aobl)
       end if
 
       return
@@ -2179,24 +2184,26 @@ contains
          end if
       end if
 
-      if (param%lgr) then
-         call pl%pv2v(param)
-         call tp%pv2v(param)
-      end if
-
-      if ((param%out_form == EL) .or. (param%out_form == XVEL)) then ! Do an orbital element conversion prior to writing out the frame, as we have access to the central body here
-         call pl%xv2el(cb)
-         call tp%xv2el(cb)
-      end if
-      
       ! Write out each data type frame
       if ((param%out_type == REAL4_TYPE) .or. (param%out_type == REAL8_TYPE)) then
+         ! For these data types, do these conversion here before writing the output. 
+         if (param%lgr) then
+            call pl%pv2v(param)
+            call tp%pv2v(param)
+         end if
+   
+         if ((param%out_form == EL) .or. (param%out_form == XVEL)) then ! Do an orbital element conversion prior to writing out the frame, as we have access to the central body here
+            call pl%xv2el(cb)
+            call tp%xv2el(cb)
+         end if
+
          call self%write_hdr(iu, param)
          call cb%write_frame(iu, param)
          call pl%write_frame(iu, param)
          call tp%write_frame(iu, param)
          close(iu, err = 667, iomsg = errmsg)
       else if ((param%out_type == NETCDF_FLOAT_TYPE) .or. (param%out_type == NETCDF_DOUBLE_TYPE)) then
+         ! For NetCDF output, because we want to store the pseudovelocity separately from the true velocity, we need to do the orbital element conversion internally
          call self%write_hdr(param%nciu, param)
          call cb%write_frame(param%nciu, param)
          call pl%write_frame(param%nciu, param)

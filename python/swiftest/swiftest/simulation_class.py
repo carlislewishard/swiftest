@@ -6,12 +6,13 @@ from datetime import date
 import xarray as xr
 import numpy as np
 import os
+import shutil
 
 class Simulation:
     """
-    This is a class that define the basic Swift/Swifter/Swiftest simulation object
+    This is a class that defines the basic Swift/Swifter/Swiftest simulation object
     """
-    def __init__(self, codename="Swiftest", param_file="", readbin=True):
+    def __init__(self, codename="Swiftest", param_file="param.in", readbin=True, verbose=True):
         self.ds = xr.Dataset()
         self.param = {
             '! VERSION': f"Swiftest parameter input",
@@ -54,12 +55,14 @@ class Simulation:
             'ENCOUNTER_CHECK': "ADAPTIVE"
         }
         self.codename = codename
+        self.verbose = verbose
         if param_file != "" :
             dir_path = os.path.dirname(os.path.realpath(param_file))
-            self.read_param(param_file, codename)
+            self.read_param(param_file, codename=codename, verbose=self.verbose)
             if readbin:
-                if os.path.exists(dir_path + '/' + self.param['BIN_OUT']):
-                    self.param['BIN_OUT'] = dir_path + '/' + self.param['BIN_OUT']
+                binpath = os.path.join(dir_path,self.param['BIN_OUT'])
+                if os.path.exists(binpath):
+                    self.param['BIN_OUT'] = binpath
                     self.bin2xr()
                 else:
                     print(f"BIN_OUT file {self.param['BIN_OUT']} not found.")
@@ -83,7 +86,7 @@ class Simulation:
         return
     
     
-    def addp(self, idvals, namevals, t1, t2, t3, t4, t5, t6, GMpl=None, Rpl=None, rhill=None, Ip1=None, Ip2=None, Ip3=None, rotx=None, roty=None, rotz=None):
+    def addp(self, idvals, namevals, t1, t2, t3, t4, t5, t6, GMpl=None, Rpl=None, rhill=None, Ip1=None, Ip2=None, Ip3=None, rotx=None, roty=None, rotz=None, t=None):
         """
         Adds a body (test particle or massive body) to the internal DataSet given a set up 6 vectors (orbital elements
         or cartesian state vectors, depending on the value of self.param). Input all angles in degress
@@ -106,23 +109,27 @@ class Simulation:
         -------
         self.ds : xarray dataset
         """
-        t = self.param['T0']
+        if t is None:
+            t = self.param['T0']
 
         dsnew = init_cond.vec2xr(self.param, idvals, namevals, t1, t2, t3, t4, t5, t6, GMpl, Rpl, rhill, Ip1, Ip2, Ip3, rotx, roty, rotz, t)
         if dsnew is not None:
             self.ds = xr.combine_by_coords([self.ds, dsnew])
+        self.ds['ntp'] = self.ds['id'].where(np.isnan(self.ds['Gmass'])).count(dim="id")
+        self.ds['npl'] = self.ds['id'].where(np.invert(np.isnan(self.ds['Gmass']))).count(dim="id") - 1
+
         return
     
     
-    def read_param(self, param_file, codename="Swiftest"):
+    def read_param(self, param_file, codename="Swiftest", verbose=True):
         if codename == "Swiftest":
-            self.param = io.read_swiftest_param(param_file, self.param)
+            self.param = io.read_swiftest_param(param_file, self.param, verbose=verbose)
             self.codename = "Swiftest"
         elif codename == "Swifter":
-            self.param = io.read_swifter_param(param_file)
+            self.param = io.read_swifter_param(param_file, verbose=verbose)
             self.codename = "Swifter"
         elif codename == "Swift":
-            self.param = io.read_swift_param(param_file)
+            self.param = io.read_swift_param(param_file, verbose=verbose)
             self.codename = "Swift"
         else:
             print(f'{codename} is not a recognized code name. Valid options are "Swiftest", "Swifter", or "Swift".')
@@ -180,11 +187,11 @@ class Simulation:
     
     def bin2xr(self):
         if self.codename == "Swiftest":
-            self.ds = io.swiftest2xr(self.param)
-            print('Swiftest simulation data stored as xarray DataSet .ds')
+            self.ds = io.swiftest2xr(self.param, verbose=self.verbose)
+            if self.verbose: print('Swiftest simulation data stored as xarray DataSet .ds')
         elif self.codename == "Swifter":
-            self.ds = io.swifter2xr(self.param)
-            print('Swifter simulation data stored as xarray DataSet .ds')
+            self.ds = io.swifter2xr(self.param, verbose=self.verbose)
+            if self.verbose: print('Swifter simulation data stored as xarray DataSet .ds')
         elif self.codename == "Swift":
             print("Reading Swift simulation data is not implemented yet")
         else:
@@ -215,7 +222,7 @@ class Simulation:
         else:
             fol = None
         
-        print('follow.out written')
+        if self.verbose: print('follow.out written')
         return fol
     
     
@@ -234,3 +241,38 @@ class Simulation:
             print(f'Saving to {codename} not supported')
 
         return
+
+    def initial_conditions_from_bin(self, framenum=-1, new_param=None, new_param_file="param.new.in", new_initial_conditions_file="bin_in.nc",  restart=False, codename="Swiftest"):
+        if codename != "Swiftest":
+            self.save(new_param_file, framenum, codename)
+            return
+        if new_param is None:
+            new_param = self.param.copy()
+
+        if codename == "Swiftest":
+            if restart:
+                new_param['T0'] = self.ds.time.values[framenum]
+            if self.param['OUT_TYPE'] == 'NETCDF_DOUBLE' or self.param['OUT_TYPE'] == 'REAL8':
+                new_param['IN_TYPE'] = 'NETCDF_DOUBLE'
+            elif self.param['OUT_TYPE'] == 'NETCDF_FLOAT' or self.param['OUT_TYPE'] == 'REAL4':
+                new_param['IN_TYPE'] = 'NETCDF_FLOAT'
+            else:
+                print(f"{self.param['OUT_TYPE']} is an invalid OUT_TYPE file")
+                return
+            if self.param['BIN_OUT'] != new_param['BIN_OUT'] and restart:
+               print(f"Restart run with new output file. Copying {self.param['BIN_OUT']} to {new_param['BIN_OUT']}")
+               shutil.copy2(self.param['BIN_OUT'],new_param['BIN_OUT'])
+            new_param['IN_FORM'] = 'XV'
+            if restart:
+                new_param['OUT_STAT'] = 'APPEND'
+            new_param['FIRSTKICK'] = 'T'
+            new_param['NC_IN'] = new_initial_conditions_file
+            new_param.pop('PL_IN', None)
+            new_param.pop('TP_IN', None)
+            new_param.pop('CB_IN', None)
+            print(f"Extracting data from dataset at time frame number {framenum} and saving it to {new_param['NC_IN']}")
+            frame = io.swiftest_xr2infile(self.ds, self.param, infile_name=new_param['NC_IN'],framenum=framenum)
+            print(f"Saving parameter configuration file to {new_param_file}")
+            self.write_param(new_param_file, param=new_param)
+
+        return frame

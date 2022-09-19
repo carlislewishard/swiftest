@@ -36,15 +36,11 @@ contains
             do i = 0, NTPHENC
                allocate(pl%inner(i)%x(NDIM, n))
                allocate(pl%inner(i)%v(NDIM, n))
+               allocate(pl%inner(i)%aobl(NDIM, n))
                pl%inner(i)%x(:,:) = 0.0_DP
                pl%inner(i)%v(:,:) = 0.0_DP
+               pl%inner(i)%aobl(:,:) = 0.0_DP
             end do
-            if (param%loblatecb) then
-               do i = 0, NTPHENC
-                  allocate(pl%inner(i)%aobl(NDIM, n))
-                  pl%inner(i)%aobl(:,:) = 0.0_DP
-               end do
-            end if
             if (param%ltides) then
                do i = 0, NTPHENC
                   allocate(pl%inner(i)%atide(NDIM, n))
@@ -145,11 +141,7 @@ contains
 
       !> Call allocation method for parent class. In this case, whm does not have its own setup method, so we use the base method for swiftest_tp
       call setup_tp(self, n, param) 
-      if (n < 0) return
-
-      call self%dealloc()
-
-      if (n == 0) return
+      if (n <= 0) return
 
       allocate(self%lperi(n))
       allocate(self%plperP(n))

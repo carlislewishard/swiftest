@@ -157,6 +157,9 @@ module swiftest_globals
    character(*), parameter :: VHX_VARNAME             = "vhx"             !! NetCDF name of the heliocentric velocity x variable 
    character(*), parameter :: VHY_VARNAME             = "vhy"             !! NetCDF name of the heliocentric velocity y variable 
    character(*), parameter :: VHZ_VARNAME             = "vhz"             !! NetCDF name of the heliocentric velocity z variable 
+   character(*), parameter :: GR_PSEUDO_VHX_VARNAME   = "gr_pseudo_vhx"   !! NetCDF name of the heliocentric pseudovelocity x variable (used in GR only)
+   character(*), parameter :: GR_PSEUDO_VHY_VARNAME   = "gr_pseudo_vhy"   !! NetCDF name of the heliocentric pseudovelocity y variable (used in GR only)
+   character(*), parameter :: GR_PSEUDO_VHZ_VARNAME   = "gr_pseudo_vhz"   !! NetCDF name of the heliocentric pseudovelocity z variable (used in GR only)
    character(*), parameter :: GMASS_VARNAME           = "Gmass"           !! NetCDF name of the mass variable
    character(*), parameter :: RHILL_VARNAME           = "rhill"           !! NetCDF name of the hill radius variable
    character(*), parameter :: RADIUS_VARNAME          = "radius"          !! NetCDF name of the radius variable
@@ -201,5 +204,7 @@ module swiftest_globals
    character(*), parameter :: DISCARD_VHY_VARNAME     = "discard_vhy"     !! NetCDF name of the heliocentric velocity of the body at the time of discard y variable
    character(*), parameter :: DISCARD_VHZ_VARNAME     = "discard_vhz"     !! NetCDF name of the heliocentric velocity of the body at the time of discard z variable
    character(*), parameter :: DISCARD_BODY_ID_VARNAME = "discard_body_id" !! NetCDF name of the id of the other body involved in the discard
+   character(*), parameter :: J2RP2_VARNAME           = "j2rp2"           !! NetCDF name of the j2rp2 variable
+   character(*), parameter :: J4RP4_VARNAME           = "j4rp4"           !! NetCDF name of the j4pr4 variable
 
 end module swiftest_globals
