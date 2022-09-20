@@ -47,34 +47,37 @@ COLLRESOLVE_HOME = $(ROOT_DIR)/collresolve/
 # this is done explicitly as needed in the Makefile
 IDEBUG = -O0 -init=snan,arrays  -nogen-interfaces -no-pie -no-ftz -fpe-all=0 -g -traceback -mp1 -qopt-matmul -fp-model strict -fpe0 -debug all -align all -pad -ip -prec-div -prec-sqrt -assume protect-parens -CB -no-wrap-margin 
 STRICTREAL = -fp-model=precise -prec-div -prec-sqrt -assume protect-parens 
-SIMDVEC = -simd -xhost -align all -assume contiguous_assumed_shape -vecabi=cmdtarget -fp-model no-except -fma
-PAR = -qopenmp -parallel 
+SIMDVEC = -simd -xhost -align all -align array64 -pad -assume contiguous_assumed_shape -vecabi=cmdtarget -fp-model no-except -fma 
+PAR = -qopenmp -parallel-source-info=2 
 HEAPARR = -heap-arrays 4194304 
 OPTREPORT = -qopt-report=5 
-IPRODUCTION = -no-wrap-margin -O3 -qopt-prefetch=0 -qopt-matmul -sox $(PAR) $(SIMDVEC) #$(HEAPARR)
+IPRODUCTION = -no-wrap-margin -O3 -qopt-prefetch=0 -qopt-matmul -sox  $(SIMDVEC) $(PAR) #$(HEAPARR)
 
 #gfortran flags
 GDEBUG = -g -Og -fbacktrace -fbounds-check -ffree-line-length-none
 GPAR = -fopenmp -ftree-parallelize-loops=4
-GMEM =  -fsanitize-address-use-after-scope -fstack-check  -fsanitize=bounds-strict -fsanitize=undefined -fsanitize=signed-integer-overflow -fsanitize=object-size -fstack-protector-all
+GMEM =  -fsanitize=undefined -fsanitize=address -fbounds-check #-fsanitize-address-use-after-scope -fstack-check  -fsanitize=bounds-strict -fsanitize=undefined -fsanitize=signed-integer-overflow -fsanitize=object-size -fstack-protector-all
 GWARNINGS = -Wall -Warray-bounds  -Wimplicit-interface -Wextra -Warray-temporaries
 GPRODUCTION = -O3 -ffree-line-length-none $(GPAR)
 
 INCLUDES = -I$(SWIFTEST_HOME)/include -I$(NETCDF_FORTRAN_HOME)/include -I$(MKLROOT)/include 
-LINKS = -L$(MKLROOT)/lib/intel64 -L$(NETCDF_FORTRAN_HOME)/lib  -lswiftest -lnetcdf -lnetcdff -qopt-matmul $(PAR)
+LINKS = -L$(NETCDF_FORTRAN_HOME)/lib -lswiftest -lnetcdf -lnetcdff -L$(MKLROOT)/lib/intel64 -qopt-matmul $(PAR)
 
-FSTRICTFLAGS  = $(IPRODUCTION) $(STRICTREAL) 
-FFLAGS  = $(IPRODUCTION) -fp-model=fast
+# FSTRICTFLAGS  = $(IDEBUG) #$(SIMDVEC)  $(PAR)
+# FFLAGS  = $(IDEBUG) #$(SIMDVEC)  $(PAR)
+
+FSTRICTFLAGS  = $(IPRODUCTION) $(STRICTREAL) $(OPTREPORT) -g -traceback
+FFLAGS  = $(IPRODUCTION) -fp-model=fast $(OPTREPORT) -g -traceback
 
 FORTRAN = ifort
 AR     = xiar
 CC    = icc
 
-#FORTRAN = gfortran
-#FFLAGS =  $(GDEBUG)  $(GMEM) #$(GPAR)
-#FSTRICTFLAGS =  $(GDEBUG)  $(GMEM) #$(GPAR)
-#AR     = ar 
-#CC     = cc
+# FORTRAN = gfortran
+# FFLAGS =  $(GPRODUCTION) $(GMEM) -g -fbacktrace #$(GDEBUG) $(GPAR)
+# FSTRICTFLAGS = $(GPRODUCTION) $(GMEM) -g -fbacktrace  #$(GDEBUG)  $(GPAR)
+# AR     = ar 
+# CC     = cc
 
 # DO NOT include in CFLAGS the "-c" option to compile object only
 # this is done explicitly as needed in the Makefile
