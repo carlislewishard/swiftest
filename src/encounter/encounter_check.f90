@@ -269,9 +269,9 @@ contains
          npl_last = npl
       end if
 
-      !$omp parallel do default(private) schedule(static) &
-      !$omp shared(x, v, renc, boundingbox) &
-      !$omp firstprivate(dt, npl, n)
+      !!$omp parallel do default(private) schedule(static) &
+      !!$omp shared(x, v, renc, boundingbox) &
+      !!$omp firstprivate(dt, npl, n)
       do dim = 1, SWEEPDIM
          where(v(dim,1:npl) < 0.0_DP)
             vshift_min(1:npl) = 1
@@ -283,7 +283,7 @@ contains
          call boundingbox%aabb(dim)%sort(npl, [x(dim,1:npl) - renc(1:npl) + vshift_min(1:npl) * v(dim,1:npl) * dt, &
                                                x(dim,1:npl) + renc(1:npl) + vshift_max(1:npl) * v(dim,1:npl) * dt])
       end do
-      !$omp end parallel do 
+      !!$omp end parallel do 
 
       call boundingbox%sweep(npl, x, v, renc, dt, nenc, index1, index2, lvdotr) 
 
@@ -333,9 +333,9 @@ contains
          ntot_last = ntot
       end if
 
-      !$omp parallel do default(private) schedule(static) &
-      !$omp shared(xplm, xplt, vplm, vplt, rencm, renct, boundingbox) &
-      !$omp firstprivate(dt, nplm, nplt, ntot)
+      !!$omp parallel do default(private) schedule(static) &
+      !!$omp shared(xplm, xplt, vplm, vplt, rencm, renct, boundingbox) &
+      !!$omp firstprivate(dt, nplm, nplt, ntot)
       do dim = 1, SWEEPDIM
          where(vplm(dim,1:nplm) < 0.0_DP)
             vplmshift_min(1:nplm) = 1
@@ -358,7 +358,7 @@ contains
                                                 xplm(dim,1:nplm) + rencm(1:nplm) + vplmshift_max(1:nplm) * vplm(dim,1:nplm) * dt, &
                                                 xplt(dim,1:nplt) + renct(1:nplt) + vpltshift_max(1:nplt) * vplt(dim,1:nplt) * dt])
       end do
-      !$omp end parallel do
+      !!$omp end parallel do
 
       call boundingbox%sweep(nplm, nplt, xplm, vplm, xplt, vplt, rencm, renct, dt, nenc, index1, index2, lvdotr) 
 
@@ -409,9 +409,9 @@ contains
 
       renctp(:) = 0.0_DP
       
-      !$omp parallel do default(private) schedule(static) &
-      !$omp shared(xpl, xtp, vpl, vtp, rencpl, renctp, boundingbox) &
-      !$omp firstprivate(dt, npl, ntp, ntot)
+      !!$omp parallel do default(private) schedule(static) &
+      !!$omp shared(xpl, xtp, vpl, vtp, rencpl, renctp, boundingbox) &
+      !!$omp firstprivate(dt, npl, ntp, ntot)
       do dim = 1, SWEEPDIM
          where(vpl(dim,1:npl) < 0.0_DP)
             vplshift_min(1:npl) = 1
@@ -434,7 +434,7 @@ contains
                                                 xpl(dim,1:npl) + rencpl(1:npl) + vplshift_max(1:npl) * vpl(dim,1:npl) * dt, &
                                                 xtp(dim,1:ntp) + renctp(1:ntp) + vtpshift_max(1:ntp) * vtp(dim,1:ntp) * dt])
       end do
-      !$omp end parallel do
+      !!$omp end parallel do
 
       call boundingbox%sweep(npl, ntp, xpl, vpl, xtp, vtp, rencpl, renctp, dt, nenc, index1, index2, lvdotr) 
 
@@ -615,7 +615,7 @@ contains
 
       call util_index_array(ind_arr, nplt)
 
-      !$omp parallel do default(private) schedule(dynamic)&
+      !$omp parallel do default(private) schedule(dynamic,nplm)&
       !$omp shared(xplm, vplm, xplt, vplt, rencm, renct, lenc, ind_arr) &
       !$omp firstprivate(nplm, nplt, dt)
       do i = 1, nplm
@@ -664,7 +664,7 @@ contains
       call util_index_array(ind_arr, ntp)
       renct(:) = 0.0_DP
 
-      !$omp parallel do default(private) schedule(dynamic)&
+      !$omp parallel do default(private) schedule(dynamic,8)&
       !$omp shared(xpl, vpl, xtp, vtp, renc, renct, lenc, ind_arr) &
       !$omp firstprivate(npl, ntp, dt)
       do i = 1, npl

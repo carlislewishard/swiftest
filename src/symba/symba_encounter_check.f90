@@ -24,7 +24,6 @@ contains
       integer(I4B), dimension(:,:), allocatable :: k_plpl_enc 
       type(interaction_timer), save :: itimer
       logical, save :: lfirst = .true.
-      type(walltimer) :: timer 
  
       lany_encounter = .false.
       if (self%nbody == 0) return

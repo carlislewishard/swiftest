@@ -16,6 +16,7 @@ contains
       ! Internals
       type(interaction_timer), save :: itimer
       logical, save :: lfirst = .true.
+      ! type(walltimer), save :: kick_timer
 
       if (param%ladaptive_interactions) then
          if (self%nplplm > 0) then
@@ -32,11 +33,19 @@ contains
          end if
       end if
 
+      ! call kick_timer%start()
       if (param%lflatten_interactions) then
          call kick_getacch_int_all_flat_pl(self%nbody, self%nplplm, self%k_plpl, self%xh, self%Gmass, self%radius, self%ah)
       else
          call kick_getacch_int_all_triangular_pl(self%nbody, self%nplm, self%xh, self%Gmass, self%radius, self%ah)
       end if
+      ! call kick_timer%stop()
+
+      ! if (param%iout == 1) then
+      !    call kick_timer%report(message="symba_kick_getacch_int_pl", nsubsteps=param%istep_dump)
+      !    call kick_timer%reset()
+      ! end if
+
 
       if (param%ladaptive_interactions .and. self%nplplm > 0) then 
          if (itimer%is_on) call itimer%adapt(param, self%nplplm, self)

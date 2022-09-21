@@ -14,14 +14,8 @@ program swiftest_driver
    integer(I4B)                               :: integrator       !! Integrator type code (see swiftest_globals for symbolic names)
    character(len=:),allocatable               :: param_file_name  !! Name of the file containing user-defined parameters
    integer(I4B)                               :: ierr             !! I/O error code 
-   integer(I8B)                               :: iloop            !! Loop counter
-   integer(I8B)                               :: idump            !! Dump cadence counter
-   integer(I8B)                               :: iout             !! Output cadence counter
-   integer(I8B)                               :: ioutput_t0       !! The output frame counter at time 0
-   integer(I8B)                               :: nloops           !! Number of steps to take in the simulation
    real(DP)                                   :: old_t_final = 0.0_DP !! Output time at which writing should start, in order to prevent duplicate lines being written for restarts
    type(walltimer)                            :: integration_timer !! Object used for computing elapsed wall time
-   real(DP)                                   :: tfrac
    character(*), parameter                    :: statusfmt   = '("Time = ", ES12.5, "; fraction done = ", F6.3, ' // & 
                                                                 '"; Number of active pl, tp = ", I5, ", ", I5)'
    character(*), parameter                    :: symbastatfmt   = '("Time = ", ES12.5, "; fraction done = ", F6.3, ' // &
@@ -50,7 +44,13 @@ program swiftest_driver
              tstop      => param%tstop, &
              istep_out  => param%istep_out, &
              istep_dump => param%istep_dump, &
-             ioutput    => param%ioutput)  
+             ioutput    => param%ioutput, &
+             iloop      => param%iloop, &
+             idump      => param%idump, &
+             iout       => param%iout, &
+             ioutput_t0 => param%ioutput_t0, &
+             nloops     => param%nloops, &
+             tfrac      => param%tfrac)
 
       call nbody_system%initialize(param)
       t = t0

@@ -139,6 +139,7 @@ module swiftest_classes
       character(NAMELEN)   :: interaction_loops = "ADAPTIVE"      !! Method used to compute interaction loops. Options are "TRIANGULAR", "FLAT", or "ADAPTIVE" 
       character(NAMELEN)   :: encounter_check_plpl = "ADAPTIVE"   !! Method used to compute pl-pl encounter checks. Options are "TRIANGULAR", "SORTSWEEP", or "ADAPTIVE" 
       character(NAMELEN)   :: encounter_check_pltp = "ADAPTIVE"   !! Method used to compute pl-tp encounter checks. Options are "TRIANGULAR", "SORTSWEEP", or "ADAPTIVE" 
+
       ! The following are used internally, and are not set by the user, but instead are determined by the input value of INTERACTION_LOOPS
       logical :: lflatten_interactions = .false. !! Use the flattened upper triangular matrix for pl-pl interaction loops
       logical :: ladaptive_interactions = .false. !! Adaptive interaction loop is turned on (choose between TRIANGULAR and FLAT based on periodic timing tests)
@@ -146,6 +147,14 @@ module swiftest_classes
       logical :: lencounter_sas_pltp = .false. !! Use the Sort and Sweep algorithm to prune the encounter list before checking for close encounters
       logical :: ladaptive_encounters_plpl = .false. !! Adaptive encounter checking is turned on (choose between TRIANGULAR or SORTSWEEP based on periodic timing tests)
       logical :: ladaptive_encounters_pltp = .false. !! Adaptive encounter checking is turned on (choose between TRIANGULAR or SORTSWEEP based on periodic timing tests)
+
+      ! Other internal variables not set directly by the user
+      integer(I8B) :: iloop            !! Loop counter
+      integer(I8B) :: idump            !! Dump cadence counter
+      integer(I8B) :: iout             !! Output cadence counter
+      integer(I8B) :: ioutput_t0       !! The output frame counter at time 0
+      integer(I8B) :: nloops           !! Number of steps to take in the simulation
+      real(DP)     :: tfrac            !! Fraction of run completed
 
       ! Logical flags to turn on or off various features of the code
       logical :: lrhill_present = .false. !! Hill radii are given as an input rather than calculated by the code (can be used to inflate close encounter regions manually)

@@ -104,9 +104,9 @@ contains
       ahj(:,:) = 0.0_DP
 
       if (present(radius)) then
-         !$omp parallel do default(private) schedule(static)&
+         !$omp parallel do default(private) schedule(dynamic,npl)&
          !$omp shared(nplpl, k_plpl, x, Gmass, radius) &
-         !$omp lastprivate(i, j, rji2, rlim2, xr, yr, zr) &
+         !$omp lastprivate(rji2, rlim2, xr, yr, zr) &
          !$omp reduction(+:ahi) &
          !$omp reduction(-:ahj) 
          do k = 1_I8B, nplpl
@@ -122,9 +122,9 @@ contains
          end do
          !$omp end parallel do 
       else
-         !$omp parallel do default(private) schedule(static)&
-         !$omp shared(nplpl, k_plpl, x, Gmass, radius) &
-         !$omp lastprivate(i, j, rji2, xr, yr, zr) &
+         !$omp parallel do default(private) schedule(dynamic,npl)&
+         !$omp shared(nplpl, k_plpl, x, Gmass) &
+         !$omp lastprivate(rji2, xr, yr, zr) &
          !$omp reduction(+:ahi) &
          !$omp reduction(-:ahj) 
          do k = 1_I8B, nplpl
@@ -137,10 +137,12 @@ contains
             call kick_getacch_int_one_pl(rji2, xr, yr, zr, Gmass(i), Gmass(j), &
                                          ahi(1,i), ahi(2,i), ahi(3,i), ahj(1,j), ahj(2,j), ahj(3,j))
          end do
-         !$omp end parallel do
+         !$omp end parallel do 
       end if
      
-      acc(:,:) = acc(:,:) + ahi(:,:) + ahj(:,:)
+      do concurrent(i = 1:npl)
+         acc(:,i) = acc(:,i) + ahi(:,i) + ahj(:,i)
+      end do
 
       return
    end subroutine kick_getacch_int_all_flat_pl
@@ -190,7 +192,7 @@ contains
          !$omp end parallel do
       else
          !$omp parallel do default(private) schedule(static)&
-         !$omp shared(npl, nplm, x, Gmass) &
+         !$omp shared(npl, nplm, x, Gmass, radius) &
          !$omp lastprivate(rji2, xr, yr, zr) &
          !$omp reduction(+:ahi) &
          !$omp reduction(-:ahj) 
